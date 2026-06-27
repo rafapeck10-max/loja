@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poltrona de Veludo Azul Royal | Mobili</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Premium Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header id="main-header">
+        <div class="header-main">
+            <a href="index.html" class="logo-area">
+                <svg viewBox="0 0 280 80" class="brand-svg">
+                    <text x="0" y="60" font-family="'Cormorant Garamond', serif" font-size="60" font-weight="700" fill="#C5A059" stroke="#C5A059" stroke-width="2.5" letter-spacing="2">MOBILI<tspan fill="#F4EFE6" stroke="none">.</tspan></text>
+                </svg>
+            </a>
+
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="Busque por móveis de luxo...">
+                <button id="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+            
+            <div class="header-icons">
+                <button class="header-btn" id="user-btn" aria-label="Minha Conta">
+                    <i class="fa-regular fa-user"></i>
+                </button>
+                <button class="header-btn" id="cart-btn" aria-label="Carrinho de Compras">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span class="cart-count" id="cart-count" style="display: none;">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <nav>
+        <ul class="nav-list">
+            <li><a href="index.html">Coleção Raízes</a></li>
+            <li><a href="#">Sofás</a></li>
+            <li><a href="#" class="active">Poltronas</a></li>
+            <li><a href="#">Salas de Jantar</a></li>
+            <li><a href="#">Dormitórios</a></li>
+        </ul>
+    </nav>
+
+    <main class="container">
+        <!-- Breadcrumb -->
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; color: var(--text-light);">
+            <a href="index.html" style="color: inherit; text-decoration: none;">Início</a> &nbsp;/&nbsp; 
+            <a href="#" style="color: inherit; text-decoration: none;">Poltronas</a> &nbsp;/&nbsp; 
+            <span style="color: var(--gold); font-weight: 600;">Poltrona Azul Royal</span>
+        </div>
+
+        <div class="product-detail-layout">
+            <!-- Left Side: Interactive Carousel -->
+            <div class="product-gallery">
+                <div class="carousel-container">
+                    <div class="carousel-wrapper" id="carousel-wrapper">
+                        <div class="carousel-slide">
+                            <img src="https://images.unsplash.com/photo-1592078615290-033ee584e267?w=800" alt="Vista Principal">
+                        </div>
+                        <div class="carousel-slide">
+                            <img src="https://images.unsplash.com/photo-1506898667547-42e22a46e125?w=800" alt="Detalhe do Tecido">
+                        </div>
+                        <div class="carousel-slide">
+                            <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800" alt="Ambientada">
+                        </div>
+                        <div class="carousel-slide">
+                            <img src="https://images.unsplash.com/photo-1503602642458-232111445657?w=800" alt="Vista de Perfil">
+                        </div>
+                    </div>
+                    
+                    <button class="carousel-btn carousel-prev" id="carousel-prev" aria-label="Imagem Anterior">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <button class="carousel-btn carousel-next" id="carousel-next" aria-label="Próxima Imagem">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                    
+                    <div class="carousel-dots" id="carousel-dots">
+                        <!-- Dots are generated/controlled by JS or pre-rendered -->
+                        <span class="dot active"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                    </div>
+                </div>
+                
+                <!-- Thumbnail Grid (Synced to Carousel) -->
+                <div class="thumb-grid">
+                    <div class="thumb-item active" data-slide="0">
+                        <img src="https://images.unsplash.com/photo-1592078615290-033ee584e267?w=800" alt="Vista Principal">
+                    </div>
+                    <div class="thumb-item" data-slide="1">
+                        <img src="https://images.unsplash.com/photo-1506898667547-42e22a46e125?w=800" alt="Detalhe do Tecido">
+                    </div>
+                    <div class="thumb-item" data-slide="2">
+                        <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800" alt="Ambientada">
+                    </div>
+                    <div class="thumb-item" data-slide="3">
+                        <img src="https://images.unsplash.com/photo-1503602642458-232111445657?w=800" alt="Vista de Perfil">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Info Panel -->
+            <div class="product-info-panel">
+                <span class="product-tag">Coleção Raízes &nbsp;|&nbsp; Exclusivo Mobili</span>
+                <h1 class="product-title">Poltrona de Veludo Azul Royal e Base em Ouro</h1>
+                
+                <div class="product-price-box">
+                    <div class="price-old">R$ 2.450,00</div>
+                    <div class="price-new">R$ 1.689,00</div>
+                    <div class="price-info">
+                        <strong>R$ 1.604,55</strong> à vista no PIX (5% desc.) ou <strong>10x de R$ 168,90</strong> sem juros nos cartões.
+                    </div>
+                </div>
+
+                <!-- Selectors Grouped Side-by-Side (Cores, Acabamentos e Quantidades no Lado) -->
+                <div class="selectors-row">
+                    <!-- Velvet Color Selection -->
+                    <div class="option-group">
+                        <label class="option-label">Cor do Veludo:</label>
+                        <div class="option-selector">
+                            <label class="color-option" title="Azul Royal">
+                                <input type="radio" name="color" value="Azul Royal" checked>
+                                <span class="color-dot" style="background-color: #0b3c5d;"></span>
+                            </label>
+                            <label class="color-option" title="Verde Esmeralda">
+                                <input type="radio" name="color" value="Verde Esmeralda">
+                                <span class="color-dot" style="background-color: #0b5d3c;"></span>
+                            </label>
+                            <label class="color-option" title="Cacau Premium">
+                                <input type="radio" name="color" value="Cacau Premium">
+                                <span class="color-dot" style="background-color: #493327;"></span>
+                            </label>
+                            <label class="color-option" title="Areia Soft">
+                                <input type="radio" name="color" value="Areia Soft">
+                                <span class="color-dot" style="background-color: #d1c7bd;"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Finish Selection -->
+                    <div class="option-group">
+                        <label class="option-label">Pés:</label>
+                        <div class="option-selector">
+                            <label class="finish-option">
+                                <input type="radio" name="finish" value="Ouro Fosco" checked>
+                                <span class="finish-text">Ouro Fosco</span>
+                            </label>
+                            <label class="finish-option">
+                                <input type="radio" name="finish" value="Champagne">
+                                <span class="finish-text">Champagne</span>
+                            </label>
+                            <label class="finish-option">
+                                <input type="radio" name="finish" value="Preto Carbono">
+                                <span class="finish-text">Preto</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Quantity Selector -->
+                    <div class="option-group">
+                        <label class="option-label">Quantidade:</label>
+                        <div class="qty-control">
+                            <button class="qty-btn" id="detail-qty-minus"><i class="fa-solid fa-minus"></i></button>
+                            <span class="qty-val" id="product-qty-val">1</span>
+                            <button class="qty-btn" id="detail-qty-plus"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Description -->
+                <p class="product-desc">
+                    A Poltrona Raízes une a opulência do veludo italiano em tom Azul Royal à imponência da sua base estrutural banhada em tonalidade ouro fosco. Uma verdadeira obra de arte do design contemporâneo que traz personalidade e luxo incomparável ao seu espaço de estar ou dormitório. Conforto anatômico premium com espuma D-28 Soft de alta resiliência.
+                </p>
+
+                <!-- Call to Action -->
+                <div class="action-row">
+                    <button class="btn-primary" 
+                            id="add-to-cart-product"
+                            data-id="1" 
+                            data-name="Poltrona de Veludo Azul Royal" 
+                            data-price="1689.00" 
+                            data-img="https://images.unsplash.com/photo-1592078615290-033ee584e267?w=800">
+                        Adicionar ao Carrinho
+                    </button>
+                    <button class="btn-secondary" id="buy-now-product">
+                        Comprar Agora
+                    </button>
+                </div>
+
+                <!-- Technical Details Accordion -->
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <button class="accordion-header">
+                            <span>Especificações Técnicas</span>
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                        <div class="accordion-content">
+                            <ul>
+                                <li><strong>Estrutura:</strong> Madeira 100% reflorestada de eucalipto seco, imune a cupins.</li>
+                                <li><strong>Espuma:</strong> Assento D-28 Soft com molas Bonnel e percintas elásticas italianas.</li>
+                                <li><strong>Revestimento:</strong> Tecido Veludo Italiano Importado de toque ultra macio.</li>
+                                <li><strong>Base / Pés:</strong> Aço maciço estrutural com pintura automotiva termoestabilizada.</li>
+                                <li><strong>Dimensões:</strong> 85cm (Altura) x 82cm (Largura) x 80cm (Profundidade).</li>
+                                <li><strong>Peso Suportado:</strong> Até 150 kg distribuídos.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <button class="accordion-header">
+                            <span>Entrega e Montagem (Baixada Fluminense)</span>
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                        <div class="accordion-content">
+                            <p>
+                                Entregamos e montamos em toda a Baixada Fluminense (Nova Iguaçu, Duque de Caxias, Belford Roxo, Nilópolis, Mesquita, São João de Meriti) e Grande Rio de Janeiro. 
+                                Nossos entregadores sobem até o apartamento (verifique as dimensões dos elevadores e portas antes da compra).
+                            </p>
+                            <p>
+                                <strong>Frete Grátis e Pagamento na Entrega:</strong> Combine sua data ideal via WhatsApp e pague apenas quando o produto for montado e aprovado em seu domicílio!
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <button class="accordion-header">
+                            <span>Garantia e Assistência</span>
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                        <div class="accordion-content">
+                            <p>
+                                Todos os produtos da Mobili possuem garantia integral de 1 ano contra qualquer defeito estrutural, de solda ou costura da madeira. Assistência técnica rápida direta de fábrica em domicílio para o seu total conforto e segurança.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h4>Experiência Mobili</h4>
+                <p>Nascida da paixão pelo design, a Mobili entrega conforto de shopping com preço de fábrica na Baixada Fluminense.</p>
+                <div class="social-icons">
+                    <i class="fa-brands fa-instagram" aria-label="Instagram"></i>
+                    <i class="fa-brands fa-facebook-f" aria-label="Facebook"></i>
+                    <i class="fa-brands fa-tiktok" aria-label="Tiktok"></i>
+                </div>
+            </div>
+            
+            <div class="footer-col">
+                <h4>Atendimento</h4>
+                <p>Segunda a Sexta: 08h - 18h</p>
+                <p>Sábado: 09h - 14h</p>
+                <p style="color: var(--gold); font-weight: 700; margin-top: 15px;">WhatsApp: (21) 98655-9996</p>
+            </div>
+
+            <div class="footer-col">
+                <h4>Pagamento Seguro</h4>
+                <p>Aceitamos as principais bandeiras. Pague apenas na entrega.</p>
+                <div class="payment-icons">
+                    <i class="fa-brands fa-cc-visa" aria-label="Visa"></i>
+                    <i class="fa-brands fa-cc-mastercard" aria-label="Mastercard"></i>
+                    <i class="fa-brands fa-pix" aria-label="Pix"></i>
+                </div>
+            </div>
+
+            <div class="footer-col">
+                <h4>Selo de Segurança</h4>
+                <div class="seals">
+                    <div class="seal"><i class="fa-solid fa-lock"></i> <span>Criptografado SSL</span></div>
+                    <div class="seal"><i class="fa-solid fa-shield"></i> <span>Google Safe</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div style="margin-bottom: 15px; display: flex; justify-content: center;">
+                <svg viewBox="0 0 280 80" style="height: 25px;">
+                    <text x="0" y="60" font-family="'Cormorant Garamond', serif" font-size="60" font-weight="700" fill="#C5A059" stroke="#C5A059" stroke-width="2.5" letter-spacing="2">MOBILI<tspan fill="#F4EFE6" stroke="none">.</tspan></text>
+                </svg>
+            </div>
+            <p>© 2026 Mobili Móveis e Interiores. Todos os direitos reservados. Nova Iguaçu - RJ.</p>
+        </div>
+    </footer>
+
+    <!-- WHATSAPP FLOATING ACTION BUTTON -->
+    <a href="https://wa.me/5521986559996" class="wa-float" target="_blank" aria-label="Conversar no WhatsApp">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
+
+    <!-- CART DRAWERS -->
+    <div class="cart-overlay" id="cart-overlay"></div>
+    <div class="cart-drawer" id="cart-drawer">
+        <div class="cart-header">
+            <h3>Seu Carrinho</h3>
+            <button class="close-cart" id="close-cart" aria-label="Fechar Carrinho"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="cart-items" id="cart-items">
+            <!-- Items injected by Javascript -->
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total-row">
+                <span>Subtotal:</span>
+                <span class="cart-total-price" id="cart-total-price">R$ 0,00</span>
+            </div>
+            <p style="font-size: 11px; color: var(--text-light); text-align: center; margin-bottom: 15px; font-weight: 500;">
+                <i class="fa-solid fa-truck-fast" style="color: var(--gold); margin-right: 5px;"></i> Pague e receba em casa na Baixada Fluminense.
+            </p>
+            <a href="#" class="cart-checkout-btn" id="checkout-btn" target="_blank">
+                <i class="fa-brands fa-whatsapp"></i> Finalizar no WhatsApp
+            </a>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Interactive Script -->
+    <script src="script.js"></script>
+</body>
+</html>
