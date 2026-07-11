@@ -49,7 +49,7 @@ export function ProductCard({ produto }: { produto: Produto }) {
               img: produto.imagem_url,
             })
           }
-          className="flex w-11 shrink-0 items-center justify-center border border-deep-green text-deep-green transition-all duration-300 hover:bg-gold hover:border-gold hover:text-deep-green"
+          className="flex w-11 shrink-0 self-stretch items-center justify-center border border-deep-green text-deep-green transition-all duration-300 hover:bg-gold hover:border-gold hover:text-deep-green"
         >
           <Plus className="h-4 w-4" />
         </button>

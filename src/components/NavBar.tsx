@@ -1,6 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-
-const categories = ["Sofás", "Poltronas", "Salas de Jantar", "Dormitórios"];
+import { CATEGORIES } from "@/lib/constants";
 
 export function NavBar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -21,17 +20,23 @@ export function NavBar() {
             Destaques
           </Link>
         </li>
-        {categories.map((cat) => (
-          <li key={cat}>
-            <a
-              href="#"
-              onClick={(e) => e.preventDefault()}
-              className="nav-underline text-xs font-semibold uppercase tracking-[1.5px] text-deep-green no-underline transition-colors hover:text-gold"
-            >
-              {cat}
-            </a>
-          </li>
-        ))}
+        {CATEGORIES.map((cat) => {
+          const active = pathname === `/categoria/${cat.slug}`;
+          return (
+            <li key={cat.slug}>
+              <Link
+                to="/categoria/$slug"
+                params={{ slug: cat.slug }}
+                data-active={active}
+                className={`nav-underline text-xs font-semibold uppercase tracking-[1.5px] no-underline transition-colors hover:text-gold ${
+                  active ? "text-gold" : "text-deep-green"
+                }`}
+              >
+                {cat.label}
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </nav>
   );

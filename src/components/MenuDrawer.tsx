@@ -1,9 +1,8 @@
 import { ChevronRight, X } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { useUI } from "@/lib/ui-context";
 import { WhatsAppIcon } from "@/components/WhatsAppIcon";
-import { WHATSAPP_URL } from "@/lib/constants";
-
-const CATEGORIES = ["Ambientes", "Móveis", "Decoração", "Lançamentos", "Inspire-se"];
+import { WHATSAPP_URL, CATEGORIES } from "@/lib/constants";
 
 export function MenuDrawer() {
   const { menuOpen, closeMenu } = useUI();
@@ -51,19 +50,28 @@ export function MenuDrawer() {
         {/* Lista de categorias */}
         <nav className="flex-1 overflow-y-auto">
           <ul>
+            <li>
+              <Link
+                to="/"
+                search={{}}
+                onClick={closeMenu}
+                className="flex items-center justify-between border-b border-cacau/10 px-6 py-5 font-sans text-sm font-medium text-cacau transition-colors hover:bg-white hover:text-gold"
+              >
+                <span>Destaques</span>
+                <ChevronRight className="h-4 w-4 text-text-light" />
+              </Link>
+            </li>
             {CATEGORIES.map((cat) => (
-              <li key={cat}>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    closeMenu();
-                  }}
+              <li key={cat.slug}>
+                <Link
+                  to="/categoria/$slug"
+                  params={{ slug: cat.slug }}
+                  onClick={closeMenu}
                   className="flex items-center justify-between border-b border-cacau/10 px-6 py-5 font-sans text-sm font-medium text-cacau transition-colors hover:bg-white hover:text-gold"
                 >
-                  <span>{cat}</span>
+                  <span>{cat.label}</span>
                   <ChevronRight className="h-4 w-4 text-text-light" />
-                </a>
+                </Link>
               </li>
             ))}
           </ul>

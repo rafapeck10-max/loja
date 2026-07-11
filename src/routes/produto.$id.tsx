@@ -306,10 +306,20 @@ function ProductPage() {
             <div className="text-4xl font-bold text-price-green">
               {formatBRL(produto.preco_novo)}
             </div>
-            <div className="mt-1 text-xs text-text-light">
-              <strong className="text-cacau">{formatBRL(pixPrice)}</strong> à vista no PIX (5%
-              desc.) ou <strong className="text-cacau">10x de {formatBRL(installment)}</strong> sem
-              juros nos cartões.
+            <div className="mt-1 flex items-start gap-1.5 text-xs text-text-light">
+              <svg
+                viewBox="0 0 512 512"
+                fill="currentColor"
+                className="mt-px h-4 w-4 shrink-0 text-price-green"
+                aria-hidden="true"
+              >
+                <path d="M393.8 183.3c-16.8-16.8-44-16.8-60.8 0l-73.6 73.6c-4.7 4.7-12.3 4.7-17 0l-73.6-73.6c-16.8-16.8-44-16.8-60.8 0L56.3 235c-16.8 16.8-16.8 44 0 60.8l51.6 51.7c16.8 16.8 44 16.8 60.8 0l73.6-73.6c4.7-4.7 12.3-4.7 17 0l73.6 73.6c16.8 16.8 44 16.8 60.8 0l51.7-51.7c16.8-16.8 16.8-44 0-60.8l-51.7-51.7z" />
+              </svg>
+              <span>
+                <strong className="text-cacau">{formatBRL(pixPrice)}</strong> à vista no PIX (5%
+                desc.) ou <strong className="text-cacau">10x de {formatBRL(installment)}</strong> sem
+                juros nos cartões.
+              </span>
             </div>
           </div>
 

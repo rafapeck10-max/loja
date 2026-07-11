@@ -90,3 +90,43 @@ export const produtoQueryOptions = (id: string) =>
     queryKey: ["produtos", id],
     queryFn: () => getProduto({ data: { id } }),
   });
+
+export const getProdutosByCategoria = createServerFn({ method: "GET" })
+  .inputValidator((input: { slug: string }) => {
+    if (typeof input?.slug !== "string" || !input.slug) throw new Error("slug inválido");
+    return { slug: input.slug };
+  })
+  .handler(async ({ data }): Promise<Produto[]> => {
+    const { CATEGORIES } = await import("@/lib/constants");
+    const cat = CATEGORIES.find((c) => c.slug === data.slug);
+    if (!cat) return [];
+
+    const supabase = createClient<Database>(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_PUBLISHABLE_KEY!,
+      { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
+    );
+    const { data: rows, error } = await supabase
+      .from("produtos")
+      .select("id, nome, slug, preco_antigo, preco_atual, categoria, url_imagem, ordem")
+      .eq("categoria", cat.label)
+      .order("ordem", { ascending: true });
+    if (error) throw new Error(error.message);
+
+    return (rows ?? []).map((row) => ({
+      id: row.id,
+      nome: row.nome,
+      slug: row.slug,
+      preco_antigo: Number(row.preco_antigo),
+      preco_novo: Number(row.preco_atual),
+      imagem_url: row.url_imagem,
+      categoria: row.categoria,
+      ordem: row.ordem ?? 0,
+    }));
+  });
+
+export const categoriaProdutosQueryOptions = (slug: string) =>
+  queryOptions({
+    queryKey: ["produtos", "categoria", slug],
+    queryFn: () => getProdutosByCategoria({ data: { slug } }),
+  });

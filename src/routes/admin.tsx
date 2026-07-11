@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Lock, LogOut, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { produtosQueryOptions, type Produto } from "@/lib/products.functions";
+import { CATEGORIES } from "@/lib/constants";
 import {
   checkAdminPassword,
   deleteProduto,
@@ -213,6 +214,7 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
             <thead className="bg-sand text-xs uppercase tracking-wider text-cacau">
               <tr>
                 <th className="p-3">Produto</th>
+                <th className="p-3">Categoria</th>
                 <th className="p-3">Preços</th>
                 <th className="p-3 text-right">Ações</th>
               </tr>
@@ -228,6 +230,11 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
                         <div className="text-xs text-text-light">{p.slug}</div>
                       </div>
                     </div>
+                  </td>
+                  <td className="p-3">
+                    <span className="inline-block border border-cacau/15 bg-sand px-2 py-1 text-xs font-medium text-cacau">
+                      {p.categoria || "—"}
+                    </span>
                   </td>
                   <td className="p-3 text-cacau">
                     <div className="text-xs text-text-light line-through">
@@ -257,7 +264,7 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
               ))}
               {produtos.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="p-8 text-center text-text-light">
+                  <td colSpan={4} className="p-8 text-center text-text-light">
                     Nenhum produto cadastrado.
                   </td>
                 </tr>
@@ -416,12 +423,18 @@ function ProductForm({
           </div>
           <div>
             <label className={label}>Categoria *</label>
-            <input
+            <select
               value={value.categoria ?? ""}
               onChange={(e) => onChange({ ...value, categoria: e.target.value })}
-              placeholder="ex: Poltronas"
               className={field}
-            />
+            >
+              <option value="">Selecione uma categoria</option>
+              {CATEGORIES.map((c) => (
+                <option key={c.slug} value={c.label}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className={label}>Ordem</label>
