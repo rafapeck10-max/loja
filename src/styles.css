@@ -1,0 +1,184 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * MOBILI — Design System "Raízes do Luxo"
+ * Bege Areia (#F4EFE6) fundo · Marrom Cacau (#493327) texto ·
+ * Dourado (#C5A059) detalhes · Verde Esmeralda Profundo (#2E3F32) header/footer
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Mobili brand tokens */
+  --color-deep-green: var(--deep-green);
+  --color-gold: var(--gold);
+  --color-gold-hover: var(--gold-hover);
+  --color-cacau: var(--cacau);
+  --color-sand: var(--sand);
+  --color-price-green: var(--price-green);
+  --color-whatsapp: var(--whatsapp);
+  --color-text-light: var(--text-light);
+
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Cormorant Garamond", ui-serif, Georgia, serif;
+
+  --shadow-premium: 0 15px 35px oklch(0.3485 0.0314 151.72 / 0.08);
+  --shadow-hover: 0 25px 50px oklch(0.3485 0.0314 151.72 / 0.15);
+  --shadow-drawer: -10px 0 40px oklch(0 0 0 / 0.2);
+
+  --animate-fade-in-up: fade-in-up 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-fade-in-down: fade-in-down 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes fade-in-down {
+    from {
+      opacity: 0;
+      transform: translateY(-24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+:root {
+  --radius: 0.25rem;
+
+  /* Brand palette (exact conversions) */
+  --deep-green: oklch(0.3485 0.0314 151.72); /* #2E3F32 */
+  --gold: oklch(0.7245 0.0998 82.35); /* #C5A059 */
+  --gold-hover: oklch(0.6674 0.0973 81.02); /* #B38E4A */
+  --cacau: oklch(0.3431 0.0378 49.66); /* #493327 */
+  --sand: oklch(0.9535 0.0131 82.4); /* #F4EFE6 */
+  --price-green: oklch(0.5461 0.143 152.2); /* #008744 */
+  --whatsapp: oklch(0.761 0.2015 149.74); /* #25D366 */
+  --text-light: oklch(0.5872 0.0317 65.42); /* #8A7969 */
+
+  /* Semantic mapping */
+  --background: var(--sand);
+  --foreground: var(--cacau);
+  --card: oklch(1 0 0);
+  --card-foreground: var(--cacau);
+  --popover: oklch(1 0 0);
+  --popover-foreground: var(--cacau);
+  --primary: var(--deep-green);
+  --primary-foreground: var(--sand);
+  --secondary: var(--gold);
+  --secondary-foreground: var(--deep-green);
+  --muted: oklch(0.92 0.014 82.4);
+  --muted-foreground: var(--text-light);
+  --accent: var(--gold);
+  --accent-foreground: var(--deep-green);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.984 0.003 247.858);
+  --border: oklch(0.3431 0.0378 49.66 / 0.1);
+  --input: oklch(0.3431 0.0378 49.66 / 0.15);
+  --ring: var(--gold);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    font-weight: 700;
+  }
+}
+
+@utility section-title-line {
+  position: relative;
+  padding-bottom: 15px;
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 2px;
+    background: var(--gold);
+  }
+}
+
+@utility nav-underline {
+  position: relative;
+  padding-bottom: 4px;
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 1.5px;
+    background: var(--gold);
+    transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  &:hover::after {
+    width: 100%;
+  }
+  &[data-active="true"]::after {
+    width: 100%;
+  }
+}
+
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
