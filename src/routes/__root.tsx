@@ -20,6 +20,12 @@ import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { CartDrawer } from "@/components/CartDrawer";
 import { MenuDrawer } from "@/components/MenuDrawer";
+import {
+  SITE_DESCRIPTION,
+  SITE_TITLE,
+  SITE_URL,
+  SOCIAL_IMAGE_URL,
+} from "@/lib/site-metadata";
 
 function NotFoundComponent() {
   return (
@@ -87,35 +93,26 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Mobili – Móveis direto da fábrica" },
-      {
-        name: "description",
-        content:
-          "Poltronas, Sofás e muito mais. Design sofisticado, qualidade artesanal e entrega na Baixada.",
-      },
-      { name: "author", content: "Mobili" },
-      { property: "og:title", content: "Mobili – Móveis direto da fábrica" },
-      {
-        property: "og:description",
-        content:
-          "Poltronas, Sofás e muito mais. Design sofisticado, qualidade artesanal e entrega na Baixada.",
-      },
+      { title: SITE_TITLE },
+      { name: "description", content: SITE_DESCRIPTION },
+      { name: "author", content: "Mobi" },
+      { property: "og:title", content: SITE_TITLE },
+      { property: "og:description", content: SITE_DESCRIPTION },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Mobi" },
+      { property: "og:locale", content: "pt_BR" },
+      { property: "og:url", content: SITE_URL },
+      { property: "og:image", content: SOCIAL_IMAGE_URL },
+      { property: "og:image:secure_url", content: SOCIAL_IMAGE_URL },
+      { property: "og:image:type", content: "image/png" },
+      { property: "og:image:width", content: "1731" },
+      { property: "og:image:height", content: "909" },
+      { property: "og:image:alt", content: "Mobi, móveis direto da fábrica" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Mobili – Móveis direto da fábrica" },
-      {
-        name: "twitter:description",
-        content:
-          "Poltronas, Sofás e muito mais. Design sofisticado, qualidade artesanal e entrega na Baixada.",
-      },
-      {
-        property: "og:image",
-        content: "https://images.unsplash.com/photo-1592078615290-033ee584e267?w=800",
-      },
-      {
-        name: "twitter:image",
-        content: "https://images.unsplash.com/photo-1592078615290-033ee584e267?w=800",
-      },
+      { name: "twitter:title", content: SITE_TITLE },
+      { name: "twitter:description", content: SITE_DESCRIPTION },
+      { name: "twitter:image", content: SOCIAL_IMAGE_URL },
+      { name: "twitter:image:alt", content: "Mobi, móveis direto da fábrica" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
