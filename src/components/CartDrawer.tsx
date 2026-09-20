@@ -2,13 +2,18 @@ import { useState } from "react";
 import { Minus, Plus, Trash2, X, Truck, Sofa, ArrowLeft } from "lucide-react";
 import { useCart, cartItemKey } from "@/lib/cart-context";
 import { formatBRL, WHATSAPP_NUMBER } from "@/lib/constants";
+import { MAX_INSTALLMENTS } from "@/lib/constants";
 import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 
 type Step = "cart" | "checkout";
 
 const PAYMENT_OPTIONS = [
-  { value: "PIX (5% de desconto)", label: "PIX", desc: "5% de desconto à vista" },
-  { value: "Cartão na entrega", label: "Cartão", desc: "Até 10x sem juros na entrega" },
+  { value: "PIX", label: "PIX", desc: "Preço com desconto à vista" },
+  {
+    value: "Cartão na entrega",
+    label: "Cartão",
+    desc: `Preço cheio em até ${MAX_INSTALLMENTS}x, na entrega`,
+  },
   { value: "Dinheiro na entrega", label: "Dinheiro", desc: "Pague ao receber e montar" },
 ];
 
@@ -19,9 +24,16 @@ export function CartDrawer() {
     nome: "",
     rua: "",
     bairro: "",
+    cidade: "Nova Iguaçu - RJ",
     pagamento: PAYMENT_OPTIONS[0].value,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const isCardPayment = form.pagamento === "Cartão na entrega";
+  const orderTotal = items.reduce(
+    (sum, item) =>
+      sum + (isCardPayment ? (item.cardPrice ?? item.price) : item.price) * item.quantity,
+    0,
+  );
 
   const close = () => {
     closeCart();
@@ -36,6 +48,7 @@ export function CartDrawer() {
     else if (form.rua.trim().length > 200) errs.rua = "Endereço muito longo";
     if (!form.bairro.trim()) errs.bairro = "Informe o bairro";
     else if (form.bairro.trim().length > 100) errs.bairro = "Bairro muito longo";
+    if (!form.cidade.trim()) errs.cidade = "Informe a cidade";
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -43,21 +56,26 @@ export function CartDrawer() {
   const sendToWhatsApp = () => {
     if (!validate()) return;
 
-    let message = "Olá Mobili! Gostaria de fazer um pedido:\n\n";
+    let message = "Olá Mobi! Gostaria de fazer um pedido:\n\n";
     items.forEach((item, index) => {
       message += `*${index + 1}. ${item.name}*\n`;
       const opts: string[] = [];
       if (item.color) opts.push(`Cor: ${item.color}`);
       if (item.finish) opts.push(`Pés: ${item.finish}`);
       if (opts.length) message += `   _(${opts.join(", ")})_\n`;
-      message += `   Qtd: ${item.quantity}x | Preço: ${formatBRL(item.price)}\n\n`;
+      const itemPrice = isCardPayment ? (item.cardPrice ?? item.price) : item.price;
+      message += `   Qtd: ${item.quantity}x | Preço: ${formatBRL(itemPrice)}\n\n`;
+      if (isCardPayment) {
+        const installments = item.installmentCount ?? MAX_INSTALLMENTS;
+        message += `   Cartão: ${installments}x de ${formatBRL((itemPrice * item.quantity) / installments)}\n\n`;
+      }
     });
-    message += `*Valor Total:* ${formatBRL(total)}\n\n`;
+    message += `*Valor Total:* ${formatBRL(orderTotal)}\n\n`;
     message += `*Dados de Entrega:*\n`;
     message += `Nome: ${form.nome.trim()}\n`;
     message += `Rua: ${form.rua.trim()}\n`;
     message += `Bairro: ${form.bairro.trim()}\n`;
-    message += `Cidade: Nova Iguaçu - RJ\n\n`;
+    message += `Cidade: ${form.cidade.trim()}\n\n`;
     message += `*Forma de Pagamento:* ${form.pagamento}\n\n`;
     message += `Gostaria de combinar a entrega (Baixada Fluminense).`;
 
@@ -86,6 +104,7 @@ export function CartDrawer() {
       {/* Drawer */}
       <aside
         aria-hidden={!isOpen}
+        inert={!isOpen}
         className={`fixed right-0 top-0 z-[1002] flex h-full w-full max-w-[420px] flex-col bg-sand shadow-drawer transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
@@ -149,7 +168,15 @@ export function CartDrawer() {
                           </span>
                         )}
                         <div className="text-sm font-bold text-price-green">
-                          {formatBRL(item.price)}
+                          {formatBRL(item.price)} no PIX
+                        </div>
+                        <div className="text-[11px] text-text-light">
+                          ou {item.installmentCount ?? MAX_INSTALLMENTS}x de{" "}
+                          {formatBRL(
+                            (item.cardPrice ?? item.price) /
+                              (item.installmentCount ?? MAX_INSTALLMENTS),
+                          )}{" "}
+                          no cartão
                         </div>
                         <div className="mt-1 flex items-center justify-between">
                           <div className="flex items-center gap-3 border border-cacau/15 px-2 py-1">
@@ -216,10 +243,16 @@ export function CartDrawer() {
               </p>
               <div className="space-y-4">
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-cacau">
+                  <label
+                    htmlFor="checkout-nome"
+                    className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-cacau"
+                  >
                     Nome completo
                   </label>
                   <input
+                    id="checkout-nome"
+                    autoComplete="name"
+                    aria-invalid={Boolean(errors.nome)}
                     value={form.nome}
                     onChange={(e) => setForm({ ...form, nome: e.target.value })}
                     placeholder="Seu nome"
@@ -229,10 +262,16 @@ export function CartDrawer() {
                   {errors.nome && <p className="mt-1 text-xs text-destructive">{errors.nome}</p>}
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-cacau">
+                  <label
+                    htmlFor="checkout-rua"
+                    className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-cacau"
+                  >
                     Rua e número
                   </label>
                   <input
+                    id="checkout-rua"
+                    autoComplete="street-address"
+                    aria-invalid={Boolean(errors.rua)}
                     value={form.rua}
                     onChange={(e) => setForm({ ...form, rua: e.target.value })}
                     placeholder="Ex: Rua das Palmeiras, 123"
@@ -243,10 +282,16 @@ export function CartDrawer() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-cacau">
+                    <label
+                      htmlFor="checkout-bairro"
+                      className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-cacau"
+                    >
                       Bairro
                     </label>
                     <input
+                      id="checkout-bairro"
+                      autoComplete="address-level3"
+                      aria-invalid={Boolean(errors.bairro)}
                       value={form.bairro}
                       onChange={(e) => setForm({ ...form, bairro: e.target.value })}
                       placeholder="Seu bairro"
@@ -258,17 +303,28 @@ export function CartDrawer() {
                     )}
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-cacau">
+                    <label
+                      htmlFor="checkout-cidade"
+                      className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-cacau"
+                    >
                       Cidade
                     </label>
                     <input
-                      value="Nova Iguaçu - RJ"
-                      disabled
-                      className="w-full border border-cacau/15 bg-muted px-4 py-3 font-sans text-sm text-text-light"
+                      id="checkout-cidade"
+                      value={form.cidade}
+                      onChange={(e) => setForm({ ...form, cidade: e.target.value })}
+                      autoComplete="address-level2"
+                      maxLength={100}
+                      className={inputClass("cidade")}
                     />
                   </div>
                 </div>
 
+                {errors.cidade && (
+                  <p role="alert" className="text-xs text-destructive">
+                    {errors.cidade}
+                  </p>
+                )}
                 <div className="pt-2">
                   <p className="mb-3 text-xs uppercase tracking-[1.5px] text-text-light">
                     Forma de Pagamento
@@ -308,7 +364,7 @@ export function CartDrawer() {
                 <span className="text-sm font-semibold uppercase tracking-wide text-cacau">
                   Total do Pedido:
                 </span>
-                <span className="text-xl font-bold text-price-green">{formatBRL(total)}</span>
+                <span className="text-xl font-bold text-price-green">{formatBRL(orderTotal)}</span>
               </div>
               <button
                 onClick={sendToWhatsApp}

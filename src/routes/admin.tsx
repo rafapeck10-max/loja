@@ -1,23 +1,41 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { Lock, LogOut, Pencil, Plus, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { AlertCircle, Lock, LogOut, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { produtosQueryOptions, type Produto } from "@/lib/products.functions";
-import { CATEGORIES } from "@/lib/constants";
+import { PRODUCT_CATEGORY_OPTIONS } from "@/lib/constants";
 import {
   checkAdminPassword,
   deleteProduto,
+  listAdminProdutos,
   upsertProduto,
   type ProdutoInput,
+  type ProdutoAdmin,
 } from "@/lib/admin.functions";
 import { formatBRL } from "@/lib/constants";
 
 const STORAGE_KEY = "mobili_admin_pwd";
 
+function normalizeFilterText(value: unknown): string {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("pt-BR")
+    .trim();
+}
+
+// These are the names stored in the catalog. Keep the current value in the
+// select as well so older/custom supplier names are never cleared on edit.
+const SUPPLIER_OPTIONS = [
+  "Alpoim Distribuidora",
+  "Tropical Móveis",
+  "SR Móveis Atacadão",
+  "Outro",
+] as const;
+
 export const Route = createFileRoute("/admin")({
   head: () => ({
-    meta: [{ title: "Admin | Mobili" }, { name: "robots", content: "noindex,nofollow" }],
+    meta: [{ title: "Admin | Mobi" }, { name: "robots", content: "noindex,nofollow" }],
   }),
   component: AdminPage,
 });
@@ -73,7 +91,7 @@ function LoginForm({ onSuccess }: { onSuccess: (pwd: string) => void }) {
     try {
       await checkAdminPassword({ data: { password: value } });
       onSuccess(value);
-      toast.success("Bem-vindo(a) ao painel Mobili.");
+      toast.success("Bem-vindo(a) ao painel Mobi.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Senha incorreta");
     } finally {
@@ -86,7 +104,7 @@ function LoginForm({ onSuccess }: { onSuccess: (pwd: string) => void }) {
       <div className="border border-cacau/10 bg-white p-8 shadow-premium">
         <div className="mb-6 flex items-center gap-3 text-deep-green">
           <Lock className="h-5 w-5 text-gold" />
-          <h1 className="text-2xl">Painel Mobili</h1>
+          <h1 className="text-2xl">Painel Mobi</h1>
         </div>
         <p className="mb-6 text-sm text-text-light">
           Área restrita para cadastrar e atualizar produtos.
@@ -121,36 +139,192 @@ const EMPTY: ProdutoInput = {
   id: "",
   nome: "",
   slug: "",
-  preco_antigo: 0,
   preco_novo: 0,
   imagem_url: "",
   categoria: "",
   ordem: 0,
+  fornecedor: "",
+  referencia: "",
+  preco_fornecedor: null,
+  link_fornecedor: "",
+  fonte_preco: "",
+  vendas_ultimos_30_dias: 0,
+  descricao: "",
+  medidas: "",
+  cores: [],
 };
+
+type ProductStatus = "published" | "awaiting" | "incomplete";
+
+const STATUS_LABELS: Record<ProductStatus, string> = {
+  published: "Publicado",
+  awaiting: "Aguardando precificação",
+  incomplete: "Dados incompletos",
+};
+
+function productStatus(product: ProdutoAdmin): ProductStatus {
+  const sitePrice = Number(product.preco_atual ?? 0);
+  const supplierPrice = Number(product.preco_atacado ?? 0);
+  const hasImage = /^https?:\/\//i.test(product.url_imagem ?? "");
+  if (sitePrice > 0 && hasImage && product.fornecedor && supplierPrice > 0) return "published";
+  if (supplierPrice > 0 && sitePrice <= 0) return "awaiting";
+  return "incomplete";
+}
+
+function sourceUrl(product: ProdutoAdmin): string | null {
+  return product.url_fornecedor || product.fonte_preco || null;
+}
+
+function sourceName(product: ProdutoAdmin): string {
+  if (product.fornecedor) return product.fornecedor;
+  const url = sourceUrl(product);
+  if (!url) return "Sem fornecedor";
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "Fonte cadastrada";
+  }
+}
+
+function moneyOrDash(value: number | null | undefined): string {
+  return value == null || Number(value) <= 0 ? "—" : formatBRL(Number(value));
+}
+
+function marginLabel(product: ProdutoAdmin): string {
+  const cost = Number(product.preco_atacado ?? 0);
+  const price = Number(product.preco_atual ?? 0);
+  if (cost <= 0 || price <= 0) return "—";
+  return formatBRL(price - cost);
+}
+
+function StatusBadge({ status }: { status: ProductStatus }) {
+  const colors: Record<ProductStatus, string> = {
+    published: "border-price-green/25 bg-price-green/10 text-price-green",
+    awaiting: "border-gold/40 bg-gold/15 text-cacau",
+    incomplete: "border-destructive/25 bg-destructive/10 text-destructive",
+  };
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center border px-2 py-1 text-[10px] font-bold uppercase tracking-wide ${colors[status]}`}
+    >
+      {STATUS_LABELS[status]}
+    </span>
+  );
+}
 
 function AdminDashboard({ password, onLogout }: { password: string; onLogout: () => void }) {
   const router = useRouter();
   const qc = useQueryClient();
-  const { data: produtos = [], isLoading } = useQuery(produtosQueryOptions());
+  const {
+    data: produtos = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useQuery({
+    queryKey: ["admin-produtos"],
+    queryFn: () => listAdminProdutos({ data: { password } }),
+  });
   const [editing, setEditing] = useState<ProdutoInput | null>(null);
   const [saving, setSaving] = useState(false);
+  const [search, setSearch] = useState("");
+  const [supplierFilter, setSupplierFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | ProductStatus>("all");
+  const [page, setPage] = useState(1);
+  const perPage = 32;
+
+  const suppliers = useMemo(
+    () =>
+      Array.from(
+        new Set(produtos.map((product) => product.fornecedor).filter(Boolean) as string[]),
+      ).sort((a, b) => a.localeCompare(b, "pt-BR")),
+    [produtos],
+  );
+  const categories = useMemo(
+    () =>
+      Array.from(new Set(produtos.map((product) => product.categoria).filter(Boolean))).sort(
+        (a, b) => a.localeCompare(b, "pt-BR"),
+      ),
+    [produtos],
+  );
+  const filteredProdutos = useMemo(() => {
+    const normalizedSearch = normalizeFilterText(search);
+    const normalizedSupplier = normalizeFilterText(supplierFilter);
+    const normalizedCategory = normalizeFilterText(categoryFilter);
+    return produtos.filter((product) => {
+      const searchableText = normalizeFilterText(
+        [
+          product.nome,
+          product.slug,
+          product.sku,
+          product.fornecedor,
+          product.categoria,
+          product.fonte_preco,
+          product.url_fornecedor,
+          product.descricao,
+          product.medidas,
+          ...(product.cores ?? []),
+        ]
+          .filter(Boolean)
+          .join(" "),
+      );
+      const matchesSearch = !normalizedSearch || searchableText.includes(normalizedSearch);
+      const matchesSupplier =
+        supplierFilter === "all" || normalizeFilterText(product.fornecedor) === normalizedSupplier;
+      const matchesCategory =
+        categoryFilter === "all" || normalizeFilterText(product.categoria) === normalizedCategory;
+      const matchesStatus = statusFilter === "all" || productStatus(product) === statusFilter;
+      return matchesSearch && matchesSupplier && matchesCategory && matchesStatus;
+    });
+  }, [produtos, search, supplierFilter, categoryFilter, statusFilter]);
+  const totals = useMemo(
+    () =>
+      produtos.reduce(
+        (acc, product) => {
+          acc[productStatus(product)] += 1;
+          return acc;
+        },
+        { published: 0, awaiting: 0, incomplete: 0 } as Record<ProductStatus, number>,
+      ),
+    [produtos],
+  );
+  const totalPages = Math.max(1, Math.ceil(filteredProdutos.length / perPage));
+  const visibleProdutos = filteredProdutos.slice((page - 1) * perPage, page * perPage);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, supplierFilter, categoryFilter, statusFilter]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   const refresh = async () => {
-    await qc.invalidateQueries({ queryKey: ["produtos"] });
+    await qc.invalidateQueries({ queryKey: ["admin-produtos"] });
     router.invalidate();
   };
 
   const startNew = () => setEditing({ ...EMPTY });
-  const startEdit = (p: Produto) =>
+  const startEdit = (p: ProdutoAdmin) =>
     setEditing({
       id: p.id,
       nome: p.nome,
       slug: p.slug,
-      preco_antigo: p.preco_antigo,
-      preco_novo: p.preco_novo,
-      imagem_url: p.imagem_url,
+      preco_novo: p.preco_atual,
+      imagem_url: p.url_imagem,
       categoria: p.categoria,
       ordem: p.ordem ?? 0,
+      fornecedor: p.fornecedor ?? "",
+      referencia: p.sku ?? "",
+      preco_fornecedor: p.preco_atacado ?? null,
+      link_fornecedor: p.url_fornecedor ?? p.fonte_preco ?? "",
+      fonte_preco: p.fonte_preco ?? p.url_fornecedor ?? "",
+      vendas_ultimos_30_dias: p.vendas_ultimos_30_dias ?? 0,
+      descricao: p.descricao ?? "",
+      medidas: p.medidas ?? "",
+      cores: p.cores ?? [],
     });
 
   const save = async () => {
@@ -179,98 +353,285 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
     }
   };
 
+  const clearFilters = () => {
+    setSearch("");
+    setSupplierFilter("all");
+    setCategoryFilter("all");
+    setStatusFilter("all");
+  };
+
   return (
-    <div className="mx-auto max-w-[1100px] px-[5%] py-10">
-      <div className="mb-8 flex items-center justify-between gap-4">
+    <div className="mx-auto max-w-[1280px] px-4 py-6 sm:px-[5%] sm:py-10">
+      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-3xl text-deep-green">Painel de Produtos</h1>
-          <p className="mt-1 text-sm text-text-light">
-            Cadastre novos móveis ou atualize os existentes. A vitrine reflete as mudanças
-            automaticamente.
+          <p className="mb-2 text-xs font-bold uppercase tracking-[2px] text-gold">
+            Catálogo interno
+          </p>
+          <h1 className="text-3xl text-deep-green sm:text-4xl">Painel de Produtos</h1>
+          <p className="mt-2 max-w-2xl text-sm text-text-light">
+            Controle a origem, o custo e a publicação de cada produto. Um item só aparece na vitrine
+            quando tem preço de venda e imagem válidos.
           </p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={startNew}
-            className="flex items-center gap-2 bg-deep-green px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-sand transition-colors hover:bg-gold hover:text-deep-green"
+            className="flex flex-1 items-center justify-center gap-2 bg-deep-green px-4 py-3 text-xs font-bold uppercase tracking-wider text-sand transition-colors hover:bg-gold hover:text-deep-green sm:flex-none"
           >
             <Plus className="h-4 w-4" /> Novo
           </button>
           <button
             onClick={onLogout}
             aria-label="Sair"
-            className="flex items-center gap-2 border border-cacau/20 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-cacau transition-colors hover:border-gold hover:text-gold"
+            className="flex flex-1 items-center justify-center gap-2 border border-cacau/20 px-4 py-3 text-xs font-bold uppercase tracking-wider text-cacau transition-colors hover:border-gold hover:text-gold sm:flex-none"
           >
             <LogOut className="h-4 w-4" /> Sair
           </button>
         </div>
       </div>
 
+      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="border border-cacau/10 bg-white p-4">
+          <div className="text-xs font-semibold uppercase tracking-wider text-text-light">
+            Total
+          </div>
+          <div className="mt-1 text-2xl font-bold text-deep-green">{produtos.length}</div>
+        </div>
+        <div className="border border-price-green/20 bg-price-green/5 p-4">
+          <div className="text-xs font-semibold uppercase tracking-wider text-price-green">
+            Publicados
+          </div>
+          <div className="mt-1 text-2xl font-bold text-price-green">{totals.published}</div>
+        </div>
+        <div className="border border-gold/30 bg-gold/10 p-4">
+          <div className="text-xs font-semibold uppercase tracking-wider text-cacau">
+            Aguardando preço
+          </div>
+          <div className="mt-1 text-2xl font-bold text-cacau">{totals.awaiting}</div>
+        </div>
+        <div className="border border-destructive/20 bg-destructive/5 p-4">
+          <div className="text-xs font-semibold uppercase tracking-wider text-destructive">
+            Incompletos
+          </div>
+          <div className="mt-1 text-2xl font-bold text-destructive">{totals.incomplete}</div>
+        </div>
+      </div>
+
+      <section className="mb-6 border border-cacau/10 bg-sand/50 p-4 sm:p-5">
+        <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="font-semibold text-deep-green">Encontrar produto</h2>
+            <p className="text-xs text-text-light">
+              Pesquise por nome, SKU, fornecedor ou fonte do preço.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="self-start text-xs font-bold uppercase tracking-wider text-cacau underline decoration-gold underline-offset-4"
+          >
+            Limpar filtros
+          </button>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Nome, SKU, slug..."
+            className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold lg:col-span-2"
+          />
+          <select
+            value={supplierFilter}
+            onChange={(event) => setSupplierFilter(event.target.value)}
+            className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold"
+          >
+            <option value="all">Todos os fornecedores</option>
+            {suppliers.map((supplier) => (
+              <option key={supplier} value={supplier}>
+                {supplier}
+              </option>
+            ))}
+          </select>
+          <select
+            value={categoryFilter}
+            onChange={(event) => setCategoryFilter(event.target.value)}
+            className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold"
+          >
+            <option value="all">Todas as categorias</option>
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value as "all" | ProductStatus)}
+            className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold md:col-span-2 lg:col-span-1"
+          >
+            <option value="all">Todos os estados</option>
+            <option value="published">Publicados</option>
+            <option value="awaiting">Aguardando precificação</option>
+            <option value="incomplete">Dados incompletos</option>
+          </select>
+        </div>
+      </section>
+
       {isLoading ? (
         <p className="text-text-light">Carregando produtos…</p>
+      ) : isError ? (
+        <div className="border border-destructive/25 bg-destructive/5 p-6 text-cacau">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+            <div>
+              <h2 className="font-semibold">Não foi possível carregar os produtos</h2>
+              <p className="mt-1 text-sm text-text-light">
+                {error instanceof Error ? error.message : "Tente novamente em instantes."}
+              </p>
+              <button
+                type="button"
+                onClick={() => refetch()}
+                disabled={isFetching}
+                className="mt-4 inline-flex items-center gap-2 bg-deep-green px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-sand disabled:opacity-60"
+              >
+                <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+                {isFetching ? "Tentando…" : "Tentar novamente"}
+              </button>
+            </div>
+          </div>
+        </div>
       ) : (
-        <div className="overflow-hidden border border-cacau/10 bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-sand text-xs uppercase tracking-wider text-cacau">
-              <tr>
-                <th className="p-3">Produto</th>
-                <th className="p-3">Categoria</th>
-                <th className="p-3">Preços</th>
-                <th className="p-3 text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {produtos.map((p) => (
-                <tr key={p.id} className="border-t border-cacau/10">
-                  <td className="p-3">
-                    <div className="flex items-center gap-3">
-                      <img src={p.imagem_url} alt={p.nome} className="h-14 w-14 object-cover" />
-                      <div>
-                        <div className="font-semibold text-cacau">{p.nome}</div>
-                        <div className="text-xs text-text-light">{p.slug}</div>
+        <div>
+          <div className="mb-3 flex items-center justify-between gap-3 text-xs text-text-light">
+            <span>{filteredProdutos.length} produto(s) encontrado(s)</span>
+            <span>
+              Página {page} de {totalPages}
+            </span>
+          </div>
+          {visibleProdutos.length === 0 ? (
+            <div className="border border-cacau/10 bg-white p-10 text-center text-sm text-text-light">
+              Nenhum produto corresponde aos filtros atuais.
+            </div>
+          ) : (
+            <div className="grid gap-3 xl:grid-cols-2">
+              {visibleProdutos.map((p) => {
+                const status = productStatus(p);
+                const source = sourceUrl(p);
+                return (
+                  <article
+                    key={p.id}
+                    className="border border-cacau/10 bg-white p-4 transition-shadow hover:shadow-premium sm:p-5"
+                  >
+                    <div className="flex gap-3">
+                      <img
+                        src={p.url_imagem}
+                        alt=""
+                        className="h-20 w-20 shrink-0 border border-cacau/10 object-cover sm:h-24 sm:w-24"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <button
+                            type="button"
+                            onClick={() => startEdit(p)}
+                            className="text-left font-semibold text-cacau hover:text-gold"
+                          >
+                            {p.nome}
+                          </button>
+                          <StatusBadge status={status} />
+                        </div>
+                        <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-text-light">
+                          <span>{p.sku || "Sem SKU"}</span>
+                          <span>{p.categoria || "Sem categoria"}</span>
+                        </div>
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                          <span className="font-semibold text-deep-green">{sourceName(p)}</span>
+                          {source ? (
+                            <a
+                              href={source}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-gold underline underline-offset-2"
+                            >
+                              Abrir fonte
+                            </a>
+                          ) : (
+                            <span className="text-text-light">Fonte não cadastrada</span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </td>
-                  <td className="p-3">
-                    <span className="inline-block border border-cacau/15 bg-sand px-2 py-1 text-xs font-medium text-cacau">
-                      {p.categoria || "—"}
-                    </span>
-                  </td>
-                  <td className="p-3 text-cacau">
-                    <div className="text-xs text-text-light line-through">
-                      {formatBRL(p.preco_antigo)}
+                    <div className="mt-4 grid grid-cols-3 gap-2 border-y border-cacau/10 py-3 text-xs">
+                      <div>
+                        <div className="text-text-light">Custo fornecedor</div>
+                        <div className="mt-1 font-bold text-cacau">
+                          {moneyOrDash(p.preco_atacado)}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-text-light">Preço no site</div>
+                        <div className="mt-1 font-bold text-price-green">
+                          {moneyOrDash(p.preco_atual)}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-text-light">Diferença</div>
+                        <div
+                          className={`mt-1 font-bold ${Number(p.preco_atual ?? 0) >= Number(p.preco_atacado ?? 0) ? "text-price-green" : "text-destructive"}`}
+                        >
+                          {marginLabel(p)}
+                        </div>
+                      </div>
                     </div>
-                    <div className="font-bold text-price-green">{formatBRL(p.preco_novo)}</div>
-                  </td>
-                  <td className="p-3 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => startEdit(p)}
-                        aria-label="Editar"
-                        className="border border-cacau/20 p-2 text-cacau transition-colors hover:border-gold hover:text-gold"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => remove(p.id, p.nome)}
-                        aria-label="Remover"
-                        className="border border-cacau/20 p-2 text-cacau transition-colors hover:border-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                    <div className="flex items-center justify-between gap-3 pt-1">
+                      <span className="text-xs text-text-light">
+                        {p.vendas_ultimos_30_dias ?? 0} venda(s) em 30 dias
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => startEdit(p)}
+                          className="inline-flex items-center gap-1.5 border border-cacau/20 px-3 py-2 text-xs font-bold uppercase tracking-wider text-cacau hover:border-gold hover:text-gold"
+                        >
+                          <Pencil className="h-3.5 w-3.5" /> Editar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => remove(p.id, p.nome)}
+                          aria-label={`Remover ${p.nome}`}
+                          className="border border-cacau/20 p-2 text-cacau hover:border-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
-                  </td>
-                </tr>
-              ))}
-              {produtos.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="p-8 text-center text-text-light">
-                    Nenhum produto cadastrado.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+          {totalPages > 1 && (
+            <div className="mt-5 flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
+                disabled={page === 1}
+                className="border border-cacau/20 px-4 py-2 text-xs font-bold uppercase tracking-wider text-cacau disabled:opacity-40"
+              >
+                Anterior
+              </button>
+              <span className="text-xs text-text-light">
+                {page} / {totalPages}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+                disabled={page === totalPages}
+                className="border border-cacau/20 px-4 py-2 text-xs font-bold uppercase tracking-wider text-cacau disabled:opacity-40"
+              >
+                Próxima
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -304,6 +665,12 @@ function ProductForm({
     "w-full border border-cacau/15 bg-white px-3 py-2.5 text-sm text-cacau outline-none transition-colors focus:border-gold";
   const label = "mb-1 block text-xs font-semibold uppercase tracking-wide text-cacau";
   const [uploading, setUploading] = useState(false);
+  const supplierPrice = Number(value.preco_fornecedor ?? 0);
+  const sitePrice = Number(value.preco_novo ?? 0);
+  const pricingDifference = supplierPrice > 0 && sitePrice > 0 ? sitePrice - supplierPrice : null;
+  const supplierOptions = Array.from(
+    new Set([...(value.fornecedor ? [value.fornecedor] : []), ...SUPPLIER_OPTIONS]),
+  );
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -346,12 +713,27 @@ function ProductForm({
       onClick={onCancel}
     >
       <div
-        className="w-full max-w-lg border border-cacau/10 bg-sand p-6 shadow-drawer"
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto border border-cacau/10 bg-sand p-5 shadow-drawer sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="mb-4 text-2xl text-deep-green">
           {value.id ? "Editar produto" : "Novo produto"}
         </h2>
+        <div className="mb-4 border border-gold/30 bg-gold/10 p-3 text-sm text-cacau">
+          <div className="flex items-center justify-between gap-3">
+            <span className="font-semibold">Fluxo de publicação</span>
+            <span className="text-xs font-bold uppercase tracking-wide">
+              {supplierPrice > 0 && sitePrice <= 0
+                ? "Aguardando precificação"
+                : sitePrice > 0
+                  ? "Pronto para publicar"
+                  : "Preencha os preços"}
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-text-light">
+            Produtos sem preço no site permanecem fora da vitrine.
+          </p>
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <label className={label}>Nome *</label>
@@ -373,22 +755,134 @@ function ProductForm({
             />
           </div>
           <div>
-            <label className={label}>Preço antigo (R$) *</label>
+            <label className={label}>Preço do fornecedor (R$)</label>
             <input
               type="number"
               step="0.01"
-              value={value.preco_antigo}
-              onChange={(e) => onChange({ ...value, preco_antigo: Number(e.target.value) })}
+              min="0"
+              value={value.preco_fornecedor ?? ""}
+              onChange={(e) =>
+                onChange({
+                  ...value,
+                  preco_fornecedor: e.target.value === "" ? null : Number(e.target.value),
+                })
+              }
               className={field}
             />
           </div>
           <div>
-            <label className={label}>Preço novo (R$) *</label>
+            <label className={label}>Preço no site (R$) *</label>
             <input
               type="number"
               step="0.01"
               value={value.preco_novo}
               onChange={(e) => onChange({ ...value, preco_novo: Number(e.target.value) })}
+              className={field}
+            />
+            <p className="mt-1 text-[11px] text-text-light">
+              O preço antigo será calculado automaticamente: +15%.
+            </p>
+          </div>
+          <div>
+            <label className={label}>Fornecedor do catálogo</label>
+            <select
+              value={value.fornecedor ?? ""}
+              onChange={(e) => onChange({ ...value, fornecedor: e.target.value })}
+              className={field}
+            >
+              <option value="">Selecione</option>
+              {supplierOptions.map((supplier) => (
+                <option key={supplier} value={supplier}>
+                  {supplier}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-[11px] text-text-light">
+              O fornecedor já cadastrado é carregado automaticamente ao editar.
+            </p>
+          </div>
+          <div>
+            <label className={label}>Referência / SKU</label>
+            <input
+              value={value.referencia ?? ""}
+              onChange={(e) => onChange({ ...value, referencia: e.target.value })}
+              className={field}
+            />
+          </div>
+          <div className="sm:col-span-2 border border-cacau/10 bg-white p-3">
+            <div className="mb-2 text-xs font-bold uppercase tracking-wide text-cacau">
+              Conferência de preço
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <div className="text-xs text-text-light">Custo do fornecedor</div>
+                <div className="mt-1 font-bold text-cacau">
+                  {moneyOrDash(value.preco_fornecedor)}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-text-light">Preço no site</div>
+                <div className="mt-1 font-bold text-price-green">
+                  {moneyOrDash(value.preco_novo)}
+                </div>
+              </div>
+            </div>
+            {pricingDifference != null && pricingDifference < 0 && (
+              <p className="mt-2 text-xs font-semibold text-destructive">
+                Atenção: o preço do site está abaixo do custo do fornecedor.
+              </p>
+            )}
+          </div>
+          <div className="sm:col-span-2">
+            <label className={label}>Link do fornecedor / fonte do preço</label>
+            <input
+              type="url"
+              value={value.link_fornecedor ?? value.fonte_preco ?? ""}
+              onChange={(e) =>
+                onChange({ ...value, link_fornecedor: e.target.value, fonte_preco: e.target.value })
+              }
+              placeholder="https://..."
+              className={field}
+            />
+            <p className="mt-1 text-xs text-text-light">
+              Este link fica disponível somente no painel para conferir a origem do produto.
+            </p>
+          </div>
+          <div>
+            <label className={label}>Vendas nos últimos 30 dias</label>
+            <input
+              type="number"
+              min="0"
+              value={value.vendas_ultimos_30_dias ?? 0}
+              onChange={(e) =>
+                onChange({ ...value, vendas_ultimos_30_dias: Number(e.target.value) })
+              }
+              className={field}
+            />
+          </div>
+          <div>
+            <label className={label}>Medidas</label>
+            <input
+              value={value.medidas ?? ""}
+              onChange={(e) => onChange({ ...value, medidas: e.target.value })}
+              placeholder="ex.: 1,80 × 0,80 m"
+              className={field}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label className={label}>Cores (separadas por vírgula)</label>
+            <input
+              value={(value.cores ?? []).join(", ")}
+              onChange={(e) => onChange({ ...value, cores: e.target.value.split(",") })}
+              className={field}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label className={label}>Descrição</label>
+            <textarea
+              value={value.descricao ?? ""}
+              onChange={(e) => onChange({ ...value, descricao: e.target.value })}
+              rows={3}
               className={field}
             />
           </div>
@@ -429,9 +923,9 @@ function ProductForm({
               className={field}
             >
               <option value="">Selecione uma categoria</option>
-              {CATEGORIES.map((c) => (
-                <option key={c.slug} value={c.label}>
-                  {c.label}
+              {PRODUCT_CATEGORY_OPTIONS.map((category) => (
+                <option key={category} value={category}>
+                  {category}
                 </option>
               ))}
             </select>

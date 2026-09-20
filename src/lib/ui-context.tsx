@@ -4,12 +4,16 @@ interface UIContextValue {
   menuOpen: boolean;
   openMenu: () => void;
   closeMenu: () => void;
+  searchOpen: boolean;
+  openSearch: () => void;
+  closeSearch: () => void;
 }
 
 const UIContext = createContext<UIContextValue | null>(null);
 
 export function UIProvider({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -22,9 +26,15 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
   const openMenu = useCallback(() => setMenuOpen(true), []);
   const closeMenu = useCallback(() => setMenuOpen(false), []);
+  const openSearch = useCallback(() => setSearchOpen(true), []);
+  const closeSearch = useCallback(() => setSearchOpen(false), []);
 
   return (
-    <UIContext.Provider value={{ menuOpen, openMenu, closeMenu }}>{children}</UIContext.Provider>
+    <UIContext.Provider
+      value={{ menuOpen, openMenu, closeMenu, searchOpen, openSearch, closeSearch }}
+    >
+      {children}
+    </UIContext.Provider>
   );
 }
 

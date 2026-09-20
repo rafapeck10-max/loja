@@ -15,17 +15,11 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { CartProvider } from "@/lib/cart-context";
 import { UIProvider } from "@/lib/ui-context";
 import { Header } from "@/components/Header";
-import { NavBar } from "@/components/NavBar";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { CartDrawer } from "@/components/CartDrawer";
 import { MenuDrawer } from "@/components/MenuDrawer";
-import {
-  SITE_DESCRIPTION,
-  SITE_TITLE,
-  SITE_URL,
-  SOCIAL_IMAGE_URL,
-} from "@/lib/site-metadata";
+import { MobileBottomBar } from "@/components/MobileBottomBar";
 
 function NotFoundComponent() {
   return (
@@ -93,25 +87,50 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: SITE_TITLE },
-      { name: "description", content: SITE_DESCRIPTION },
+      { title: "Mobi – Móveis direto da fábrica" },
+      {
+        name: "description",
+        content:
+          "Poltronas, Sofás e muito mais. Design sofisticado, qualidade artesanal e entrega na Baixada.",
+      },
       { name: "author", content: "Mobi" },
-      { property: "og:title", content: SITE_TITLE },
-      { property: "og:description", content: SITE_DESCRIPTION },
+      { property: "og:title", content: "Mobi – Móveis direto da fábrica" },
+      {
+        property: "og:description",
+        content:
+          "Poltronas, Sofás e muito mais. Design sofisticado, qualidade artesanal e entrega na Baixada.",
+      },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "Mobi" },
       { property: "og:locale", content: "pt_BR" },
-      { property: "og:url", content: SITE_URL },
-      { property: "og:image", content: SOCIAL_IMAGE_URL },
-      { property: "og:image:secure_url", content: SOCIAL_IMAGE_URL },
+      { property: "og:url", content: "https://www.mobimb.com.br" },
+      {
+        property: "og:image",
+        content: "https://www.mobimb.com.br/mobi-social-preview.png",
+      },
+      {
+        property: "og:image:secure_url",
+        content: "https://www.mobimb.com.br/mobi-social-preview.png",
+      },
       { property: "og:image:type", content: "image/png" },
-      { property: "og:image:width", content: "1731" },
-      { property: "og:image:height", content: "909" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
       { property: "og:image:alt", content: "Mobi, móveis direto da fábrica" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: SITE_TITLE },
-      { name: "twitter:description", content: SITE_DESCRIPTION },
-      { name: "twitter:image", content: SOCIAL_IMAGE_URL },
+      { name: "twitter:title", content: "Mobi – Móveis direto da fábrica" },
+      {
+        name: "twitter:description",
+        content:
+          "Poltronas, Sofás e muito mais. Design sofisticado, qualidade artesanal e entrega na Baixada.",
+      },
+      {
+        property: "og:image",
+        content: "https://www.mobimb.com.br/mobi-social-preview.png",
+      },
+      {
+        name: "twitter:image",
+        content: "https://www.mobimb.com.br/mobi-social-preview.png",
+      },
       { name: "twitter:image:alt", content: "Mobi, móveis direto da fábrica" },
     ],
     links: [
@@ -121,7 +140,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Montserrat:wght@400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap",
       },
     ],
   }),
@@ -152,10 +171,9 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <UIProvider>
         <CartProvider>
-          <div className="flex min-h-screen flex-col">
+          <div className="store-shell flex min-h-screen flex-col">
             <Header />
-            <NavBar />
-            <main className="flex-1">
+            <main id="conteudo" className="flex-1 pb-20 md:pb-0">
               {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
               <Outlet />
             </main>
@@ -164,6 +182,7 @@ function RootComponent() {
           <WhatsAppFloat />
           <CartDrawer />
           <MenuDrawer />
+          <MobileBottomBar />
           <Toaster
             position="bottom-left"
             toastOptions={{
@@ -171,7 +190,7 @@ function RootComponent() {
                 background: "#2E3F32",
                 color: "#F4EFE6",
                 border: "1px solid rgba(197, 160, 89, 0.4)",
-                fontFamily: "Montserrat, sans-serif",
+                fontFamily: "Manrope, sans-serif",
                 fontSize: "13px",
               },
             }}

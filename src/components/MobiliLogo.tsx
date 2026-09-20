@@ -1,22 +1,21 @@
-export function MobiliLogo({ className = "h-9" }: { className?: string }) {
+export function MobiliLogo({ className = "h-9 w-auto" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 280 80" className={className} aria-label="Mobili">
-      <text
-        x="0"
-        y="60"
-        fontFamily="'Cormorant Garamond', serif"
-        fontSize="60"
-        fontWeight="700"
-        fill="#C5A059"
-        stroke="#C5A059"
-        strokeWidth="2.5"
-        letterSpacing="2"
-      >
-        MOBILI
-        <tspan fill="#F4EFE6" stroke="none">
-          .
-        </tspan>
-      </text>
+    <svg
+      viewBox="0 0 320 140"
+      className={className}
+      aria-label="MOBI"
+      role="img"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <g fill="#C5A059">
+        <path d="M 10 130 V 60 H 28 L 50 98 L 72 60 H 90 V 130 H 74 V 84 L 54 118 H 46 L 26 84 V 130 Z" />
+        <path d="M 135 60 A 35 35 0 1 0 135 130 A 35 35 0 1 0 135 60 Z M 135 76 A 19 19 0 1 1 135 114 A 19 19 0 1 1 135 76 Z" />
+      </g>
+      <g fill="#FFFFFF">
+        <rect x="180" y="0" width="131" height="18" rx="9" />
+        <path d="M 190 30 H 235 C 258 30, 270 40, 270 55 C 270 68, 260 76, 245 78 C 265 82, 275 92, 275 106 C 275 122, 260 130, 235 130 H 190 Z M 206 46 V 73 H 235 C 248 73, 252 66, 252 59 C 252 52, 248 46, 235 46 Z M 206 89 V 114 H 238 C 252 114, 257 107, 257 101 C 257 95, 252 89, 238 89 Z" />
+        <rect x="285" y="30" width="16" height="100" />
+      </g>
     </svg>
   );
 }

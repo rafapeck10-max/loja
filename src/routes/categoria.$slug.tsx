@@ -1,20 +1,23 @@
+import { useEffect } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Sofa } from "lucide-react";
 import { categoriaProdutosQueryOptions } from "@/lib/products.functions";
 import { ProductCard } from "@/components/ProductCard";
-import { CATEGORIES } from "@/lib/constants";
+import { CatalogPagination, PAGE_SIZE, parsePage } from "@/components/CatalogPagination";
+import { CATEGORIES, getCategory, getSubcategories, categoryMatches } from "@/lib/constants";
 
 export const Route = createFileRoute("/categoria/$slug")({
+  validateSearch: (search: Record<string, unknown>) => ({ page: parsePage(search.page) }),
   loader: ({ context, params }) => {
-    context.queryClient.ensureQueryData(categoriaProdutosQueryOptions(params.slug));
+    return context.queryClient.ensureQueryData(categoriaProdutosQueryOptions(params.slug));
   },
   head: ({ params }) => {
-    const cat = CATEGORIES.find((c) => c.slug === params.slug);
-    const title = cat ? `${cat.label} | Mobili` : "Categoria | Mobili";
+    const cat = getCategory(params.slug);
+    const title = cat ? `${cat.label} | Mobi` : "Categoria | Mobi";
     const desc = cat
       ? `Confira nossa coleção de ${cat.label}. Móveis premium, direto da fábrica com entrega na Baixada Fluminense.`
-      : "Categoria de produtos Mobili.";
+      : "Categoria de produtos Mobi.";
     return {
       meta: [
         { title },
@@ -49,11 +52,19 @@ function CategoriaError({ reset }: { error: Error; reset: () => void }) {
 function CategoriaPage() {
   const { slug } = Route.useParams();
   const { data: produtos } = useSuspenseQuery(categoriaProdutosQueryOptions(slug));
-  const cat = CATEGORIES.find((c) => c.slug === slug);
+  const cat = getCategory(slug);
+  const parent = CATEGORIES.find((c) => c.children.includes(cat?.slug ?? slug));
+  const subcategories = getSubcategories(slug);
   const label = cat?.label ?? slug;
+  const { page: requestedPage } = Route.useSearch();
+  const page = Math.min(requestedPage, Math.max(1, Math.ceil(produtos.length / PAGE_SIZE)));
+  useEffect(() => {
+    document.getElementById("catalogo")?.scrollIntoView({ behavior: "instant", block: "start" });
+  }, [page, slug]);
+  const visible = produtos.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className="mx-auto my-14 max-w-[1300px] px-[5%]">
+    <div id="catalogo" className="mx-auto my-6 max-w-[1300px] px-4 sm:my-9 sm:px-8">
       {/* Breadcrumb */}
       <div className="mb-6 text-[11px] uppercase tracking-wider text-text-light">
         <Link to="/" search={{}} className="text-inherit no-underline hover:text-gold">
@@ -63,14 +74,68 @@ function CategoriaPage() {
         <span className="font-semibold text-gold">{label}</span>
       </div>
 
-      <h1 className="section-title-line mb-12 text-center text-3xl uppercase tracking-[3px] text-deep-green md:text-4xl">
-        {label}
-      </h1>
+      <h1 className="mb-3 text-center text-3xl text-deep-green md:text-4xl">{label}</h1>
+      <p className="mx-auto mb-5 max-w-xl text-center text-sm leading-relaxed text-text-light">
+        {cat?.description ?? "Encontre móveis selecionados para a sua casa."}
+      </p>
 
+      <nav aria-label="Departamentos" className="mb-4 flex flex-wrap justify-center gap-2">
+        {CATEGORIES.map((item) => (
+          <Link
+            key={item.slug}
+            to="/categoria/$slug"
+            params={{ slug: item.slug }}
+            search={{ page: 1 }}
+            aria-current={item.slug === cat?.slug ? "page" : undefined}
+            className={`rounded-full border px-3 py-2 text-xs ${item.slug === cat?.slug ? "bg-deep-green text-white" : "bg-white text-deep-green"}`}
+          >
+            {item.label}
+          </Link>
+        ))}
+      </nav>
+      {parent && (
+        <Link
+          to="/categoria/$slug"
+          params={{ slug: parent.slug }}
+          search={{ page: 1 }}
+          className="mb-4 inline-block text-sm text-deep-green underline"
+        >
+          ← Ver todos em {parent.label}
+        </Link>
+      )}
+      {subcategories.length > 0 && (
+        <nav aria-label="Tipos de produto" className="mb-6 rounded-xl bg-white p-4">
+          <p className="mb-3 text-sm font-semibold text-deep-green">Escolha o tipo de produto</p>
+          <div className="flex flex-wrap gap-2">
+            {subcategories.map((item) => {
+              const count = produtos.filter((product) =>
+                categoryMatches(product.categoria, item.slug),
+              ).length;
+              return (
+                <Link
+                  key={item.slug}
+                  to="/categoria/$slug"
+                  params={{ slug: item.slug }}
+                  search={{ page: 1 }}
+                  className="rounded-lg border border-gold/30 px-3 py-2 text-sm text-deep-green hover:bg-sand"
+                >
+                  {item.label} <span className="text-text-light">({count})</span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      )}
+      <p className="mb-4 text-sm text-text-light" aria-live="polite">
+        {produtos.length} produtos nesta seleção
+      </p>
       {produtos.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 py-16 text-center text-text-light">
+        <div className="mx-auto flex max-w-lg flex-col items-center gap-4 rounded-2xl border border-cacau/10 bg-white px-6 py-14 text-center text-text-light shadow-premium">
           <Sofa className="h-12 w-12 text-gold/50" />
-          <p className="text-sm">Nenhum móvel encontrado nesta categoria.</p>
+          <h2 className="text-2xl text-deep-green">Estamos preparando esta seleção</h2>
+          <p className="text-sm">
+            Ainda não há produtos com preço de venda e foto publicados neste grupo.
+          </p>
           <Link
             to="/"
             search={{}}
@@ -80,12 +145,13 @@ function CategoriaPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-2 items-stretch gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-4 lg:gap-9">
-          {produtos.map((produto) => (
+        <div className="grid grid-cols-2 items-stretch gap-3 md:grid-cols-3 md:gap-5 lg:grid-cols-4">
+          {visible.map((produto) => (
             <ProductCard key={produto.id} produto={produto} />
           ))}
         </div>
       )}
+      <CatalogPagination page={page} total={produtos.length} category={slug} />
     </div>
   );
 }

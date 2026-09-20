@@ -14,6 +14,8 @@ export interface CartItem {
   id: string;
   name: string;
   price: number;
+  cardPrice?: number;
+  installmentCount?: number;
   img: string;
   quantity: number;
   color?: string | null;
@@ -85,7 +87,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const existing = prev.find((i) => cartItemKey(i) === key);
       if (existing) {
         return prev.map((i) =>
-          cartItemKey(i) === key ? { ...i, quantity: i.quantity + quantity } : i,
+          cartItemKey(i) === key ? { ...i, ...item, quantity: i.quantity + quantity } : i,
         );
       }
       return [...prev, { ...item, quantity }];

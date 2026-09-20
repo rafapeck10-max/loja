@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { queryOptions } from "@tanstack/react-query";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { categoryMatches, getCategory } from "@/lib/constants";
 
 export interface Produto {
   id: string;
@@ -12,33 +13,82 @@ export interface Produto {
   imagem_url: string;
   categoria: string;
   ordem?: number;
+  descricao: string;
+  imagens: string[];
+  sku: string | null;
+  fornecedor: string | null;
+  medidas: string | null;
+  cores: string[] | null;
+  parcelas_sem_juros: number;
 }
 
-export const getProdutos = createServerFn({ method: "GET" }).handler(
-  async (): Promise<Produto[]> => {
-    const supabase = createClient<Database>(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_PUBLISHABLE_KEY!,
-      { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
-    );
+const PRODUCT_SELECT =
+  "id, nome, slug, preco_antigo, preco_atual, categoria, url_imagem, ordem, descricao, imagens, sku, medidas, cores, parcelas_sem_juros";
+
+type PublicProductRow = Pick<
+  Database["public"]["Tables"]["produtos"]["Row"],
+  | "id"
+  | "nome"
+  | "slug"
+  | "preco_antigo"
+  | "preco_atual"
+  | "categoria"
+  | "url_imagem"
+  | "ordem"
+  | "descricao"
+  | "imagens"
+  | "sku"
+  | "medidas"
+  | "cores"
+  | "parcelas_sem_juros"
+>;
+
+function mapProduto(row: PublicProductRow): Produto {
+  return {
+    id: row.id,
+    nome: row.nome,
+    slug: row.slug,
+    preco_antigo: Number(row.preco_antigo),
+    preco_novo: Number(row.preco_atual),
+    imagem_url: row.url_imagem,
+    categoria: row.categoria,
+    ordem: row.ordem ?? 0,
+    descricao: row.descricao ?? "",
+    imagens: Array.isArray(row.imagens) ? row.imagens.filter(Boolean) : [],
+    sku: row.sku ?? null,
+    fornecedor: null, // Supplier stays in the admin; not sent by the storefront API.
+    medidas: row.medidas ?? null,
+    cores: Array.isArray(row.cores) ? row.cores.filter(Boolean) : null,
+    parcelas_sem_juros: Number(row.parcelas_sem_juros ?? 0),
+  };
+}
+
+async function readPublicProducts(): Promise<Produto[]> {
+  const supabase = createClient<Database>(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_PUBLISHABLE_KEY!,
+    { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
+  );
+  const products: Produto[] = [];
+  const batchSize = 500;
+  for (let offset = 0; ; offset += batchSize) {
     const { data, error } = await supabase
       .from("produtos")
-      .select("id, nome, slug, preco_antigo, preco_atual, categoria, url_imagem, ordem")
-      .order("ordem", { ascending: true });
+      .select(PRODUCT_SELECT)
+      .gt("preco_atacado", 0)
+      .gt("preco_atual", 0)
+      .neq("url_imagem", "")
+      .order("ordem", { ascending: true })
+      .order("id", { ascending: true })
+      .range(offset, offset + batchSize - 1);
     if (error) throw new Error(error.message);
 
-    return (data ?? []).map((row) => ({
-      id: row.id,
-      nome: row.nome,
-      slug: row.slug,
-      preco_antigo: Number(row.preco_antigo),
-      preco_novo: Number(row.preco_atual),
-      imagem_url: row.url_imagem,
-      categoria: row.categoria,
-      ordem: row.ordem ?? 0,
-    }));
-  },
-);
+    products.push(...(data ?? []).filter((row) => row.url_imagem?.trim()).map(mapProduto));
+    if ((data?.length ?? 0) < batchSize) break;
+  }
+  return products;
+}
+export const getProdutos = createServerFn({ method: "GET" }).handler(readPublicProducts);
 
 export const getProduto = createServerFn({ method: "GET" })
   .inputValidator((input: { id: string }) => {
@@ -55,7 +105,10 @@ export const getProduto = createServerFn({ method: "GET" })
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.id);
     const query = supabase
       .from("produtos")
-      .select("id, nome, slug, preco_antigo, preco_atual, categoria, url_imagem, ordem");
+      .select(PRODUCT_SELECT)
+      .gt("preco_atacado", 0)
+      .gt("preco_atual", 0)
+      .neq("url_imagem", "");
 
     if (isUUID) {
       query.eq("id", data.id);
@@ -67,16 +120,7 @@ export const getProduto = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     if (!row) return null;
 
-    return {
-      id: row.id,
-      nome: row.nome,
-      slug: row.slug,
-      preco_antigo: Number(row.preco_antigo),
-      preco_novo: Number(row.preco_atual),
-      imagem_url: row.url_imagem,
-      categoria: row.categoria,
-      ordem: row.ordem ?? 0,
-    };
+    return mapProduto(row);
   });
 
 export const produtosQueryOptions = () =>
@@ -97,32 +141,12 @@ export const getProdutosByCategoria = createServerFn({ method: "GET" })
     return { slug: input.slug };
   })
   .handler(async ({ data }): Promise<Produto[]> => {
-    const { CATEGORIES } = await import("@/lib/constants");
-    const cat = CATEGORIES.find((c) => c.slug === data.slug);
+    const cat = getCategory(data.slug);
     if (!cat) return [];
 
-    const supabase = createClient<Database>(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_PUBLISHABLE_KEY!,
-      { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
+    return (await readPublicProducts()).filter((product) =>
+      categoryMatches(product.categoria, cat.slug),
     );
-    const { data: rows, error } = await supabase
-      .from("produtos")
-      .select("id, nome, slug, preco_antigo, preco_atual, categoria, url_imagem, ordem")
-      .eq("categoria", cat.label)
-      .order("ordem", { ascending: true });
-    if (error) throw new Error(error.message);
-
-    return (rows ?? []).map((row) => ({
-      id: row.id,
-      nome: row.nome,
-      slug: row.slug,
-      preco_antigo: Number(row.preco_antigo),
-      preco_novo: Number(row.preco_atual),
-      imagem_url: row.url_imagem,
-      categoria: row.categoria,
-      ordem: row.ordem ?? 0,
-    }));
   });
 
 export const categoriaProdutosQueryOptions = (slug: string) =>

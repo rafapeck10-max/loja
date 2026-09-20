@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * MOBILI — Design System "Raízes do Luxo"
+ * MOBI — Design System "Raízes do Luxo"
  * Bege Areia (#F4EFE6) fundo · Marrom Cacau (#493327) texto ·
  * Dourado (#C5A059) detalhes · Verde Esmeralda Profundo (#2E3F32) header/footer
  */
@@ -35,7 +35,7 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* Mobili brand tokens */
+  /* Mobi brand tokens */
   --color-deep-green: var(--deep-green);
   --color-gold: var(--gold);
   --color-gold-hover: var(--gold-hover);
@@ -45,8 +45,9 @@
   --color-whatsapp: var(--whatsapp);
   --color-text-light: var(--text-light);
 
-  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Cormorant Garamond", ui-serif, Georgia, serif;
+  /* Manrope: tipografia sem serifa usada na nova referência visual. */
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Manrope", ui-sans-serif, system-ui, sans-serif;
 
   --shadow-premium: 0 15px 35px oklch(0.3485 0.0314 151.72 / 0.08);
   --shadow-hover: 0 25px 50px oklch(0.3485 0.0314 151.72 / 0.15);
@@ -180,5 +181,36 @@
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+@layer base {
+  :where(a, button, input, select, textarea):focus-visible {
+    outline: 3px solid var(--color-gold);
+    outline-offset: 3px;
+  }
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+  #catalogo,
+  #conteudo {
+    scroll-margin-top: 100px;
+  }
+  @media (max-width: 767px) {
+    .store-shell {
+      padding-bottom: calc(68px + env(safe-area-inset-bottom));
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }

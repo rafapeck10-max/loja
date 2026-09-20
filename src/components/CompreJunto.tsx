@@ -4,6 +4,7 @@ import { Plus, RefreshCw, ShoppingCart } from "lucide-react";
 import { produtosQueryOptions, type Produto } from "@/lib/products.functions";
 import { formatBRL } from "@/lib/constants";
 import { useCart } from "@/lib/cart-context";
+import { cardTotal } from "@/lib/payment";
 
 interface Props {
   current: Produto;
@@ -14,20 +15,25 @@ function discountPct(oldPrice: number, newPrice: number) {
   return Math.round(((oldPrice - newPrice) / oldPrice) * 100);
 }
 
+function cardPrice(produto: Produto) {
+  return cardTotal(produto.preco_novo);
+}
+
 export function CompreJunto({ current }: Props) {
   const { data: produtos = [] } = useQuery(produtosQueryOptions());
   const { addItem, openCart } = useCart();
-
-  const others = useMemo(() => produtos.filter((p) => p.id !== current.id), [produtos, current.id]);
-  const [suggIndex, setSuggIndex] = useState(0);
+  const others = useMemo(
+    () => produtos.filter((product) => product.id !== current.id),
+    [produtos, current.id],
+  );
+  const [suggestionIndex, setSuggestionIndex] = useState(0);
   const [include, setInclude] = useState(true);
 
   if (others.length === 0) return null;
 
-  const suggestion = others[suggIndex % others.length];
+  const suggestion = others[suggestionIndex % others.length];
   const currentDiscount = discountPct(current.preco_antigo, current.preco_novo);
   const suggestionDiscount = discountPct(suggestion.preco_antigo, suggestion.preco_novo);
-
   const total = current.preco_novo + (include ? suggestion.preco_novo : 0);
 
   const handleAdd = () => {
@@ -35,6 +41,7 @@ export function CompreJunto({ current }: Props) {
       id: current.id,
       name: current.nome,
       price: current.preco_novo,
+      cardPrice: cardPrice(current),
       img: current.imagem_url,
     });
     if (include) {
@@ -42,24 +49,22 @@ export function CompreJunto({ current }: Props) {
         id: suggestion.id,
         name: suggestion.nome,
         price: suggestion.preco_novo,
+        cardPrice: cardPrice(suggestion),
         img: suggestion.imagem_url,
       });
     }
     openCart();
   };
 
-  const cycle = () => setSuggIndex((i) => (i + 1) % others.length);
-
   return (
-    <section className="mx-auto mt-16 max-w-[1300px] px-[5%]">
+    <section className="mx-auto mt-16 max-w-[1300px]">
       <h2 className="section-title-line mb-10 text-center text-3xl uppercase tracking-[3px] text-deep-green md:text-4xl">
         Compre Junto
       </h2>
 
-      <div className="mx-auto max-w-[520px]">
+      <div className="mx-auto max-w-[620px]">
         <ProductRow produto={current} discount={currentDiscount} primary />
 
-        {/* Divisor */}
         <div className="relative my-5 flex items-center">
           <div className="h-px flex-1 bg-cacau/15" />
           <div className="mx-3 flex h-9 w-9 items-center justify-center rounded-full border border-gold bg-sand text-gold">
@@ -72,10 +77,13 @@ export function CompreJunto({ current }: Props) {
           produto={suggestion}
           discount={suggestionDiscount}
           checkbox={{ checked: include, onChange: setInclude }}
-          onSwap={others.length > 1 ? cycle : undefined}
+          onSwap={
+            others.length > 1
+              ? () => setSuggestionIndex((index) => (index + 1) % others.length)
+              : undefined
+          }
         />
 
-        {/* Barra de total */}
         <div className="mt-6 flex flex-col gap-3 border-t-2 border-gold bg-white p-5 shadow-premium sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="text-[11px] uppercase tracking-[1.5px] text-text-light">
@@ -84,10 +92,11 @@ export function CompreJunto({ current }: Props) {
             <div className="text-2xl font-bold text-price-green">{formatBRL(total)}</div>
           </div>
           <button
+            type="button"
             onClick={handleAdd}
-            className="flex items-center justify-center gap-2 bg-deep-green px-5 py-3.5 text-xs font-bold uppercase tracking-[1.5px] text-sand transition-colors hover:bg-gold hover:text-deep-green"
+            className="flex items-center justify-center gap-2 rounded-full bg-deep-green px-5 py-3.5 text-xs font-bold uppercase tracking-[1.5px] text-sand transition-colors hover:bg-gold hover:text-deep-green"
           >
-            <ShoppingCart className="h-4 w-4" /> Adicionar ao Carrinho
+            <ShoppingCart className="h-4 w-4" /> Adicionar ao carrinho
           </button>
         </div>
       </div>
@@ -105,16 +114,16 @@ function ProductRow({
   produto: Produto;
   discount: number;
   primary?: boolean;
-  checkbox?: { checked: boolean; onChange: (v: boolean) => void };
+  checkbox?: { checked: boolean; onChange: (value: boolean) => void };
   onSwap?: () => void;
 }) {
+  const hasDiscount = produto.preco_antigo > 0 && produto.preco_antigo > produto.preco_novo;
+
   return (
     <div className="flex gap-4 border border-cacau/10 bg-white p-4">
-      <img
-        src={produto.imagem_url}
-        alt={produto.nome}
-        className="h-24 w-24 shrink-0 object-cover sm:h-28 sm:w-28"
-      />
+      <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-sand sm:h-28 sm:w-28">
+        <img src={produto.imagem_url} alt={produto.nome} className="h-full w-full object-contain" />
+      </div>
       <div className="flex flex-1 flex-col">
         <div className="mb-1 flex items-start justify-between gap-2">
           <div className="flex items-start gap-2">
@@ -122,12 +131,12 @@ function ProductRow({
               <input
                 type="checkbox"
                 checked={checkbox.checked}
-                onChange={(e) => checkbox.onChange(e.target.checked)}
+                onChange={(event) => checkbox.onChange(event.target.checked)}
                 aria-label={`Incluir ${produto.nome}`}
                 className="mt-1 h-4 w-4 accent-[#2E3F32]"
               />
             )}
-            <h3 className="font-sans text-sm font-medium lowercase leading-snug text-cacau">
+            <h3 className="font-sans text-sm font-medium leading-snug text-cacau">
               {produto.nome}
             </h3>
           </div>
@@ -138,9 +147,11 @@ function ProductRow({
           )}
         </div>
 
-        <div className="text-xs text-text-light line-through">
-          {formatBRL(produto.preco_antigo)}
-        </div>
+        {hasDiscount && (
+          <div className="text-xs text-text-light line-through">
+            {formatBRL(produto.preco_antigo)}
+          </div>
+        )}
         <div className="text-lg font-bold text-price-green">{formatBRL(produto.preco_novo)}</div>
 
         {primary && (
@@ -149,6 +160,7 @@ function ProductRow({
 
         {onSwap && (
           <button
+            type="button"
             onClick={onSwap}
             className="mt-2 flex w-fit items-center gap-1.5 border border-cacau/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-cacau transition-colors hover:border-gold hover:text-gold"
           >

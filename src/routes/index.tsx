@@ -1,43 +1,48 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Sofa } from "lucide-react";
+import { Armchair, BedDouble, CookingPot, Sofa, Table2, Truck, Tv } from "lucide-react";
 import { produtosQueryOptions } from "@/lib/products.functions";
 import { ProductCard } from "@/components/ProductCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
-import {
-  SITE_DESCRIPTION,
-  SITE_TITLE,
-  SITE_URL,
-  SOCIAL_IMAGE_URL,
-} from "@/lib/site-metadata";
+import { CatalogPagination, PAGE_SIZE, parsePage } from "@/components/CatalogPagination";
+import { CATEGORIES, categoryMatches } from "@/lib/constants";
+import { featuredProducts } from "@/lib/featured-products";
 
 export const Route = createFileRoute("/")({
-  validateSearch: (search: Record<string, unknown>): { q?: string } => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { q?: string; ofertas?: boolean; all?: boolean; page?: number } => ({
+    page: search.page === undefined ? undefined : parsePage(search.page),
     q: typeof search.q === "string" && search.q ? search.q : undefined,
+    ofertas: search.ofertas === true || search.ofertas === "true" ? true : undefined,
+    all: search.all === true || search.all === "true" ? true : undefined,
   }),
   loader: ({ context }) => {
-    context.queryClient.ensureQueryData(produtosQueryOptions());
+    return context.queryClient.ensureQueryData(produtosQueryOptions());
   },
   head: () => ({
     meta: [
-      { title: SITE_TITLE },
-      { name: "description", content: SITE_DESCRIPTION },
-      { property: "og:title", content: SITE_TITLE },
-      { property: "og:description", content: SITE_DESCRIPTION },
-      { property: "og:site_name", content: "Mobi" },
-      { property: "og:locale", content: "pt_BR" },
-      { property: "og:url", content: SITE_URL },
-      { property: "og:image", content: SOCIAL_IMAGE_URL },
-      { property: "og:image:secure_url", content: SOCIAL_IMAGE_URL },
-      { property: "og:image:type", content: "image/png" },
-      { property: "og:image:width", content: "1731" },
-      { property: "og:image:height", content: "909" },
-      { property: "og:image:alt", content: "Mobi, móveis direto da fábrica" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: SITE_TITLE },
-      { name: "twitter:description", content: SITE_DESCRIPTION },
-      { name: "twitter:image", content: SOCIAL_IMAGE_URL },
-      { name: "twitter:image:alt", content: "Mobi, móveis direto da fábrica" },
+      { title: "Mobi – Móveis direto da fábrica" },
+      {
+        name: "description",
+        content:
+          "Poltronas, Sofás e muito mais. Design sofisticado, qualidade artesanal e entrega na Baixada.",
+      },
+      { property: "og:title", content: "Mobi – Móveis direto da fábrica" },
+      {
+        property: "og:description",
+        content:
+          "Poltronas, Sofás e muito mais. Design sofisticado, qualidade artesanal e entrega na Baixada.",
+      },
+      {
+        property: "og:image",
+        content: "https://www.mobimb.com.br/mobi-social-preview.png",
+      },
+      {
+        name: "twitter:image",
+        content: "https://www.mobimb.com.br/mobi-social-preview.png",
+      },
     ],
   }),
   component: Index,
@@ -64,36 +69,183 @@ function IndexError({ reset }: { error: Error; reset: () => void }) {
 }
 
 function Index() {
-  const { q } = Route.useSearch();
+  const { q, ofertas, all, page: requestedPage } = Route.useSearch();
   const { data: produtos } = useSuspenseQuery(produtosQueryOptions());
-
-  const filtered = q
-    ? produtos.filter((p) => p.nome.toLowerCase().includes(q.toLowerCase().trim()))
-    : produtos;
-
+  const catalog = Boolean(all || ofertas || q || requestedPage);
+  const normalize = (value: string) =>
+    value
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+  const filtered = produtos.filter(
+    (p) =>
+      (!q || normalize(p.nome).includes(normalize(q.trim()))) &&
+      (!ofertas || p.preco_antigo > p.preco_novo),
+  );
+  const page = Math.min(requestedPage ?? 1, Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)));
+  const visibleProducts = catalog
+    ? filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+    : featuredProducts(produtos);
+  useEffect(() => {
+    if (catalog)
+      document.getElementById("catalogo")?.scrollIntoView({ behavior: "instant", block: "start" });
+  }, [catalog, page, q, ofertas]);
+  const categoryIcons = {
+    armchair: Armchair,
+    sofa: Sofa,
+    tv: Tv,
+    bed: BedDouble,
+    "cooking-pot": CookingPot,
+    table: Table2,
+    mattress: BedDouble,
+  } as const;
+  const categories = CATEGORIES.filter((category) =>
+    produtos.some((p) => categoryMatches(p.categoria, category.slug)),
+  );
   return (
     <>
-      <HeroCarousel />
-
-      {/* Vitrine */}
-      <div className="mx-auto my-14 max-w-[1300px] px-[5%]">
-        <h2 className="section-title-line mb-12 text-center text-3xl uppercase tracking-[3px] text-deep-green md:text-4xl">
-          Destaques da Temporada
-        </h2>
-
+      {!catalog && (
+        <>
+          <HeroCarousel />
+          <section
+            aria-label="Compre por ambiente"
+            className="mx-auto max-w-[1300px] px-4 pt-3 sm:px-8 sm:pt-5"
+          >
+            <div className="flex items-center justify-center gap-3 rounded-lg bg-white px-3 py-3 text-sm font-semibold text-deep-green">
+              <Truck className="h-6 w-6 shrink-0" strokeWidth={1.8} /> Pague somente na entrega
+            </div>
+            <div className="mt-3 grid w-full grid-cols-4 gap-3 sm:grid-cols-5 lg:grid-cols-9 sm:gap-4">
+              {categories.map((category) => {
+                const Icon = categoryIcons[category.icon];
+                return (
+                  <Link
+                    key={category.slug}
+                    to="/categoria/$slug"
+                    params={{ slug: category.slug }}
+                    search={{ page: 1 }}
+                    className="group flex min-w-0 flex-col items-center gap-1 text-center no-underline"
+                  >
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-deep-green sm:h-16 sm:w-16">
+                      <Icon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.6} />
+                    </span>
+                    <span className="w-full text-[10px] font-medium leading-3 text-deep-green sm:text-sm sm:leading-normal">
+                      {category.shortLabel}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        </>
+      )}
+      <section id="catalogo" className="mx-auto my-6 max-w-[1300px] px-4 sm:my-9 sm:px-8">
+        {catalog && (
+          <Link
+            to="/"
+            search={{}}
+            className="mb-4 inline-flex text-xs text-text-light underline underline-offset-4"
+          >
+            Início
+          </Link>
+        )}
+        <div className="mb-4 flex items-center justify-between gap-3 sm:mb-6">
+          {catalog ? (
+            <h1 className="text-2xl leading-tight text-deep-green sm:text-3xl">
+              {q ? `Resultados para “${q}”` : ofertas ? "Ofertas da Mobi" : "Todos os produtos"}
+            </h1>
+          ) : (
+            <h2 className="text-xl leading-tight text-deep-green sm:text-3xl">Destaques da Mobi</h2>
+          )}
+          {!catalog && (
+            <>
+              <span aria-hidden="true" className="hidden h-px flex-1 bg-gold/70 sm:block" />
+              <Link
+                to="/"
+                search={{ all: true, page: 1 }}
+                hash="catalogo"
+                className="shrink-0 text-xs font-semibold text-deep-green no-underline sm:text-sm"
+              >
+                Ver todos →
+              </Link>
+            </>
+          )}
+        </div>
+        {catalog && (
+          <p className="mb-4 text-xs text-text-light" aria-live="polite">
+            {filtered.length} produtos encontrados
+          </p>
+        )}
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center gap-4 py-16 text-center text-text-light">
-            <Sofa className="h-12 w-12 text-gold/50" />
-            <p className="text-sm">Nenhum móvel encontrado para a busca "{q}".</p>
+          <div className="rounded-xl border border-cacau/10 bg-white px-5 py-8 text-center">
+            <Sofa className="mx-auto mb-3 h-9 w-9 text-gold" />
+            <p className="mb-4 text-sm">
+              {q
+                ? "Não encontramos produtos com esse nome. Tente outra palavra."
+                : "Não há ofertas disponíveis no momento."}
+            </p>
+            <Link
+              to="/"
+              search={{ all: true, page: 1 }}
+              className="inline-flex min-h-11 items-center rounded-full bg-deep-green px-5 text-sm text-white"
+            >
+              Explorar todos os produtos
+            </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 items-stretch gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-4 lg:gap-9">
-            {filtered.map((produto) => (
+          <div className="grid grid-cols-2 items-stretch gap-3 md:grid-cols-3 md:gap-5 lg:grid-cols-4">
+            {visibleProducts.map((produto) => (
               <ProductCard key={produto.id} produto={produto} />
             ))}
           </div>
         )}
-      </div>
+        {catalog && (
+          <CatalogPagination
+            page={page}
+            total={filtered.length}
+            search={{ all: true, q, ofertas }}
+          />
+        )}
+        {!catalog && filtered.length > visibleProducts.length && (
+          <div className="mt-5 text-center">
+            <Link
+              to="/"
+              search={{ all: true, page: 1 }}
+              hash="catalogo"
+              className="inline-flex min-h-11 items-center rounded-full border border-gold px-6 text-sm font-semibold text-deep-green"
+            >
+              Ver todos os produtos →
+            </Link>
+          </div>
+        )}
+      </section>
+      {!catalog && (
+        <section className="mx-auto mb-6 max-w-[1300px] px-4 sm:mb-9 sm:px-8">
+          <div className="relative overflow-hidden rounded-xl bg-deep-green px-5 py-7 text-white sm:p-9">
+            <img
+              src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1000&q=80"
+              alt="Inspiração para sua sala"
+              className="absolute inset-0 h-full w-full object-cover opacity-25"
+              loading="lazy"
+            />
+            <div className="relative max-w-xs">
+              <h2 className="text-2xl leading-tight">
+                Seu lar,
+                <br />
+                com mais estilo
+              </h2>
+              <p className="mb-4 mt-2 text-sm">Encontre móveis que combinam com você.</p>
+              <Link
+                to="/"
+                search={{ all: true, page: 1 }}
+                hash="catalogo"
+                className="inline-flex min-h-11 items-center rounded-full bg-gold px-5 text-xs font-bold text-deep-green"
+              >
+                Explorar coleção →
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
     </>
   );
 }
