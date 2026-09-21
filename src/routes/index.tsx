@@ -1,10 +1,11 @@
 import { useEffect } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Armchair, BedDouble, CookingPot, Sofa, Table2, Truck, Tv } from "lucide-react";
+import { Sofa, Truck } from "lucide-react";
 import { produtosQueryOptions } from "@/lib/products.functions";
 import { ProductCard } from "@/components/ProductCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
+import { CategoryNavigation } from "@/components/CategoryNavigation";
 import { CatalogPagination, PAGE_SIZE, parsePage } from "@/components/CatalogPagination";
 import { CATEGORIES, categoryMatches } from "@/lib/constants";
 import { featuredProducts } from "@/lib/featured-products";
@@ -90,15 +91,6 @@ function Index() {
     if (catalog)
       document.getElementById("catalogo")?.scrollIntoView({ behavior: "instant", block: "start" });
   }, [catalog, page, q, ofertas]);
-  const categoryIcons = {
-    armchair: Armchair,
-    sofa: Sofa,
-    tv: Tv,
-    bed: BedDouble,
-    "cooking-pot": CookingPot,
-    table: Table2,
-    mattress: BedDouble,
-  } as const;
   const categories = CATEGORIES.filter((category) =>
     produtos.some((p) => categoryMatches(p.categoria, category.slug)),
   );
@@ -114,26 +106,8 @@ function Index() {
             <div className="flex items-center justify-center gap-3 rounded-lg bg-white px-3 py-3 text-sm font-semibold text-deep-green">
               <Truck className="h-6 w-6 shrink-0" strokeWidth={1.8} /> Pague somente na entrega
             </div>
-            <div className="mt-3 grid w-full grid-cols-4 gap-3 sm:grid-cols-5 lg:grid-cols-9 sm:gap-4">
-              {categories.map((category) => {
-                const Icon = categoryIcons[category.icon];
-                return (
-                  <Link
-                    key={category.slug}
-                    to="/categoria/$slug"
-                    params={{ slug: category.slug }}
-                    search={{ page: 1 }}
-                    className="group flex min-w-0 flex-col items-center gap-1 text-center no-underline"
-                  >
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-deep-green sm:h-16 sm:w-16">
-                      <Icon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.6} />
-                    </span>
-                    <span className="w-full text-[10px] font-medium leading-3 text-deep-green sm:text-sm sm:leading-normal">
-                      {category.shortLabel}
-                    </span>
-                  </Link>
-                );
-              })}
+            <div className="mt-3">
+              <CategoryNavigation categories={categories} />
             </div>
           </section>
         </>

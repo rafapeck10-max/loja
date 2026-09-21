@@ -1,10 +1,19 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, LayoutGrid } from "lucide-react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { FURNITURE_MENU_COLUMNS } from "@/lib/furniture-menu";
 
 const FURNITURE_MENU_IMAGE =
   "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1000&q=80";
+
+const PRIMARY_LINKS = [
+  { label: "Sala", slug: "sala-de-estar" },
+  { label: "Quartos", slug: "dormitorios" },
+  { label: "Cozinha", slug: "cozinha" },
+  { label: "Sala de jantar", slug: "salas-de-jantar" },
+  { label: "Colchões e bases", slug: "colchoes-e-bases" },
+  { label: "Decoração", slug: "decoracao" },
+] as const;
 
 export function FurnitureNav() {
   const [isOpen, setIsOpen] = useState(false);
@@ -34,25 +43,48 @@ export function FurnitureNav() {
   return (
     <div
       ref={navRef}
-      className="relative hidden border-t border-gold/20 bg-white md:block"
+      className="relative mt-3 hidden border-t border-white/10 md:block"
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node | null)) closeMenu();
       }}
     >
-      <nav aria-label="Navegação por móveis" className="mx-auto max-w-[1300px] px-[5%]">
-        <div className="flex justify-center">
+      <nav aria-label="Navegação por móveis" className="mx-auto max-w-[1300px]">
+        <div className="flex min-h-11 items-center justify-center gap-1 pt-1">
+          <div className="hidden items-center gap-1 lg:flex">
+            {PRIMARY_LINKS.map((item) => {
+              const active = pathname.startsWith(`/categoria/${item.slug}`);
+              return (
+                <Link
+                  key={item.slug}
+                  to="/categoria/$slug"
+                  params={{ slug: item.slug }}
+                  search={{ page: 1 }}
+                  aria-current={active ? "page" : undefined}
+                  className={`inline-flex min-h-10 items-center rounded-lg px-3 text-xs font-semibold no-underline transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${
+                    active
+                      ? "bg-white/10 text-gold"
+                      : "text-sand/90 hover:bg-white/10 hover:text-gold"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
           <button
             type="button"
             aria-expanded={isOpen}
             aria-controls="furniture-mega-menu"
             onClick={() => setIsOpen((open) => !open)}
-            className={`inline-flex min-h-11 items-center gap-2 border-b-2 px-5 text-xs font-bold uppercase tracking-[1.5px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 ${
-              isOpen || pathname.startsWith("/categoria/")
-                ? "border-gold text-gold"
-                : "border-transparent text-deep-green hover:border-gold hover:text-gold"
+            className={`inline-flex min-h-10 items-center gap-2 rounded-lg px-3.5 text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${
+              isOpen
+                ? "bg-gold text-deep-green"
+                : "bg-white/10 text-sand hover:bg-gold hover:text-deep-green"
             }`}
           >
-            Móveis
+            <LayoutGrid className="h-4 w-4" aria-hidden="true" />
+            <span className="lg:hidden">Categorias</span>
+            <span className="hidden lg:inline">Todos os móveis</span>
             <ChevronDown
               aria-hidden="true"
               className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
@@ -65,7 +97,7 @@ export function FurnitureNav() {
         id="furniture-mega-menu"
         hidden={!isOpen}
         aria-hidden={!isOpen}
-        className="absolute inset-x-0 top-full z-50 max-h-[78vh] overflow-y-auto border-t border-gold/30 bg-sand shadow-[0_18px_35px_rgba(35,31,26,0.18)]"
+        className="absolute inset-x-0 top-full z-50 max-h-[78vh] overflow-y-auto rounded-b-2xl border border-t-0 border-gold/25 bg-sand shadow-[0_18px_35px_rgba(35,31,26,0.18)]"
       >
         <div className="mx-auto grid max-w-[1300px] grid-cols-1 gap-5 px-5 py-5 md:px-8 md:py-6 xl:grid-cols-[minmax(230px,0.8fr)_2.2fr] xl:gap-8 xl:px-0 xl:py-8">
           <Link
@@ -154,7 +186,10 @@ export function FurnitureNav() {
               onClick={closeMenu}
               className="inline-flex py-1 text-xs font-semibold text-deep-green no-underline transition-colors hover:text-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
             >
-              Ver todos os móveis <span aria-hidden="true" className="ml-1">→</span>
+              Ver todos os móveis{" "}
+              <span aria-hidden="true" className="ml-1">
+                →
+              </span>
             </Link>
           </div>
         </div>

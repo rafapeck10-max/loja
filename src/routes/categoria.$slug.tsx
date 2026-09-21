@@ -4,6 +4,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Sofa } from "lucide-react";
 import { categoriaProdutosQueryOptions } from "@/lib/products.functions";
 import { ProductCard } from "@/components/ProductCard";
+import { CategoryNavigation } from "@/components/CategoryNavigation";
 import { CatalogPagination, PAGE_SIZE, parsePage } from "@/components/CatalogPagination";
 import { CATEGORIES, getCategory, getSubcategories, categoryMatches } from "@/lib/constants";
 
@@ -79,20 +80,14 @@ function CategoriaPage() {
         {cat?.description ?? "Encontre móveis selecionados para a sua casa."}
       </p>
 
-      <nav aria-label="Departamentos" className="mb-4 flex flex-wrap justify-center gap-2">
-        {CATEGORIES.map((item) => (
-          <Link
-            key={item.slug}
-            to="/categoria/$slug"
-            params={{ slug: item.slug }}
-            search={{ page: 1 }}
-            aria-current={item.slug === cat?.slug ? "page" : undefined}
-            className={`rounded-full border px-3 py-2 text-xs ${item.slug === cat?.slug ? "bg-deep-green text-white" : "bg-white text-deep-green"}`}
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
+      <div className="mb-4">
+        <CategoryNavigation
+          categories={CATEGORIES}
+          activeSlug={parent?.slug ?? cat?.slug}
+          label="Departamentos"
+          variant="tabs"
+        />
+      </div>
       {parent && (
         <Link
           to="/categoria/$slug"
@@ -103,26 +98,29 @@ function CategoriaPage() {
           ← Ver todos em {parent.label}
         </Link>
       )}
+
       {subcategories.length > 0 && (
         <nav aria-label="Tipos de produto" className="mb-6 rounded-xl bg-white p-4">
           <p className="mb-3 text-sm font-semibold text-deep-green">Escolha o tipo de produto</p>
-          <div className="flex flex-wrap gap-2">
-            {subcategories.map((item) => {
-              const count = produtos.filter((product) =>
-                categoryMatches(product.categoria, item.slug),
-              ).length;
-              return (
-                <Link
-                  key={item.slug}
-                  to="/categoria/$slug"
-                  params={{ slug: item.slug }}
-                  search={{ page: 1 }}
-                  className="rounded-lg border border-gold/30 px-3 py-2 text-sm text-deep-green hover:bg-sand"
-                >
-                  {item.label} <span className="text-text-light">({count})</span>
-                </Link>
-              );
-            })}
+          <div className="scrollbar-none -mx-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+            <div className="flex w-max gap-2 sm:w-auto sm:flex-wrap">
+              {subcategories.map((item) => {
+                const count = produtos.filter((product) =>
+                  categoryMatches(product.categoria, item.slug),
+                ).length;
+                return (
+                  <Link
+                    key={item.slug}
+                    to="/categoria/$slug"
+                    params={{ slug: item.slug }}
+                    search={{ page: 1 }}
+                    className="inline-flex min-h-10 shrink-0 items-center rounded-full border border-gold/30 px-3.5 text-sm text-deep-green no-underline transition-colors hover:bg-sand"
+                  >
+                    {item.label} <span className="ml-1 text-text-light">({count})</span>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         </nav>
       )}
