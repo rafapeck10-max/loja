@@ -165,7 +165,7 @@ function ProductPage() {
   };
 
   return (
-    <div className="mx-auto max-w-[1400px] px-4 py-6 pb-10 sm:px-6 sm:py-10 lg:px-10">
+    <div className="mx-auto w-full min-w-0 max-w-[1400px] px-4 py-6 pb-10 sm:px-6 sm:py-10 lg:px-10">
       <div className="mb-6 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-wider text-text-light">
         <Link to="/" search={{}} className="text-inherit no-underline hover:text-gold">
           Início
@@ -183,8 +183,8 @@ function ProductPage() {
         <span className="max-w-full truncate font-semibold text-gold">{produto.nome}</span>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)] lg:gap-14">
-        <section aria-label="Galeria do produto">
+      <div className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)] lg:gap-14">
+        <section className="min-w-0" aria-label="Galeria do produto">
           <div className="relative overflow-hidden rounded-3xl border border-cacau/10 bg-white p-2 shadow-premium sm:p-4">
             <div
               className="flex transition-transform duration-500 ease-out"
@@ -253,7 +253,7 @@ function ProductPage() {
           )}
         </section>
 
-        <section className="lg:sticky lg:top-28 lg:self-start">
+        <section className="min-w-0 lg:sticky lg:top-28 lg:self-start">
           <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-[1.5px] text-gold">
             <span>{produto.categoria}</span>
           </div>

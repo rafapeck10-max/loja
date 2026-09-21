@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Menu, Search, ShoppingCart } from "lucide-react";
 import { MobiliLogo } from "@/components/MobiliLogo";
-import { FurnitureNav } from "@/components/FurnitureNav";
 import { useCart } from "@/lib/cart-context";
 import { useUI } from "@/lib/ui-context";
 
@@ -42,7 +41,7 @@ export function Header() {
         scrolled ? "py-3 shadow-[0_10px_30px_rgba(0,0,0,0.25)]" : "py-5 md:py-6"
       }`}
     >
-      <div className="mx-auto flex max-w-[1300px] items-center justify-between gap-3 md:gap-8">
+      <div className="mx-auto flex w-full min-w-0 max-w-[1300px] items-center justify-between gap-3 md:gap-8">
         <button
           onClick={openMenu}
           aria-label="Abrir menu"
@@ -101,7 +100,6 @@ export function Header() {
           </button>
         </div>
       </div>
-      <FurnitureNav />
       {searchOpen && (
         <div className="mx-auto mt-4 max-w-[1300px] sm:hidden">
           <div className="relative">
