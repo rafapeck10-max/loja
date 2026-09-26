@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { queryOptions } from "@tanstack/react-query";
 import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database, Json } from "@/integrations/supabase/types";
 import { categoryMatches, getCategory } from "@/lib/constants";
 
 export interface Produto {
@@ -20,10 +20,18 @@ export interface Produto {
   medidas: string | null;
   cores: string[] | null;
   parcelas_sem_juros: number;
+  variacoes_preco: ProductPriceVariation[];
+}
+
+export interface ProductPriceVariation {
+  name: string;
+  sku: string;
+  supplier_price: number | null;
+  sale_price: number | null;
 }
 
 const PRODUCT_SELECT =
-  "id, nome, slug, preco_antigo, preco_atual, categoria, url_imagem, ordem, descricao, imagens, sku, medidas, cores, parcelas_sem_juros";
+  "id, nome, slug, preco_antigo, preco_atual, categoria, url_imagem, ordem, descricao, imagens, sku, medidas, cores, parcelas_sem_juros, variacoes_preco";
 
 type PublicProductRow = Pick<
   Database["public"]["Tables"]["produtos"]["Row"],
@@ -41,7 +49,21 @@ type PublicProductRow = Pick<
   | "medidas"
   | "cores"
   | "parcelas_sem_juros"
+  | "variacoes_preco"
 >;
+
+function parsePriceVariations(value: Json): ProductPriceVariation[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((entry) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [];
+    const name = typeof entry.name === "string" ? entry.name : "";
+    const sku = typeof entry.sku === "string" ? entry.sku : "";
+    if (!name || !sku) return [];
+    const supplierPrice = typeof entry.supplier_price === "number" ? entry.supplier_price : null;
+    const salePrice = typeof entry.sale_price === "number" ? entry.sale_price : null;
+    return [{ name, sku, supplier_price: supplierPrice, sale_price: salePrice }];
+  });
+}
 
 function mapProduto(row: PublicProductRow): Produto {
   return {
@@ -60,6 +82,7 @@ function mapProduto(row: PublicProductRow): Produto {
     medidas: row.medidas ?? null,
     cores: Array.isArray(row.cores) ? row.cores.filter(Boolean) : null,
     parcelas_sem_juros: Number(row.parcelas_sem_juros ?? 0),
+    variacoes_preco: parsePriceVariations(row.variacoes_preco),
   };
 }
 

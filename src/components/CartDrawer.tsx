@@ -62,6 +62,7 @@ export function CartDrawer() {
       const opts: string[] = [];
       if (item.color) opts.push(`Cor: ${item.color}`);
       if (item.finish) opts.push(`Pés: ${item.finish}`);
+      if (item.variant) opts.push(`Opção: ${item.variant}`);
       if (opts.length) message += `   _(${opts.join(", ")})_\n`;
       const itemPrice = isCardPayment ? (item.cardPrice ?? item.price) : item.price;
       message += `   Qtd: ${item.quantity}x | Preço: ${formatBRL(itemPrice)}\n\n`;
@@ -157,11 +158,12 @@ export function CartDrawer() {
                         <h4 className="font-sans text-sm font-semibold leading-snug text-cacau">
                           {item.name}
                         </h4>
-                        {(item.color || item.finish) && (
+                        {(item.color || item.finish || item.variant) && (
                           <span className="text-[11px] text-text-light">
                             {[
                               item.color && `Cor: ${item.color}`,
                               item.finish && `Pés: ${item.finish}`,
+                              item.variant && `Opção: ${item.variant}`,
                             ]
                               .filter(Boolean)
                               .join(" | ")}

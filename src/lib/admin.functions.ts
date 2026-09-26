@@ -8,6 +8,8 @@ export interface ProdutoInput {
   slug?: string;
   preco_novo: number;
   imagem_url: string;
+  imagens?: string[];
+  variacoes_preco?: PriceVariation[];
   categoria?: string;
   ordem?: number;
   fornecedor?: string;
@@ -19,6 +21,7 @@ export interface ProdutoInput {
   descricao?: string;
   medidas?: string;
   cores?: string[];
+  deduplicateExisting?: boolean;
 }
 
 function checkPassword(input: string) {
@@ -34,6 +37,36 @@ function checkPassword(input: string) {
 }
 
 export type ProdutoAdmin = Database["public"]["Tables"]["produtos"]["Row"];
+export type ProdutoScrapImport = Database["public"]["Tables"]["scraped_products"]["Row"];
+
+export interface ProdutoScrapImportInput {
+  supplier: string;
+  name: string;
+  category?: string | null;
+  price?: number | null;
+  price_variations?: Array<{
+    name: string;
+    sku: string;
+    supplier_price: number;
+  }>;
+  currency?: string | null;
+  sku?: string | null;
+  references?: string | null;
+  colors?: string | null;
+  availability?: string[];
+  measurements?: string | null;
+  description?: string | null;
+  image_urls?: string[];
+  product_url?: string | null;
+  scraped_at?: string | null;
+}
+
+export interface PriceVariation {
+  name: string;
+  sku: string;
+  supplier_price: number | null;
+  sale_price: number | null;
+}
 
 const ADMIN_PRODUCTS_PAGE_SIZE = 500;
 
@@ -80,6 +113,107 @@ export const listAdminProdutos = createServerFn({ method: "POST" })
     return rows;
   });
 
+export const listPendingScrapedProducts = createServerFn({ method: "POST" })
+  .inputValidator((input: { password: string }) => ({ password: String(input?.password ?? "") }))
+  .handler(async ({ data }): Promise<ProdutoScrapImport[]> => {
+    checkPassword(data.password);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("scraped_products")
+      .select("*")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(500);
+    if (error) throw new Error(error.message);
+    return rows ?? [];
+  });
+
+export const importScrapedProducts = createServerFn({ method: "POST" })
+  .inputValidator((input: { password: string; records: ProdutoScrapImportInput[] }) => ({
+    password: String(input?.password ?? ""),
+    records: Array.isArray(input?.records) ? input.records : [],
+  }))
+  .handler(async ({ data }) => {
+    checkPassword(data.password);
+    if (!data.records.length) throw new Error("O arquivo não contém produtos para importar.");
+    if (data.records.length > 500) throw new Error("Importe no máximo 500 produtos por arquivo.");
+
+    const rows: Database["public"]["Tables"]["scraped_products"]["Insert"][] = data.records.map(
+      (record) => {
+        const name = String(record.name ?? "").trim();
+        const supplier = String(record.supplier ?? "").trim();
+        if (!name || !supplier) throw new Error("Todos os produtos precisam de nome e fornecedor.");
+        const price = record.price == null ? null : Number(record.price);
+        if (price != null && (!Number.isFinite(price) || price < 0)) {
+          throw new Error(`Preço de fornecedor inválido em ${name}.`);
+        }
+        const imageUrls = Array.isArray(record.image_urls)
+          ? record.image_urls
+              .map((value) => String(value).trim())
+              .filter((value) => /^https?:\/\//i.test(value))
+          : [];
+        return {
+          supplier: supplier.slice(0, 120),
+          name: name.slice(0, 200),
+          category: String(record.category ?? "").trim() || null,
+          supplier_price: price,
+          price_variations: Array.isArray(record.price_variations)
+            ? record.price_variations
+                .map((variation) => ({
+                  name: String(variation.name ?? "").trim(),
+                  sku: String(variation.sku ?? "").trim(),
+                  supplier_price: Number(variation.supplier_price),
+                  sale_price: null,
+                }))
+                .filter(
+                  (variation) =>
+                    variation.name &&
+                    variation.sku &&
+                    Number.isFinite(variation.supplier_price) &&
+                    variation.supplier_price >= 0,
+                )
+            : [],
+          currency: record.currency === "BRL" ? "BRL" : null,
+          sku: String(record.sku ?? "").trim() || null,
+          reference: String(record.references ?? "").trim() || null,
+          colors: String(record.colors ?? "").trim() || null,
+          availability: Array.isArray(record.availability) ? record.availability.map(String) : [],
+          measurements: String(record.measurements ?? "").trim() || null,
+          description: String(record.description ?? "").trim() || null,
+          image_urls: imageUrls,
+          source_url: String(record.product_url ?? "").trim() || null,
+          scraped_at: record.scraped_at ?? null,
+        };
+      },
+    );
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: inserted, error } = await supabaseAdmin
+      .from("scraped_products")
+      .upsert(rows, { onConflict: "supplier,name" })
+      .select("id");
+    if (error) throw new Error(error.message);
+    return { received: rows.length, processed: inserted?.length ?? 0 };
+  });
+
+export const completeScrapedProductImport = createServerFn({ method: "POST" })
+  .inputValidator((input: { password: string; importId: string; productId: string }) => ({
+    password: String(input?.password ?? ""),
+    importId: String(input?.importId ?? ""),
+    productId: String(input?.productId ?? ""),
+  }))
+  .handler(async ({ data }) => {
+    checkPassword(data.password);
+    if (!data.importId || !data.productId) throw new Error("Importação inválida.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("scraped_products")
+      .update({ status: "imported", product_id: data.productId })
+      .eq("id", data.importId);
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
 function slugify(text: string): string {
   return text
     .normalize("NFD")
@@ -102,6 +236,27 @@ function normalize(input: ProdutoInput) {
   if (precoFornecedor != null && (!isFinite(precoFornecedor) || precoFornecedor < 0)) {
     throw new Error("Preço do fornecedor inválido.");
   }
+  const variacoesPreco: PriceVariation[] = Array.isArray(input.variacoes_preco)
+    ? input.variacoes_preco.map((variation) => {
+        const supplierPrice =
+          variation.supplier_price == null ? null : Number(variation.supplier_price);
+        const salePrice = variation.sale_price == null ? null : Number(variation.sale_price);
+        if (
+          !variation.name.trim() ||
+          !variation.sku.trim() ||
+          (supplierPrice != null && (!Number.isFinite(supplierPrice) || supplierPrice < 0)) ||
+          (salePrice != null && (!Number.isFinite(salePrice) || salePrice < 0))
+        ) {
+          throw new Error("Revise nome e preços de cada opção do produto.");
+        }
+        return {
+          name: variation.name.trim(),
+          sku: variation.sku.trim(),
+          supplier_price: supplierPrice,
+          sale_price: salePrice,
+        };
+      })
+    : [];
   const precoAntigo = Math.round(precoNovo * 1.15 * 100) / 100;
 
   const idRaw = String(input.id ?? "").trim();
@@ -124,6 +279,12 @@ function normalize(input: ProdutoInput) {
     preco_antigo: precoAntigo,
     preco_novo: precoNovo,
     imagem_url: imagem.slice(0, 500),
+    imagens: Array.isArray(input.imagens)
+      ? input.imagens
+          .map((value) => String(value).trim())
+          .filter((value) => /^https?:\/\//i.test(value))
+      : [],
+    variacoes_preco: variacoesPreco,
     ordem: Number.isFinite(Number(input.ordem)) ? Number(input.ordem) : 0,
     categoria,
     fornecedor:
@@ -169,27 +330,99 @@ export const upsertProduto = createServerFn({ method: "POST" })
     const row = normalize(data.produto);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    let existing: ProdutoAdmin | null = null;
+    if (data.produto.deduplicateExisting) {
+      if (row.fornecedor && row.referencia) {
+        const result = await supabaseAdmin
+          .from("produtos")
+          .select("*")
+          .eq("fornecedor", row.fornecedor)
+          .eq("sku", row.referencia)
+          .limit(1)
+          .maybeSingle();
+        if (result.error) throw new Error(result.error.message);
+        existing = result.data;
+      }
+      if (!existing && row.referencia) {
+        const result = await supabaseAdmin
+          .from("produtos")
+          .select("*")
+          .eq("sku", row.referencia)
+          .limit(1)
+          .maybeSingle();
+        if (result.error) throw new Error(result.error.message);
+        if (
+          result.data &&
+          (!result.data.fornecedor || !row.fornecedor || result.data.fornecedor === row.fornecedor)
+        ) {
+          existing = result.data;
+        }
+      }
+      if (!existing) {
+        const result = await supabaseAdmin
+          .from("produtos")
+          .select("*")
+          .eq("slug", row.slug)
+          .limit(1)
+          .maybeSingle();
+        if (result.error) throw new Error(result.error.message);
+        if (
+          result.data &&
+          (!result.data.fornecedor || !row.fornecedor || result.data.fornecedor === row.fornecedor)
+        ) {
+          existing = result.data;
+        }
+      }
+    }
+
+    const existingImages = existing?.imagens ?? [];
+    const images = [...new Set([...existingImages, ...row.imagens])];
+    const existingVariations = Array.isArray(existing?.variacoes_preco)
+      ? (existing.variacoes_preco as unknown as PriceVariation[])
+      : [];
+    const oldVariationBySku = new Map(
+      existingVariations.map((variation) => [variation.sku, variation]),
+    );
+    const mergedVariations = new Map(oldVariationBySku);
+    for (const variation of row.variacoes_preco) {
+      const oldVariation = oldVariationBySku.get(variation.sku);
+      mergedVariations.set(variation.sku, {
+        ...oldVariation,
+        ...variation,
+        sale_price: variation.sale_price ?? oldVariation?.sale_price ?? null,
+      });
+    }
+    const variations = [...mergedVariations.values()];
+
     const dbRow: Database["public"]["Tables"]["produtos"]["Insert"] = {
-      nome: row.nome,
-      slug: row.slug,
-      preco_antigo: row.preco_antigo,
-      preco_atual: row.preco_novo,
-      url_imagem: row.imagem_url,
-      categoria: row.categoria,
-      ordem: row.ordem,
-      fornecedor: row.fornecedor,
-      sku: row.referencia,
-      preco_atacado: row.preco_fornecedor,
-      url_fornecedor: row.link_fornecedor,
-      fonte_preco: row.fonte_preco,
-      vendas_ultimos_30_dias: row.vendas_ultimos_30_dias,
-      descricao: row.descricao,
-      medidas: row.medidas,
-      cores: row.cores,
+      nome: existing?.nome ?? row.nome,
+      slug: existing?.slug ?? row.slug,
+      preco_antigo: existing?.preco_antigo ?? row.preco_antigo,
+      preco_atual:
+        existing?.preco_atual && existing.preco_atual > 0 ? existing.preco_atual : row.preco_novo,
+      url_imagem: existing?.url_imagem || row.imagem_url,
+      imagens: images,
+      variacoes_preco: variations.map(({ name, sku, supplier_price, sale_price }) => ({
+        name,
+        sku,
+        supplier_price,
+        sale_price,
+      })),
+      categoria: existing?.categoria ?? row.categoria,
+      ordem: existing?.ordem ?? row.ordem,
+      fornecedor: existing?.fornecedor ?? row.fornecedor,
+      sku: existing?.sku ?? row.referencia,
+      preco_atacado: row.preco_fornecedor ?? existing?.preco_atacado ?? null,
+      url_fornecedor: existing?.url_fornecedor ?? row.link_fornecedor,
+      fonte_preco: existing?.fonte_preco ?? row.fonte_preco,
+      vendas_ultimos_30_dias: existing?.vendas_ultimos_30_dias ?? row.vendas_ultimos_30_dias,
+      descricao: existing?.descricao || row.descricao,
+      medidas: existing?.medidas || row.medidas,
+      cores: existing?.cores?.length ? existing.cores : row.cores,
     };
 
-    if (row.id) {
-      dbRow.id = row.id;
+    if (existing?.id || row.id) {
+      dbRow.id = existing?.id ?? row.id!;
     }
 
     const { data: inserted, error } = await supabaseAdmin
@@ -200,7 +433,7 @@ export const upsertProduto = createServerFn({ method: "POST" })
 
     if (error) throw new Error(error.message);
     if (!inserted) throw new Error("Erro ao salvar produto no banco.");
-    return { ok: true as const, id: inserted.id };
+    return { ok: true as const, id: inserted.id, duplicate: Boolean(existing) };
   });
 
 export const deleteProduto = createServerFn({ method: "POST" })

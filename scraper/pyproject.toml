@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mobi-product-scraper"
+version = "0.1.0"
+description = "Isolated supplier catalog scraper for the Mobi storefront"
+requires-python = ">=3.10"
+dependencies = ["scrapling[fetchers]==0.4.15"]
+
+[project.scripts]
+mobi-scrape = "mobi_scraper.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
