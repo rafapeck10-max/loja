@@ -396,7 +396,7 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
     setEditing({
       ...EMPTY,
       deduplicateExisting: true,
-      id: product.id,
+      id: product.product_id ?? product.id,
       nome: product.name,
       preco_novo: 0,
       imagem_url: product.image_urls[0] ?? "",

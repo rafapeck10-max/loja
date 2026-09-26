@@ -332,7 +332,17 @@ export const upsertProduto = createServerFn({ method: "POST" })
 
     let existing: ProdutoAdmin | null = null;
     if (data.produto.deduplicateExisting) {
-      if (row.fornecedor && row.referencia) {
+      if (row.id) {
+        const result = await supabaseAdmin
+          .from("produtos")
+          .select("*")
+          .eq("id", row.id)
+          .limit(1)
+          .maybeSingle();
+        if (result.error) throw new Error(result.error.message);
+        existing = result.data;
+      }
+      if (!existing && row.fornecedor && row.referencia) {
         const result = await supabaseAdmin
           .from("produtos")
           .select("*")
