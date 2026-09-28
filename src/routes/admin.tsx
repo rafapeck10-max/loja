@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -115,6 +115,13 @@ function LoginForm({ onSuccess }: { onSuccess: (pwd: string) => void }) {
   return (
     <div className="mx-auto max-w-md px-4 py-12 sm:py-20">
       <div className="rounded-3xl border border-cacau/10 bg-white p-6 shadow-premium sm:p-9">
+        <Link
+          to="/"
+          search={{}}
+          className="mb-6 inline-flex min-h-11 items-center text-sm font-semibold text-deep-green underline decoration-gold underline-offset-4"
+        >
+          ← Voltar à loja
+        </Link>
         <div className="mb-6 flex items-center gap-3 text-deep-green">
           <Lock className="h-5 w-5 text-gold" />
           <h1 className="text-2xl">Painel Mobi</h1>
@@ -387,7 +394,14 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
             Origem, custo e publicação do catálogo Mobi em um só lugar.
           </p>
         </div>
-        <div className="flex gap-2 sm:shrink-0">
+        <div className="flex flex-wrap gap-2 sm:shrink-0">
+          <Link
+            to="/"
+            search={{}}
+            className="inline-flex min-h-12 items-center justify-center rounded-xl border border-sand/25 px-4 text-sm font-semibold text-sand no-underline hover:border-gold hover:text-gold"
+          >
+            Ver loja
+          </Link>
           <button
             type="button"
             onClick={startNew}
@@ -557,11 +571,20 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
                     className="overflow-hidden rounded-2xl border border-cacau/10 bg-white p-4 shadow-sm transition-shadow hover:shadow-premium sm:p-5"
                   >
                     <div className="flex gap-3">
-                      <img
-                        src={p.url_imagem}
-                        alt=""
-                        className="h-20 w-20 shrink-0 rounded-xl border border-cacau/10 bg-sand object-cover sm:h-24 sm:w-24"
-                      />
+                      {/^https?:\/\//i.test(p.url_imagem ?? "") ? (
+                        <img
+                          src={p.url_imagem}
+                          alt=""
+                          className="h-20 w-20 shrink-0 rounded-xl border border-cacau/10 bg-sand object-cover sm:h-24 sm:w-24"
+                        />
+                      ) : (
+                        <div
+                          className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-sand text-text-light sm:h-24 sm:w-24"
+                          aria-label="Produto sem imagem"
+                        >
+                          <ImagePlus className="h-6 w-6" />
+                        </div>
+                      )}
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-col items-start gap-2 sm:flex-row sm:justify-between">
                           <button
