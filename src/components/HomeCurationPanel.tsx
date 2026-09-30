@@ -275,7 +275,13 @@ export function HomeCurationPanel({ password, products }: Props) {
                     <button
                       key={product.id}
                       type="button"
-                      onClick={() => setWeeklyIds((current) => [...current, product.id])}
+                      onClick={() =>
+                        setWeeklyIds((current) =>
+                          current.length >= 4 || current.includes(product.id)
+                            ? current
+                            : [...current, product.id],
+                        )
+                      }
                       className="flex min-h-11 w-full items-center gap-2 rounded-lg px-2 text-left hover:bg-white"
                     >
                       <ImageWithFallback
@@ -362,6 +368,7 @@ export function HomeCurationPanel({ password, products }: Props) {
                         <label key={field} className="text-[10px] font-semibold text-cacau">
                           {field === "novidade" ? "Novidades" : "Para sua sala"}
                           <select
+                            aria-label={`${field === "novidade" ? "Novidades" : "Para sua sala"} de ${product.nome}`}
                             value={value[field]}
                             onChange={(event) => setSetting(product.id, field, event.target.value)}
                             className="mt-1 min-h-10 w-full rounded-lg border border-cacau/15 bg-sand/30 px-2 text-xs font-normal outline-none focus:border-gold"

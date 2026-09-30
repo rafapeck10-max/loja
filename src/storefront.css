@@ -606,9 +606,14 @@
   gap: 8px;
   font-size: 12px;
   margin-bottom: 16px;
+  min-height: 44px;
+  cursor: pointer;
 }
 .mobi-radio input {
   accent-color: #2e3f32;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 }
 .mobi-filter-note {
   border-top: 1px solid #ddd2bf;

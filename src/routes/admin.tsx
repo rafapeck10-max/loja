@@ -22,6 +22,12 @@ import { formatBRL } from "@/lib/constants";
 import { HomeCurationPanel } from "@/components/HomeCurationPanel";
 import { HomeBannersPanel } from "@/components/HomeBannersPanel";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
+import {
+  matchesPriceFilter,
+  parsePriceFilter,
+  productStatus,
+  type ProductStatus,
+} from "@/lib/admin-filters";
 
 const STORAGE_KEY = "mobili_admin_pwd";
 
@@ -165,22 +171,11 @@ const EMPTY: ProdutoInput = {
   cores: [],
 };
 
-type ProductStatus = "published" | "awaiting" | "incomplete";
-
 const STATUS_LABELS: Record<ProductStatus, string> = {
   published: "Publicado",
   awaiting: "Aguardando precificação",
   incomplete: "Dados incompletos",
 };
-
-function productStatus(product: ProdutoAdmin): ProductStatus {
-  const sitePrice = Number(product.preco_atual ?? 0);
-  const supplierPrice = Number(product.preco_atacado ?? 0);
-  const hasImage = /^https?:\/\//i.test(product.url_imagem ?? "");
-  if (sitePrice > 0 && hasImage && product.fornecedor && supplierPrice > 0) return "published";
-  if (supplierPrice > 0 && sitePrice <= 0) return "awaiting";
-  return "incomplete";
-}
 
 function sourceUrl(product: ProdutoAdmin): string | null {
   return product.url_fornecedor || product.fonte_preco || null;
@@ -259,7 +254,7 @@ function StatusBadge({ status }: { status: ProductStatus }) {
   );
 }
 
-function AdminDashboard({ password, onLogout }: { password: string; onLogout: () => void }) {
+export function AdminDashboard({ password, onLogout }: { password: string; onLogout: () => void }) {
   const router = useRouter();
   const qc = useQueryClient();
   const {
@@ -291,6 +286,9 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
   const [supplierFilter, setSupplierFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState<"all" | ProductStatus>("all");
+  const [priceField, setPriceField] = useState<"site" | "supplier">("site");
+  const [minimumPrice, setMinimumPrice] = useState("");
+  const [maximumPrice, setMaximumPrice] = useState("");
   const [page, setPage] = useState(1);
   const perPage = 32;
 
@@ -335,9 +333,23 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
       const matchesCategory =
         categoryFilter === "all" || normalizeFilterText(product.categoria) === normalizedCategory;
       const matchesStatus = statusFilter === "all" || productStatus(product) === statusFilter;
-      return matchesSearch && matchesSupplier && matchesCategory && matchesStatus;
+      const matchesPrice = matchesPriceFilter(
+        priceField === "site" ? product.preco_atual : product.preco_atacado,
+        minimumPrice,
+        maximumPrice,
+      );
+      return matchesSearch && matchesSupplier && matchesCategory && matchesStatus && matchesPrice;
     });
-  }, [produtos, search, supplierFilter, categoryFilter, statusFilter]);
+  }, [
+    produtos,
+    search,
+    supplierFilter,
+    categoryFilter,
+    statusFilter,
+    priceField,
+    minimumPrice,
+    maximumPrice,
+  ]);
   const totals = useMemo(
     () =>
       produtos.reduce(
@@ -354,7 +366,15 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
 
   useEffect(() => {
     setPage(1);
-  }, [search, supplierFilter, categoryFilter, statusFilter]);
+  }, [
+    search,
+    supplierFilter,
+    categoryFilter,
+    statusFilter,
+    priceField,
+    minimumPrice,
+    maximumPrice,
+  ]);
 
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
@@ -492,7 +512,25 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
     setSupplierFilter("all");
     setCategoryFilter("all");
     setStatusFilter("all");
+    setPriceField("site");
+    setMinimumPrice("");
+    setMaximumPrice("");
   };
+
+  const selectSummary = (status: "all" | ProductStatus) => {
+    clearFilters();
+    setStatusFilter(status);
+    setPage(1);
+    document
+      .getElementById("admin-product-filters")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  const minPrice = parsePriceFilter(minimumPrice);
+  const maxPrice = parsePriceFilter(maximumPrice);
+  const invalidPrices =
+    Number.isNaN(minPrice) ||
+    Number.isNaN(maxPrice) ||
+    (minPrice != null && maxPrice != null && minPrice > maxPrice);
 
   return (
     <div className="mx-auto max-w-[1280px] px-4 py-6 sm:px-[5%] sm:py-10">
@@ -525,30 +563,50 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div className="border border-cacau/10 bg-white p-4">
+        <button
+          type="button"
+          onClick={() => selectSummary("all")}
+          aria-pressed={statusFilter === "all"}
+          className="border border-cacau/10 bg-white p-4 text-left aria-pressed:ring-2 aria-pressed:ring-deep-green"
+        >
           <div className="text-xs font-semibold uppercase tracking-wider text-text-light">
             Total
           </div>
           <div className="mt-1 text-2xl font-bold text-deep-green">{produtos.length}</div>
-        </div>
-        <div className="border border-price-green/20 bg-price-green/5 p-4">
+        </button>
+        <button
+          type="button"
+          onClick={() => selectSummary("published")}
+          aria-pressed={statusFilter === "published"}
+          className="border border-price-green/20 bg-price-green/5 p-4 text-left aria-pressed:ring-2 aria-pressed:ring-deep-green"
+        >
           <div className="text-xs font-semibold uppercase tracking-wider text-price-green">
             Publicados
           </div>
           <div className="mt-1 text-2xl font-bold text-price-green">{totals.published}</div>
-        </div>
-        <div className="border border-gold/30 bg-gold/10 p-4">
+        </button>
+        <button
+          type="button"
+          onClick={() => selectSummary("awaiting")}
+          aria-pressed={statusFilter === "awaiting"}
+          className="border border-gold/30 bg-gold/10 p-4 text-left aria-pressed:ring-2 aria-pressed:ring-deep-green"
+        >
           <div className="text-xs font-semibold uppercase tracking-wider text-cacau">
             Aguardando preço
           </div>
           <div className="mt-1 text-2xl font-bold text-cacau">{totals.awaiting}</div>
-        </div>
-        <div className="border border-destructive/20 bg-destructive/5 p-4">
+        </button>
+        <button
+          type="button"
+          onClick={() => selectSummary("incomplete")}
+          aria-pressed={statusFilter === "incomplete"}
+          className="border border-destructive/20 bg-destructive/5 p-4 text-left aria-pressed:ring-2 aria-pressed:ring-deep-green"
+        >
           <div className="text-xs font-semibold uppercase tracking-wider text-destructive">
             Incompletos
           </div>
           <div className="mt-1 text-2xl font-bold text-destructive">{totals.incomplete}</div>
-        </div>
+        </button>
       </div>
 
       <HomeCurationPanel password={password} products={produtos} />
@@ -666,7 +724,10 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
         )}
       </section>
 
-      <section className="mb-6 border border-cacau/10 bg-sand/50 p-4 sm:p-5">
+      <section
+        id="admin-product-filters"
+        className="mb-6 scroll-mt-4 border border-cacau/10 bg-sand/50 p-4 sm:p-5"
+      >
         <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="font-semibold text-deep-green">Encontrar produto</h2>
@@ -684,12 +745,14 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
         </div>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <input
+            aria-label="Buscar produto no painel"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Nome, SKU, slug..."
             className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold lg:col-span-2"
           />
           <select
+            aria-label="Filtrar fornecedor"
             value={supplierFilter}
             onChange={(event) => setSupplierFilter(event.target.value)}
             className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold"
@@ -702,6 +765,7 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
             ))}
           </select>
           <select
+            aria-label="Filtrar categoria"
             value={categoryFilter}
             onChange={(event) => setCategoryFilter(event.target.value)}
             className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold"
@@ -714,6 +778,7 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
             ))}
           </select>
           <select
+            aria-label="Filtrar estado de publicação"
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value as "all" | ProductStatus)}
             className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold md:col-span-2 lg:col-span-1"
@@ -724,6 +789,52 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
             <option value="incomplete">Dados incompletos</option>
           </select>
         </div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <label className="text-xs text-cacau">
+            Filtrar preço de
+            <select
+              value={priceField}
+              onChange={(event) => setPriceField(event.target.value as "site" | "supplier")}
+              className="mt-1 min-h-11 w-full border border-cacau/15 bg-white px-3 text-sm"
+            >
+              <option value="site">Preço no site</option>
+              <option value="supplier">Preço do fornecedor</option>
+            </select>
+          </label>
+          <label className="text-xs text-cacau">
+            Preço mínimo (R$)
+            <input
+              inputMode="decimal"
+              value={minimumPrice}
+              onChange={(event) => setMinimumPrice(event.target.value)}
+              placeholder="Sem mínimo"
+              aria-invalid={invalidPrices}
+              className="mt-1 min-h-11 w-full border border-cacau/15 bg-white px-3 text-sm"
+            />
+          </label>
+          <label className="text-xs text-cacau">
+            Preço máximo (R$)
+            <input
+              inputMode="decimal"
+              value={maximumPrice}
+              onChange={(event) => setMaximumPrice(event.target.value)}
+              placeholder="Sem máximo"
+              aria-invalid={invalidPrices}
+              className="mt-1 min-h-11 w-full border border-cacau/15 bg-white px-3 text-sm"
+            />
+          </label>
+        </div>
+        {invalidPrices && (
+          <p role="alert" className="mt-2 text-xs text-destructive">
+            Informe valores válidos; o mínimo não pode ser maior que o máximo.
+          </p>
+        )}
+        {statusFilter === "awaiting" && (
+          <p className="mt-3 text-xs text-cacau">
+            Produtos sem preço de venda, inclusive os que ainda não têm custo cadastrado. Edite o
+            produto para definir o preço; ele continua fora da vitrine até estar pronto.
+          </p>
+        )}
       </section>
 
       {isLoading ? (
