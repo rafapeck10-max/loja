@@ -19,6 +19,9 @@ import {
   type PriceVariation,
 } from "@/lib/admin.functions";
 import { formatBRL } from "@/lib/constants";
+import { HomeCurationPanel } from "@/components/HomeCurationPanel";
+import { HomeBannersPanel } from "@/components/HomeBannersPanel";
+import { ImageWithFallback } from "@/components/ImageWithFallback";
 
 const STORAGE_KEY = "mobili_admin_pwd";
 
@@ -548,6 +551,9 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
         </div>
       </div>
 
+      <HomeCurationPanel password={password} products={produtos} />
+      <HomeBannersPanel password={password} />
+
       <section className="mb-6 border border-gold/30 bg-gold/5 p-4 sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -597,9 +603,9 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
                 <article key={product.id} className="border border-cacau/10 bg-white p-3 sm:p-4">
                   <div className="flex gap-3">
                     {product.image_urls[0] ? (
-                      <img
+                      <ImageWithFallback
                         src={product.image_urls[0]}
-                        alt=""
+                        alt={`Imagem de ${product.name}`}
                         className="h-16 w-16 shrink-0 border border-cacau/10 object-contain sm:h-20 sm:w-20"
                       />
                     ) : (
@@ -766,9 +772,9 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
                     className="border border-cacau/10 bg-white p-4 transition-shadow hover:shadow-premium sm:p-5"
                   >
                     <div className="flex gap-3">
-                      <img
+                      <ImageWithFallback
                         src={p.url_imagem}
-                        alt=""
+                        alt={`Imagem de ${p.nome}`}
                         className="h-20 w-20 shrink-0 border border-cacau/10 object-cover sm:h-24 sm:w-24"
                       />
                       <div className="min-w-0 flex-1">
@@ -1032,44 +1038,46 @@ function ProductForm({
               className={field}
             />
           </div>
-          <div>
-            <label className={label}>Preço do fornecedor (R$)</label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={value.preco_fornecedor ?? ""}
-              onChange={(e) =>
-                onChange({
-                  ...value,
-                  preco_fornecedor: e.target.value === "" ? null : Number(e.target.value),
-                })
-              }
-              className={field}
-            />
-          </div>
-          <div>
-            <label className={label}>Preço no site (R$) *</label>
-            <input
-              type="number"
-              step="0.01"
-              value={value.preco_novo}
-              onChange={(e) => {
-                const price = Number(e.target.value);
-                const variations = value.variacoes_preco ?? [];
-                onChange({
-                  ...value,
-                  preco_novo: price,
-                  variacoes_preco: variations.map((variation, index) =>
-                    index === 0 ? { ...variation, sale_price: price || null } : variation,
-                  ),
-                });
-              }}
-              className={field}
-            />
-            <p className="mt-1 text-[11px] text-text-light">
-              O preço antigo será calculado automaticamente: +15%.
-            </p>
+          <div className="grid grid-cols-2 gap-3 sm:col-span-2 sm:gap-4">
+            <div className="min-w-0">
+              <label className={label}>Preço do fornecedor (R$)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={value.preco_fornecedor ?? ""}
+                onChange={(e) =>
+                  onChange({
+                    ...value,
+                    preco_fornecedor: e.target.value === "" ? null : Number(e.target.value),
+                  })
+                }
+                className={field}
+              />
+            </div>
+            <div className="min-w-0">
+              <label className={label}>Preço no site (R$) *</label>
+              <input
+                type="number"
+                step="0.01"
+                value={value.preco_novo}
+                onChange={(e) => {
+                  const price = Number(e.target.value);
+                  const variations = value.variacoes_preco ?? [];
+                  onChange({
+                    ...value,
+                    preco_novo: price,
+                    variacoes_preco: variations.map((variation, index) =>
+                      index === 0 ? { ...variation, sale_price: price || null } : variation,
+                    ),
+                  });
+                }}
+                className={field}
+              />
+              <p className="mt-1 text-[11px] text-text-light">
+                O preço antigo será calculado automaticamente: +15%.
+              </p>
+            </div>
           </div>
           <div>
             <label className={label}>Fornecedor do catálogo</label>
@@ -1196,7 +1204,7 @@ function ProductForm({
               </label>
             </div>
             {value.imagem_url && (
-              <img
+              <ImageWithFallback
                 src={value.imagem_url}
                 alt="Prévia"
                 className="mt-2 h-32 w-32 border border-cacau/10 object-cover"
@@ -1293,7 +1301,7 @@ function ProductForm({
             {!!value.imagens?.length && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {value.imagens.map((src, index) => (
-                  <img
+                  <ImageWithFallback
                     key={`${src}-${index}`}
                     src={src}
                     alt={`Foto adicional ${index + 1}`}

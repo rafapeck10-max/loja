@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createHash, timingSafeEqual } from "node:crypto";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database, Json } from "@/integrations/supabase/types";
+import {
+  DEFAULT_HOMEPAGE_BANNERS,
+  type HomepageBanner,
+  type HomepageBannerInput,
+} from "@/lib/homepage-banners";
 
 export interface ProdutoInput {
   id: string;
@@ -68,6 +73,15 @@ export interface PriceVariation {
   sale_price: number | null;
 }
 
+export type HomeCurationMode = "automatico" | "incluir" | "ocultar";
+
+export interface HomeProductCurationInput {
+  id: string;
+  novidade: HomeCurationMode;
+  sala: HomeCurationMode;
+  descoberta: boolean;
+}
+
 const ADMIN_PRODUCTS_PAGE_SIZE = 500;
 
 export const listAdminProdutos = createServerFn({ method: "POST" })
@@ -111,6 +125,188 @@ export const listAdminProdutos = createServerFn({ method: "POST" })
     }
 
     return rows;
+  });
+
+export const homepageCurationStatus = createServerFn({ method: "POST" })
+  .validator((input: { password: string }) => ({
+    password: String(input?.password ?? ""),
+  }))
+  .handler(async ({ data }) => {
+    checkPassword(data.password);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("produtos").select("vitrine_semana_ordem").limit(0);
+    if (!error) return { available: true as const };
+    if (
+      error.code === "42703" ||
+      error.code === "PGRST204" ||
+      /vitrine_semana_ordem/i.test(error.message)
+    ) {
+      return { available: false as const };
+    }
+    throw new Error(error.message);
+  });
+
+export const saveHomepageCuration = createServerFn({ method: "POST" })
+  .validator(
+    (input: { password: string; weeklyIds: string[]; settings: HomeProductCurationInput[] }) => {
+      const weeklyIds = Array.isArray(input?.weeklyIds) ? input.weeklyIds.map(String) : [];
+      const settings = Array.isArray(input?.settings)
+        ? input.settings.map((item) => ({
+            id: String(item?.id ?? ""),
+            novidade: item?.novidade,
+            sala: item?.sala,
+            descoberta: item?.descoberta,
+          }))
+        : [];
+      const allowed = new Set<HomeCurationMode>(["automatico", "incluir", "ocultar"]);
+      if (weeklyIds.length > 4 || weeklyIds.some((id) => !id || id.length > 160)) {
+        throw new Error("Escolha até quatro produtos válidos para a semana.");
+      }
+      if (settings.length > 5000) {
+        throw new Error("Atualize a lista do catálogo antes de salvar a vitrine.");
+      }
+      if (
+        settings.some(
+          (item) =>
+            !item.id ||
+            item.id.length > 160 ||
+            !allowed.has(item.novidade as HomeCurationMode) ||
+            !allowed.has(item.sala as HomeCurationMode) ||
+            typeof item.descoberta !== "boolean",
+        )
+      ) {
+        throw new Error("Revise as opções de exibição dos produtos.");
+      }
+      if (
+        new Set(weeklyIds).size !== weeklyIds.length ||
+        new Set(settings.map((item) => item.id)).size !== settings.length
+      ) {
+        throw new Error("Há produtos repetidos na seleção da vitrine.");
+      }
+      return {
+        password: String(input?.password ?? ""),
+        weeklyIds,
+        settings: settings as HomeProductCurationInput[],
+      };
+    },
+  )
+  .handler(async ({ data }) => {
+    checkPassword(data.password);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    if (data.weeklyIds.length) {
+      const { data: selectedProducts, error: productsError } = await supabaseAdmin
+        .from("produtos")
+        .select("id, preco_atual, preco_atacado, url_imagem, descricao, cores")
+        .in("id", data.weeklyIds);
+      if (productsError) throw new Error(productsError.message);
+      if (selectedProducts?.length !== data.weeklyIds.length) {
+        throw new Error("Atualize o catálogo: um produto escolhido não está mais disponível.");
+      }
+      const unavailable = /indispon[ií]vel|esgotad[oa]|sem estoque|n[aã]o temos dispon[ií]vel/i;
+      const invalid = selectedProducts.some(
+        (product) =>
+          Number(product.preco_atual ?? 0) <= 0 ||
+          Number(product.preco_atacado ?? 0) <= 0 ||
+          !/^https?:\/\//i.test(product.url_imagem ?? "") ||
+          unavailable.test(String(product.descricao ?? "") + " " + (product.cores ?? []).join(" ")),
+      );
+      if (invalid) throw new Error("Escolha somente produtos publicados e disponíveis.");
+    }
+
+    const { error } = await supabaseAdmin.rpc("save_homepage_curation", {
+      p_weekly_ids: data.weeklyIds,
+      p_home_settings: data.settings as unknown as Json,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
+function isMissingHomepageBannersTable(error: { code?: string; message: string }) {
+  return (
+    error.code === "42P01" ||
+    error.code === "PGRST205" ||
+    (error.message.toLowerCase().includes("homepage_banners") &&
+      /schema cache|does not exist|could not find|relation/i.test(error.message))
+  );
+}
+
+export const listAdminHomepageBanners = createServerFn({ method: "POST" })
+  .validator((input: { password: string }) => ({
+    password: String(input?.password ?? ""),
+  }))
+  .handler(async ({ data }): Promise<{ available: boolean; banners: HomepageBanner[] }> => {
+    checkPassword(data.password);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("homepage_banners")
+      .select("*")
+      .order("position", { ascending: true });
+
+    if (error) {
+      if (isMissingHomepageBannersTable(error)) {
+        return { available: false, banners: DEFAULT_HOMEPAGE_BANNERS };
+      }
+      throw new Error(error.message);
+    }
+
+    const byPosition = new Map((rows ?? []).map((banner) => [banner.position, banner]));
+    return {
+      available: true,
+      banners: DEFAULT_HOMEPAGE_BANNERS.map(
+        (fallback) => byPosition.get(fallback.position) ?? fallback,
+      ),
+    };
+  });
+
+export const saveHomepageBanners = createServerFn({ method: "POST" })
+  .validator((input: { password: string; banners: HomepageBannerInput[] }) => {
+    const source = Array.isArray(input?.banners) ? input.banners : [];
+    if (source.length !== 3) throw new Error("Mantenha os três espaços de banner do carrossel.");
+    const banners = source.map((banner, index) => ({
+      position: index + 1,
+      image_url: String(banner?.image_url ?? "").trim(),
+      eyebrow: String(banner?.eyebrow ?? "").trim(),
+      title: String(banner?.title ?? "").trim(),
+      subtitle: String(banner?.subtitle ?? "").trim(),
+      cta_label: String(banner?.cta_label ?? "").trim(),
+      cta_href: String(banner?.cta_href ?? "").trim(),
+      active: banner?.active === true,
+    }));
+
+    if (
+      banners.some(
+        (banner) =>
+          !/^https:\/\//i.test(banner.image_url) ||
+          !banner.title ||
+          banner.title.length > 120 ||
+          banner.eyebrow.length > 60 ||
+          banner.subtitle.length > 220 ||
+          banner.cta_label.length > 50 ||
+          banner.cta_href.length > 300 ||
+          !(
+            (banner.cta_href.startsWith("/") && !banner.cta_href.startsWith("//")) ||
+            /^https:\/\//i.test(banner.cta_href)
+          ),
+      )
+    ) {
+      throw new Error("Confira as imagens, os títulos e os links dos banners.");
+    }
+    if (!banners.some((banner) => banner.active)) {
+      throw new Error("Deixe pelo menos um banner ativo.");
+    }
+
+    return { password: String(input?.password ?? ""), banners };
+  })
+  .handler(async ({ data }) => {
+    checkPassword(data.password);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("homepage_banners").upsert(
+      data.banners.map((banner) => ({ ...banner, updated_at: new Date().toISOString() })),
+      { onConflict: "position" },
+    );
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
   });
 
 export const listPendingScrapedProducts = createServerFn({ method: "POST" })
