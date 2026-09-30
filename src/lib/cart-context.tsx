@@ -20,10 +20,11 @@ export interface CartItem {
   quantity: number;
   color?: string | null;
   finish?: string | null;
+  variant?: string | null;
 }
 
-export function cartItemKey(item: Pick<CartItem, "id" | "color" | "finish">) {
-  return `${item.id}__${item.color ?? ""}__${item.finish ?? ""}`;
+export function cartItemKey(item: Pick<CartItem, "id" | "color" | "finish" | "variant">) {
+  return `${item.id}__${item.color ?? ""}__${item.finish ?? ""}__${item.variant ?? ""}`;
 }
 
 interface CartContextValue {

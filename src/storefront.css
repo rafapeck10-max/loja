@@ -1,0 +1,1032 @@
+/* Visual aprovado na prévia Mobi de 27/09/2026. Escopo exclusivo da vitrine. */
+.mobi-wrap {
+  max-width: 1300px;
+  margin-right: auto;
+  margin-left: auto;
+  padding-left: 44px;
+  padding-right: 44px;
+  width: 100%;
+}
+.mobi-header {
+  background: #2e3f32;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+.mobi-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  min-height: 88px;
+}
+.mobi-logo {
+  display: block;
+  flex-shrink: 0;
+}
+.mobi-logo-image {
+  display: block;
+  width: 100px;
+  height: 44px;
+}
+.mobi-search {
+  display: flex;
+  max-width: 520px;
+  width: 100%;
+  background: #415143;
+  border: 1px solid #56634d;
+  border-radius: 40px;
+  padding: 5px 5px 5px 20px;
+}
+.mobi-search input {
+  background: transparent;
+  border: 0;
+  color: white;
+  outline: none;
+  min-width: 0;
+  flex: 1;
+  font-size: 13px;
+}
+.mobi-search input::placeholder {
+  color: #d2d4c9;
+}
+.mobi-search button {
+  background: #c5a059;
+  color: #27382d;
+  border-radius: 30px;
+  padding: 10px 17px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.mobi-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.mobi-header-catalog {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid #c5a059;
+  border-radius: 999px;
+  background: #ffffff08;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
+  text-decoration: none;
+  transition:
+    background 0.18s,
+    color 0.18s;
+}
+.mobi-header-catalog svg {
+  color: #dfbd7c;
+}
+.mobi-header-catalog:hover {
+  background: #c5a059;
+  color: #2e3f32;
+}
+.mobi-header-catalog:hover svg {
+  color: #2e3f32;
+}
+.mobi-header-cart {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: #dfbd7c;
+  font-size: 12px;
+  min-height: 44px;
+}
+.mobi-hero {
+  height: 470px;
+  position: relative;
+  overflow: hidden;
+  background: #2e3f32;
+}
+.mobi-hero > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 57%;
+  filter: brightness(0.59);
+}
+.mobi-image-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f4efe6;
+  color: #947135;
+}
+.mobi-hero > .mobi-image-fallback {
+  width: 100%;
+  height: 100%;
+  background: #2e3f32;
+  color: #dfbd7c;
+}
+.mobi-photo > .mobi-image-fallback {
+  width: 100%;
+  height: 100%;
+}
+.mobi-hero-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+}
+.mobi-eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2.1px;
+  color: #947135;
+  display: block;
+  margin-bottom: 13px;
+}
+.mobi-hero .mobi-eyebrow {
+  color: #dfbd7c;
+}
+.mobi-hero h1 {
+  color: #fff;
+  font-size: 52px;
+  line-height: 1.14;
+  max-width: 520px;
+  margin: 0 0 17px;
+  letter-spacing: -2px;
+  font-weight: 700;
+}
+.mobi-hero p {
+  color: #ecece5;
+  font-size: 15px;
+  margin: 0 0 15px;
+  line-height: 1.7;
+}
+.mobi-primary,
+.mobi-gold {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 14px 23px;
+  background: #2e3f32;
+  color: #fff;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 13px;
+  text-decoration: none;
+}
+.mobi-gold {
+  background: #c5a059;
+  color: #2e3f32;
+}
+.mobi-primary:hover,
+.mobi-product-cta:hover {
+  background: #435a48;
+}
+.mobi-gold:hover {
+  background: #d8b674;
+}
+.mobi-dots {
+  display: flex;
+  gap: 8px;
+  margin-top: 28px;
+}
+.mobi-dots button {
+  height: 5px;
+  width: 23px;
+  border-radius: 4px;
+  padding: 0;
+  background: #b4b1a7;
+}
+.mobi-dots .active {
+  background: #e5be70;
+  width: 35px;
+}
+.mobi-trust {
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+  padding: 17px;
+  background: #fff;
+  border-bottom: 1px solid #e7e1d5;
+  font-size: 12px;
+  color: #46513f;
+  font-weight: 600;
+}
+.mobi-category-wrap {
+  padding-top: 25px;
+  padding-bottom: 6px;
+}
+.mobi-categories {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 10px;
+}
+.mobi-categories a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-width: 0;
+  min-height: 90px;
+  background: #fff;
+  border: 1px solid #e3dbce;
+  border-radius: 12px;
+  padding: 10px 7px;
+  font-weight: 600;
+  font-size: 11px;
+  line-height: 1.3;
+  text-align: center;
+  color: #493327;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.mobi-category-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f4efe6;
+  width: 37px;
+  height: 37px;
+  border-radius: 8px;
+  color: #2e3f32;
+  flex-shrink: 0;
+}
+.mobi-categories a:hover .mobi-category-icon {
+  color: #947135;
+  background: #efe5cf;
+}
+.mobi-mobile-environments {
+  display: none;
+}
+.mobi-shelf {
+  padding-top: 26px;
+  padding-bottom: 10px;
+}
+.mobi-section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  gap: 15px;
+}
+.mobi-section-title h2 {
+  font-size: 30px;
+  line-height: 1.3;
+  margin: 0 0 8px;
+  letter-spacing: -1.1px;
+  color: #2e3f32;
+  font-weight: 700;
+}
+.mobi-section-title p {
+  color: #7f7467;
+  font-size: 13px;
+  margin: 0;
+  line-height: 1.7;
+}
+.mobi-text-link {
+  display: inline-block;
+  background: none;
+  color: #2e3f32;
+  font-weight: 700;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+  padding: 8px 0;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.mobi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 21px;
+}
+.mobi-product {
+  background: #fff;
+  border-radius: 9px;
+  overflow: hidden;
+  border: 1px solid #e8e0d3;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.mobi-photo {
+  width: 100%;
+  position: relative;
+  background: #fff;
+  padding: 8px;
+  display: block;
+  aspect-ratio: 4/3;
+  overflow: hidden;
+}
+.mobi-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.25s;
+}
+.mobi-photo:hover img {
+  transform: scale(1.04);
+}
+.mobi-badge {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  top: 12px;
+  left: 12px;
+  max-width: calc(100% - 24px);
+  min-height: 30px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.25;
+  box-shadow: 0 2px 5px #49332708;
+  text-align: left;
+}
+.mobi-badge svg {
+  flex-shrink: 0;
+  width: 13px;
+  height: 13px;
+}
+.mobi-badge-week {
+  background: #fcf4e3;
+  border: 1px solid #e9d6ad;
+  color: #806027;
+}
+.mobi-badge-new {
+  background: #edf5ef;
+  border: 1px solid #d1e4d5;
+  color: #346248;
+}
+.mobi-product-body {
+  padding: 14px 19px 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.mobi-product small {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.1px;
+  color: #91806e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mobi-product h3 {
+  font-size: 14px;
+  margin: 7px 0 5px;
+  font-weight: 700;
+  line-height: 1.45;
+  height: 1.45em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  display: block;
+  color: #493327;
+}
+.mobi-detail {
+  color: #827367;
+  font-size: 12px;
+  height: 1.5em;
+  margin: 0 0 8px;
+  line-height: 1.5;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  display: block;
+}
+.mobi-price-panel {
+  min-height: 90px;
+  margin: 2px 0 12px;
+  padding: 10px 12px 9px;
+  background: #f3f7f1;
+  border: 1px solid #e6eee3;
+  border-radius: 8px;
+}
+.mobi-price {
+  font-size: 23px;
+  font-weight: 800;
+  color: #247049;
+  letter-spacing: -0.6px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 3px;
+  line-height: 1.15;
+}
+.mobi-price span {
+  font-size: 10px;
+  letter-spacing: 0;
+  font-weight: 600;
+}
+.mobi-installments {
+  font-size: 11px;
+  color: #817669;
+  margin: 5px 0 0;
+  line-height: 1.4;
+}
+.mobi-product-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: auto;
+  border-radius: 5px;
+  padding: 12px;
+  min-height: 44px;
+  background: #2e3f32;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+  text-align: center;
+}
+.mobi-inspiration {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  padding-top: 52px;
+  padding-bottom: 8px;
+  align-items: stretch;
+}
+.mobi-inspiration img {
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+  border-radius: 8px 0 0 8px;
+}
+.mobi-inspiration > div {
+  background: #e9e1d2;
+  padding: 44px;
+  border-radius: 0 8px 8px 0;
+}
+.mobi-inspiration h2 {
+  font-size: 33px;
+  line-height: 1.2;
+  color: #2e3f32;
+  letter-spacing: -1.1px;
+  margin: 0 0 8px;
+}
+.mobi-inspiration p {
+  font-size: 13px;
+  max-width: 290px;
+  color: #7b6b57;
+  line-height: 1.7;
+  margin: 0 0 16px;
+}
+.mobi-catalog-invite {
+  text-align: center;
+  padding-top: 65px;
+  padding-bottom: 60px;
+}
+.mobi-catalog-invite h2 {
+  font-size: 30px;
+  color: #2e3f32;
+  letter-spacing: -1.1px;
+  margin: 0 0 8px;
+}
+.mobi-catalog-invite p {
+  font-size: 13px;
+  color: #7b6b57;
+  line-height: 1.7;
+  margin: 0 0 16px;
+}
+.mobi-catalog {
+  padding-top: 27px;
+  padding-bottom: 65px;
+}
+.mobi-breadcrumb {
+  font-size: 11px;
+  color: #8a7a65;
+  margin-bottom: 30px;
+}
+.mobi-catalog-title h1 {
+  font-size: 40px;
+  line-height: 1.2;
+  margin: 0 0 10px;
+  color: #2e3f32;
+  letter-spacing: -1.1px;
+}
+.mobi-category-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 27px;
+  border-bottom: 1px solid #dfd6c7;
+}
+.mobi-category-chips a,
+.mobi-category-chips button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  white-space: nowrap;
+  padding: 10px 17px;
+  border-radius: 40px;
+  background: transparent;
+  border: 1px solid #d6cbb9;
+  color: #493327;
+  font-size: 11px;
+  text-decoration: none;
+}
+.mobi-category-chips svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.mobi-category-chips .mobi-category-icon {
+  width: 16px;
+  height: 16px;
+  background: none;
+}
+.mobi-category-chips .selected {
+  background: #2e3f32;
+  border-color: #2e3f32;
+  color: #fff;
+}
+.mobi-catalog-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 32px;
+  padding-top: 30px;
+}
+.mobi-filters {
+  align-self: start;
+  position: sticky;
+  top: 112px;
+  padding-right: 20px;
+}
+.mobi-filter-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 24px;
+}
+.mobi-filter-heading h3 {
+  font-size: 14px;
+  margin: 0;
+  color: #493327;
+}
+.mobi-filters > label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 9px;
+}
+.mobi-catalog select {
+  border: 1px solid #d8cfbd;
+  border-radius: 5px;
+  background: #fff;
+  color: #493327;
+  padding: 11px 10px;
+  font-size: 12px;
+}
+.mobi-filters select {
+  width: 100%;
+}
+.mobi-filters fieldset {
+  padding: 22px 0;
+  border: 0;
+  margin: 15px 0 0;
+}
+.mobi-filters legend {
+  font-weight: 700;
+  font-size: 12px;
+  padding-top: 18px;
+}
+.mobi-radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+.mobi-radio input {
+  accent-color: #2e3f32;
+}
+.mobi-filter-note {
+  border-top: 1px solid #ddd2bf;
+  font-size: 12px;
+  color: #8c7c67;
+  padding-top: 24px;
+  line-height: 1.8;
+  margin: 0;
+}
+.mobi-results-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  font-size: 11px;
+  color: #7c6c59;
+}
+.mobi-sort {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.mobi-sort select {
+  max-width: 150px;
+}
+.mobi-catalog-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 17px;
+}
+.mobi-applied {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.mobi-applied:empty {
+  display: none;
+}
+.mobi-applied button,
+.mobi-applied a {
+  background: #e6dfd2;
+  color: #493327;
+  padding: 8px 12px;
+  border-radius: 30px;
+  font-size: 11px;
+  text-decoration: none;
+}
+.mobi-load-more {
+  text-align: center;
+  padding: 35px 0;
+}
+.mobi-load-more p {
+  font-size: 12px;
+  color: #8a7963;
+  margin: 0 0 13px;
+}
+.mobi-load-more progress {
+  display: block;
+  width: 160px;
+  height: 4px;
+  accent-color: #2e3f32;
+  margin: 0 auto 20px;
+}
+.mobi-empty {
+  text-align: center;
+  padding: 80px 20px;
+}
+.mobi-empty h2 {
+  font-size: 30px;
+  color: #2e3f32;
+}
+.mobi-empty p {
+  line-height: 1.7;
+  margin: 12px 0;
+}
+.mobi-filter-toggle {
+  display: none;
+}
+#conteudo {
+  padding-bottom: 0;
+  scroll-margin-top: 100px;
+}
+@media (max-width: 1000px) and (min-width: 601px) {
+  .mobi-categories {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+@media (max-width: 900px) {
+  .mobi-wrap {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  .mobi-grid {
+    gap: 12px;
+  }
+  .mobi-product-body {
+    padding: 12px;
+  }
+  .mobi-price {
+    font-size: 20px;
+  }
+  .mobi-catalog-layout {
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 20px;
+  }
+  .mobi-catalog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mobi-inspiration > div {
+    padding: 30px;
+  }
+  .mobi-inspiration h2 {
+    font-size: 27px;
+  }
+  .mobi-hero h1 {
+    font-size: 46px;
+  }
+}
+@media (max-width: 600px) {
+  .mobi-wrap {
+    padding-left: 17px;
+    padding-right: 17px;
+  }
+  .mobi-header-inner {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-top: 14px;
+    padding-bottom: 14px;
+    min-height: 100px;
+  }
+  .mobi-logo-image {
+    width: 82px;
+    height: 36px;
+  }
+  .mobi-search {
+    order: 3;
+    max-width: none;
+    width: 100%;
+    padding-left: 15px;
+  }
+  .mobi-search input {
+    font-size: 11px;
+  }
+  .mobi-search button {
+    padding: 8px 14px;
+  }
+  .mobi-header-catalog {
+    min-height: 40px;
+    padding: 0 13px;
+    gap: 7px;
+    font-size: 12px;
+  }
+  .mobi-header-cart {
+    display: none;
+  }
+  .mobi-hero {
+    height: 350px;
+  }
+  .mobi-hero h1 {
+    font-size: 37px;
+    max-width: 300px;
+    letter-spacing: -1.4px;
+  }
+  .mobi-hero-content {
+    padding-left: 25px;
+  }
+  .mobi-hero p {
+    font-size: 12px;
+  }
+  .mobi-gold {
+    font-size: 11px;
+  }
+  .mobi-trust {
+    gap: 13px;
+    padding: 13px 10px;
+    font-size: 9px;
+  }
+  .mobi-trust span {
+    max-width: 100px;
+    text-align: center;
+  }
+  .mobi-category-wrap {
+    padding-top: 12px;
+    padding-bottom: 0;
+  }
+  .mobi-desktop-categories {
+    display: none;
+  }
+  .mobi-mobile-environments {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+  }
+  .mobi-mobile-environments a,
+  .mobi-mobile-environments button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-width: 0;
+    min-height: 90px;
+    padding: 12px 7px;
+    background: #fff;
+    border: 1px solid #e3dbce;
+    border-radius: 12px;
+    color: #2e3f32;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .mobi-mobile-environments svg {
+    width: 25px;
+    height: 25px;
+    flex-shrink: 0;
+  }
+  .mobi-mobile-environments .mobi-category-icon {
+    background: none;
+  }
+  .mobi-mobile-environments .selected {
+    background: #2e3f32;
+    color: #fff;
+    border-color: #2e3f32;
+  }
+  .mobi-mobile-environments .selected .mobi-category-icon {
+    color: inherit;
+  }
+  .mobi-shelf {
+    padding-top: 14px;
+    padding-bottom: 8px;
+  }
+  .mobi-section-title {
+    margin-bottom: 9px;
+    align-items: flex-start;
+  }
+  .mobi-section-title h2 {
+    font-size: 24px;
+    margin-bottom: 4px;
+  }
+  .mobi-section-title p {
+    font-size: 11px;
+    max-width: 235px;
+    line-height: 1.5;
+  }
+  .mobi-text-link {
+    font-size: 11px;
+  }
+  .mobi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 11px;
+  }
+  .mobi-photo {
+    padding: 5px;
+    aspect-ratio: 4/3;
+  }
+  .mobi-badge {
+    top: 8px;
+    left: 8px;
+    max-width: calc(100% - 16px);
+    min-height: 28px;
+    padding: 6px 8px;
+    gap: 5px;
+    font-size: 10px;
+    border-radius: 8px;
+  }
+  .mobi-badge svg {
+    width: 12px;
+    height: 12px;
+  }
+  .mobi-product-body {
+    padding: 11px;
+  }
+  .mobi-product h3 {
+    font-size: 13px;
+  }
+  .mobi-product small {
+    font-size: 9px;
+    letter-spacing: 0.4px;
+  }
+  .mobi-detail {
+    font-size: 11px;
+  }
+  .mobi-price-panel {
+    min-height: 90px;
+    margin-top: 1px;
+    padding: 8px 9px 7px;
+    border-radius: 7px;
+  }
+  .mobi-price-panel .mobi-price {
+    font-size: 18px;
+  }
+  .mobi-price span {
+    font-size: 8px;
+  }
+  .mobi-price-panel .mobi-installments {
+    font-size: 9px;
+  }
+  .mobi-product-cta {
+    font-size: 10px;
+    padding: 11px 6px;
+  }
+  .mobi-inspiration {
+    grid-template-columns: 1fr;
+    padding-top: 32px;
+  }
+  .mobi-inspiration img {
+    height: 230px;
+    border-radius: 8px 8px 0 0;
+  }
+  .mobi-inspiration > div {
+    padding: 28px;
+    border-radius: 0 0 8px 8px;
+  }
+  .mobi-inspiration h2 {
+    font-size: 30px;
+  }
+  .mobi-catalog-invite {
+    padding-top: 45px;
+    padding-bottom: 45px;
+  }
+  .mobi-catalog-invite h2 {
+    font-size: 25px;
+  }
+  .mobi-catalog {
+    padding-top: 18px;
+  }
+  .mobi-breadcrumb {
+    margin-bottom: 25px;
+  }
+  .mobi-catalog-title h1 {
+    font-size: 30px;
+  }
+  .mobi-catalog > .mobi-mobile-environments {
+    margin-bottom: 8px;
+  }
+  .mobi-catalog-layout {
+    display: block;
+    padding-top: 18px;
+  }
+  .mobi-filters {
+    display: none;
+  }
+  .mobi-filters.open {
+    display: block;
+    position: static;
+    padding: 20px;
+    background: #fff;
+    margin-bottom: 20px;
+    border: 1px solid #ded4c3;
+    border-radius: 8px;
+  }
+  .mobi-results-toolbar {
+    flex-wrap: wrap;
+    font-size: 10px;
+    gap: 11px;
+  }
+  .mobi-sort {
+    margin-left: auto;
+    gap: 5px;
+  }
+  .mobi-sort select {
+    font-size: 10px;
+    padding: 9px 5px;
+    max-width: 116px;
+  }
+  .mobi-filter-toggle {
+    display: block;
+    background: #e7dfd0;
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 11px;
+  }
+  .mobi-results-toolbar > span {
+    width: 100%;
+  }
+  .mobi-catalog-grid {
+    gap: 11px;
+  }
+  .mobi-empty {
+    padding: 45px 10px;
+  }
+  .mobi-empty h2 {
+    font-size: 23px;
+  }
+}
+
+.mobi-product {
+  position: relative;
+}
+.mobi-badge-row {
+  height: 0;
+}
+@media (max-width: 600px) {
+  .mobi-badge-row {
+    height: 32px;
+    padding: 3px 9px 0;
+    display: flex;
+    align-items: flex-start;
+  }
+  .mobi-badge-row .mobi-badge {
+    position: static;
+    max-width: 100%;
+    min-height: 25px;
+    padding: 5px 6px;
+    font-size: 9px;
+    gap: 4px;
+    border-radius: 6px;
+    box-shadow: none;
+    white-space: nowrap;
+  }
+  .mobi-badge-row .mobi-badge svg {
+    width: 11px;
+    height: 11px;
+  }
+  .mobi-product-body {
+    padding-top: 5px;
+  }
+}

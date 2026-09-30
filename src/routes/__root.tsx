@@ -6,6 +6,7 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  useRouterState,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { Toaster } from "sonner";
@@ -166,6 +167,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const isAdminRoute = useRouterState({ select: (state) => state.location.pathname === "/admin" });
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -173,16 +175,16 @@ function RootComponent() {
         <CartProvider>
           <div className="store-shell flex min-h-screen flex-col">
             <Header />
-            <main id="conteudo" className="flex-1 pb-20 md:pb-0">
+            <main id="conteudo" className={isAdminRoute ? "flex-1" : "flex-1 pb-20 md:pb-0"}>
               {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
               <Outlet />
             </main>
             <Footer />
           </div>
-          <WhatsAppFloat />
+          {!isAdminRoute && <WhatsAppFloat />}
           <CartDrawer />
           <MenuDrawer />
-          <MobileBottomBar />
+          {!isAdminRoute && <MobileBottomBar />}
           <Toaster
             position="bottom-left"
             toastOptions={{

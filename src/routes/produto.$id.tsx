@@ -128,11 +128,19 @@ function ProductPage() {
   const [qty, setQty] = useState(1);
   const [color, setColor] = useState<string | null>(produto?.cores?.[0] ?? null);
   const [installmentCount, setInstallmentCount] = useState(MAX_INSTALLMENTS);
+  const [priceVariationSku, setPriceVariationSku] = useState<string | null>(null);
 
   if (!produto) return null;
 
   const images = galleryFor(produto);
-  const pixPrice = produto.preco_novo;
+  const pricedVariations = produto.variacoes_preco.filter(
+    (variation) => variation.sale_price != null && variation.sale_price > 0,
+  );
+  const selectedPriceVariation =
+    pricedVariations.find((variation) => variation.sku === priceVariationSku) ??
+    pricedVariations[0] ??
+    null;
+  const pixPrice = selectedPriceVariation?.sale_price ?? produto.preco_novo;
   const cardPrice = cardTotal(pixPrice, installmentCount);
   const installment = cardInstallment(pixPrice, installmentCount);
   const installmentOptions = Array.from({ length: MAX_INSTALLMENTS }, (_, index) => index + 1);
@@ -150,12 +158,13 @@ function ProductPage() {
     addItem({
       id: produto.id,
       name: produto.nome,
-      price: produto.preco_novo,
+      price: pixPrice,
       cardPrice,
       installmentCount,
       img: produto.imagem_url,
       quantity: qty,
       color,
+      variant: selectedPriceVariation?.name ?? null,
     });
   };
 
@@ -269,7 +278,7 @@ function ProductPage() {
           <div className="mt-5 rounded-2xl border-l-4 border-gold bg-white px-5 py-5 shadow-premium">
             <div className="text-sm text-text-light line-through">{formatBRL(cardPrice)}</div>
             <div className="text-4xl font-bold tracking-tight text-price-green sm:text-5xl">
-              {formatBRL(produto.preco_novo)}
+              {formatBRL(pixPrice)}
             </div>
             <p className="mt-2 text-sm leading-relaxed text-text-light">
               <strong className="text-cacau">{formatBRL(pixPrice)}</strong> à vista no PIX ou cartão
@@ -319,6 +328,28 @@ function ProductPage() {
               </div>
             </div>
           </div>
+
+          {pricedVariations.length > 0 && (
+            <div className="mt-6">
+              <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-cacau">
+                Peça / opção
+              </span>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {pricedVariations.map((variation) => (
+                  <button
+                    key={variation.sku}
+                    type="button"
+                    aria-pressed={selectedPriceVariation?.sku === variation.sku}
+                    onClick={() => setPriceVariationSku(variation.sku)}
+                    className={`flex min-h-14 flex-col items-start justify-center rounded-xl border px-3 py-2 text-left transition-colors ${selectedPriceVariation?.sku === variation.sku ? "border-gold bg-gold/10 text-cacau" : "border-cacau/15 bg-white text-text-light hover:border-gold"}`}
+                  >
+                    <span className="text-xs font-semibold">{variation.name}</span>
+                    <span className="text-[11px]">{formatBRL(variation.sale_price ?? 0)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {colors.length > 0 && (
             <div className="mt-6">
