@@ -12,6 +12,7 @@ import {
   type ProdutoAdmin,
 } from "@/lib/admin.functions";
 import { formatBRL } from "@/lib/constants";
+import { produtosQueryOptions } from "@/lib/products.functions";
 
 interface Props {
   password: string;
@@ -195,25 +196,42 @@ export function HomeCurationPanel({ password, products }: Props) {
   };
   const save = async () => {
     setSaving(true);
+    let savedToDatabase = false;
     try {
       const settings: HomeProductCurationInput[] = products.map((product) => ({
         id: product.id,
         ...(current.settings[product.id] ?? settingsFor(product)),
       }));
       await saveHomepageCuration({ data: { password, weeklyIds: current.weeklyIds, settings } });
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["admin-produtos"] }),
-        queryClient.invalidateQueries({ queryKey: ["produtos"] }),
-      ]);
+      savedToDatabase = true;
+      await queryClient.invalidateQueries({ queryKey: ["admin-produtos"] });
+
+      // Confirm through the same public query the storefront uses before reporting success.
+      const storefrontProducts = await queryClient.fetchQuery(produtosQueryOptions());
+      const confirmedWeeklyIds = storefrontProducts
+        .filter((product) => product.vitrine_semana_ordem != null)
+        .sort(
+          (a, b) =>
+            (a.vitrine_semana_ordem ?? Number.MAX_SAFE_INTEGER) -
+            (b.vitrine_semana_ordem ?? Number.MAX_SAFE_INTEGER),
+        )
+        .map((product) => product.id);
+      if (JSON.stringify(confirmedWeeklyIds) !== JSON.stringify(current.weeklyIds)) {
+        throw new Error("A seleção salva ainda não apareceu na consulta pública da vitrine.");
+      }
+
       setDraft(null);
       setPickerIndex(null);
-      toast.success("Alterações salvas. A vitrine da loja foi atualizada.");
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Não foi possível salvar. Suas alterações continuam aqui.",
+      toast.success(
+        "Escolhas salvas e confirmadas na vitrine. Se ela já estava aberta em outra aba, atualize a página.",
       );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Tente novamente em instantes.";
+      if (savedToDatabase) {
+        toast.warning(`Salvo no painel, mas não foi possível confirmar na vitrine. ${message}`);
+      } else {
+        toast.error(`${message} Suas alterações continuam aqui.`);
+      }
     } finally {
       setSaving(false);
     }
