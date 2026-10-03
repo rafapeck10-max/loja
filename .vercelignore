@@ -1,0 +1,4 @@
+.vercel-cli-tmp/
+vercel-*.tgz
+SITE_CONTEXT.md
+supabase/.temp/
