@@ -1,187 +1,25 @@
 ---
-description: Deployment command for production releases. Pre-flight checks and deployment execution.
+description: Publish this Mobi storefront through the connected GitHub and Vercel project.
 ---
 
-# /deploy - Production Deployment
+# /deploy — Mobi storefront
 
-$ARGUMENTS
+Use [DEPLOYMENT.md](../../DEPLOYMENT.md) as the project-specific release procedure. Ignore generic checklist commands in this file if they do not match the scripts defined by `package.json`.
 
----
+## Quick flow
 
-## Purpose
+1. Start from the latest `main` and create a focused branch.
+2. Keep the change within the user's request. Product prices, installment data, and catalog images live in Supabase; do not alter them for a visual request.
+3. Open a pull request and use its Vercel preview to check the affected route.
+4. Run only relevant checks:
+   - Build: `npm run build` (also run by the Vercel preview).
+   - Lint: `npm run lint` when code changes warrant it.
+   - Category regression: `npm run test:categories` when category matching or navigation changes.
+   - There is no `npm test` script.
+5. For ordinary visual changes and simple bug fixes, the request authorizes publication after the preview passes. Do not ask for duplicate approval.
+6. For price, 10x installment, catalog/stock, or commercial/legal-copy changes, present before-and-after details and wait for explicit approval. One approval for the reviewed version is sufficient.
+7. Merge through GitHub and let Vercel deploy the commit. Prefer a merge commit; do not rewrite published branch history. Confirm production is `READY` and check the affected route.
 
-This command handles production deployment with pre-flight checks, deployment execution, and verification.
+## User-facing result
 
----
-
-## Sub-commands
-
-```
-/deploy            - Interactive deployment wizard
-/deploy check      - Run pre-deployment checks only
-/deploy preview    - Deploy to preview/staging
-/deploy production - Deploy to production
-/deploy rollback   - Rollback to previous version
-```
-
----
-
-## Pre-Deployment Checklist
-
-Before any deployment:
-
-```markdown
-## 🚀 Pre-Deploy Checklist
-
-### Code Quality
-
-- [ ] No TypeScript errors (`npx tsc --noEmit`)
-- [ ] ESLint passing (`npx eslint .`)
-- [ ] All tests passing (`npm test`)
-
-### Security
-
-- [ ] No hardcoded secrets
-- [ ] Environment variables documented
-- [ ] Dependencies audited (`npm audit`)
-
-### Performance
-
-- [ ] Bundle size acceptable
-- [ ] No console.log statements
-- [ ] Images optimized
-
-### Documentation
-
-- [ ] README updated
-- [ ] CHANGELOG updated
-- [ ] API docs current
-
-### Ready to deploy? (y/n)
-```
-
----
-
-## Deployment Flow
-
-```
-┌─────────────────┐
-│  /deploy        │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Pre-flight     │
-│  checks         │
-└────────┬────────┘
-         │
-    Pass? ──No──► Fix issues
-         │
-        Yes
-         │
-         ▼
-┌─────────────────┐
-│  Build          │
-│  application    │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Deploy to      │
-│  platform       │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Health check   │
-│  & verify       │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  ✅ Complete    │
-└─────────────────┘
-```
-
----
-
-## Output Format
-
-### Successful Deploy
-
-```markdown
-## 🚀 Deployment Complete
-
-### Summary
-
-- **Version:** v1.2.3
-- **Environment:** production
-- **Duration:** [build + deploy time]
-- **Platform:** Vercel
-
-### URLs
-
-- 🌐 Production: https://app.example.com
-- 📊 Dashboard: https://vercel.com/project
-
-### What Changed
-
-- Added user profile feature
-- Fixed login bug
-- Updated dependencies
-
-### Health Check
-
-✅ API responding (200 OK)
-✅ Database connected
-✅ All services healthy
-```
-
-### Failed Deploy
-
-```markdown
-## ❌ Deployment Failed
-
-### Error
-
-Build failed at step: TypeScript compilation
-
-### Details
-```
-
-error TS2345: Argument of type 'string' is not assignable...
-
-```
-
-### Resolution
-1. Fix TypeScript error in `src/services/user.ts:45`
-2. Run `npm run build` locally to verify
-3. Try `/deploy` again
-
-### Rollback Available
-Previous version (v1.2.2) is still active.
-Run `/deploy rollback` if needed.
-```
-
----
-
-## Platform Support
-
-| Platform | Command                | Notes                     |
-| -------- | ---------------------- | ------------------------- |
-| Vercel   | `vercel --prod`        | Auto-detected for Next.js |
-| Railway  | `railway up`           | Needs Railway CLI         |
-| Fly.io   | `fly deploy`           | Needs flyctl              |
-| Docker   | `docker compose up -d` | For self-hosted           |
-
----
-
-## Examples
-
-```
-/deploy
-/deploy check
-/deploy preview
-/deploy production
-/deploy rollback
-```
+Give a short summary, the preview or production URL, deployment status, and the exact 10x comparison when payment was involved. The user does not need to click through GitHub settings or perform deployment steps.
