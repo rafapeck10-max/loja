@@ -9,5 +9,6 @@ export function publicDescription(description: string) {
     )
     .join("\n")
     .replace(/\s+(Medidas:|Variações de cor:)/g, "\n\n$1")
+    .replace(/ +((?:PESO|COR|[A-ZÀ-Ú]{4,})(?: [A-ZÀ-Ú]+)*):/g, (_, label) => "\n" + label + ":")
     .trim();
 }

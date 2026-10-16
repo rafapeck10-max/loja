@@ -1,0 +1,12 @@
+.vercel-auth-tmp/
+.vercel-cli-tmp/
+.vercel/
+vercel-*.tgz
+SITE_CONTEXT.md
+supabase/.temp/
+source.zip
+.env*
+proof/
+.output/
+.wrangler/
+deployment-source-manifest.json

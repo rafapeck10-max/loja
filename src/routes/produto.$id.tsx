@@ -374,6 +374,21 @@ function ProductPage() {
             </span>
           </div>
 
+          <div
+            role="note"
+            aria-label="Atenção à montagem"
+            className="mt-5 rounded-xl border border-gold/40 bg-gold/10 px-4 py-3 text-sm leading-relaxed text-cacau"
+          >
+            <p className="font-semibold text-deep-green">Atenção à montagem</p>
+            <p className="mt-1 text-xs sm:text-sm">
+              O produto deve ser montado conforme o manual do fabricante por profissional
+              qualificado. A Mobi não se responsabiliza por danos causados exclusivamente por
+              montagem incorreta ou feita por pessoa não qualificada; esses danos podem não ser
+              cobertos pela garantia do fabricante. Se desejar, podemos indicar um montador.
+              Consulte disponibilidade e valores.
+            </p>
+          </div>
+
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             <button
               onClick={handleBuyNow}

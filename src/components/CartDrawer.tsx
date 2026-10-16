@@ -4,6 +4,7 @@ import { useCart, cartItemKey } from "@/lib/cart-context";
 import { formatBRL, WHATSAPP_NUMBER } from "@/lib/constants";
 import { MAX_INSTALLMENTS } from "@/lib/constants";
 import { WhatsAppIcon } from "@/components/WhatsAppIcon";
+import { installmentFromTotal } from "@/lib/payment";
 
 type Step = "cart" | "checkout";
 
@@ -66,8 +67,12 @@ export function CartDrawer() {
       const itemPrice = isCardPayment ? (item.cardPrice ?? item.price) : item.price;
       message += `   Qtd: ${item.quantity}x | Preço: ${formatBRL(itemPrice)}\n\n`;
       if (isCardPayment) {
-        const installments = item.installmentCount ?? MAX_INSTALLMENTS;
-        message += `   Cartão: ${installments}x de ${formatBRL((itemPrice * item.quantity) / installments)}\n\n`;
+        const installments = Math.min(
+          Math.max(item.installmentCount ?? MAX_INSTALLMENTS, 1),
+          MAX_INSTALLMENTS,
+        );
+        const installmentAmount = installmentFromTotal(itemPrice * item.quantity, installments);
+        message += `   Cartão: ${installments}x de ${formatBRL(installmentAmount)}\n\n`;
       }
     });
     message += `*Valor Total:* ${formatBRL(orderTotal)}\n\n`;
