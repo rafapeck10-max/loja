@@ -19,7 +19,7 @@ import { formatBRL, MAX_INSTALLMENTS, SUBCATEGORIES, categoryMatches } from "@/l
 import { useCart } from "@/lib/cart-context";
 import { publicDescription } from "@/lib/product-copy";
 import { CompreJunto } from "@/components/CompreJunto";
-import { cardInstallment, cardTotal, installmentRate } from "@/lib/payment";
+import { cardInstallment, cardTotal } from "@/lib/payment";
 
 export const Route = createFileRoute("/produto/$id")({
   loader: async ({ context, params }) => {
@@ -127,7 +127,7 @@ function ProductPage() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [qty, setQty] = useState(1);
   const [color, setColor] = useState<string | null>(produto?.cores?.[0] ?? null);
-  const [installmentCount, setInstallmentCount] = useState(MAX_INSTALLMENTS);
+  const installmentCount = MAX_INSTALLMENTS;
 
   if (!produto) return null;
 
@@ -135,7 +135,6 @@ function ProductPage() {
   const pixPrice = produto.preco_novo;
   const cardPrice = cardTotal(pixPrice, installmentCount);
   const installment = cardInstallment(pixPrice, installmentCount);
-  const installmentOptions = Array.from({ length: MAX_INSTALLMENTS }, (_, index) => index + 1);
   const colors = (produto.cores ?? []).map((name, index) => ({
     name,
     hex: COLOR_SWATCHES[index % COLOR_SWATCHES.length],
@@ -279,45 +278,6 @@ function ProductPage() {
               </strong>{" "}
               na entrega.
             </p>
-          </div>
-
-          <div className="mt-5 rounded-2xl border border-cacau/10 bg-white shadow-premium">
-            <div className="border-b border-cacau/10 px-5 py-4">
-              <p className="text-[11px] font-bold uppercase tracking-[1.5px] text-gold">
-                Condições de pagamento
-              </p>
-              <h2 className="mt-1 text-2xl text-deep-green">Parcelamento no cartão</h2>
-              <p className="mt-1 text-xs text-text-light">
-                Escolha o número de parcelas. O valor de cada opção já considera a taxa do cartão.
-              </p>
-            </div>
-            <div className="grid grid-cols-4 gap-2 p-4 sm:grid-cols-6">
-              {installmentOptions.map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  aria-label={`${value} parcelas`}
-                  aria-pressed={installmentCount === value}
-                  onClick={() => setInstallmentCount(value)}
-                  className={`flex min-h-12 flex-col items-center justify-center rounded-lg border text-sm font-bold transition-colors ${installmentCount === value ? "border-gold bg-gold/15 text-cacau" : "border-cacau/10 text-cacau hover:border-gold"}`}
-                >
-                  <span>{value}x</span>
-                  <span className="text-[10px] font-medium">
-                    {installmentRate(value).toFixed(2).replace(".", ",")}%
-                  </span>
-                </button>
-              ))}
-            </div>
-            <div className="flex items-end justify-between gap-4 border-t border-cacau/10 px-5 py-4">
-              <div>
-                <p className="text-xs text-text-light">{installmentCount} parcelas de</p>
-                <p className="text-xl font-bold text-price-green">{formatBRL(installment)}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-text-light">Total no cartão</p>
-                <p className="text-lg font-bold text-cacau">{formatBRL(cardPrice)}</p>
-              </div>
-            </div>
           </div>
 
           {colors.length > 0 && (
