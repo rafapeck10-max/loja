@@ -1,7 +1,7 @@
 export const WHATSAPP_NUMBER = "5521984324338";
 export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}`;
 export const WHATSAPP_DISPLAY = "(21) 98432-4338";
-export const MAX_INSTALLMENTS = 12;
+export const MAX_INSTALLMENTS = 10;
 export function formatBRL(value: number): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
