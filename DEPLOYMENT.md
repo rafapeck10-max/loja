@@ -8,6 +8,12 @@ Envie o link da página ou uma captura de tela e diga o resultado desejado. Se a
 
 ## Caminho da alteração
 
+Antes de editar, resolver o deployment que atende `mobimb.com.br` e comparar seus arquivos fonte, não os nomes dos bundles compilados. A produção de referência `dpl_HvAbcX8PoQMMr5rHHn2z6giHUX19` foi recuperada integralmente no commit `6483e99`: os 125 arquivos enviados à Vercel foram preservados. Uma republicação pela CLI pode não informar o commit; nesse caso usar a árvore de fonte da API da Vercel. Não escolher uma pasta apenas por seu nome ou por um aviso antigo.
+
+Executar `pwsh -File scripts/deploy-preflight.ps1 -ExpectedDeploymentId <deployment-em-uso>` antes de publicar. Para uma alteração intencional, passar somente os caminhos revisados em `-AllowedChangedPath`. Qualquer outra diferença bloqueia a publicação. O script verifica autenticação, projeto/equipe, mudança concorrente do deployment e diferenças de conteúdo da aplicação.
+
+O `vercel.json` mantém o mesmo comando de compilação da produção recuperada, incluindo o aviso de montagem e a remoção dos textos já aprovados. A taxa efetivamente usada no total de até 10x fica em `src/lib/payment-config.ts`, na entrada de 10 parcelas. A fórmula desconta a taxa sobre o total do cartão e arredonda esse total para cima ao real seguinte. Preço à vista e cotações já salvas no carrinho mantêm suas regras.
+
 1. Conferir o pedido e o estado atual da loja. Usar a `main` mais recente e uma branch própria.
 2. Alterar somente o que foi pedido. Mudanças visuais não devem editar preços, parcelas ou registros do catálogo no Supabase.
 3. Usar a prévia da branch na Vercel e conferir a página ou o componente afetado.

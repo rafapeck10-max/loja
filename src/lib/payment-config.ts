@@ -22,6 +22,6 @@ export const CARD_PAYMENT_CONFIG = {
     { installments: 7, feePercent: 14.99, verification: "confirmed" },
     { installments: 8, feePercent: 15.59, verification: "confirmed" },
     { installments: 9, feePercent: 16.19, verification: "confirmed" },
-    { installments: 10, feePercent: 16.89, verification: "confirmed" },
+    { installments: 10, feePercent: 12.1, verification: "confirmed" },
   ],
 } as const;
