@@ -8,11 +8,19 @@ Envie o link da página ou uma captura de tela e diga o resultado desejado. Se a
 
 ## Caminho da alteração
 
-1. Conferir o pedido e o estado atual da loja. Usar a `main` mais recente e uma branch própria.
-2. Alterar somente o que foi pedido. Mudanças visuais não devem editar preços, parcelas ou registros do catálogo no Supabase.
+1. Fazer a pré-checagem abaixo e confirmar o deployment de produção atual, incluindo seu commit e domínio.
+2. Usar a `main` mais recente e uma branch própria; alterar somente o que foi pedido.
 3. Usar a prévia da branch na Vercel e conferir a página ou o componente afetado.
 4. Fazer apenas as verificações relevantes. O build da prévia verifica a compilação. `npm run test:categories` serve para mudanças nas categorias; `npm run lint` está disponível para mudanças no código. Não exigir uma bateria genérica de testes para uma mudança pequena.
 5. Integrar pelo GitHub e deixar a Vercel publicar a partir do commit versionado. Depois, confirmar que o deploy está `READY` e que a rota afetada responde corretamente.
+
+## Pré-checagem de acesso e alvo
+
+Antes de editar ou publicar, executar `./scripts/deploy-preflight.ps1`. Ele valida acesso ao GitHub e Vercel e confirma que o checkout está vinculado ao projeto/equipe esperados. Se qualquer credencial estiver inválida, parar e renovar pelo login oficial em navegador/dispositivo; nunca solicitar, copiar ou registrar senha/token. Fazer essa checagem no início evita descobrir uma sessão expirada só depois de preparar o código. Se o checkout não estiver vinculado, usar `vercel link` e selecionar o projeto correto antes de continuar.
+
+Confirmar também o repositório remoto, o projeto/equipe Vercel e o deployment que atende o domínio. Para a vitrine, `loja` (Project ID `prj_8EgxHw6n4OsZxaabUnypxcQpeYQ5`), equipe `team_TjH2iw1KST0NuoB2oW99e0kR` e domínio `mobimb.com.br` são referências para conferência, não substituem a verificação atual. Não confundir com `crm-mobili`.
+
+Se uma ferramenta isolada reportar falha de DNS/rede, validar por uma segunda via autorizada antes de concluir que o serviço está fora do ar ou alterar DNS/proxy do Windows. Falha do sandbox não prova falha da rede do usuário.
 
 ## Aprovação sem repetição
 

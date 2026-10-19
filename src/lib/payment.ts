@@ -3,7 +3,7 @@ import { MAX_INSTALLMENTS } from "@/lib/constants";
 // InfinitePay, plano atual: débito das taxas sobre o total da transação.
 // O valor do cartão é arredondado para cima ao real seguinte, como na loja publicada.
 export const INFINITEPAY_INSTALLMENT_RATES = [
-  5.49, 10.89, 11.99, 12.59, 13.29, 13.99, 14.99, 15.59, 16.19, 16.89,
+  12.1, 12.1, 12.1, 12.1, 12.1, 12.1, 12.1, 12.1, 12.1, 12.1,
 ] as const;
 
 function moneyCents(amount: number) {
