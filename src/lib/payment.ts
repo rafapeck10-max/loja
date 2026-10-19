@@ -1,20 +1,19 @@
-import { MAX_INSTALLMENTS } from "@/lib/constants";
+import { CARD_PAYMENT_CONFIG } from "./payment-config.ts";
+export { CARD_PAYMENT_CONFIG } from "./payment-config.ts";
 
-// InfinitePay, plano atual: débito das taxas sobre o total da transação.
-// O valor do cartão é arredondado para cima ao real seguinte, como na loja publicada.
-export const INFINITEPAY_INSTALLMENT_RATES = [
-  5.49, 10.89, 11.99, 12.59, 13.29, 13.99, 14.99, 15.59, 16.19, 16.89,
-] as const;
+export const INFINITEPAY_INSTALLMENT_RATES = CARD_PAYMENT_CONFIG.rates.map(
+  (rate) => rate.feePercent,
+);
 
-function moneyCents(amount: number) {
-  if (!Number.isFinite(amount) || amount < 0) {
-    throw new RangeError("Valor monetário inválido");
-  }
+export function moneyCents(amount: number) {
+  if (!Number.isFinite(amount) || amount < 0) throw new RangeError("Valor monetário inválido");
   const cents = Math.round((amount + Number.EPSILON) * 100);
-  if (!Number.isSafeInteger(cents)) {
-    throw new RangeError("Valor monetário fora do limite");
-  }
+  if (!Number.isSafeInteger(cents)) throw new RangeError("Valor monetário fora do limite");
   return cents;
+}
+
+export function roundMoney(amount: number) {
+  return moneyCents(amount) / 100;
 }
 
 function feeBasisPoints(feePercent: number) {
@@ -24,32 +23,63 @@ function feeBasisPoints(feePercent: number) {
   return Math.round(feePercent * 100);
 }
 
-export function installmentRate(count: number) {
-  const normalizedCount = Math.min(Math.max(Math.trunc(count), 1), MAX_INSTALLMENTS);
-  return INFINITEPAY_INSTALLMENT_RATES[normalizedCount - 1];
+export function installmentTerms(count: number) {
+  if (!Number.isInteger(count) || count < 1 || count > CARD_PAYMENT_CONFIG.maxInstallments) {
+    throw new RangeError("Quantidade de parcelas inválida");
+  }
+  return CARD_PAYMENT_CONFIG.rates[count - 1];
 }
 
-function quotedCardTotal(pixPrice: number, feePercent: number) {
+export function installmentRate(count: number) {
+  return installmentTerms(count).feePercent;
+}
+
+/** Use somente sobre o preço BASE/Pix; um total já cotado nunca passa por esta função. */
+export function grossUpTotal(pixPrice: number, feePercent: number) {
   const baseCents = moneyCents(pixPrice);
   const rate = feeBasisPoints(feePercent);
-  const numerator = BigInt(baseCents) * 10_000n;
-  const denominator = BigInt(10_000 - rate) * 100n;
-  const total = (numerator + denominator - 1n) / denominator;
-  if (total > BigInt(Math.floor(Number.MAX_SAFE_INTEGER / 100))) {
+  const numerator = BigInt(baseCents) * 10000n;
+  const denominator = BigInt(10000 - rate) * 100n;
+  const totalReais = (numerator + denominator - 1n) / denominator;
+  if (totalReais > BigInt(Math.floor(Number.MAX_SAFE_INTEGER / 100))) {
     throw new RangeError("Total no cartão fora do limite");
   }
-  return Number(total);
+  return Number(totalReais);
 }
 
-export function cardTotal(pixPrice: number, installmentCount = MAX_INSTALLMENTS) {
-  return quotedCardTotal(pixPrice, installmentRate(installmentCount));
+export function netAfterFee(chargedTotal: number, feePercent: number) {
+  return (
+    Math.round((moneyCents(chargedTotal) * (10000 - feeBasisPoints(feePercent))) / 10000) / 100
+  );
 }
 
-export function installmentFromTotal(cardPrice: number, installmentCount: number) {
-  const count = Math.min(Math.max(Math.trunc(installmentCount), 1), MAX_INSTALLMENTS);
-  return Math.ceil(moneyCents(cardPrice) / count) / 100;
+/** Exibe a parcela arredondando para cima ao centavo; o total continua sendo a autoridade. */
+export function installmentFromTotal(chargedTotal: number, count: number) {
+  installmentTerms(count);
+  return Math.ceil(moneyCents(chargedTotal) / count) / 100;
 }
 
-export function cardInstallment(pixPrice: number, installmentCount = MAX_INSTALLMENTS) {
-  return installmentFromTotal(cardTotal(pixPrice, installmentCount), installmentCount);
+export function cardQuote(pixPrice: number, count: number = CARD_PAYMENT_CONFIG.maxInstallments) {
+  const terms = installmentTerms(count);
+  const total = grossUpTotal(pixPrice, terms.feePercent);
+  return {
+    configId: CARD_PAYMENT_CONFIG.id,
+    pixPrice: roundMoney(pixPrice),
+    count,
+    feePercent: terms.feePercent,
+    rateVerification: terms.verification,
+    total,
+    approximateInstallment: installmentFromTotal(total, count),
+  };
+}
+
+export function cardTotal(pixPrice: number, count: number = CARD_PAYMENT_CONFIG.maxInstallments) {
+  return cardQuote(pixPrice, count).total;
+}
+
+export function cardInstallment(
+  pixPrice: number,
+  count: number = CARD_PAYMENT_CONFIG.maxInstallments,
+) {
+  return cardQuote(pixPrice, count).approximateInstallment;
 }

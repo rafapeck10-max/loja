@@ -8,6 +8,42 @@ export type Database = {
   };
   public: {
     Tables: {
+      homepage_banners: {
+        Row: {
+          position: number;
+          image_url: string;
+          eyebrow: string;
+          title: string;
+          subtitle: string;
+          cta_label: string;
+          cta_href: string;
+          active: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          position: number;
+          image_url: string;
+          eyebrow?: string;
+          title: string;
+          subtitle?: string;
+          cta_label?: string;
+          cta_href?: string;
+          active?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          position?: number;
+          image_url?: string;
+          eyebrow?: string;
+          title?: string;
+          subtitle?: string;
+          cta_label?: string;
+          cta_href?: string;
+          active?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       produtos: {
         Row: {
           categoria: string;
@@ -32,6 +68,10 @@ export type Database = {
           variacoes_preco: Json;
           url_fornecedor: string | null;
           vendas_ultimos_30_dias: number;
+          vitrine_semana_ordem: number | null;
+          vitrine_novidade: string;
+          vitrine_sala: string;
+          vitrine_descoberta: boolean;
         };
         Insert: {
           categoria?: string;
@@ -56,6 +96,10 @@ export type Database = {
           variacoes_preco?: Json;
           url_fornecedor?: string | null;
           vendas_ultimos_30_dias?: number;
+          vitrine_semana_ordem?: number | null;
+          vitrine_novidade?: string;
+          vitrine_sala?: string;
+          vitrine_descoberta?: boolean;
         };
         Update: {
           categoria?: string;
@@ -80,6 +124,76 @@ export type Database = {
           variacoes_preco?: Json;
           url_fornecedor?: string | null;
           vendas_ultimos_30_dias?: number;
+          vitrine_semana_ordem?: number | null;
+          vitrine_novidade?: string;
+          vitrine_sala?: string;
+          vitrine_descoberta?: boolean;
+        };
+        Relationships: [];
+      };
+      scraped_products: {
+        Row: {
+          id: string;
+          supplier: string;
+          name: string;
+          category: string | null;
+          supplier_price: number | null;
+          price_variations: Json;
+          currency: string | null;
+          sku: string | null;
+          reference: string | null;
+          colors: string | null;
+          availability: Json;
+          measurements: string | null;
+          description: string | null;
+          image_urls: string[];
+          source_url: string | null;
+          scraped_at: string | null;
+          status: string;
+          product_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          supplier: string;
+          name: string;
+          category?: string | null;
+          supplier_price?: number | null;
+          price_variations?: Json;
+          currency?: string | null;
+          sku?: string | null;
+          reference?: string | null;
+          colors?: string | null;
+          availability?: Json;
+          measurements?: string | null;
+          description?: string | null;
+          image_urls?: string[];
+          source_url?: string | null;
+          scraped_at?: string | null;
+          status?: string;
+          product_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          supplier?: string;
+          name?: string;
+          category?: string | null;
+          supplier_price?: number | null;
+          price_variations?: Json;
+          currency?: string | null;
+          sku?: string | null;
+          reference?: string | null;
+          colors?: string | null;
+          availability?: Json;
+          measurements?: string | null;
+          description?: string | null;
+          image_urls?: string[];
+          source_url?: string | null;
+          scraped_at?: string | null;
+          status?: string;
+          product_id?: string | null;
+          created_at?: string;
         };
         Relationships: [];
       };
@@ -88,7 +202,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      save_homepage_curation: {
+        Args: { p_weekly_ids: string[]; p_home_settings: Json };
+        Returns: undefined;
+      };
     };
     Enums: {
       [_ in never]: never;

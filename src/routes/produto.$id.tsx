@@ -19,7 +19,8 @@ import { formatBRL, MAX_INSTALLMENTS, SUBCATEGORIES, categoryMatches } from "@/l
 import { useCart } from "@/lib/cart-context";
 import { publicDescription } from "@/lib/product-copy";
 import { CompreJunto } from "@/components/CompreJunto";
-import { cardInstallment, cardTotal } from "@/lib/payment";
+import { ProductDiscountLine } from "@/components/ProductDiscountLine";
+import { cardQuote } from "@/lib/payment";
 
 export const Route = createFileRoute("/produto/$id")({
   loader: async ({ context, params }) => {
@@ -127,14 +128,22 @@ function ProductPage() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [qty, setQty] = useState(1);
   const [color, setColor] = useState<string | null>(produto?.cores?.[0] ?? null);
-  const installmentCount = MAX_INSTALLMENTS;
+  const [priceVariationSku, setPriceVariationSku] = useState<string | null>(null);
 
   if (!produto) return null;
 
   const images = galleryFor(produto);
-  const pixPrice = produto.preco_novo;
-  const cardPrice = cardTotal(pixPrice, installmentCount);
-  const installment = cardInstallment(pixPrice, installmentCount);
+  const pricedVariations = produto.variacoes_preco.filter(
+    (variation) => variation.sale_price != null && variation.sale_price > 0,
+  );
+  const selectedPriceVariation =
+    pricedVariations.find((variation) => variation.sku === priceVariationSku) ??
+    pricedVariations[0] ??
+    null;
+  const pixPrice = selectedPriceVariation?.sale_price ?? produto.preco_novo;
+  const payment = cardQuote(pixPrice, MAX_INSTALLMENTS);
+  const cardPrice = payment.total;
+  const installment = payment.approximateInstallment;
   const colors = (produto.cores ?? []).map((name, index) => ({
     name,
     hex: COLOR_SWATCHES[index % COLOR_SWATCHES.length],
@@ -149,12 +158,15 @@ function ProductPage() {
     addItem({
       id: produto.id,
       name: produto.nome,
-      price: produto.preco_novo,
+      price: pixPrice,
       cardPrice,
-      installmentCount,
+      cardRateVerification: payment.rateVerification,
+      paymentConfigId: payment.configId,
+      installmentCount: MAX_INSTALLMENTS,
       img: produto.imagem_url,
       quantity: qty,
       color,
+      variant: selectedPriceVariation?.name ?? null,
     });
   };
 
@@ -265,20 +277,59 @@ function ProductPage() {
             Disponível para confirmar entrega
           </div>
 
-          <div className="mt-5 rounded-2xl border-l-4 border-gold bg-white px-5 py-5 shadow-premium">
-            <div className="text-sm text-text-light line-through">{formatBRL(cardPrice)}</div>
+          <div className="mobi-product-price-panel mt-5 rounded-2xl border-l-4 border-gold bg-white px-5 py-5 shadow-premium">
+            <ProductDiscountLine
+              oldPrice={selectedPriceVariation ? 0 : produto.preco_antigo}
+              currentPrice={pixPrice}
+            />
+            <div className="text-sm font-semibold text-text-light">À vista no Pix ou dinheiro</div>
             <div className="text-4xl font-bold tracking-tight text-price-green sm:text-5xl">
-              {formatBRL(produto.preco_novo)}
+              {formatBRL(pixPrice)}
             </div>
-            <p className="mt-2 text-sm leading-relaxed text-text-light">
-              <strong className="text-cacau">{formatBRL(pixPrice)}</strong> à vista no PIX ou cartão
-              em até{" "}
-              <strong className="text-cacau">
-                {installmentCount}x de {formatBRL(installment)}
-              </strong>{" "}
-              na entrega.
-            </p>
+            <div className="mt-4 rounded-xl border border-price-green/20 bg-price-green/5 p-4 sm:p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wide text-price-green">
+                    Ou no cartão · sem juros
+                  </p>
+                  <p className="mt-1 text-xl font-bold text-deep-green sm:text-2xl">
+                    {MAX_INSTALLMENTS}x de {formatBRL(installment)}
+                  </p>
+                </div>
+                <div className="text-left sm:text-right">
+                  <p className="text-xs text-text-light">Total parcelado</p>
+                  <p className="text-lg font-bold text-cacau sm:text-xl">{formatBRL(cardPrice)}</p>
+                </div>
+              </div>
+            </div>
           </div>
+
+          <p className="mt-2 text-xs leading-relaxed text-text-light">
+            Parcelamento de 1x a {MAX_INSTALLMENTS}x pelo mesmo total. Consulte a Mobi para outras
+            bandeiras ou condições de cartão.
+          </p>
+
+          {pricedVariations.length > 0 && (
+            <div className="mt-6">
+              <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-cacau">
+                Peça / opção
+              </span>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {pricedVariations.map((variation) => (
+                  <button
+                    key={variation.sku}
+                    type="button"
+                    aria-pressed={selectedPriceVariation?.sku === variation.sku}
+                    onClick={() => setPriceVariationSku(variation.sku)}
+                    className={`flex min-h-14 flex-col items-start justify-center rounded-xl border px-3 py-2 text-left transition-colors ${selectedPriceVariation?.sku === variation.sku ? "border-gold bg-gold/10 text-cacau" : "border-cacau/15 bg-white text-text-light hover:border-gold"}`}
+                  >
+                    <span className="text-xs font-semibold">{variation.name}</span>
+                    <span className="text-[11px]">{formatBRL(variation.sale_price ?? 0)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {colors.length > 0 && (
             <div className="mt-6">
@@ -334,21 +385,6 @@ function ProductPage() {
             </span>
           </div>
 
-          <div
-            role="note"
-            aria-label="Atenção à montagem"
-            className="mt-5 rounded-xl border border-gold/40 bg-gold/10 px-4 py-3 text-sm leading-relaxed text-cacau"
-          >
-            <p className="font-semibold text-deep-green">Atenção à montagem</p>
-            <p className="mt-1 text-xs sm:text-sm">
-              O produto deve ser montado conforme o manual do fabricante por profissional
-              qualificado. A Mobi não se responsabiliza por danos causados exclusivamente por
-              montagem incorreta ou feita por pessoa não qualificada; esses danos podem não ser
-              cobertos pela garantia do fabricante. Se desejar, podemos indicar um montador.
-              Consulte disponibilidade e valores.
-            </p>
-          </div>
-
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             <button
               onClick={handleBuyNow}
@@ -389,7 +425,7 @@ function ProductPage() {
                 </p>
                 <p>
                   O pagamento é feito somente na entrega: PIX com desconto, cartão em até{" "}
-                  {MAX_INSTALLMENTS}x ou dinheiro.
+                  {MAX_INSTALLMENTS}x sem juros ou dinheiro.
                 </p>
               </div>
             </Accordion>

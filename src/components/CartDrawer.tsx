@@ -4,7 +4,7 @@ import { useCart, cartItemKey } from "@/lib/cart-context";
 import { formatBRL, WHATSAPP_NUMBER } from "@/lib/constants";
 import { MAX_INSTALLMENTS } from "@/lib/constants";
 import { WhatsAppIcon } from "@/components/WhatsAppIcon";
-import { installmentFromTotal } from "@/lib/payment";
+import { cartPaymentLine, orderPaymentSummary, orderWhatsAppMessage } from "@/lib/cart-payment";
 
 type Step = "cart" | "checkout";
 
@@ -13,7 +13,7 @@ const PAYMENT_OPTIONS = [
   {
     value: "Cartão na entrega",
     label: "Cartão",
-    desc: `Preço cheio em até ${MAX_INSTALLMENTS}x, na entrega`,
+    desc: `Até ${MAX_INSTALLMENTS}x sem juros`,
   },
   { value: "Dinheiro na entrega", label: "Dinheiro", desc: "Pague ao receber e montar" },
 ];
@@ -30,12 +30,8 @@ export function CartDrawer() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const isCardPayment = form.pagamento === "Cartão na entrega";
-  const orderTotal = items.reduce(
-    (sum, item) =>
-      sum + (isCardPayment ? (item.cardPrice ?? item.price) : item.price) * item.quantity,
-    0,
-  );
-
+  const summary = orderPaymentSummary(items);
+  const orderTotal = isCardPayment ? summary.cardTotal : summary.pixTotal;
   const close = () => {
     closeCart();
     setStep("cart");
@@ -57,32 +53,7 @@ export function CartDrawer() {
   const sendToWhatsApp = () => {
     if (!validate()) return;
 
-    let message = "Olá Mobi! Gostaria de fazer um pedido:\n\n";
-    items.forEach((item, index) => {
-      message += `*${index + 1}. ${item.name}*\n`;
-      const opts: string[] = [];
-      if (item.color) opts.push(`Cor: ${item.color}`);
-      if (item.finish) opts.push(`Pés: ${item.finish}`);
-      if (opts.length) message += `   _(${opts.join(", ")})_\n`;
-      const itemPrice = isCardPayment ? (item.cardPrice ?? item.price) : item.price;
-      message += `   Qtd: ${item.quantity}x | Preço: ${formatBRL(itemPrice)}\n\n`;
-      if (isCardPayment) {
-        const installments = Math.min(
-          Math.max(item.installmentCount ?? MAX_INSTALLMENTS, 1),
-          MAX_INSTALLMENTS,
-        );
-        const installmentAmount = installmentFromTotal(itemPrice * item.quantity, installments);
-        message += `   Cartão: ${installments}x de ${formatBRL(installmentAmount)}\n\n`;
-      }
-    });
-    message += `*Valor Total:* ${formatBRL(orderTotal)}\n\n`;
-    message += `*Dados de Entrega:*\n`;
-    message += `Nome: ${form.nome.trim()}\n`;
-    message += `Rua: ${form.rua.trim()}\n`;
-    message += `Bairro: ${form.bairro.trim()}\n`;
-    message += `Cidade: ${form.cidade.trim()}\n\n`;
-    message += `*Forma de Pagamento:* ${form.pagamento}\n\n`;
-    message += `Gostaria de combinar a entrega (Baixada Fluminense).`;
+    const message = orderWhatsAppMessage(items, form);
 
     window.open(
       `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`,
@@ -151,6 +122,7 @@ export function CartDrawer() {
               ) : (
                 items.map((item) => {
                   const key = cartItemKey(item);
+                  const payment = cartPaymentLine(item);
                   return (
                     <div key={key} className="flex gap-4 border-b border-cacau/10 py-4">
                       <img
@@ -162,26 +134,30 @@ export function CartDrawer() {
                         <h4 className="font-sans text-sm font-semibold leading-snug text-cacau">
                           {item.name}
                         </h4>
-                        {(item.color || item.finish) && (
+                        {(item.color || item.finish || item.variant) && (
                           <span className="text-[11px] text-text-light">
                             {[
                               item.color && `Cor: ${item.color}`,
                               item.finish && `Pés: ${item.finish}`,
+                              item.variant && `Opção: ${item.variant}`,
                             ]
                               .filter(Boolean)
                               .join(" | ")}
                           </span>
                         )}
                         <div className="text-sm font-bold text-price-green">
-                          {formatBRL(item.price)} no PIX
+                          {formatBRL(item.price)} à vista no Pix ou dinheiro
                         </div>
                         <div className="text-[11px] text-text-light">
-                          ou {item.installmentCount ?? MAX_INSTALLMENTS}x de{" "}
-                          {formatBRL(
-                            (item.cardPrice ?? item.price) /
-                              (item.installmentCount ?? MAX_INSTALLMENTS),
-                          )}{" "}
-                          no cartão
+                          Cartão: até {MAX_INSTALLMENTS}x sem juros
+                          <br />
+                          {payment.installments}x de {formatBRL(payment.unitApproximateInstallment)}
+                          {" por unidade"}
+                          <br />
+                          Total no cartão por unidade: {formatBRL(payment.unitCardTotal)}
+                          {payment.rateVerification === "inferred" && (
+                            <p>Crédito à vista: simulação provisória; confirmar taxa na conta.</p>
+                          )}
                         </div>
                         <div className="mt-1 flex items-center justify-between">
                           <div className="flex items-center gap-3 border border-cacau/15 px-2 py-1">
@@ -222,7 +198,7 @@ export function CartDrawer() {
             <div className="border-t border-cacau/10 bg-white px-6 py-5">
               <div className="mb-3 flex items-center justify-between">
                 <span className="text-sm font-semibold uppercase tracking-wide text-cacau">
-                  Subtotal:
+                  Subtotal no Pix:
                 </span>
                 <span className="text-xl font-bold text-price-green">{formatBRL(total)}</span>
               </div>
@@ -361,13 +337,33 @@ export function CartDrawer() {
                   </div>
                 </div>
               </div>
+              {isCardPayment && (
+                <div className="mb-3 space-y-2 text-xs text-text-light">
+                  {items.map((item, index) => {
+                    const line = summary.lines[index];
+                    return (
+                      <p key={cartItemKey(item)}>
+                        {item.name} · {item.quantity} unidade(s): até {MAX_INSTALLMENTS}x sem juros;
+                        {" "}{line.installments}x de {formatBRL(line.approximateInstallment)}.
+                        {" "}Total no cartão: {formatBRL(line.cardTotal)}.
+                        {line.rateVerification === "inferred" &&
+                          " Crédito à vista provisório: confirmar taxa na conta."}
+                      </p>
+                    );
+                  })}
+                  <p>
+                    A parcela exibida foi arredondada para cima; centavos residuais seguem a
+                    operadora e o total informado permanece válido.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Footer */}
             <div className="border-t border-cacau/10 bg-white px-6 py-5">
-              <div className="mb-4 flex items-center justify-between">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                 <span className="text-sm font-semibold uppercase tracking-wide text-cacau">
-                  Total do Pedido:
+                  {isCardPayment ? "Total no cartão:" : "Total do Pedido:"}
                 </span>
                 <span className="text-xl font-bold text-price-green">{formatBRL(orderTotal)}</span>
               </div>

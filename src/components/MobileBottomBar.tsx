@@ -1,4 +1,4 @@
-import { Home, Search, ShoppingCart, Tag } from "lucide-react";
+import { BookOpen, Home, Search, ShoppingCart, Tag } from "lucide-react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useCart } from "@/lib/cart-context";
 import { useUI } from "@/lib/ui-context";
@@ -18,7 +18,7 @@ export function MobileBottomBar() {
       className="fixed inset-x-0 bottom-0 z-[1000] border-t border-gold/30 bg-deep-green text-white shadow-[0_-2px_10px_rgba(0,0,0,0.04)] md:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <div className="mx-auto grid max-w-lg grid-cols-4">
+      <div className="mx-auto grid max-w-lg grid-cols-5">
         <Link
           to="/"
           search={{}}
@@ -34,6 +34,20 @@ export function MobileBottomBar() {
           <Search className="h-6 w-6" strokeWidth={1.8} />
           Buscar
         </button>
+        <Link
+          to="/"
+          search={{ all: true, page: 1 }}
+          hash="catalogo"
+          aria-current={
+            !filters.ofertas && (filters.all || pathname.startsWith("/categoria/"))
+              ? "page"
+              : undefined
+          }
+          className={`flex min-h-[68px] flex-col items-center justify-center gap-1 text-[11px] font-semibold no-underline ${!filters.ofertas && (filters.all || pathname.startsWith("/categoria/")) ? "text-gold" : "text-white"}`}
+        >
+          <BookOpen className="h-6 w-6" strokeWidth={1.8} />
+          Catálogo
+        </Link>
         <Link
           to="/"
           search={{ ofertas: true, all: true, page: 1 }}

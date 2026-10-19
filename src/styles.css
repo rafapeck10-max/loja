@@ -1,6 +1,8 @@
+@import "./admin-tabs.css";
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import "./storefront.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -214,3 +216,4 @@
     }
   }
 }
+

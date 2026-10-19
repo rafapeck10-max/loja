@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { MobiliLogo } from "@/components/MobiliLogo";
 import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import { PixIcon } from "@/components/PixIcon";
-import { WHATSAPP_DISPLAY, WHATSAPP_URL } from "@/lib/constants";
+import { MAX_INSTALLMENTS, WHATSAPP_DISPLAY, WHATSAPP_URL } from "@/lib/constants";
 
 export function Footer() {
   return (
@@ -48,12 +48,12 @@ export function Footer() {
               <PixIcon className="h-6 w-6 shrink-0 text-gold" /> PIX com desconto
             </span>
             <span className="flex items-center gap-2">
-              <CreditCard className="h-6 w-6 shrink-0 text-gold" /> Cartão até 12x
+              <CreditCard className="h-6 w-6 shrink-0 text-gold" /> Cartão até {MAX_INSTALLMENTS}x sem juros
             </span>
           </div>
           <p className="mt-3 text-xs leading-relaxed text-sand/80">
-            Consulte as parcelas na página do produto. Frete e data de entrega combinados pelo
-            WhatsApp.
+            Confira o total parcelado na página de cada produto. Frete e data de entrega combinados
+            pelo WhatsApp.
           </p>
         </section>
       </div>

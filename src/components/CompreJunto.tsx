@@ -4,19 +4,20 @@ import { Plus, RefreshCw, ShoppingCart } from "lucide-react";
 import { produtosQueryOptions, type Produto } from "@/lib/products.functions";
 import { formatBRL } from "@/lib/constants";
 import { useCart } from "@/lib/cart-context";
-import { cardTotal } from "@/lib/payment";
+import { cardQuote } from "@/lib/payment";
+import { hasRealReferencePrice } from "@/lib/price-reference";
 
 interface Props {
   current: Produto;
 }
 
 function discountPct(oldPrice: number, newPrice: number) {
-  if (!oldPrice || oldPrice <= newPrice) return 0;
+  if (!hasRealReferencePrice(oldPrice, newPrice)) return 0;
   return Math.round(((oldPrice - newPrice) / oldPrice) * 100);
 }
 
 function cardPrice(produto: Produto) {
-  return cardTotal(produto.preco_novo);
+  return cardQuote(produto.preco_novo);
 }
 
 export function CompreJunto({ current }: Props) {
@@ -37,11 +38,16 @@ export function CompreJunto({ current }: Props) {
   const total = current.preco_novo + (include ? suggestion.preco_novo : 0);
 
   const handleAdd = () => {
+    const currentPayment = cardPrice(current);
+    const suggestionPayment = cardPrice(suggestion);
     addItem({
       id: current.id,
       name: current.nome,
       price: current.preco_novo,
-      cardPrice: cardPrice(current),
+      cardPrice: currentPayment.total,
+      installmentCount: currentPayment.count,
+      cardRateVerification: currentPayment.rateVerification,
+      paymentConfigId: currentPayment.configId,
       img: current.imagem_url,
     });
     if (include) {
@@ -49,7 +55,10 @@ export function CompreJunto({ current }: Props) {
         id: suggestion.id,
         name: suggestion.nome,
         price: suggestion.preco_novo,
-        cardPrice: cardPrice(suggestion),
+        cardPrice: suggestionPayment.total,
+        installmentCount: suggestionPayment.count,
+        cardRateVerification: suggestionPayment.rateVerification,
+        paymentConfigId: suggestionPayment.configId,
         img: suggestion.imagem_url,
       });
     }
@@ -87,7 +96,7 @@ export function CompreJunto({ current }: Props) {
         <div className="mt-6 flex flex-col gap-3 border-t-2 border-gold bg-white p-5 shadow-premium sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="text-[11px] uppercase tracking-[1.5px] text-text-light">
-              Total {include ? "dos 2 itens" : "do item"}
+              Total no Pix {include ? "dos 2 itens" : "do item"}
             </div>
             <div className="text-2xl font-bold text-price-green">{formatBRL(total)}</div>
           </div>
@@ -117,7 +126,7 @@ function ProductRow({
   checkbox?: { checked: boolean; onChange: (value: boolean) => void };
   onSwap?: () => void;
 }) {
-  const hasDiscount = produto.preco_antigo > 0 && produto.preco_antigo > produto.preco_novo;
+  const hasDiscount = hasRealReferencePrice(produto.preco_antigo, produto.preco_novo);
 
   return (
     <div className="flex gap-4 border border-cacau/10 bg-white p-4">

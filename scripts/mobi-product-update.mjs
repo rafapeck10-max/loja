@@ -1,0 +1,21 @@
+import fs from "node:fs";
+import path from "node:path";
+import crypto from "node:crypto";
+const protectedHashes={"src/lib/constants.ts":"cb5edeebcfc9e4ff800e431fd7f5308d2ac2c544","src/lib/payment.ts":"f8db50ffe05f5c5434256ece9680ed3eb4c90ede","src/lib/payment-config.ts":"d1e99bbf83f96dd54b087bd763be873446896d6f","src/lib/cart-payment.ts":"6fa2a3bf5736b39b92897f5ce2f79574bbbc931a","src/components/MobiliLogo.tsx":"21acfa6225b81e891c2b7c4c27834ae0cfb68022","src/components/StoreCatalog.tsx":"86660e1dd0a7e8159342142be0c538dae0321990","src/lib/home-curation.ts":"146a2cbb336aef407d279b37b58f6158e654dff3","src/storefront.css":"c1c72cb39875fc930f8677ac94b66833270fac9b","public/mobi-logo-approved.png":"30d97f6e40d5c604b31f49abb18edc609976781d"};
+const sha=p=>crypto.createHash("sha1").update(fs.readFileSync(p)).digest("hex");
+for(const [p,h] of Object.entries(protectedHashes))if(sha(p)!==h)throw new Error("Unexpected baseline: "+p);
+const productPath="src/routes/produto.$id.tsx";
+if(sha(productPath)!=="634f898897f5a1756462407b5dab88e11df2ed41")throw new Error("Unexpected product-page baseline");
+const changed=[];
+const phrase=/(?:[ \t]*[·•][ \t]*)?sem[ \t]+juros/gi;
+function walk(dir){for(const e of fs.readdirSync(dir,{withFileTypes:true})){const p=path.join(dir,e.name);if(e.isDirectory())walk(p);else if(p.endsWith(".tsx")){const before=fs.readFileSync(p,"utf8");const count=[...before.matchAll(phrase)].length;if(count){fs.writeFileSync(p,before.replace(phrase,""));changed.push({path:p,phrasesRemoved:count});}}}}
+walk("src");
+let product=fs.readFileSync(productPath,"utf8");
+const anchor=/<div className="mt-6 grid gap-3 sm:grid-cols-2">(?=\r?\n[ \t]*<button\r?\n[ \t]*onClick=\{handleBuyNow\})/g;
+if([...product.matchAll(anchor)].length!==1)throw new Error("Expected one purchase-button section");
+if(product.includes('aria-label="Atenção à montagem"'))throw new Error("Assembly notice already exists");
+const eol=product.includes("\r\n")?"\r\n":"\n";
+product=product.replace(anchor,"<aside aria-label=\"Atenção à montagem\" className=\"mt-6 rounded-2xl border border-gold/40 bg-gold/10 p-4 text-sm leading-relaxed text-cacau\"><p className=\"font-semibold text-deep-green\">Atenção à montagem</p><p className=\"mt-2\">O produto deve ser montado conforme o manual do fabricante por profissional qualificado. A Mobi não se responsabiliza por danos causados exclusivamente por montagem incorreta ou feita por pessoa não qualificada; esses danos podem não ser cobertos pela garantia do fabricante. Se desejar, podemos indicar um montador. Consulte disponibilidade e valores.</p></aside>"+eol+eol+"          "+'<div className="mt-6 grid gap-3 sm:grid-cols-2">');
+fs.writeFileSync(productPath,product);
+for(const [p,h] of Object.entries(protectedHashes))if(sha(p)!==h)throw new Error("Protected file changed: "+p);
+console.log("MOBI_PRODUCT_UPDATE "+JSON.stringify({phrasesRemoved:changed,assemblyInsertedBeforePurchase:true,protectedFilesUnchanged:Object.keys(protectedHashes).length,productSha:sha(productPath)}));

@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import { MobiliLogo } from "@/components/MobiliLogo";
 import { WhatsAppIcon } from "@/components/WhatsAppIcon";
-import { WHATSAPP_URL } from "@/lib/constants";
+import { MAX_INSTALLMENTS, WHATSAPP_URL } from "@/lib/constants";
 
 export const Route = createFileRoute("/links")({
   head: () => ({
@@ -56,7 +56,7 @@ function LinksPage() {
         </div>
 
         <p className="mt-8 text-xs text-text-light">
-          Pagamento somente na entrega · Até 12x no cartão
+          Pagamento somente na entrega · Até {MAX_INSTALLMENTS}x sem juros no cartão
         </p>
       </section>
     </main>

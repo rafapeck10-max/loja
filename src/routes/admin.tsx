@@ -1,18 +1,35 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, Lock, LogOut, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { AlertCircle, FileUp, Lock, LogOut, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { PRODUCT_CATEGORY_OPTIONS } from "@/lib/constants";
 import {
   checkAdminPassword,
+  completeScrapedProductImport,
   deleteProduto,
+  importScrapedProducts,
   listAdminProdutos,
+  listPendingScrapedProducts,
   upsertProduto,
   type ProdutoInput,
   type ProdutoAdmin,
+  type ProdutoScrapImport,
+  type ProdutoScrapImportInput,
+  type PriceVariation,
 } from "@/lib/admin.functions";
 import { formatBRL } from "@/lib/constants";
+import { hasRealReferencePrice } from "@/lib/price-reference";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { HomeCurationPanel } from "@/components/HomeCurationPanel";
+import { HomeBannersPanel } from "@/components/HomeBannersPanel";
+import { ImageWithFallback } from "@/components/ImageWithFallback";
+import {
+  matchesPriceFilter,
+  parsePriceFilter,
+  productStatus,
+  type ProductStatus,
+} from "@/lib/admin-filters";
 
 const STORAGE_KEY = "mobili_admin_pwd";
 
@@ -139,8 +156,11 @@ const EMPTY: ProdutoInput = {
   id: "",
   nome: "",
   slug: "",
+  preco_antigo: null,
   preco_novo: 0,
   imagem_url: "",
+  imagens: [],
+  variacoes_preco: [],
   categoria: "",
   ordem: 0,
   fornecedor: "",
@@ -154,22 +174,11 @@ const EMPTY: ProdutoInput = {
   cores: [],
 };
 
-type ProductStatus = "published" | "awaiting" | "incomplete";
-
 const STATUS_LABELS: Record<ProductStatus, string> = {
   published: "Publicado",
   awaiting: "Aguardando precificação",
   incomplete: "Dados incompletos",
 };
-
-function productStatus(product: ProdutoAdmin): ProductStatus {
-  const sitePrice = Number(product.preco_atual ?? 0);
-  const supplierPrice = Number(product.preco_atacado ?? 0);
-  const hasImage = /^https?:\/\//i.test(product.url_imagem ?? "");
-  if (sitePrice > 0 && hasImage && product.fornecedor && supplierPrice > 0) return "published";
-  if (supplierPrice > 0 && sitePrice <= 0) return "awaiting";
-  return "incomplete";
-}
 
 function sourceUrl(product: ProdutoAdmin): string | null {
   return product.url_fornecedor || product.fonte_preco || null;
@@ -188,6 +197,42 @@ function sourceName(product: ProdutoAdmin): string {
 
 function moneyOrDash(value: number | null | undefined): string {
   return value == null || Number(value) <= 0 ? "—" : formatBRL(Number(value));
+}
+
+function parsePriceVariations(value: unknown): PriceVariation[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((entry) => {
+    if (!entry || typeof entry !== "object") return [];
+    const variation = entry as Record<string, unknown>;
+    const name = String(variation.name ?? "").trim();
+    const sku = String(variation.sku ?? "").trim();
+    if (!name || !sku) return [];
+    const supplierPrice = Number(variation.supplier_price);
+    const salePrice =
+      variation.sale_price == null || variation.sale_price === ""
+        ? null
+        : Number(variation.sale_price);
+    return [
+      {
+        name,
+        sku,
+        supplier_price: Number.isFinite(supplierPrice) ? supplierPrice : null,
+        sale_price: salePrice != null && Number.isFinite(salePrice) ? salePrice : null,
+      },
+    ];
+  });
+}
+
+async function readScrapeFile(file: File): Promise<ProdutoScrapImportInput[]> {
+  const content = (await file.text()).trim();
+  const parsed = content.startsWith("[")
+    ? JSON.parse(content)
+    : content
+        .split(/\r?\n/)
+        .filter(Boolean)
+        .map((line) => JSON.parse(line));
+  if (!Array.isArray(parsed)) throw new Error("O arquivo precisa conter uma lista JSON ou JSONL.");
+  return parsed as ProdutoScrapImportInput[];
 }
 
 function marginLabel(product: ProdutoAdmin): string {
@@ -212,7 +257,7 @@ function StatusBadge({ status }: { status: ProductStatus }) {
   );
 }
 
-function AdminDashboard({ password, onLogout }: { password: string; onLogout: () => void }) {
+export function AdminDashboard({ password, onLogout }: { password: string; onLogout: () => void }) {
   const router = useRouter();
   const qc = useQueryClient();
   const {
@@ -226,12 +271,28 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
     queryKey: ["admin-produtos"],
     queryFn: () => listAdminProdutos({ data: { password } }),
   });
+  const {
+    data: pendingScrapedProducts = [],
+    refetch: refreshScrapedProducts,
+    isFetching: isFetchingScraped,
+    isError: isScrapedError,
+    error: scrapedError,
+  } = useQuery({
+    queryKey: ["admin-scraped-products"],
+    queryFn: () => listPendingScrapedProducts({ data: { password } }),
+  });
   const [editing, setEditing] = useState<ProdutoInput | null>(null);
+  const [activeScrapedImport, setActiveScrapedImport] = useState<ProdutoScrapImport | null>(null);
   const [saving, setSaving] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [search, setSearch] = useState("");
   const [supplierFilter, setSupplierFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [workspaceTab, setWorkspaceTab] = useState("vitrine");
   const [statusFilter, setStatusFilter] = useState<"all" | ProductStatus>("all");
+  const [priceField, setPriceField] = useState<"site" | "supplier">("site");
+  const [minimumPrice, setMinimumPrice] = useState("");
+  const [maximumPrice, setMaximumPrice] = useState("");
   const [page, setPage] = useState(1);
   const perPage = 32;
 
@@ -276,9 +337,23 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
       const matchesCategory =
         categoryFilter === "all" || normalizeFilterText(product.categoria) === normalizedCategory;
       const matchesStatus = statusFilter === "all" || productStatus(product) === statusFilter;
-      return matchesSearch && matchesSupplier && matchesCategory && matchesStatus;
+      const matchesPrice = matchesPriceFilter(
+        priceField === "site" ? product.preco_atual : product.preco_atacado,
+        minimumPrice,
+        maximumPrice,
+      );
+      return matchesSearch && matchesSupplier && matchesCategory && matchesStatus && matchesPrice;
     });
-  }, [produtos, search, supplierFilter, categoryFilter, statusFilter]);
+  }, [
+    produtos,
+    search,
+    supplierFilter,
+    categoryFilter,
+    statusFilter,
+    priceField,
+    minimumPrice,
+    maximumPrice,
+  ]);
   const totals = useMemo(
     () =>
       produtos.reduce(
@@ -295,7 +370,15 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
 
   useEffect(() => {
     setPage(1);
-  }, [search, supplierFilter, categoryFilter, statusFilter]);
+  }, [
+    search,
+    supplierFilter,
+    categoryFilter,
+    statusFilter,
+    priceField,
+    minimumPrice,
+    maximumPrice,
+  ]);
 
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
@@ -303,17 +386,27 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
 
   const refresh = async () => {
     await qc.invalidateQueries({ queryKey: ["admin-produtos"] });
+    await qc.invalidateQueries({ queryKey: ["admin-scraped-products"] });
     router.invalidate();
   };
 
-  const startNew = () => setEditing({ ...EMPTY });
-  const startEdit = (p: ProdutoAdmin) =>
+  const startNew = () => {
+    setActiveScrapedImport(null);
+    setEditing({ ...EMPTY });
+  };
+  const startEdit = (p: ProdutoAdmin) => {
+    setActiveScrapedImport(null);
     setEditing({
       id: p.id,
       nome: p.nome,
       slug: p.slug,
+      preco_antigo: hasRealReferencePrice(Number(p.preco_antigo), Number(p.preco_atual))
+        ? Number(p.preco_antigo)
+        : null,
       preco_novo: p.preco_atual,
       imagem_url: p.url_imagem,
+      imagens: p.imagens ?? [],
+      variacoes_preco: parsePriceVariations(p.variacoes_preco),
       categoria: p.categoria,
       ordem: p.ordem ?? 0,
       fornecedor: p.fornecedor ?? "",
@@ -326,14 +419,82 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
       medidas: p.medidas ?? "",
       cores: p.cores ?? [],
     });
+  };
+
+  const startScrapedEdit = (product: ProdutoScrapImport) => {
+    setActiveScrapedImport(product);
+    setEditing({
+      ...EMPTY,
+      deduplicateExisting: true,
+      id: product.product_id ?? product.id,
+      nome: product.name,
+      preco_novo: 0,
+      imagem_url: product.image_urls[0] ?? "",
+      imagens: product.image_urls.slice(1),
+      variacoes_preco: parsePriceVariations(product.price_variations),
+      categoria: product.category ?? "",
+      fornecedor: product.supplier,
+      referencia: product.sku ?? product.reference ?? "",
+      preco_fornecedor: product.supplier_price == null ? null : Number(product.supplier_price),
+      link_fornecedor: product.source_url ?? "",
+      fonte_preco: product.source_url ?? "",
+      descricao: product.description ?? "",
+      medidas: product.measurements ?? "",
+      cores:
+        Array.isArray(product.availability) && product.availability.length
+          ? product.availability
+              .map((value) => String(value).split(" - ")[0].trim())
+              .filter(Boolean)
+          : product.colors
+            ? product.colors
+                .split(/[,;\n]/)
+                .map((value) => value.trim())
+                .filter(Boolean)
+            : [],
+    });
+  };
+
+  const handleScrapeImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setImporting(true);
+    try {
+      const records = await readScrapeFile(file);
+      const result = await importScrapedProducts({ data: { password, records } });
+      toast.success(`${result.processed} produto(s) adicionado(s) ou atualizado(s) para revisão.`);
+      await refreshScrapedProducts();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Não foi possível importar o arquivo.");
+    } finally {
+      setImporting(false);
+    }
+  };
 
   const save = async () => {
     if (!editing) return;
     setSaving(true);
     try {
-      await upsertProduto({ data: { password, produto: editing } });
-      toast.success("Produto salvo com sucesso.");
+      const saved = await upsertProduto({
+        data: {
+          password,
+          produto: { ...editing, deduplicateExisting: Boolean(activeScrapedImport) },
+        },
+      });
+      if (activeScrapedImport) {
+        await completeScrapedProductImport({
+          data: { password, importId: activeScrapedImport.id, productId: saved.id },
+        });
+      }
+      toast.success(
+        activeScrapedImport
+          ? saved.duplicate
+            ? "Produto existente atualizado sem duplicar no catálogo."
+            : "Produto cadastrado e enviado para o catálogo."
+          : "Produto salvo com sucesso.",
+      );
       setEditing(null);
+      setActiveScrapedImport(null);
       await refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao salvar");
@@ -358,7 +519,26 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
     setSupplierFilter("all");
     setCategoryFilter("all");
     setStatusFilter("all");
+    setPriceField("site");
+    setMinimumPrice("");
+    setMaximumPrice("");
   };
+
+  const selectSummary = (status: "all" | ProductStatus) => {
+    clearFilters();
+    setStatusFilter(status);
+    setPage(1);
+    setWorkspaceTab("produtos");
+    requestAnimationFrame(() => {
+      document.getElementById("admin-product-filters")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+  const minPrice = parsePriceFilter(minimumPrice);
+  const maxPrice = parsePriceFilter(maximumPrice);
+  const invalidPrices =
+    Number.isNaN(minPrice) ||
+    Number.isNaN(maxPrice) ||
+    (minPrice != null && maxPrice != null && minPrice > maxPrice);
 
   return (
     <div className="mx-auto max-w-[1280px] px-4 py-6 sm:px-[5%] sm:py-10">
@@ -391,36 +571,188 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div className="border border-cacau/10 bg-white p-4">
+        <button
+          type="button"
+          onClick={() => selectSummary("all")}
+          aria-pressed={statusFilter === "all"}
+          className="border border-cacau/10 bg-white p-4 text-left aria-pressed:ring-2 aria-pressed:ring-deep-green"
+        >
           <div className="text-xs font-semibold uppercase tracking-wider text-text-light">
             Total
           </div>
           <div className="mt-1 text-2xl font-bold text-deep-green">{produtos.length}</div>
-        </div>
-        <div className="border border-price-green/20 bg-price-green/5 p-4">
+        </button>
+        <button
+          type="button"
+          onClick={() => selectSummary("published")}
+          aria-pressed={statusFilter === "published"}
+          className="border border-price-green/20 bg-price-green/5 p-4 text-left aria-pressed:ring-2 aria-pressed:ring-deep-green"
+        >
           <div className="text-xs font-semibold uppercase tracking-wider text-price-green">
             Publicados
           </div>
           <div className="mt-1 text-2xl font-bold text-price-green">{totals.published}</div>
-        </div>
-        <div className="border border-gold/30 bg-gold/10 p-4">
+        </button>
+        <button
+          type="button"
+          onClick={() => selectSummary("awaiting")}
+          aria-pressed={statusFilter === "awaiting"}
+          className="border border-gold/30 bg-gold/10 p-4 text-left aria-pressed:ring-2 aria-pressed:ring-deep-green"
+        >
           <div className="text-xs font-semibold uppercase tracking-wider text-cacau">
             Aguardando preço
           </div>
           <div className="mt-1 text-2xl font-bold text-cacau">{totals.awaiting}</div>
-        </div>
-        <div className="border border-destructive/20 bg-destructive/5 p-4">
+        </button>
+        <button
+          type="button"
+          onClick={() => selectSummary("incomplete")}
+          aria-pressed={statusFilter === "incomplete"}
+          className="border border-destructive/20 bg-destructive/5 p-4 text-left aria-pressed:ring-2 aria-pressed:ring-deep-green"
+        >
           <div className="text-xs font-semibold uppercase tracking-wider text-destructive">
             Incompletos
           </div>
           <div className="mt-1 text-2xl font-bold text-destructive">{totals.incomplete}</div>
-        </div>
+        </button>
       </div>
 
-      <section className="mb-6 border border-cacau/10 bg-sand/50 p-4 sm:p-5">
+      <Tabs value={workspaceTab} onValueChange={setWorkspaceTab} className="admin-workspace">
+        <TabsList aria-label="Áreas do painel admin" className="admin-workspace-tabs">
+          <TabsTrigger value="vitrine" className="admin-workspace-tab">Vitrine da página inicial</TabsTrigger>
+          <TabsTrigger value="banners" className="admin-workspace-tab">Banner da página inicial</TabsTrigger>
+          <TabsTrigger value="revisao" className="admin-workspace-tab">Produtos coletados para revisão</TabsTrigger>
+          <TabsTrigger value="produtos" className="admin-workspace-tab">Encontrar produtos</TabsTrigger>
+        </TabsList>
+        <TabsContent value="vitrine" forceMount className="admin-workspace-panel">
+          <HomeCurationPanel password={password} products={produtos} />
+        </TabsContent>
+        <TabsContent value="banners" forceMount className="admin-workspace-panel">
+          <HomeBannersPanel password={password} />
+        </TabsContent>
+        <TabsContent value="revisao" forceMount className="admin-workspace-panel">
+
+      <section className="mb-6 border border-gold/30 bg-gold/5 p-4 sm:p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="font-semibold text-deep-green">Produtos coletados para revisão</h2>
+            <p className="mt-1 text-xs text-text-light">
+              Importe um JSONL do worker. O custo fica registrado como preço do fornecedor; o preço
+              de venda só é definido por você ao completar o cadastro.
+            </p>
+          </div>
+          <label className="inline-flex cursor-pointer items-center justify-center gap-2 bg-deep-green px-4 py-3 text-xs font-bold uppercase tracking-wider text-sand transition-colors hover:bg-gold hover:text-deep-green">
+            <FileUp className="h-4 w-4" />
+            {importing ? "Importando…" : "Importar JSONL"}
+            <input
+              type="file"
+              accept=".jsonl,.ndjson,.json,application/json,text/plain"
+              onChange={handleScrapeImport}
+              disabled={importing}
+              className="hidden"
+            />
+          </label>
+        </div>
+
+        {pendingScrapedProducts.length === 0 ? (
+          <p className="mt-4 border-t border-gold/20 pt-3 text-sm text-text-light">
+            {isScrapedError
+              ? `A fila de importação ainda não está disponível: ${scrapedError instanceof Error ? scrapedError.message : "verifique a migração do banco."}`
+              : isFetchingScraped
+                ? "Carregando importações…"
+                : "Nenhum produto aguardando revisão."}
+          </p>
+        ) : (
+          <>
+            <div className="mt-4 flex items-center justify-between border-t border-gold/20 pt-3 text-xs text-text-light">
+              <span>{pendingScrapedProducts.length} produto(s) aguardando revisão</span>
+              <button
+                type="button"
+                onClick={() => refreshScrapedProducts()}
+                disabled={isFetchingScraped}
+                className="inline-flex items-center gap-1 font-semibold text-cacau"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${isFetchingScraped ? "animate-spin" : ""}`} />
+                Atualizar
+              </button>
+            </div>
+            <div className="mt-3 grid max-h-[640px] gap-3 overflow-y-auto pr-1 xl:grid-cols-2">
+              {pendingScrapedProducts.map((product) => (
+                <article key={product.id} className="border border-cacau/10 bg-white p-3 sm:p-4">
+                  <div className="flex gap-3">
+                    {product.image_urls[0] ? (
+                      <ImageWithFallback
+                        src={product.image_urls[0]}
+                        alt={`Imagem de ${product.name}`}
+                        className="h-16 w-16 shrink-0 border border-cacau/10 object-contain sm:h-20 sm:w-20"
+                      />
+                    ) : (
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center border border-cacau/10 bg-sand text-[10px] text-text-light sm:h-20 sm:w-20">
+                        Sem foto
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <h3 className="font-semibold text-cacau">{product.name}</h3>
+                        <span className="shrink-0 text-xs font-bold text-deep-green">
+                          {moneyOrDash(product.supplier_price)} custo
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-text-light">
+                        {[product.supplier, product.category, product.sku]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                      {parsePriceVariations(product.price_variations).length > 1 && (
+                        <p className="mt-2 text-xs text-cacau">
+                          {parsePriceVariations(product.price_variations)
+                            .map(
+                              (variation) =>
+                                `${variation.name}: ${moneyOrDash(variation.supplier_price)}`,
+                            )
+                            .join(" · ")}
+                        </p>
+                      )}
+                      {product.measurements && (
+                        <p className="mt-2 line-clamp-2 text-xs text-cacau">
+                          {product.measurements}
+                        </p>
+                      )}
+                      {product.description && (
+                        <p className="mt-1 line-clamp-2 text-xs text-text-light">
+                          {product.description}
+                        </p>
+                      )}
+                      {Array.isArray(product.availability) && product.availability.length > 0 && (
+                        <p className="mt-1 line-clamp-2 text-[11px] text-text-light">
+                          Disponibilidade: {product.availability.map(String).join(" · ")}
+                        </p>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => startScrapedEdit(product)}
+                        className="mt-3 border border-gold px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-cacau hover:bg-gold hover:text-deep-green"
+                      >
+                        Completar preço e fotos
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </>
+        )}
+      </section>
+
+        </TabsContent>
+        <TabsContent value="produtos" forceMount className="admin-workspace-panel">
+      <section
+        id="admin-product-filters"
+        className="mb-6 scroll-mt-4 border border-cacau/10 bg-sand/50 p-4 sm:p-5"
+      >
         <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="font-semibold text-deep-green">Encontrar produto</h2>
+            <h2 className="font-semibold text-deep-green">Encontrar produtos</h2>
             <p className="text-xs text-text-light">
               Pesquise por nome, SKU, fornecedor ou fonte do preço.
             </p>
@@ -435,12 +767,14 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
         </div>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <input
+            aria-label="Buscar produto no painel"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Nome, SKU, slug..."
             className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold lg:col-span-2"
           />
           <select
+            aria-label="Filtrar fornecedor"
             value={supplierFilter}
             onChange={(event) => setSupplierFilter(event.target.value)}
             className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold"
@@ -453,6 +787,7 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
             ))}
           </select>
           <select
+            aria-label="Filtrar categoria"
             value={categoryFilter}
             onChange={(event) => setCategoryFilter(event.target.value)}
             className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold"
@@ -465,6 +800,7 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
             ))}
           </select>
           <select
+            aria-label="Filtrar estado de publicação"
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value as "all" | ProductStatus)}
             className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold md:col-span-2 lg:col-span-1"
@@ -475,6 +811,52 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
             <option value="incomplete">Dados incompletos</option>
           </select>
         </div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <label className="text-xs text-cacau">
+            Filtrar preço de
+            <select
+              value={priceField}
+              onChange={(event) => setPriceField(event.target.value as "site" | "supplier")}
+              className="mt-1 min-h-11 w-full border border-cacau/15 bg-white px-3 text-sm"
+            >
+              <option value="site">Preço no site</option>
+              <option value="supplier">Preço do fornecedor</option>
+            </select>
+          </label>
+          <label className="text-xs text-cacau">
+            Preço mínimo (R$)
+            <input
+              inputMode="decimal"
+              value={minimumPrice}
+              onChange={(event) => setMinimumPrice(event.target.value)}
+              placeholder="Sem mínimo"
+              aria-invalid={invalidPrices}
+              className="mt-1 min-h-11 w-full border border-cacau/15 bg-white px-3 text-sm"
+            />
+          </label>
+          <label className="text-xs text-cacau">
+            Preço máximo (R$)
+            <input
+              inputMode="decimal"
+              value={maximumPrice}
+              onChange={(event) => setMaximumPrice(event.target.value)}
+              placeholder="Sem máximo"
+              aria-invalid={invalidPrices}
+              className="mt-1 min-h-11 w-full border border-cacau/15 bg-white px-3 text-sm"
+            />
+          </label>
+        </div>
+        {invalidPrices && (
+          <p role="alert" className="mt-2 text-xs text-destructive">
+            Informe valores válidos; o mínimo não pode ser maior que o máximo.
+          </p>
+        )}
+        {statusFilter === "awaiting" && (
+          <p className="mt-3 text-xs text-cacau">
+            Produtos sem preço de venda, inclusive os que ainda não têm custo cadastrado. Edite o
+            produto para definir o preço; ele continua fora da vitrine até estar pronto.
+          </p>
+        )}
       </section>
 
       {isLoading ? (
@@ -523,9 +905,9 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
                     className="border border-cacau/10 bg-white p-4 transition-shadow hover:shadow-premium sm:p-5"
                   >
                     <div className="flex gap-3">
-                      <img
+                      <ImageWithFallback
                         src={p.url_imagem}
-                        alt=""
+                        alt={`Imagem de ${p.nome}`}
                         className="h-20 w-20 shrink-0 border border-cacau/10 object-cover sm:h-24 sm:w-24"
                       />
                       <div className="min-w-0 flex-1">
@@ -635,11 +1017,17 @@ function AdminDashboard({ password, onLogout }: { password: string; onLogout: ()
         </div>
       )}
 
+        </TabsContent>
+      </Tabs>
+
       {editing && (
         <ProductForm
           value={editing}
           onChange={setEditing}
-          onCancel={() => setEditing(null)}
+          onCancel={() => {
+            setEditing(null);
+            setActiveScrapedImport(null);
+          }}
           onSave={save}
           saving={saving}
         />
@@ -707,6 +1095,38 @@ function ProductForm({
     }
   };
 
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (!files.length) return;
+
+    setUploading(true);
+    const toastId = toast.loading("Enviando fotos para o Storage...");
+    try {
+      const { supabase } = await import("@/lib/supabaseClient");
+      const urls: string[] = [];
+      for (const file of files) {
+        const extension = file.name.split(".").pop() || "jpg";
+        const fileName = `${Date.now()}_${crypto.randomUUID()}.${extension}`;
+        const filePath = `produtos/${fileName}`;
+        const { error: uploadError } = await supabase.storage
+          .from("produtos-bucket")
+          .upload(filePath, file, { cacheControl: "3600", upsert: false });
+        if (uploadError) throw uploadError;
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("produtos-bucket").getPublicUrl(filePath);
+        urls.push(publicUrl);
+      }
+      onChange({ ...value, imagens: [...(value.imagens ?? []), ...urls] });
+      toast.success(`${urls.length} foto(s) adicionada(s).`, { id: toastId });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro no upload das fotos", { id: toastId });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/50 p-4"
@@ -754,33 +1174,66 @@ function ProductForm({
               className={field}
             />
           </div>
-          <div>
-            <label className={label}>Preço do fornecedor (R$)</label>
+          <div className="grid grid-cols-2 gap-3 sm:col-span-2 sm:gap-4">
+            <div className="min-w-0">
+              <label className={label}>Preço do fornecedor (R$)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={value.preco_fornecedor ?? ""}
+                onChange={(e) =>
+                  onChange({
+                    ...value,
+                    preco_fornecedor: e.target.value === "" ? null : Number(e.target.value),
+                  })
+                }
+                className={field}
+              />
+            </div>
+            <div className="min-w-0">
+              <label className={label}>Preço no site (R$) *</label>
+              <input
+                type="number"
+                step="0.01"
+                value={value.preco_novo}
+                onChange={(e) => {
+                  const price = Number(e.target.value);
+                  const variations = value.variacoes_preco ?? [];
+                  onChange({
+                    ...value,
+                    preco_novo: price,
+                    variacoes_preco: variations.map((variation, index) =>
+                      index === 0 ? { ...variation, sale_price: price || null } : variation,
+                    ),
+                  });
+                }}
+                className={field}
+              />
+              <p className="mt-1 text-[11px] text-text-light">
+                Preço à vista ou dinheiro, antes de qualquer promoção.
+              </p>
+            </div>
+          </div>
+          <div className="sm:col-span-2">
+            <label className={label}>Preço anterior (opcional)</label>
             <input
               type="number"
               step="0.01"
               min="0"
-              value={value.preco_fornecedor ?? ""}
+              value={value.preco_antigo ?? ""}
               onChange={(e) =>
                 onChange({
                   ...value,
-                  preco_fornecedor: e.target.value === "" ? null : Number(e.target.value),
+                  preco_antigo: e.target.value === "" ? null : Number(e.target.value),
                 })
               }
-              className={field}
-            />
-          </div>
-          <div>
-            <label className={label}>Preço no site (R$) *</label>
-            <input
-              type="number"
-              step="0.01"
-              value={value.preco_novo}
-              onChange={(e) => onChange({ ...value, preco_novo: Number(e.target.value) })}
+              placeholder="Informe somente um preço anterior real"
               className={field}
             />
             <p className="mt-1 text-[11px] text-text-light">
-              O preço antigo será calculado automaticamente: +15%.
+              Deixe vazio para não mostrar preço riscado nem selo de desconto. Preencha apenas se
+              esse preço anterior foi realmente praticado.
             </p>
           </div>
           <div>
@@ -908,11 +1361,111 @@ function ProductForm({
               </label>
             </div>
             {value.imagem_url && (
-              <img
+              <ImageWithFallback
                 src={value.imagem_url}
                 alt="Prévia"
                 className="mt-2 h-32 w-32 border border-cacau/10 object-cover"
               />
+            )}
+          </div>
+          {!!value.variacoes_preco?.length && (
+            <div className="sm:col-span-2 border border-gold/30 bg-white p-3">
+              <div className="mb-1 text-xs font-bold uppercase tracking-wide text-cacau">
+                Preços por referência / peça
+              </div>
+              <p className="mb-3 text-[11px] text-text-light">
+                Cada código TROP da referência tem seu próprio custo. Preencha o preço de venda de
+                cada opção; o primeiro também define o preço principal do produto.
+              </p>
+              <div className="space-y-2">
+                {value.variacoes_preco.map((variation, index) => (
+                  <div
+                    key={`${variation.sku}-${index}`}
+                    className="grid items-center gap-2 border-t border-cacau/10 pt-2 sm:grid-cols-[minmax(0,1fr)_100px_130px]"
+                  >
+                    <div className="min-w-0">
+                      <div className="truncate text-xs font-semibold text-cacau">
+                        {variation.name || "Peça"}
+                      </div>
+                      <div className="text-[11px] text-text-light">{variation.sku}</div>
+                    </div>
+                    <div className="text-xs text-text-light">
+                      Custo: {moneyOrDash(variation.supplier_price)}
+                    </div>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={variation.sale_price ?? ""}
+                      onChange={(event) => {
+                        const raw = event.target.value;
+                        const salePrice = raw === "" ? null : Number(raw);
+                        const variations = (value.variacoes_preco ?? []).map((entry, entryIndex) =>
+                          entryIndex === index ? { ...entry, sale_price: salePrice } : entry,
+                        );
+                        const primaryPrice =
+                          variations[0]?.sale_price ??
+                          variations.find((entry) => (entry.sale_price ?? 0) > 0)?.sale_price ??
+                          0;
+                        onChange({
+                          ...value,
+                          preco_novo: primaryPrice,
+                          variacoes_preco: variations,
+                        });
+                      }}
+                      placeholder="Venda (R$)"
+                      aria-label={`Preço de venda de ${variation.name}`}
+                      className={field}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="sm:col-span-2">
+            <label className={label}>Fotos adicionais</label>
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="inline-flex cursor-pointer items-center justify-center border border-cacau/20 px-3 py-2 text-xs font-bold uppercase tracking-wide text-cacau hover:border-gold hover:text-gold">
+                {uploading ? "Enviando…" : "Adicionar fotos"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleGalleryUpload}
+                  disabled={uploading}
+                  className="hidden"
+                />
+              </label>
+              <span className="text-xs text-text-light">
+                A primeira foto é a principal; as demais aparecem na galeria do produto.
+              </span>
+            </div>
+            <textarea
+              value={(value.imagens ?? []).join("\n")}
+              onChange={(e) =>
+                onChange({
+                  ...value,
+                  imagens: e.target.value
+                    .split(/\r?\n/)
+                    .map((url) => url.trim())
+                    .filter(Boolean),
+                })
+              }
+              rows={3}
+              placeholder="Uma URL de foto por linha"
+              className={`${field} mt-2`}
+            />
+            {!!value.imagens?.length && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {value.imagens.map((src, index) => (
+                  <ImageWithFallback
+                    key={`${src}-${index}`}
+                    src={src}
+                    alt={`Foto adicional ${index + 1}`}
+                    className="h-16 w-16 border border-cacau/10 object-contain"
+                  />
+                ))}
+              </div>
             )}
           </div>
           <div>
@@ -959,3 +1512,5 @@ function ProductForm({
     </div>
   );
 }
+
+

@@ -1,0 +1,8 @@
+/* Áreas independentes do painel, com rascunhos preservados ao trocar de aba. */
+.admin-workspace-tabs{display:grid;width:100%;height:auto;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:6px;margin-bottom:20px;border:1px solid #ddd6c9;border-radius:14px;background:#eae5dc}
+.admin-workspace-tab{white-space:normal;min-height:56px;padding:10px 14px;font-size:13px;line-height:1.4;color:#52604f;border-radius:9px;text-align:center}
+.admin-workspace-tab[data-state=active]{background:#2e3f32;color:#fff;box-shadow:0 2px 6px #2e3f321c}
+.admin-workspace-tab:focus-visible{outline:2px solid #c5a059;outline-offset:2px}
+.admin-workspace-panel[data-state=inactive]{display:none}
+.admin-workspace-panel{margin-top:0;min-width:0}
+@media(max-width:700px){.admin-workspace-tabs{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.admin-workspace-tab{min-height:58px;padding:9px;font-size:12px}}

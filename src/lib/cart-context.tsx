@@ -9,22 +9,25 @@ import {
   type ReactNode,
 } from "react";
 import { toast } from "sonner";
+import { quotedCartKey, orderPaymentSummary } from "./cart-payment.ts";
+import type { RateVerification } from "./payment-config.ts";
 
 export interface CartItem {
   id: string;
   name: string;
   price: number;
   cardPrice?: number;
+  cardRateVerification?: RateVerification;
+  paymentConfigId?: string;
   installmentCount?: number;
   img: string;
   quantity: number;
   color?: string | null;
   finish?: string | null;
+  variant?: string | null;
 }
 
-export function cartItemKey(item: Pick<CartItem, "id" | "color" | "finish">) {
-  return `${item.id}__${item.color ?? ""}__${item.finish ?? ""}`;
-}
+export const cartItemKey = quotedCartKey;
 
 interface CartContextValue {
   items: CartItem[];
@@ -117,7 +120,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const { count, total } = useMemo(
     () => ({
       count: items.reduce((sum, i) => sum + i.quantity, 0),
-      total: items.reduce((sum, i) => sum + i.price * i.quantity, 0),
+      total: orderPaymentSummary(items).pixTotal,
     }),
     [items],
   );
