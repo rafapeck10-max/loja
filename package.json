@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test:categories": "node tests/categories.test.mjs",
-    "test:payment": "node --test tests/payment.test.mjs tests/cart-payment.test.mjs"
+    "test:payment": "node --test tests/payment.test.mjs tests/cart-payment.test.mjs",
+    "test:storefront-load": "node --experimental-strip-types --test tests/image-fallback.test.mjs tests/homepage-selection.test.mjs"
   },
   "dependencies": {
     "@fortawesome/free-brands-svg-icons": "^7.3.1",

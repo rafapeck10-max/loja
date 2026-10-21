@@ -21,6 +21,7 @@ import { publicDescription } from "@/lib/product-copy";
 import { CompreJunto } from "@/components/CompreJunto";
 import { ProductDiscountLine } from "@/components/ProductDiscountLine";
 import { cardQuote } from "@/lib/payment";
+import { ImageWithFallback } from "@/components/ImageWithFallback";
 
 export const Route = createFileRoute("/produto/$id")({
   loader: async ({ context, params }) => {
@@ -201,18 +202,18 @@ function ProductPage() {
               className="flex transition-transform duration-500 ease-out"
               style={{ transform: `translateX(-${activeSlide * 100}%)` }}
             >
-              {images.map((src) => (
+              {images.map((src, index) => (
                 <div
                   key={src}
                   className="flex aspect-[4/3] w-full shrink-0 items-center justify-center bg-white"
                 >
-                  <img
+                  <ImageWithFallback
                     src={src}
+                    fallbackSrcs={images.filter((candidate) => candidate !== src)}
                     alt={produto.nome}
                     className="h-full w-full object-contain"
-                    onError={(event) => {
-                      event.currentTarget.style.visibility = "hidden";
-                    }}
+                    loading={index === activeSlide ? "eager" : "lazy"}
+                    fetchPriority={index === activeSlide ? "high" : "auto"}
                   />
                 </div>
               ))}
@@ -257,7 +258,13 @@ function ProductPage() {
                   aria-label={`Selecionar imagem ${index + 1}`}
                   className={`h-20 w-28 shrink-0 overflow-hidden rounded-xl border-2 bg-white p-1 transition-colors sm:h-24 sm:w-32 ${index === activeSlide ? "border-gold" : "border-transparent"}`}
                 >
-                  <img src={src} alt="" className="h-full w-full object-contain" />
+                  <ImageWithFallback
+                    src={src}
+                    fallbackSrcs={images.filter((candidate) => candidate !== src)}
+                    alt=""
+                    className="h-full w-full object-contain"
+                    loading="lazy"
+                  />
                 </button>
               ))}
             </div>

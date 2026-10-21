@@ -1,8 +1,10 @@
 import { useState, type ImgHTMLAttributes } from "react";
 import { ImageOff } from "lucide-react";
+import { firstAvailableImageSource } from "@/lib/image-fallback";
 
 type ImageWithFallbackProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> & {
   src: string | null | undefined;
+  fallbackSrcs?: readonly (string | null | undefined)[];
 };
 
 export function ImageWithFallback({
@@ -10,10 +12,18 @@ export function ImageWithFallback({
   alt,
   className,
   onError,
+  fallbackSrcs = [],
   ...props
 }: ImageWithFallbackProps) {
-  const [failedUrl, setFailedUrl] = useState<string | null>(null);
-  if (!src || failedUrl === src) {
+  const primarySrc = src?.trim() ?? "";
+  const [imageFailures, setImageFailures] = useState<{ primarySrc: string; failed: string[] }>({
+    primarySrc: "",
+    failed: [],
+  });
+  const failedSources = imageFailures.primarySrc === primarySrc ? imageFailures.failed : [];
+  const activeSrc = firstAvailableImageSource([primarySrc, ...fallbackSrcs], failedSources);
+
+  if (!activeSrc) {
     return (
       <span
         className={`mobi-image-fallback ${className ?? ""}`}
@@ -28,12 +38,17 @@ export function ImageWithFallback({
   return (
     <img
       {...props}
-      src={src}
+      src={activeSrc}
       alt={alt ?? ""}
       className={className}
       onError={(event) => {
         onError?.(event);
-        setFailedUrl(src);
+        setImageFailures((current) => {
+          const failed = current.primarySrc === primarySrc ? current.failed : [];
+          return failed.includes(activeSrc)
+            ? current
+            : { primarySrc, failed: [...failed, activeSrc] };
+        });
       }}
     />
   );
