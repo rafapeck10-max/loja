@@ -36,7 +36,12 @@ export function ProductCard({ produto, badge }: { produto: Produto; badge?: Prod
         className="mobi-photo"
         aria-label={`Ver ${produto.nome}`}
       >
-        <ImageWithFallback src={produto.imagem_url} alt={produto.nome} loading="lazy" />
+        <ImageWithFallback
+          src={produto.imagem_url}
+          fallbackSrcs={produto.imagens}
+          alt={produto.nome}
+          loading="lazy"
+        />
       </Link>
       <div className="mobi-badge-row">
         {badge && (
@@ -63,9 +68,7 @@ export function ProductCard({ produto, badge }: { produto: Produto; badge?: Prod
             reserveSpace
           />
           <div className="mobi-price-label">À vista no Pix ou dinheiro</div>
-          <div className="mobi-price">
-            {formatBRL(price)}
-          </div>
+          <div className="mobi-price">{formatBRL(price)}</div>
           <p className="mobi-installments">
             <strong>
               ou {payment.count}x de {formatBRL(payment.approximateInstallment)} sem juros

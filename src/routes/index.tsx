@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { produtosQueryOptions } from "@/lib/products.functions";
+import { useQuery } from "@tanstack/react-query";
+import {
+  homepageProductsQueryOptions,
+  produtosQueryOptions,
+  type HomepageProducts,
+} from "@/lib/products.functions";
 import type { ProductBadge } from "@/components/ProductCard";
 import { HeroCarousel, MOBI_HERO } from "@/components/HeroCarousel";
 import { CategoryNavigation } from "@/components/CategoryNavigation";
@@ -9,12 +13,7 @@ import { parsePage } from "@/components/CatalogPagination";
 import { CATEGORIES, MAX_INSTALLMENTS } from "@/lib/constants";
 import { HomeProductSection } from "@/components/HomeProductSection";
 import { StoreCatalog } from "@/components/StoreCatalog";
-import {
-  discoverHomepageProducts,
-  newHomepageProducts,
-  roomHomepageProducts,
-  weeklyHomepageProducts,
-} from "@/lib/home-curation";
+import { newHomepageProducts, weeklyHomepageProducts } from "@/lib/home-curation";
 
 export const Route = createFileRoute("/")({
   validateSearch: (
@@ -25,8 +24,15 @@ export const Route = createFileRoute("/")({
     ofertas: search.ofertas === true || search.ofertas === "true" ? true : undefined,
     all: search.all === true || search.all === "true" ? true : undefined,
   }),
-  loader: ({ context }) => {
-    return context.queryClient.ensureQueryData(produtosQueryOptions());
+  loaderDeps: ({ search }) => ({
+    catalog: Boolean(search.all || search.ofertas || search.q || search.page),
+    q: search.q,
+    ofertas: search.ofertas,
+    all: search.all,
+    page: search.page,
+  }),
+  loader: ({ context, deps }) => {
+    if (deps.catalog) return context.queryClient.ensureQueryData(produtosQueryOptions());
   },
   head: () => ({
     meta: [
@@ -76,17 +82,37 @@ function IndexError({ reset }: { error: Error; reset: () => void }) {
 }
 
 function Index() {
-  const [rotationDate, setRotationDate] = useState(() => new Date("2000-01-01T12:00:00.000Z"));
   const { q, ofertas, all, page } = Route.useSearch();
-  const { data: produtos } = useSuspenseQuery(produtosQueryOptions());
   const catalog = Boolean(all || ofertas || q || page);
+  return catalog ? <CatalogIndex query={q} offers={ofertas} page={page} /> : <HomepageIndex />;
+}
+
+function CatalogIndex({
+  query,
+  offers,
+  page,
+}: {
+  query?: string;
+  offers?: boolean;
+  page?: number;
+}) {
+  const [rotationDate, setRotationDate] = useState(() => new Date("2000-01-01T12:00:00.000Z"));
+  const result = useQuery(produtosQueryOptions());
+  const produtos = result.data;
+  useEffect(() => {
+    setRotationDate(new Date());
+  }, []);
+  useEffect(() => {
+    if (produtos)
+      document.getElementById("catalogo")?.scrollIntoView({ behavior: "instant", block: "start" });
+  }, [query, offers, page, produtos]);
+
+  if (!produtos && result.isError)
+    return <IndexError error={result.error} reset={() => void result.refetch()} />;
+  if (!produtos) return <CatalogLoadingState />;
+
   const weeklyProducts = weeklyHomepageProducts(produtos);
   const newProducts = newHomepageProducts(produtos, rotationDate);
-  const roomProducts = roomHomepageProducts(produtos);
-  const excluded = new Set(
-    [...weeklyProducts, ...newProducts, ...roomProducts].map((product) => product.id),
-  );
-  const discoveryProducts = discoverHomepageProducts(produtos, excluded, rotationDate);
   const badges: Record<string, ProductBadge> = {};
   newProducts.forEach((product) => {
     badges[product.id] = "new";
@@ -94,29 +120,25 @@ function Index() {
   weeklyProducts.forEach((product) => {
     badges[product.id] = "week";
   });
-  useEffect(() => {
-    if (!catalog) setRotationDate(new Date());
-  }, [catalog]);
-  useEffect(() => {
-    if (catalog)
-      document.getElementById("catalogo")?.scrollIntoView({ behavior: "instant", block: "start" });
-  }, [catalog, q, ofertas]);
-  if (catalog)
-    return (
-      <StoreCatalog
-        key={(q ?? "") + String(ofertas)}
-        products={produtos}
-        query={q}
-        offers={ofertas}
-        requestedPage={page}
-        badges={badges}
-      />
-    );
+
+  return (
+    <StoreCatalog
+      key={(query ?? "") + String(offers)}
+      products={produtos}
+      query={query}
+      offers={offers}
+      requestedPage={page}
+      badges={badges}
+    />
+  );
+}
+
+function HomepageIntro() {
   const mobileCategories = ["sala-de-estar", "cozinha", "dormitorios"].flatMap((slug) =>
     CATEGORIES.filter((category) => category.slug === slug),
   );
   return (
-    <>
+    <div>
       <HeroCarousel />
       <div className="mobi-trust">
         <span>Pague somente na entrega</span>
@@ -126,58 +148,133 @@ function Index() {
       <div className="mobi-category-wrap mobi-wrap">
         <CategoryNavigation categories={CATEGORIES} mobileCategories={mobileCategories} />
       </div>
-      <HomeProductSection
-        title="Descubra algo novo"
-        subtitle="Uma seleção diferente a cada visita. Encontre o que combina com você."
-        products={discoveryProducts}
-        badges={badges}
-      />
-      <HomeProductSection
-        title="Escolhas da semana"
-        subtitle="Uma seleção especial da Mobi para sua casa."
-        products={weeklyProducts}
-        badges={badges}
-      />
-      <section className="mobi-inspiration mobi-wrap">
-        <img src={MOBI_HERO} alt="Inspiração de sala de estar" loading="lazy" />
-        <div>
-          <span className="mobi-eyebrow">CONFORTO EM CADA DETALHE</span>
-          <h2>
-            Para sua sala,
-            <br />
-            mais personalidade.
-          </h2>
-          <p>Um lugar para descansar, receber e viver bons momentos.</p>
-          <Link
-            to="/categoria/$slug"
-            params={{ slug: "sala-de-estar" }}
-            search={{ page: 1 }}
-            className="mobi-primary"
-          >
-            Explorar móveis para sala
-          </Link>
-        </div>
-      </section>
-      <HomeProductSection
-        title="Novidades"
-        subtitle="Novas possibilidades para renovar seus ambientes."
-        products={newProducts}
-        badges={badges}
-      />
-      <HomeProductSection
-        title="Para sua sala"
-        subtitle="Conforto e detalhes que fazem a diferença."
-        products={roomProducts}
-        badges={badges}
-        category="sala-de-estar"
-      />
-      <section className="mobi-catalog-invite mobi-wrap">
-        <h2>Seu próximo móvel está aqui.</h2>
-        <p>Explore por categoria, encontre seu preço e escolha com calma.</p>
-        <Link to="/" search={{ all: true, page: 1 }} hash="catalogo" className="mobi-primary">
-          Explorar todo o catálogo
-        </Link>
-      </section>
+    </div>
+  );
+}
+
+function HomepageIndex() {
+  const result = useQuery(homepageProductsQueryOptions());
+  const data: HomepageProducts | undefined = result.data;
+  const productById = new Map((data?.products ?? []).map((product) => [product.id, product]));
+  const getProducts = (ids: string[] | undefined) =>
+    (ids ?? []).flatMap((id) => {
+      const product = productById.get(id);
+      return product ? [product] : [];
+    });
+  const discoveryProducts = getProducts(data?.sectionIds.discovery);
+  const weeklyProducts = getProducts(data?.sectionIds.weekly);
+  const newProducts = getProducts(data?.sectionIds.new);
+  const roomProducts = getProducts(data?.sectionIds.room);
+  const badges: Record<string, ProductBadge> = {};
+  newProducts.forEach((product) => {
+    badges[product.id] = "new";
+  });
+  weeklyProducts.forEach((product) => {
+    badges[product.id] = "week";
+  });
+
+  return (
+    <>
+      <HomepageIntro />
+      {!data && result.isError ? (
+        <IndexError error={result.error} reset={() => void result.refetch()} />
+      ) : !data ? (
+        <HomepageLoadingState />
+      ) : (
+        <>
+          <HomeProductSection
+            title="Descubra algo novo"
+            subtitle="Uma seleção diferente a cada visita. Encontre o que combina com você."
+            products={discoveryProducts}
+            badges={badges}
+          />
+          <HomeProductSection
+            title="Escolhas da semana"
+            subtitle="Uma seleção especial da Mobi para sua casa."
+            products={weeklyProducts}
+            badges={badges}
+          />
+          <section className="mobi-inspiration mobi-wrap">
+            <img src={MOBI_HERO} alt="Inspiração de sala de estar" loading="lazy" />
+            <div>
+              <span className="mobi-eyebrow">CONFORTO EM CADA DETALHE</span>
+              <h2>
+                Para sua sala,
+                <br />
+                mais personalidade.
+              </h2>
+              <p>Um lugar para descansar, receber e viver bons momentos.</p>
+              <Link
+                to="/categoria/$slug"
+                params={{ slug: "sala-de-estar" }}
+                search={{ page: 1 }}
+                className="mobi-primary"
+              >
+                Explorar móveis para sala
+              </Link>
+            </div>
+          </section>
+          <HomeProductSection
+            title="Novidades"
+            subtitle="Novas possibilidades para renovar seus ambientes."
+            products={newProducts}
+            badges={badges}
+          />
+          <HomeProductSection
+            title="Para sua sala"
+            subtitle="Conforto e detalhes que fazem a diferença."
+            products={roomProducts}
+            badges={badges}
+            category="sala-de-estar"
+          />
+          <section className="mobi-catalog-invite mobi-wrap">
+            <h2>Seu próximo móvel está aqui.</h2>
+            <p>Explore por categoria, encontre seu preço e escolha com calma.</p>
+            <Link to="/" search={{ all: true, page: 1 }} hash="catalogo" className="mobi-primary">
+              Explorar todo o catálogo
+            </Link>
+          </section>
+        </>
+      )}
     </>
+  );
+}
+
+function HomepageLoadingState() {
+  return (
+    <section className="mobi-shelf mobi-wrap" aria-busy="true" aria-live="polite">
+      <div className="mobi-section-title">
+        <div>
+          <h2>Carregando a vitrine</h2>
+          <p>Estamos buscando os móveis para você.</p>
+        </div>
+      </div>
+      <div className="mobi-grid" aria-hidden="true">
+        {Array.from({ length: 4 }, (_, index) => (
+          <div
+            key={index}
+            className="mobi-product animate-pulse overflow-hidden rounded-2xl border border-cacau/10 bg-white"
+          >
+            <div className="aspect-[4/3] bg-[#eee8de]" />
+            <div className="space-y-3 p-4">
+              <div className="h-3 w-1/2 rounded bg-[#eee8de]" />
+              <div className="h-4 w-4/5 rounded bg-[#eee8de]" />
+              <div className="h-3 w-2/3 rounded bg-[#eee8de]" />
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="sr-only" role="status">
+        Carregando produtos.
+      </p>
+    </section>
+  );
+}
+
+function CatalogLoadingState() {
+  return (
+    <section id="catalogo" className="mobi-wrap py-12" role="status" aria-live="polite">
+      Carregando produtos.
+    </section>
   );
 }
