@@ -59,6 +59,16 @@ test("relevance ranks explicit title matches ahead of description-only matches",
 test("materials, colors, features, and dimensions are derived only from explicit text", () => {
   assert.deepEqual(getCatalogMaterials(sofa), ["Linho"]);
   assert.deepEqual(getCatalogColors(sofa), ["Cinza claro"]);
+  assert.deepEqual(
+    getCatalogColors({
+      nome: "Sofá retrátil",
+      categoria: "Sofás",
+      descricao: "Revestimento em linho.",
+      medidas: null,
+      cores: ["Estofado Atlas - Linho Gelo", "Sofá Zeus"],
+    }),
+    ["Gelo"],
+  );
   assert.deepEqual(getCatalogFeatures({ ...sofa, descricao: "Sofá retrátil e reclinável com baú." }), [
     "Retrátil",
     "Reclinável",

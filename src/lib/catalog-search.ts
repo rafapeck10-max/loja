@@ -47,6 +47,17 @@ const knownColors = [
   { label: "Bege escuro", terms: ["bege escuro"] },
   { label: "Caramelo", terms: ["caramelo"] },
   { label: "Terracota", terms: ["terracota"] },
+  { label: "Cappuccino", terms: ["cappuccino", "capuccino", "cappucino"] },
+  { label: "Café", terms: ["cafe"] },
+  { label: "Gelo", terms: ["gelo"] },
+  { label: "Bronze", terms: ["bronze"] },
+  { label: "Marfim", terms: ["marfim"] },
+  { label: "Oliva", terms: ["oliva"] },
+  { label: "Caqui", terms: ["caqui", "kaki", "khaki"] },
+  { label: "Cru", terms: ["cru"] },
+  { label: "Juta", terms: ["juta"] },
+  { label: "Inox", terms: ["inox"] },
+  { label: "Rubi", terms: ["rubi"] },
   { label: "Grafite", terms: ["grafite"] },
   { label: "Chumbo", terms: ["chumbo"] },
   { label: "Areia", terms: ["areia"] },
@@ -191,17 +202,10 @@ export function getCatalogMaterials(product: SearchProduct) {
 
 export function getCatalogColors(product: SearchProduct) {
   const text = sourceText(product);
-  const explicit = (product.cores ?? [])
-    .flatMap((color) => color.split(/[;,/|]+/))
-    .map((color) => color.trim())
-    .filter(Boolean);
   const inferred = knownColors
     .filter((option) => option.terms.some((term) => hasPhrase(text, term)))
     .map((option) => option.label);
-  const all = [...explicit, ...inferred].filter(
-    (color, index, values) =>
-      values.findIndex((candidate) => normalize(candidate) === normalize(color)) === index,
-  );
+  const all = [...new Set(inferred)];
   return all.filter((color) => {
     const normalized = normalize(color);
     return !all.some(
