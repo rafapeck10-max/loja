@@ -1,3 +1,4 @@
+import { useLayoutEffect } from "react";
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
@@ -54,6 +55,28 @@ function CategoriaPage() {
   const navigate = useNavigate({ from: "/categoria/$slug" });
   const { data: produtos } = useSuspenseQuery(produtosQueryOptions());
   const { page } = Route.useSearch();
+  useLayoutEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("mobi:catalog-return-position");
+      if (!saved) return;
+      sessionStorage.removeItem("mobi:catalog-return-position");
+      const position = JSON.parse(saved) as {
+        category?: unknown;
+        page?: unknown;
+        scrollY?: unknown;
+      };
+      if (
+        position.category === slug &&
+        position.page === page &&
+        typeof position.scrollY === "number" &&
+        Number.isFinite(position.scrollY)
+      ) {
+        window.requestAnimationFrame(() => window.scrollTo(0, position.scrollY as number));
+      }
+    } catch {
+      sessionStorage.removeItem("mobi:catalog-return-position");
+    }
+  }, [page, slug]);
   return (
     <StoreCatalog
       key={slug}

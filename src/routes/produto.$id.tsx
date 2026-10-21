@@ -196,6 +196,7 @@ function ProductPage() {
           to="/categoria/$slug"
           params={{ slug: returnCategory ?? categorySlug(produto.categoria) }}
           search={{ page: returnPage ?? 1 }}
+          resetScroll={false}
           className="text-inherit no-underline hover:text-gold"
         >
           {produto.categoria}

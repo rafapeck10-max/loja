@@ -33,6 +33,17 @@ export function ProductCard({
 }) {
   const price = productDisplayPrice(produto);
   const payment = cardQuote(price, MAX_INSTALLMENTS);
+  const saveCatalogReturnPosition = () => {
+    if (!returnCategory || !returnPage || typeof window === "undefined") return;
+    try {
+      sessionStorage.setItem(
+        "mobi:catalog-return-position",
+        JSON.stringify({ category: returnCategory, page: returnPage, scrollY: window.scrollY }),
+      );
+    } catch {
+      // Navigation should still work if browser storage is unavailable.
+    }
+  };
   const hasPricedVariations = (produto.variacoes_preco ?? []).some(
     (variation) => variation.sale_price != null && variation.sale_price > 0,
   );
@@ -58,6 +69,7 @@ export function ProductCard({
           ...(returnPage ? { returnPage } : {}),
           ...(returnCategory ? { returnCategory } : {}),
         }}
+        onClick={saveCatalogReturnPosition}
         className="mobi-photo"
         aria-label={`Ver ${produto.nome}`}
       >
@@ -108,6 +120,7 @@ export function ProductCard({
             ...(returnPage ? { returnPage } : {}),
             ...(returnCategory ? { returnCategory } : {}),
           }}
+          onClick={saveCatalogReturnPosition}
           className="mobi-product-cta"
         >
           Ver detalhes
