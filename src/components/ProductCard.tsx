@@ -24,10 +24,12 @@ export function ProductCard({
   produto,
   badge,
   returnPage,
+  returnCategory,
 }: {
   produto: Produto;
   badge?: ProductBadge;
   returnPage?: number;
+  returnCategory?: string;
 }) {
   const price = productDisplayPrice(produto);
   const payment = cardQuote(price, MAX_INSTALLMENTS);
@@ -52,7 +54,10 @@ export function ProductCard({
       <Link
         to="/produto/$id"
         params={{ id: produto.slug }}
-        search={returnPage ? { returnPage } : {}}
+        search={{
+          ...(returnPage ? { returnPage } : {}),
+          ...(returnCategory ? { returnCategory } : {}),
+        }}
         className="mobi-photo"
         aria-label={`Ver ${produto.nome}`}
       >
@@ -99,7 +104,10 @@ export function ProductCard({
         <Link
           to="/produto/$id"
           params={{ id: produto.slug }}
-          search={returnPage ? { returnPage } : {}}
+          search={{
+            ...(returnPage ? { returnPage } : {}),
+            ...(returnCategory ? { returnCategory } : {}),
+          }}
           className="mobi-product-cta"
         >
           Ver detalhes

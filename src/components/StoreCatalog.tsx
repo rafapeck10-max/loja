@@ -504,6 +504,7 @@ export function StoreCatalog({
                     produto={product}
                     badge={badges[product.id]}
                     returnPage={initialCategory !== "all" ? requestedPage : undefined}
+                    returnCategory={initialCategory !== "all" ? initialCategory : undefined}
                   />
                 ))}
               </div>

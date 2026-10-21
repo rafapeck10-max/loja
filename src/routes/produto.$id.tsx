@@ -27,6 +27,10 @@ import { parsePage } from "@/components/CatalogPagination";
 export const Route = createFileRoute("/produto/$id")({
   validateSearch: (search: Record<string, unknown>) => ({
     returnPage: search.returnPage === undefined ? undefined : parsePage(search.returnPage),
+    returnCategory:
+      typeof search.returnCategory === "string" && /^[a-z0-9-]+$/i.test(search.returnCategory)
+        ? search.returnCategory
+        : undefined,
   }),
   loader: async ({ context, params }) => {
     const produto = await context.queryClient.ensureQueryData(produtoQueryOptions(params.id));
@@ -128,7 +132,7 @@ function Accordion({ title, children }: { title: string; children: ReactNode }) 
 
 function ProductPage() {
   const { id } = Route.useParams();
-  const { returnPage } = Route.useSearch();
+  const { returnPage, returnCategory } = Route.useSearch();
   const { data: produto } = useSuspenseQuery(produtoQueryOptions(id));
   const { addItem, openCart } = useCart();
   const [activeSlide, setActiveSlide] = useState(0);
@@ -190,7 +194,7 @@ function ProductPage() {
         <span aria-hidden="true">/</span>
         <Link
           to="/categoria/$slug"
-          params={{ slug: categorySlug(produto.categoria) }}
+          params={{ slug: returnCategory ?? categorySlug(produto.categoria) }}
           search={{ page: returnPage ?? 1 }}
           className="text-inherit no-underline hover:text-gold"
         >
