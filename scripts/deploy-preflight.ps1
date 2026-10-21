@@ -40,7 +40,13 @@ try {
   }
   $deployment = Read-VercelJson @('api', "/v13/deployments/$ExpectedDeploymentId`?teamId=$teamId", '--raw')
   if ($deployment.projectId -ne $projectId) { throw 'O deployment pertence a outro projeto.' }
-  $tree = Read-VercelJson @('api', "/v6/deployments/$ExpectedDeploymentId/files?teamId=$teamId", '--raw')
+  # Git-backed deployments do not expose a Vercel source file tree. Use their
+  # Git source SHA below; deployments without one must provide the Vercel tree.
+  $tree = if ($deployment.gitSource.sha) {
+    @()
+  } else {
+    Read-VercelJson @('api', "/v6/deployments/$ExpectedDeploymentId/files?teamId=$teamId", '--raw')
+  }
   $source = @($tree | Where-Object name -eq 'src')
   if ($source.Count -ne 1) {
     if (-not $deployment.gitSource.sha) { throw 'Fonte não disponível: não presumir que o GitHub é igual à produção.' }
