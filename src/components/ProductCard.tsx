@@ -3,7 +3,11 @@ import { Sparkles, Star } from "lucide-react";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
 import { ProductDiscountLine } from "@/components/ProductDiscountLine";
 import { CATEGORIES, categoryMatches, formatBRL, MAX_INSTALLMENTS } from "@/lib/constants";
-import { getCatalogColors, getCatalogDimensionLabel, getCatalogMaterials } from "@/lib/catalog-search";
+import {
+  getCatalogColors,
+  getCatalogDimensionLabel,
+  getCatalogMaterials,
+} from "@/lib/catalog-search";
 import type { Produto } from "@/lib/products.functions";
 import { cardQuote } from "@/lib/payment";
 
@@ -16,7 +20,15 @@ export function productDisplayPrice(produto: Produto) {
       ?.sale_price ?? produto.preco_novo
   );
 }
-export function ProductCard({ produto, badge }: { produto: Produto; badge?: ProductBadge }) {
+export function ProductCard({
+  produto,
+  badge,
+  returnPage,
+}: {
+  produto: Produto;
+  badge?: ProductBadge;
+  returnPage?: number;
+}) {
   const price = productDisplayPrice(produto);
   const payment = cardQuote(price, MAX_INSTALLMENTS);
   const hasPricedVariations = (produto.variacoes_preco ?? []).some(
@@ -40,6 +52,7 @@ export function ProductCard({ produto, badge }: { produto: Produto; badge?: Prod
       <Link
         to="/produto/$id"
         params={{ id: produto.slug }}
+        search={returnPage ? { returnPage } : {}}
         className="mobi-photo"
         aria-label={`Ver ${produto.nome}`}
       >
@@ -83,11 +96,15 @@ export function ProductCard({ produto, badge }: { produto: Produto; badge?: Prod
             <span>Total no cartão: {formatBRL(payment.total)}</span>
           </p>
         </div>
-        <Link to="/produto/$id" params={{ id: produto.slug }} className="mobi-product-cta">
+        <Link
+          to="/produto/$id"
+          params={{ id: produto.slug }}
+          search={returnPage ? { returnPage } : {}}
+          className="mobi-product-cta"
+        >
           Ver detalhes
         </Link>
       </div>
     </article>
   );
 }
-

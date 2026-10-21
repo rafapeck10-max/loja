@@ -22,8 +22,12 @@ import { CompreJunto } from "@/components/CompreJunto";
 import { ProductDiscountLine } from "@/components/ProductDiscountLine";
 import { cardQuote } from "@/lib/payment";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
+import { parsePage } from "@/components/CatalogPagination";
 
 export const Route = createFileRoute("/produto/$id")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    returnPage: search.returnPage === undefined ? undefined : parsePage(search.returnPage),
+  }),
   loader: async ({ context, params }) => {
     const produto = await context.queryClient.ensureQueryData(produtoQueryOptions(params.id));
     if (!produto) throw notFound();
@@ -124,6 +128,7 @@ function Accordion({ title, children }: { title: string; children: ReactNode }) 
 
 function ProductPage() {
   const { id } = Route.useParams();
+  const { returnPage } = Route.useSearch();
   const { data: produto } = useSuspenseQuery(produtoQueryOptions(id));
   const { addItem, openCart } = useCart();
   const [activeSlide, setActiveSlide] = useState(0);
@@ -186,7 +191,7 @@ function ProductPage() {
         <Link
           to="/categoria/$slug"
           params={{ slug: categorySlug(produto.categoria) }}
-          search={{ page: 1 }}
+          search={{ page: returnPage ?? 1 }}
           className="text-inherit no-underline hover:text-gold"
         >
           {produto.categoria}
