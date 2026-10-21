@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { produtosQueryOptions } from "@/lib/products.functions";
@@ -52,12 +51,21 @@ function CategoriaError({ reset }: { error: Error; reset: () => void }) {
 
 function CategoriaPage() {
   const { slug } = Route.useParams();
+  const navigate = useNavigate({ from: "/categoria/$slug" });
   const { data: produtos } = useSuspenseQuery(produtosQueryOptions());
   const { page } = Route.useSearch();
-  useEffect(() => {
-    document.getElementById("catalogo")?.scrollIntoView({ behavior: "instant", block: "start" });
-  }, [slug]);
   return (
-    <StoreCatalog key={slug} products={produtos} initialCategory={slug} requestedPage={page} />
+    <StoreCatalog
+      key={slug}
+      products={produtos}
+      initialCategory={slug}
+      requestedPage={page}
+      onPageChange={(nextPage) => {
+        void navigate({
+          search: (previous) => ({ ...previous, page: nextPage }),
+          replace: true,
+        });
+      }}
+    />
   );
 }

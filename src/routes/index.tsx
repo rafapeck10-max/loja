@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   homepageProductsQueryOptions,
@@ -96,16 +96,13 @@ function CatalogIndex({
   offers?: boolean;
   page?: number;
 }) {
+  const navigate = useNavigate({ from: "/" });
   const [rotationDate, setRotationDate] = useState(() => new Date("2000-01-01T12:00:00.000Z"));
   const result = useQuery(produtosQueryOptions());
   const produtos = result.data;
   useEffect(() => {
     setRotationDate(new Date());
   }, []);
-  useEffect(() => {
-    if (produtos)
-      document.getElementById("catalogo")?.scrollIntoView({ behavior: "instant", block: "start" });
-  }, [query, offers, page, produtos]);
 
   if (!produtos && result.isError)
     return <IndexError error={result.error} reset={() => void result.refetch()} />;
@@ -129,6 +126,12 @@ function CatalogIndex({
       offers={offers}
       requestedPage={page}
       badges={badges}
+      onPageChange={(nextPage) => {
+        void navigate({
+          search: (previous) => ({ ...previous, page: nextPage }),
+          replace: true,
+        });
+      }}
     />
   );
 }

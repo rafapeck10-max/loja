@@ -886,6 +886,22 @@
 .mobi-filters select {
   width: 100%;
 }
+.mobi-filters input[type="search"] {
+  width: 100%;
+  border: 1px solid #d8cfbd;
+  border-radius: 5px;
+  background: #fff;
+  color: #493327;
+  padding: 11px 10px;
+  font-size: 12px;
+}
+.mobi-dimension-help {
+  display: block;
+  margin: 6px 0 15px;
+  color: #827367;
+  font-size: 11px;
+  line-height: 1.5;
+}
 .mobi-filters fieldset {
   padding: 22px 0;
   border: 0;
@@ -1382,3 +1398,4 @@
     padding-top: 5px;
   }
 }
+

@@ -3,6 +3,7 @@ import { Sparkles, Star } from "lucide-react";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
 import { ProductDiscountLine } from "@/components/ProductDiscountLine";
 import { CATEGORIES, categoryMatches, formatBRL, MAX_INSTALLMENTS } from "@/lib/constants";
+import { getCatalogColors, getCatalogDimensionLabel, getCatalogMaterials } from "@/lib/catalog-search";
 import type { Produto } from "@/lib/products.functions";
 import { cardQuote } from "@/lib/payment";
 
@@ -27,7 +28,13 @@ export function ProductCard({ produto, badge }: { produto: Produto; badge?: Prod
   const categoryLabel =
     category?.slug === "decoracao" ? "Decoração" : (category?.shortLabel ?? produto.categoria);
   const detail =
-    [produto.medidas, ...(produto.cores ?? [])].filter(Boolean).join(" · ") || produto.categoria;
+    [
+      getCatalogDimensionLabel(produto),
+      getCatalogMaterials(produto).slice(0, 2).join(" / "),
+      getCatalogColors(produto).slice(0, 2).join(" / "),
+    ]
+      .filter(Boolean)
+      .join(" · ") || produto.categoria;
   return (
     <article className="mobi-product">
       <Link
@@ -83,3 +90,4 @@ export function ProductCard({ produto, badge }: { produto: Produto; badge?: Prod
     </article>
   );
 }
+
