@@ -46,7 +46,7 @@ export function Header() {
             ref={searchRef}
             type="search"
             aria-label="Buscar móveis"
-            placeholder="O que você procura para sua casa?"
+            placeholder="Ex.: sofá retrátil 2,10 m, linho cinza"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
@@ -79,3 +79,4 @@ export function Header() {
     </header>
   );
 }
+
