@@ -32,7 +32,8 @@ const quickCategories = ["sofas", "roupeiros", "camas-casal"].map((slug) => getC
 function facetOptions(products: Produto[], getValues: (product: Produto) => string[]) {
   const counts = new Map<string, number>();
   for (const product of products) {
-    for (const value of new Set(getValues(product))) counts.set(value, (counts.get(value) ?? 0) + 1);
+    for (const value of new Set(getValues(product)))
+      counts.set(value, (counts.get(value) ?? 0) + 1);
   }
   return [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "pt-BR"));
 }
@@ -113,12 +114,18 @@ export function StoreCatalog({
     );
     return result;
   }, [products, category, range, query, offers]);
-  const materialOptions = useMemo(() => facetOptions(baseFiltered, getCatalogMaterials), [baseFiltered]);
+  const materialOptions = useMemo(
+    () => facetOptions(baseFiltered, getCatalogMaterials),
+    [baseFiltered],
+  );
   const colorOptions = useMemo(
     () => facetOptions(baseFiltered, getCatalogColorFilterValues),
     [baseFiltered],
   );
-  const featureOptions = useMemo(() => facetOptions(baseFiltered, getCatalogFeatures), [baseFiltered]);
+  const featureOptions = useMemo(
+    () => facetOptions(baseFiltered, getCatalogFeatures),
+    [baseFiltered],
+  );
   const filtered = useMemo(() => {
     const result = baseFiltered.filter(
       (product) =>
@@ -492,7 +499,13 @@ export function StoreCatalog({
             <>
               <div className="mobi-grid mobi-catalog-grid">
                 {filtered.slice(0, count).map((product) => (
-                  <ProductCard key={product.id} produto={product} badge={badges[product.id]} />
+                  <ProductCard
+                    key={product.id}
+                    produto={product}
+                    badge={badges[product.id]}
+                    returnPage={initialCategory !== "all" ? requestedPage : undefined}
+                    returnCategory={initialCategory !== "all" ? initialCategory : undefined}
+                  />
                 ))}
               </div>
               <div className="mobi-load-more">
@@ -525,4 +538,3 @@ export function StoreCatalog({
     </section>
   );
 }
-

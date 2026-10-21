@@ -3,7 +3,11 @@ import { Sparkles, Star } from "lucide-react";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
 import { ProductDiscountLine } from "@/components/ProductDiscountLine";
 import { CATEGORIES, categoryMatches, formatBRL, MAX_INSTALLMENTS } from "@/lib/constants";
-import { getCatalogColors, getCatalogDimensionLabel, getCatalogMaterials } from "@/lib/catalog-search";
+import {
+  getCatalogColors,
+  getCatalogDimensionLabel,
+  getCatalogMaterials,
+} from "@/lib/catalog-search";
 import type { Produto } from "@/lib/products.functions";
 import { cardQuote } from "@/lib/payment";
 
@@ -16,9 +20,30 @@ export function productDisplayPrice(produto: Produto) {
       ?.sale_price ?? produto.preco_novo
   );
 }
-export function ProductCard({ produto, badge }: { produto: Produto; badge?: ProductBadge }) {
+export function ProductCard({
+  produto,
+  badge,
+  returnPage,
+  returnCategory,
+}: {
+  produto: Produto;
+  badge?: ProductBadge;
+  returnPage?: number;
+  returnCategory?: string;
+}) {
   const price = productDisplayPrice(produto);
   const payment = cardQuote(price, MAX_INSTALLMENTS);
+  const saveCatalogReturnPosition = () => {
+    if (!returnCategory || !returnPage || typeof window === "undefined") return;
+    try {
+      sessionStorage.setItem(
+        "mobi:catalog-return-position",
+        JSON.stringify({ category: returnCategory, page: returnPage, scrollY: window.scrollY }),
+      );
+    } catch {
+      // Navigation should still work if browser storage is unavailable.
+    }
+  };
   const hasPricedVariations = (produto.variacoes_preco ?? []).some(
     (variation) => variation.sale_price != null && variation.sale_price > 0,
   );
@@ -40,6 +65,11 @@ export function ProductCard({ produto, badge }: { produto: Produto; badge?: Prod
       <Link
         to="/produto/$id"
         params={{ id: produto.slug }}
+        search={{
+          ...(returnPage ? { returnPage } : {}),
+          ...(returnCategory ? { returnCategory } : {}),
+        }}
+        onClick={saveCatalogReturnPosition}
         className="mobi-photo"
         aria-label={`Ver ${produto.nome}`}
       >
@@ -83,11 +113,19 @@ export function ProductCard({ produto, badge }: { produto: Produto; badge?: Prod
             <span>Total no cartão: {formatBRL(payment.total)}</span>
           </p>
         </div>
-        <Link to="/produto/$id" params={{ id: produto.slug }} className="mobi-product-cta">
+        <Link
+          to="/produto/$id"
+          params={{ id: produto.slug }}
+          search={{
+            ...(returnPage ? { returnPage } : {}),
+            ...(returnCategory ? { returnCategory } : {}),
+          }}
+          onClick={saveCatalogReturnPosition}
+          className="mobi-product-cta"
+        >
           Ver detalhes
         </Link>
       </div>
     </article>
   );
 }
-

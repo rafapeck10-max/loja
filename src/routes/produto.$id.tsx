@@ -22,8 +22,16 @@ import { CompreJunto } from "@/components/CompreJunto";
 import { ProductDiscountLine } from "@/components/ProductDiscountLine";
 import { cardQuote } from "@/lib/payment";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
+import { parsePage } from "@/components/CatalogPagination";
 
 export const Route = createFileRoute("/produto/$id")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    returnPage: search.returnPage === undefined ? undefined : parsePage(search.returnPage),
+    returnCategory:
+      typeof search.returnCategory === "string" && /^[a-z0-9-]+$/i.test(search.returnCategory)
+        ? search.returnCategory
+        : undefined,
+  }),
   loader: async ({ context, params }) => {
     const produto = await context.queryClient.ensureQueryData(produtoQueryOptions(params.id));
     if (!produto) throw notFound();
@@ -124,6 +132,7 @@ function Accordion({ title, children }: { title: string; children: ReactNode }) 
 
 function ProductPage() {
   const { id } = Route.useParams();
+  const { returnPage, returnCategory } = Route.useSearch();
   const { data: produto } = useSuspenseQuery(produtoQueryOptions(id));
   const { addItem, openCart } = useCart();
   const [activeSlide, setActiveSlide] = useState(0);
@@ -185,8 +194,9 @@ function ProductPage() {
         <span aria-hidden="true">/</span>
         <Link
           to="/categoria/$slug"
-          params={{ slug: categorySlug(produto.categoria) }}
-          search={{ page: 1 }}
+          params={{ slug: returnCategory ?? categorySlug(produto.categoria) }}
+          search={{ page: returnPage ?? 1 }}
+          resetScroll={false}
           className="text-inherit no-underline hover:text-gold"
         >
           {produto.categoria}
