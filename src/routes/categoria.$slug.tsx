@@ -64,6 +64,7 @@ function CategoriaPage() {
         void navigate({
           search: (previous) => ({ ...previous, page: nextPage }),
           replace: true,
+          resetScroll: false,
         });
       }}
     />
