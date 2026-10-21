@@ -7,7 +7,7 @@ import { FurnitureCategoryIcon, categoryDisplayLabel } from "@/components/Catego
 import { categoryMatches, getCategory, getSubcategories } from "@/lib/constants";
 import {
   catalogSearchScore,
-  getCatalogColors,
+  getCatalogColorFilterValues,
   getCatalogFeatures,
   getCatalogMaterials,
   matchesCatalogColors,
@@ -103,7 +103,10 @@ export function StoreCatalog({
     return result;
   }, [products, category, range, query, offers]);
   const materialOptions = useMemo(() => facetOptions(baseFiltered, getCatalogMaterials), [baseFiltered]);
-  const colorOptions = useMemo(() => facetOptions(baseFiltered, getCatalogColors), [baseFiltered]);
+  const colorOptions = useMemo(
+    () => facetOptions(baseFiltered, getCatalogColorFilterValues),
+    [baseFiltered],
+  );
   const featureOptions = useMemo(() => facetOptions(baseFiltered, getCatalogFeatures), [baseFiltered]);
   const filtered = useMemo(() => {
     const result = baseFiltered.filter(

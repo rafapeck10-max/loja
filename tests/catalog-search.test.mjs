@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
   catalogSearchScore,
   getCatalogColors,
+  getCatalogColorFilterValues,
   getCatalogDimensionLabel,
   getCatalogFeatures,
   getCatalogMaterials,
@@ -59,6 +60,7 @@ test("relevance ranks explicit title matches ahead of description-only matches",
 test("materials, colors, features, and dimensions are derived only from explicit text", () => {
   assert.deepEqual(getCatalogMaterials(sofa), ["Linho"]);
   assert.deepEqual(getCatalogColors(sofa), ["Cinza claro"]);
+  assert.deepEqual(getCatalogColorFilterValues(sofa), ["Cinza claro", "Cinza"]);
   assert.deepEqual(
     getCatalogColors({
       nome: "Sofá retrátil",

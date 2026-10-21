@@ -75,6 +75,13 @@ const knownColors = [
   { label: "Amarelo", terms: ["amarelo", "amarela"] },
 ] as const;
 
+const broaderColors: Record<string, string> = {
+  "bege claro": "Bege",
+  "bege escuro": "Bege",
+  "cinza claro": "Cinza",
+  "cinza escuro": "Cinza",
+};
+
 const featureOptions = [
   { label: "Retrátil", terms: ["retratil", "retrateis"] },
   { label: "Reclinável", terms: ["reclinavel", "reclinaveis"] },
@@ -216,6 +223,16 @@ export function getCatalogColors(product: SearchProduct) {
   });
 }
 
+export function getCatalogColorFilterValues(product: SearchProduct) {
+  const values: string[] = [];
+  for (const color of getCatalogColors(product)) {
+    if (!values.includes(color)) values.push(color);
+    const broader = broaderColors[normalize(color)];
+    if (broader && !values.includes(broader)) values.push(broader);
+  }
+  return values;
+}
+
 export function getCatalogFeatures(product: SearchProduct) {
   const text = sourceText(product);
   return featureOptions
@@ -254,15 +271,7 @@ export function matchesCatalogMaterials(product: SearchProduct, material: string
 }
 
 export function matchesCatalogColors(product: SearchProduct, color: string) {
-  return (
-    color === "all" ||
-    getCatalogColors(product).some(
-      (candidate) =>
-        normalize(candidate) === normalize(color) ||
-        hasPhrase(candidate, color) ||
-        hasPhrase(color, candidate),
-    )
-  );
+  return color === "all" || getCatalogColorFilterValues(product).includes(color);
 }
 
 export function matchesCatalogFeatures(product: SearchProduct, feature: string) {
