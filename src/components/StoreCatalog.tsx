@@ -17,6 +17,7 @@ import {
   matchesCatalogSearch,
 } from "@/lib/catalog-search";
 import { catalogEnvironments as environments, catalogRoom } from "@/lib/catalog-navigation";
+import { catalogPageForVisibleCount, catalogVisibleCountForPage } from "@/lib/catalog-page-state";
 import type { Produto } from "@/lib/products.functions";
 import { hasRealReferencePrice } from "@/lib/price-reference";
 
@@ -43,6 +44,7 @@ export function StoreCatalog({
   initialCategory = "all",
   requestedPage = 1,
   badges = {},
+  onPageChange,
 }: {
   products: Produto[];
   query?: string;
@@ -50,6 +52,7 @@ export function StoreCatalog({
   initialCategory?: string;
   requestedPage?: number;
   badges?: Record<string, ProductBadge>;
+  onPageChange?: (page: number) => void;
 }) {
   const [category, setCategory] = useState(initialCategory);
   const [selectedRoom, setSelectedRoom] = useState(
@@ -61,11 +64,16 @@ export function StoreCatalog({
   const [color, setColor] = useState("all");
   const [feature, setFeature] = useState("all");
   const [dimension, setDimension] = useState("");
-  const [count, setCount] = useState(Math.max(1, requestedPage) * 24);
+  const [count, setCount] = useState(catalogVisibleCountForPage(requestedPage));
   const [filtersOpen, setFiltersOpen] = useState(false);
   const navigate = useNavigate();
   const { openMenu, menuOpen } = useUI();
   const filtersRef = useRef<HTMLElement>(null);
+  const setVisibleCount = (nextCount: number) => {
+    const safeCount = Math.max(24, nextCount);
+    setCount(safeCount);
+    onPageChange?.(catalogPageForVisibleCount(safeCount));
+  };
   const room = catalogRoom(category, selectedRoom);
   const relatedTypes = getSubcategories(category).length
     ? getSubcategories(category)
@@ -85,8 +93,11 @@ export function StoreCatalog({
     setFeature("all");
     setDimension("");
     setSort(query.trim() ? "relevant" : "recommended");
-    setCount(Math.max(1, requestedPage) * 24);
-  }, [initialCategory, requestedPage, query, offers]);
+    setCount(catalogVisibleCountForPage(requestedPage));
+  }, [initialCategory, query, offers]);
+  useEffect(() => {
+    setCount(catalogVisibleCountForPage(requestedPage));
+  }, [requestedPage]);
   const baseFiltered = useMemo(() => {
     const result = products.filter(
       (product) =>
@@ -138,14 +149,14 @@ export function StoreCatalog({
     setFeature("all");
     setDimension("");
     setSort("recommended");
-    setCount(24);
+    setVisibleCount(24);
     setFiltersOpen(false);
     navigate({ to: "/", search: { all: true, page: 1 }, hash: "catalogo" });
   };
   const selectCategory = (slug: string) => {
     setCategory(slug);
     setSelectedRoom((preferred) => catalogRoom(slug, preferred)?.slug ?? "all");
-    setCount(24);
+    setVisibleCount(24);
     setMaterial("all");
     setColor("all");
     setFeature("all");
@@ -210,7 +221,7 @@ export function StoreCatalog({
             value={material}
             onChange={(event) => {
               setMaterial(event.target.value);
-              setCount(24);
+              setVisibleCount(24);
             }}
           >
             <option value="all">Todos os materiais</option>
@@ -230,7 +241,7 @@ export function StoreCatalog({
             value={color}
             onChange={(event) => {
               setColor(event.target.value);
-              setCount(24);
+              setVisibleCount(24);
             }}
           >
             <option value="all">Todas as cores</option>
@@ -251,7 +262,7 @@ export function StoreCatalog({
         value={dimension}
         onChange={(event) => {
           setDimension(event.target.value);
-          setCount(24);
+          setVisibleCount(24);
         }}
         aria-describedby="mobi-catalog-dimension-help"
       />
@@ -266,7 +277,7 @@ export function StoreCatalog({
             value={feature}
             onChange={(event) => {
               setFeature(event.target.value);
-              setCount(24);
+              setVisibleCount(24);
             }}
           >
             <option value="all">Todas as características</option>
@@ -289,7 +300,7 @@ export function StoreCatalog({
               checked={range === value}
               onChange={() => {
                 setRange(value);
-                setCount(24);
+                setVisibleCount(24);
               }}
             />
             {label}
@@ -423,7 +434,7 @@ export function StoreCatalog({
                 value={sort}
                 onChange={(event) => {
                   setSort(event.target.value);
-                  setCount(24);
+                  setVisibleCount(24);
                 }}
               >
                 <option value="relevant">Mais relevantes</option>
@@ -445,7 +456,7 @@ export function StoreCatalog({
                 type="button"
                 onClick={() => {
                   setRange("all");
-                  setCount(24);
+                  setVisibleCount(24);
                 }}
               >
                 Faixa de preço · Remover
@@ -493,7 +504,7 @@ export function StoreCatalog({
                   <button
                     type="button"
                     className="mobi-primary"
-                    onClick={() => setCount((visible) => visible + 24)}
+                    onClick={() => setVisibleCount(count + 24)}
                   >
                     Carregar mais
                   </button>

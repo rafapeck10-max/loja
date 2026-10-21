@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test:catalog-search": "node --experimental-strip-types --test tests/catalog-search.test.mjs",
+    "test:catalog-search": "node --experimental-strip-types --test tests/catalog-search.test.mjs tests/catalog-page-state.test.mjs",
     "test:categories": "node tests/categories.test.mjs",
     "test:payment": "node --test tests/payment.test.mjs tests/cart-payment.test.mjs",
     "test:storefront-load": "node --experimental-strip-types --test tests/image-fallback.test.mjs tests/homepage-selection.test.mjs"
