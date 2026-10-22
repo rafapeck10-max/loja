@@ -180,7 +180,13 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <UIProvider>
         <CartProvider>
-          <div className="store-shell flex min-h-screen flex-col">
+          <div
+            className={
+              isLinksRoute
+                ? "flex min-h-screen flex-col bg-[#073f3b]"
+                : "store-shell flex min-h-screen flex-col"
+            }
+          >
             {!isLinksRoute && <Header />}
             <main
               id="conteudo"

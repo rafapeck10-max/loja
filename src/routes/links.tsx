@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Globe, Instagram, MapPin, Share2, ArrowUpRight, Check } from "lucide-react";
+import { Globe, Instagram, Facebook, MapPin, Share2, ArrowUpRight, Check } from "lucide-react";
 import { MobiliLogo } from "@/components/MobiliLogo";
 import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import { WHATSAPP_URL } from "@/lib/constants";
@@ -18,6 +18,7 @@ export const Route = createFileRoute("/links")({
 });
 
 const INSTAGRAM_URL = "https://www.instagram.com/lojamobimb/";
+const FACEBOOK_URL = "https://www.facebook.com/profile.php?id=61592444327378";
 const linkClass =
   "group grid min-h-[76px] grid-cols-[32px_1fr_20px] items-center gap-3 rounded-full border border-[#dfc18d]/80 px-5 py-4 text-[#edd4a9] no-underline transition-colors hover:bg-[#edd4a9] hover:text-[#073f3b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#edd4a9] sm:min-h-[82px] sm:px-6";
 
@@ -65,15 +66,26 @@ function LinksPage() {
             <br />
             Nova Iguaçu e região.
           </p>
-          <a
-            href={INSTAGRAM_URL}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="Instagram da Mobi — abre em nova aba"
-            className="mx-auto mt-4 inline-flex h-11 w-11 items-center justify-center rounded-full text-[#edd4a9] transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#edd4a9]"
-          >
-            <Instagram className="h-7 w-7" />
-          </a>
+          <div className="mt-4 flex items-center justify-center gap-3">
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Instagram da Mobi — abre em nova aba"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full text-[#edd4a9] transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#edd4a9]"
+            >
+              <Instagram className="h-7 w-7" />
+            </a>
+            <a
+              href={FACEBOOK_URL}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Facebook da Mobi — abre em nova aba"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full text-[#edd4a9] transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#edd4a9]"
+            >
+              <Facebook className="h-7 w-7" />
+            </a>
+          </div>
         </header>
         <nav aria-label="Links oficiais da Mobi" className="mt-7 grid gap-4 sm:mt-9">
           <Link to="/" search={{ all: true, page: 1 }} hash="catalogo" className={linkClass}>
@@ -92,10 +104,10 @@ function LinksPage() {
             </span>
             <ArrowUpRight className="h-4 w-4 opacity-70" aria-hidden="true" />
           </a>
-          <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" className={linkClass}>
-            <Instagram className="h-7 w-7" aria-hidden="true" />
+          <a href={FACEBOOK_URL} target="_blank" rel="noreferrer" className={linkClass}>
+            <Facebook className="h-7 w-7" aria-hidden="true" />
             <span className="text-center text-[15px] font-semibold uppercase leading-snug tracking-wide sm:text-base">
-              Siga a Mobi no Instagram
+              Acompanhe a Mobi no Facebook
             </span>
             <ArrowUpRight className="h-4 w-4 opacity-70" aria-hidden="true" />
           </a>
