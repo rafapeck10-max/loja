@@ -3,17 +3,16 @@ import { ArrowRight, ExternalLink } from "lucide-react";
 import { MobiliLogo } from "@/components/MobiliLogo";
 import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import { MAX_INSTALLMENTS, WHATSAPP_URL } from "@/lib/constants";
+import { seoHead } from "@/lib/seo";
+import { SITE_URL } from "@/lib/site-metadata";
 
 export const Route = createFileRoute("/links")({
-  head: () => ({
-    meta: [
-      { title: "Mobi | Links oficiais" },
-      {
-        name: "description",
-        content: "Acesse a loja Mobi ou fale com a nossa equipe pelo WhatsApp.",
-      },
-    ],
-  }),
+  head: () =>
+    seoHead(
+      "Mobi | Loja e atendimento em Nova Iguaçu",
+      "Links oficiais da Mobi: acesse o catálogo de móveis ou fale pelo WhatsApp sobre atendimento e entrega em Nova Iguaçu e região.",
+      `${SITE_URL}/links`,
+    ),
   component: LinksPage,
 });
 
@@ -30,6 +29,13 @@ function LinksPage() {
         </p>
 
         <div className="mt-8 grid gap-3">
+          <Link
+            to="/moveis-nova-iguacu"
+            className="flex min-h-14 items-center justify-between gap-3 border border-deep-green px-5 text-sm font-bold text-deep-green"
+          >
+            Móveis em Nova Iguaçu
+            <ArrowRight className="h-5 w-5 shrink-0" />
+          </Link>
           <Link
             to="/"
             search={{}}

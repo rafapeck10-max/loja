@@ -25,6 +25,7 @@ export function buildSitemap(products: SitemapProduct[]) {
   );
   const paths = new Set([
     "/",
+    "/moveis-nova-iguacu",
     ...categories.map((category) => `/categoria/${encodeURIComponent(category.slug)}`),
     ...products
       .filter((product) => product.slug?.trim())

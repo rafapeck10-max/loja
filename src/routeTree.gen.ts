@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as LinksRouteImport } from './routes/links'
+import { Route as MoveisNovaIguacuRouteImport } from './routes/moveis-nova-iguacu'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as CategoriaSlugRouteImport } from './routes/categoria.$slug'
 import { Route as ProdutoIdRouteImport } from './routes/produto.$id'
@@ -29,6 +30,11 @@ const AdminRoute = AdminRouteImport.update({
 const LinksRoute = LinksRouteImport.update({
   id: '/links',
   path: '/links',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MoveisNovaIguacuRoute = MoveisNovaIguacuRouteImport.update({
+  id: '/moveis-nova-iguacu',
+  path: '/moveis-nova-iguacu',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/links': typeof LinksRoute
+  '/moveis-nova-iguacu': typeof MoveisNovaIguacuRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/categoria/$slug': typeof CategoriaSlugRoute
   '/produto/$id': typeof ProdutoIdRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/links': typeof LinksRoute
+  '/moveis-nova-iguacu': typeof MoveisNovaIguacuRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/categoria/$slug': typeof CategoriaSlugRoute
   '/produto/$id': typeof ProdutoIdRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/links': typeof LinksRoute
+  '/moveis-nova-iguacu': typeof MoveisNovaIguacuRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/categoria/$slug': typeof CategoriaSlugRoute
   '/produto/$id': typeof ProdutoIdRoute
@@ -78,6 +87,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/links'
+    | '/moveis-nova-iguacu'
     | '/sitemap.xml'
     | '/categoria/$slug'
     | '/produto/$id'
@@ -86,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/links'
+    | '/moveis-nova-iguacu'
     | '/sitemap.xml'
     | '/categoria/$slug'
     | '/produto/$id'
@@ -94,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/links'
+    | '/moveis-nova-iguacu'
     | '/sitemap.xml'
     | '/categoria/$slug'
     | '/produto/$id'
@@ -103,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   LinksRoute: typeof LinksRoute
+  MoveisNovaIguacuRoute: typeof MoveisNovaIguacuRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   CategoriaSlugRoute: typeof CategoriaSlugRoute
   ProdutoIdRoute: typeof ProdutoIdRoute
@@ -129,6 +142,13 @@ declare module '@tanstack/react-router' {
       path: '/links'
       fullPath: '/links'
       preLoaderRoute: typeof LinksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/moveis-nova-iguacu': {
+      id: '/moveis-nova-iguacu'
+      path: '/moveis-nova-iguacu'
+      fullPath: '/moveis-nova-iguacu'
+      preLoaderRoute: typeof MoveisNovaIguacuRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -159,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   LinksRoute: LinksRoute,
+  MoveisNovaIguacuRoute: MoveisNovaIguacuRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   CategoriaSlugRoute: CategoriaSlugRoute,
   ProdutoIdRoute: ProdutoIdRoute,

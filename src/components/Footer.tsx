@@ -21,6 +21,12 @@ export function Footer() {
           <p className="max-w-sm text-sm leading-relaxed text-sand/85">
             Móveis que combinam com a sua vida. Atendemos Nova Iguaçu e regiões próximas.
           </p>
+          <Link
+            to="/moveis-nova-iguacu"
+            className="mt-3 inline-flex min-h-11 items-center text-sm text-sand underline underline-offset-4"
+          >
+            Móveis e atendimento em Nova Iguaçu
+          </Link>
           <p className="mt-3 flex items-center gap-2 text-xs font-semibold text-gold">
             <Truck className="h-5 w-5 shrink-0" /> Pague somente na entrega
           </p>
@@ -48,7 +54,8 @@ export function Footer() {
               <PixIcon className="h-6 w-6 shrink-0 text-gold" /> PIX com desconto
             </span>
             <span className="flex items-center gap-2">
-              <CreditCard className="h-6 w-6 shrink-0 text-gold" /> Cartão até {MAX_INSTALLMENTS}x sem juros
+              <CreditCard className="h-6 w-6 shrink-0 text-gold" /> Cartão até {MAX_INSTALLMENTS}x
+              sem juros
             </span>
           </div>
           <p className="mt-3 text-xs leading-relaxed text-sand/80">

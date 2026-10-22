@@ -110,6 +110,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             url: `${SITE_URL}/`,
             logo: `${SITE_URL}/mobi-logo-approved.png`,
             telephone: WHATSAPP_DISPLAY,
+            areaServed: {
+              "@type": "City",
+              name: "Nova Iguaçu",
+              containedInPlace: { "@type": "State", name: "Rio de Janeiro" },
+            },
+            contactPoint: {
+              "@type": "ContactPoint",
+              telephone: "+55-21-98432-4338",
+              contactType: "customer service",
+              availableLanguage: "Portuguese",
+              areaServed: "Nova Iguaçu, RJ",
+              url: "https://wa.me/5521984324338",
+            },
           },
           {
             "@type": "WebSite",
