@@ -5,7 +5,7 @@ const protectedHashes={"src/lib/constants.ts":"8d120f35887786aebb99cec54b60118d2
 const sha=p=>{const bytes=fs.readFileSync(p);const normalized=p.endsWith(".png")?bytes:Buffer.from(bytes.toString("utf8").replace(/\r\n/g,"\n"));return crypto.createHash("sha1").update(normalized).digest("hex");};
 for(const [p,h] of Object.entries(protectedHashes))if(sha(p)!==h)throw new Error("Unexpected baseline: "+p);
 const productPath="src/routes/produto.$id.tsx";
-if(sha(productPath)!=="b468cecbaea1e3a65535aacf4be005419c2bd343")throw new Error("Unexpected product-page baseline");
+if(sha(productPath)!=="5e589fe211bff822744f2532a37d76c62c020d8e")throw new Error("Unexpected product-page baseline");
 const changed=[];
 const phrase=/(?:[ \t]*[·•][ \t]*)?sem[ \t]+juros/gi;
 function walk(dir){for(const e of fs.readdirSync(dir,{withFileTypes:true})){const p=path.join(dir,e.name);if(e.isDirectory())walk(p);else if(p.endsWith(".tsx")){const before=fs.readFileSync(p,"utf8");const count=[...before.matchAll(phrase)].length;if(count){fs.writeFileSync(p,before.replace(phrase,""));changed.push({path:p,phrasesRemoved:count});}}}}

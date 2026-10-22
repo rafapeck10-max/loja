@@ -21,6 +21,9 @@ import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { CartDrawer } from "@/components/CartDrawer";
 import { MenuDrawer } from "@/components/MenuDrawer";
 import { MobileBottomBar } from "@/components/MobileBottomBar";
+import { SITE_TITLE, SITE_DESCRIPTION, SITE_URL } from "@/lib/site-metadata";
+import { jsonLd, seoHead } from "@/lib/seo";
+import { WHATSAPP_DISPLAY } from "@/lib/constants";
 
 function NotFoundComponent() {
   return (
@@ -45,7 +48,7 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: { error: unknown; reset: () => void }) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
@@ -88,55 +91,43 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Mobi – Móveis direto da fábrica" },
-      {
-        name: "description",
-        content:
-          "Poltronas, Sofás e muito mais. Design sofisticado, qualidade artesanal e entrega na Baixada.",
-      },
+      ...seoHead(SITE_TITLE, SITE_DESCRIPTION, `${SITE_URL}/`).meta,
       { name: "author", content: "Mobi" },
-      { property: "og:title", content: "Mobi – Móveis direto da fábrica" },
-      {
-        property: "og:description",
-        content:
-          "Poltronas, Sofás e muito mais. Design sofisticado, qualidade artesanal e entrega na Baixada.",
-      },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "Mobi" },
       { property: "og:locale", content: "pt_BR" },
-      { property: "og:url", content: "https://www.mobimb.com.br" },
-      {
-        property: "og:image",
-        content: "https://www.mobimb.com.br/mobi-social-preview.png",
-      },
-      {
-        property: "og:image:secure_url",
-        content: "https://www.mobimb.com.br/mobi-social-preview.png",
-      },
-      { property: "og:image:type", content: "image/png" },
-      { property: "og:image:width", content: "1200" },
-      { property: "og:image:height", content: "630" },
-      { property: "og:image:alt", content: "Mobi, móveis direto da fábrica" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Mobi – Móveis direto da fábrica" },
-      {
-        name: "twitter:description",
-        content:
-          "Poltronas, Sofás e muito mais. Design sofisticado, qualidade artesanal e entrega na Baixada.",
-      },
-      {
-        property: "og:image",
-        content: "https://www.mobimb.com.br/mobi-social-preview.png",
-      },
-      {
-        name: "twitter:image",
-        content: "https://www.mobimb.com.br/mobi-social-preview.png",
-      },
-      { name: "twitter:image:alt", content: "Mobi, móveis direto da fábrica" },
+    ],
+    scripts: [
+      jsonLd({
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": `${SITE_URL}/#organization`,
+            name: "Mobi",
+            alternateName: "Mobi Móveis",
+            url: `${SITE_URL}/`,
+            logo: `${SITE_URL}/mobi-logo-approved.png`,
+            telephone: WHATSAPP_DISPLAY,
+          },
+          {
+            "@type": "WebSite",
+            "@id": `${SITE_URL}/#website`,
+            name: "Mobi",
+            alternateName: "Mobi Móveis",
+            url: `${SITE_URL}/`,
+            publisher: { "@id": `${SITE_URL}/#organization` },
+            inLanguage: "pt-BR",
+          },
+        ],
+      }),
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "icon", href: "/mobi-icon.png", type: "image/png", sizes: "512x512" },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
