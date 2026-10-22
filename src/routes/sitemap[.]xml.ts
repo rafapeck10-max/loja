@@ -2,63 +2,49 @@ import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
-
-// TODO: replace with your project URL once a project name or custom domain is set.
-const BASE_URL = "";
-
-interface SitemapEntry {
-  path: string;
-  lastmod?: string;
-  changefreq?: "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
-  priority?: string;
-}
+import { buildSitemap, collectSitemapProducts } from "@/lib/sitemap";
 
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {
-        const entries: SitemapEntry[] = [{ path: "/", changefreq: "weekly", priority: "1.0" }];
-
         try {
           const supabase = createClient<Database>(
             process.env.SUPABASE_URL!,
             process.env.SUPABASE_PUBLISHABLE_KEY!,
             { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
           );
-          const { data } = await supabase.from("produtos").select("slug");
-          for (const p of data ?? []) {
-            entries.push({ path: `/produto/${p.slug}`, changefreq: "weekly", priority: "0.8" });
-          }
-        } catch {
-          // sitemap still serves static entries if the database is unavailable
+          // Apply the same eligibility rules used by the public storefront.
+          const products = await collectSitemapProducts(async (offset, end) => {
+            const { data, error } = await supabase
+              .from("produtos")
+              .select("id,slug,categoria,url_imagem")
+              .gt("preco_atacado", 0)
+              .gt("preco_atual", 0)
+              .neq("url_imagem", "")
+              .order("id", { ascending: true })
+              .range(offset, end);
+            if (error) throw new Error(error.message);
+            return data ?? [];
+          });
+          const visibleProducts = products.filter((product) => product.url_imagem?.trim());
+          return new Response(buildSitemap(visibleProducts), {
+            headers: {
+              "Content-Type": "application/xml; charset=utf-8",
+              "Cache-Control": "public, max-age=3600",
+            },
+          });
+        } catch (error) {
+          console.error(
+            "Sitemap could not be generated",
+            error instanceof Error ? error.message : "Unknown error",
+          );
+          // A retryable error avoids presenting an incomplete sitemap as a successful update.
+          return new Response("Sitemap temporariamente indisponível.", {
+            status: 503,
+            headers: { "Cache-Control": "no-store", "Retry-After": "300" },
+          });
         }
-
-        const urls = entries.map((e) =>
-          [
-            `  <url>`,
-            `    <loc>${BASE_URL}${e.path}</loc>`,
-            e.lastmod ? `    <lastmod>${e.lastmod}</lastmod>` : null,
-            e.changefreq ? `    <changefreq>${e.changefreq}</changefreq>` : null,
-            e.priority ? `    <priority>${e.priority}</priority>` : null,
-            `  </url>`,
-          ]
-            .filter(Boolean)
-            .join("\n"),
-        );
-
-        const xml = [
-          `<?xml version="1.0" encoding="UTF-8"?>`,
-          `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`,
-          ...urls,
-          `</urlset>`,
-        ].join("\n");
-
-        return new Response(xml, {
-          headers: {
-            "Content-Type": "application/xml",
-            "Cache-Control": "public, max-age=3600",
-          },
-        });
       },
     },
   },

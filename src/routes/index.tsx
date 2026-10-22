@@ -14,6 +14,8 @@ import { CATEGORIES, MAX_INSTALLMENTS } from "@/lib/constants";
 import { HomeProductSection } from "@/components/HomeProductSection";
 import { StoreCatalog } from "@/components/StoreCatalog";
 import { newHomepageProducts, weeklyHomepageProducts } from "@/lib/home-curation";
+import { seoHead } from "@/lib/seo";
+import { SITE_TITLE, SITE_DESCRIPTION, SITE_URL } from "@/lib/site-metadata";
 
 export const Route = createFileRoute("/")({
   validateSearch: (
@@ -34,36 +36,34 @@ export const Route = createFileRoute("/")({
   loader: ({ context, deps }) => {
     if (deps.catalog) return context.queryClient.ensureQueryData(produtosQueryOptions());
   },
-  head: () => ({
-    meta: [
-      { title: "Mobi – Móveis direto da fábrica" },
-      {
-        name: "description",
-        content:
-          "Poltronas, Sofás e muito mais. Design sofisticado, qualidade artesanal e entrega na Baixada.",
-      },
-      { property: "og:title", content: "Mobi – Móveis direto da fábrica" },
-      {
-        property: "og:description",
-        content:
-          "Poltronas, Sofás e muito mais. Design sofisticado, qualidade artesanal e entrega na Baixada.",
-      },
-      {
-        property: "og:image",
-        content: "https://www.mobimb.com.br/mobi-social-preview.png",
-      },
-      {
-        name: "twitter:image",
-        content: "https://www.mobimb.com.br/mobi-social-preview.png",
-      },
-    ],
-  }),
+  head: ({ match }) => {
+    const { q, ofertas, all, page } = match.search;
+    const catalog = Boolean(all || ofertas || q || page);
+    const catalogPage = page ?? 1;
+    const url = catalog
+      ? `${SITE_URL}/?all=true${catalogPage > 1 ? `&page=${catalogPage}` : ""}`
+      : `${SITE_URL}/`;
+    const head = seoHead(
+      catalog
+        ? `Catálogo de móveis${catalogPage > 1 ? ` – Página ${catalogPage}` : ""} | Mobi`
+        : SITE_TITLE,
+      SITE_DESCRIPTION,
+      url,
+    );
+    return {
+      ...head,
+      meta: [
+        ...head.meta,
+        ...(q || ofertas ? [{ name: "robots", content: "noindex,follow" }] : []),
+      ],
+    };
+  },
   component: Index,
   errorComponent: IndexError,
   notFoundComponent: () => <IndexError error={new Error("Não encontrado")} reset={() => {}} />,
 });
 
-function IndexError({ reset }: { error: Error; reset: () => void }) {
+function IndexError({ reset }: { error: unknown; reset: () => void }) {
   const router = useRouter();
   return (
     <div className="mx-auto flex min-h-[40vh] max-w-[1300px] flex-col items-center justify-center gap-4 px-[5%] py-20 text-center">
@@ -232,8 +232,12 @@ function HomepageIndex() {
             category="sala-de-estar"
           />
           <section className="mobi-catalog-invite mobi-wrap">
-            <h2>Seu próximo móvel está aqui.</h2>
-            <p>Explore por categoria, encontre seu preço e escolha com calma.</p>
+            <h2>Móveis para Nova Iguaçu e Baixada Fluminense.</h2>
+            <p>
+              Sofás, poltronas, painéis, guarda-roupas, colchões e móveis para cozinha. Compare
+              modelos, medidas, materiais e cores e consulte as condições de entrega com a Mobi pelo
+              WhatsApp.
+            </p>
             <Link to="/" search={{ all: true, page: 1 }} hash="catalogo" className="mobi-primary">
               Explorar todo o catálogo
             </Link>

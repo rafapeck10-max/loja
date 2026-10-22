@@ -23,9 +23,12 @@ import { ProductDiscountLine } from "@/components/ProductDiscountLine";
 import { cardQuote } from "@/lib/payment";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
 import { parsePage } from "@/components/CatalogPagination";
+import { jsonLd, productSeo, seoHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/produto/$id")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { returnPage?: number; returnCategory?: string } => ({
     returnPage: search.returnPage === undefined ? undefined : parsePage(search.returnPage),
     returnCategory:
       typeof search.returnCategory === "string" && /^[a-z0-9-]+$/i.test(search.returnCategory)
@@ -35,7 +38,7 @@ export const Route = createFileRoute("/produto/$id")({
   loader: async ({ context, params }) => {
     const produto = await context.queryClient.ensureQueryData(produtoQueryOptions(params.id));
     if (!produto) throw notFound();
-    return { nome: produto.nome, imagem: produto.imagem_url };
+    return productSeo(produto);
   },
   head: ({ loaderData }) => {
     if (!loaderData) {
@@ -44,20 +47,8 @@ export const Route = createFileRoute("/produto/$id")({
       };
     }
     return {
-      meta: [
-        { title: `${loaderData.nome} | Mobi` },
-        {
-          name: "description",
-          content: `${loaderData.nome} — disponível para entrega na Baixada Fluminense.`,
-        },
-        { property: "og:title", content: `${loaderData.nome} | Mobi` },
-        {
-          property: "og:description",
-          content: `${loaderData.nome} — confira preço, detalhes e condições de entrega.`,
-        },
-        { property: "og:image", content: loaderData.imagem },
-        { name: "twitter:image", content: loaderData.imagem },
-      ],
+      ...seoHead(loaderData.title, loaderData.description, loaderData.url, loaderData.image),
+      scripts: [jsonLd(loaderData.structured), jsonLd(loaderData.breadcrumb)],
     };
   },
   component: ProductPage,
@@ -81,7 +72,7 @@ function ProductNotFound() {
   );
 }
 
-function ProductError({ reset }: { error: Error; reset: () => void }) {
+function ProductError({ reset }: { error: unknown; reset: () => void }) {
   const router = useRouter();
   return (
     <div className="mx-auto flex min-h-[50vh] max-w-[1300px] flex-col items-center justify-center gap-4 px-[5%] py-20 text-center">

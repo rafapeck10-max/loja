@@ -1,30 +1,46 @@
 import { useLayoutEffect } from "react";
-import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate, useRouter } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { produtosQueryOptions } from "@/lib/products.functions";
 import { StoreCatalog } from "@/components/StoreCatalog";
 
 import { parsePage } from "@/components/CatalogPagination";
-import { getCategory } from "@/lib/constants";
+import { categoryMatches, getCategory } from "@/lib/constants";
+import { breadcrumbs, categoryDescription, categoryUrl, jsonLd, seoHead } from "@/lib/seo";
+import { SITE_URL } from "@/lib/site-metadata";
+import { CATALOG_BATCH_SIZE } from "@/lib/catalog-page-state";
 
 export const Route = createFileRoute("/categoria/$slug")({
   validateSearch: (search: Record<string, unknown>) => ({ page: parsePage(search.page) }),
-  loader: ({ context }) => {
+  loader: ({ context, params }) => {
+    if (!getCategory(params.slug)) throw notFound();
     return context.queryClient.ensureQueryData(produtosQueryOptions());
   },
-  head: ({ params }) => {
+  head: ({ params, match, loaderData }) => {
     const cat = getCategory(params.slug);
-    const title = cat ? `${cat.label} | Mobi` : "Categoria | Mobi";
-    const desc = cat
-      ? `Confira nossa coleção de ${cat.label}. Móveis premium, direto da fábrica com entrega na Baixada Fluminense.`
-      : "Categoria de produtos Mobi.";
+    const page = match.search.page;
+    const title = `${cat?.label ?? "Categoria"}${page > 1 ? ` – Página ${page}` : ""} | Mobi`;
+    const url = categoryUrl(params.slug, page);
+    const head = seoHead(title, categoryDescription(params.slug), url);
+    const count =
+      loaderData?.filter((product) => categoryMatches(product.categoria, params.slug)).length ?? 0;
+    const outOfRange = page > Math.max(1, Math.ceil(count / CATALOG_BATCH_SIZE));
     return {
+      ...head,
       meta: [
-        { title },
-        { name: "description", content: desc },
-        { property: "og:title", content: title },
-        { property: "og:description", content: desc },
+        ...head.meta,
+        ...(!cat || count === 0 || outOfRange
+          ? [{ name: "robots", content: "noindex,follow" }]
+          : []),
+      ],
+      scripts: [
+        jsonLd(
+          breadcrumbs([
+            { name: "Início", url: `${SITE_URL}/` },
+            { name: cat?.label ?? "Categoria", url },
+          ]),
+        ),
       ],
     };
   },
@@ -32,7 +48,7 @@ export const Route = createFileRoute("/categoria/$slug")({
   errorComponent: CategoriaError,
 });
 
-function CategoriaError({ reset }: { error: Error; reset: () => void }) {
+function CategoriaError({ reset }: { error: unknown; reset: () => void }) {
   const router = useRouter();
   return (
     <div className="mx-auto flex min-h-[40vh] max-w-[1300px] flex-col items-center justify-center gap-4 px-[5%] py-20 text-center">
@@ -78,18 +94,30 @@ function CategoriaPage() {
     }
   }, [page, slug]);
   return (
-    <StoreCatalog
-      key={slug}
-      products={produtos}
-      initialCategory={slug}
-      requestedPage={page}
-      onPageChange={(nextPage) => {
-        void navigate({
-          search: (previous) => ({ ...previous, page: nextPage }),
-          replace: true,
-          resetScroll: false,
-        });
-      }}
-    />
+    <>
+      <StoreCatalog
+        key={slug}
+        products={produtos}
+        initialCategory={slug}
+        requestedPage={page}
+        onPageChange={(nextPage) => {
+          void navigate({
+            search: (previous) => ({ ...previous, page: nextPage }),
+            replace: true,
+            resetScroll: false,
+          });
+        }}
+      />
+      <section className="mobi-wrap py-8" aria-label={`Sobre ${getCategory(slug)?.label}`}>
+        <h2 className="text-xl text-deep-green">Como escolher: {getCategory(slug)?.label}</h2>
+        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-text-light">
+          {categoryDescription(slug)}
+        </p>
+        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-text-light">
+          Veja os detalhes na página de cada produto. Para Nova Iguaçu e Baixada Fluminense,
+          consulte condições e disponibilidade de entrega com a Mobi pelo WhatsApp.
+        </p>
+      </section>
+    </>
   );
 }

@@ -267,7 +267,7 @@ export function getCatalogDimensionLabel(product: SearchProduct) {
 }
 
 export function matchesCatalogMaterials(product: SearchProduct, material: string) {
-  return material === "all" || getCatalogMaterials(product).includes(material);
+  return material === "all" || getCatalogMaterials(product).some((value) => value === material);
 }
 
 export function matchesCatalogColors(product: SearchProduct, color: string) {
@@ -275,7 +275,7 @@ export function matchesCatalogColors(product: SearchProduct, color: string) {
 }
 
 export function matchesCatalogFeatures(product: SearchProduct, feature: string) {
-  return feature === "all" || getCatalogFeatures(product).includes(feature);
+  return feature === "all" || getCatalogFeatures(product).some((value) => value === feature);
 }
 
 export function matchesCatalogDimensions(product: SearchProduct, query: string) {
