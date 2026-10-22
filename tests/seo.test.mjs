@@ -43,6 +43,12 @@ test("structured offers reflect the selectable variant prices", () => {
   );
 });
 
+test("a source description does not repeat the product name in the search snippet", () => {
+  const seo = productSeo({ ...product, descricao: `${product.nome}. Estrutura em madeira.` });
+  assert.equal(seo.description.split(product.nome).length, 2);
+  assert.match(seo.description, /Estrutura em madeira/);
+});
+
 test("JSON-LD text cannot close a script tag", () => {
   const input = { name: '</script><script>alert("x")</script>' };
   const script = jsonLd(input);

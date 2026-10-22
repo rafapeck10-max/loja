@@ -188,8 +188,13 @@ export function productSeo(product: SeoProduct) {
     excerpt(name, 110),
     product.medidas ? `Medidas: ${plainText(product.medidas)}` : "",
     product.cores?.length ? `Cores: ${product.cores.map(plainText).join(", ")}` : "",
-    plainText(publicDescription(product.descricao)).replace(/^descrição\s*:?\s*/i, ""),
   ].filter(Boolean);
+  const facts = details.join(". ");
+  let copy = plainText(publicDescription(product.descricao)).replace(/^descrição\s*:?\s*/i, "");
+  if (copy.toLocaleLowerCase("pt-BR").startsWith(name.toLocaleLowerCase("pt-BR"))) {
+    copy = copy.slice(name.length).replace(/^[\s.,:;–—-]+/, "");
+  }
+  if (facts.length < 140 && copy) details.push(copy);
   const description = excerpt(details.join(". ").replace(/\.{2,}/g, "."), 210);
   const url = `${SITE_URL}/produto/${encodeURIComponent(product.slug)}`;
   const prices = product.variacoes_preco
