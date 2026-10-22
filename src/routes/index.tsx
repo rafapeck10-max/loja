@@ -144,6 +144,19 @@ function HomepageIntro() {
   return (
     <div>
       <HeroCarousel />
+      <section className="mobi-wrap py-5" aria-label="Mobi em Nova Iguaçu">
+        <h2 className="text-xl text-deep-green">Móveis para sua casa em Nova Iguaçu</h2>
+        <p className="mt-2 text-sm leading-relaxed text-text-light">
+          Encontre sofás, guarda-roupas, colchões e móveis para sala e cozinha. Compare medidas,
+          materiais e cores no catálogo da Mobi.
+        </p>
+        <Link
+          to="/moveis-nova-iguacu"
+          className="mt-2 inline-flex min-h-11 items-center text-sm text-deep-green underline underline-offset-4"
+        >
+          Conheça o atendimento para Nova Iguaçu
+        </Link>
+      </section>
       <div className="mobi-trust">
         <span>Pague somente na entrega</span>
         <span>PIX com desconto</span>

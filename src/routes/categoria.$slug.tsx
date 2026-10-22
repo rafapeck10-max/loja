@@ -20,7 +20,7 @@ export const Route = createFileRoute("/categoria/$slug")({
   head: ({ params, match, loaderData }) => {
     const cat = getCategory(params.slug);
     const page = match.search.page;
-    const title = `${cat?.label ?? "Categoria"}${page > 1 ? ` – Página ${page}` : ""} | Mobi`;
+    const title = `${cat?.label ?? "Categoria"} em Nova Iguaçu${page > 1 ? ` – Página ${page}` : ""} | Mobi`;
     const url = categoryUrl(params.slug, page);
     const head = seoHead(title, categoryDescription(params.slug), url);
     const count =
@@ -117,6 +117,12 @@ function CategoriaPage() {
           Veja os detalhes na página de cada produto. Para Nova Iguaçu e Baixada Fluminense,
           consulte condições e disponibilidade de entrega com a Mobi pelo WhatsApp.
         </p>
+        <Link
+          to="/moveis-nova-iguacu"
+          className="mt-3 inline-flex min-h-11 items-center text-sm text-deep-green underline underline-offset-4"
+        >
+          Atendimento da Mobi para Nova Iguaçu
+        </Link>
       </section>
     </>
   );
