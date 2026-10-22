@@ -68,10 +68,10 @@ function LocalPage() {
         Móveis em Nova Iguaçu para cada ambiente da casa
       </h1>
       <p className="mt-4 max-w-3xl text-base leading-relaxed text-text-light">
-        A Mobi atende Nova Iguaçu e regiões próximas da Baixada Fluminense. Explore o catálogo de
-        sofás, guarda-roupas, colchões e móveis para sala, cozinha e quarto. Veja as características
-        de cada modelo e fale com a equipe pelo WhatsApp para consultar o atendimento no seu
-        endereço.
+        A Mobi é uma loja online que atende Nova Iguaçu e regiões próximas da Baixada Fluminense.
+        Explore o catálogo de sofás, guarda-roupas, colchões e móveis para sala, cozinha e quarto.
+        Veja as características de cada modelo e fale com a equipe pelo WhatsApp para consultar o
+        atendimento no seu endereço.
       </p>
       <a
         href={WHATSAPP_URL}
@@ -130,6 +130,13 @@ function LocalPage() {
         <h2 id="local-contact" className="text-2xl text-deep-green">
           Atendimento para Nova Iguaçu
         </h2>
+        <div>
+          <h3 className="text-lg text-deep-green">A Mobi tem loja física para visitação?</h3>
+          <p className="mt-2 text-sm leading-relaxed text-text-light">
+            No momento, o atendimento é online. Conheça os modelos pelo catálogo e fale com a equipe
+            pelo WhatsApp; não há endereço físico aberto ao público.
+          </p>
+        </div>
         <div>
           <h3 className="text-lg text-deep-green">Como consultar a entrega no meu bairro?</h3>
           <p className="mt-2 text-sm leading-relaxed text-text-light">
