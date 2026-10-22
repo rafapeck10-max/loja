@@ -172,23 +172,29 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const isAdminRoute = useRouterState({ select: (state) => state.location.pathname === "/admin" });
+  const isLinksRoute = useRouterState({
+    select: (state) => state.location.pathname.replace(/\/$/, "") === "/links",
+  });
 
   return (
     <QueryClientProvider client={queryClient}>
       <UIProvider>
         <CartProvider>
           <div className="store-shell flex min-h-screen flex-col">
-            <Header />
-            <main id="conteudo" className={isAdminRoute ? "flex-1" : "flex-1 pb-20 md:pb-0"}>
+            {!isLinksRoute && <Header />}
+            <main
+              id="conteudo"
+              className={isAdminRoute || isLinksRoute ? "flex-1" : "flex-1 pb-20 md:pb-0"}
+            >
               {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
               <Outlet />
             </main>
-            <Footer />
+            {!isLinksRoute && <Footer />}
           </div>
-          {!isAdminRoute && <WhatsAppFloat />}
+          {!isAdminRoute && !isLinksRoute && <WhatsAppFloat />}
           <CartDrawer />
           <MenuDrawer />
-          {!isAdminRoute && <MobileBottomBar />}
+          {!isAdminRoute && !isLinksRoute && <MobileBottomBar />}
           <Toaster
             position="bottom-left"
             toastOptions={{
