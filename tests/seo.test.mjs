@@ -13,7 +13,7 @@ const product = {
   cores: ["Marrom"],
   imagem_url: "https://example.com/sofa.jpg",
   imagens: [],
-  sku: "ROMA|INTERNAL",
+  sku: "ROMA",
   preco_novo: 1999,
   variacoes_preco: [],
 };
@@ -96,4 +96,17 @@ test("every catalog category has its own descriptive copy", () => {
   );
   assert.ok(descriptions.every((description) => !description.startsWith("Catálogo de móveis")));
   assert.equal(new Set(descriptions).size, descriptions.length);
+});
+
+test("SKU estruturado aceita apenas identificador único válido", () => {
+  const valid = productSeo({ ...product, sku: "ABC-123" });
+  assert.equal(valid.structured.sku, "ABC-123");
+  for (const sku of [null, "", "   ", "NT 4040", "TROP\t00452", "MESA1\nCADEIRA2", "ABC\u00a0DEF", "ABC\u2003DEF", "MESA1|CADEIRA2", "ABC\ud800", "ABC\ufdd0"]) {
+    const input = { ...product, sku };
+    const result = productSeo(input);
+    assert.equal(Object.hasOwn(result.structured, "sku"), false, JSON.stringify(sku));
+    assert.equal(input.sku, sku);
+    assert.equal(result.structured.offers.price, 1999);
+    assert.equal(result.structured.name, product.nome);
+  }
 });
