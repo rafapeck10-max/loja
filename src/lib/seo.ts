@@ -182,7 +182,16 @@ interface SeoProduct {
   variacoes_preco: Array<{ sale_price: number | null }>;
 }
 
+function structuredSku(value: string | null): string | undefined {
+  if (typeof value !== "string" || value.includes("|")) return undefined;
+  if (/[\p{Cc}\p{Cs}\p{Cf}\p{Noncharacter_Code_Point}]/u.test(value)) return undefined;
+  const sku = value.split("|")[0].trim();
+  if (!sku || /[\s\p{White_Space}]/u.test(sku)) return undefined;
+  return sku;
+}
+
 export function productSeo(product: SeoProduct) {
+  const sku = structuredSku(product.sku);
   const name = plainText(product.nome);
   const details = [
     excerpt(name, 110),
@@ -235,7 +244,7 @@ export function productSeo(product: SeoProduct) {
       url,
       image,
       category: product.categoria,
-      ...(product.sku ? { sku: product.sku.split("|")[0].trim() } : {}),
+      ...(sku ? { sku } : {}),
       ...(product.cores?.length ? { color: product.cores.join(", ") } : {}),
       ...(Number.isFinite(product.preco_novo) && product.preco_novo > 0 ? { offers: offer } : {}),
     },
