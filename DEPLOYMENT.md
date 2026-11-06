@@ -1,6 +1,6 @@
 # Alterações e publicação da loja
 
-Este é o procedimento principal para mudanças no site. O cliente não precisa abrir o GitHub, mexer na Vercel ou preparar arquivos.
+Este é o procedimento principal para mudanças no site. O cliente não precisa abrir o GitHub, mexer na Vercel ou preparar arquivos. A regra permanente de adaptação e prévia no AGENTS.md, definida por Rafael em 06/11/2026, também se aplica: desenvolver localmente ou em branch e aguardar aprovação explícita da versão apresentada antes de aplicar em produção.
 
 ## Como pedir
 
@@ -16,13 +16,13 @@ O `vercel.json` mantém o mesmo comando de compilação da produção recuperada
 
 1. Conferir o pedido e o estado atual da loja. Usar a `main` mais recente e uma branch própria.
 2. Alterar somente o que foi pedido. Mudanças visuais não devem editar preços, parcelas ou registros do catálogo no Supabase.
-3. Usar a prévia da branch na Vercel e conferir a página ou o componente afetado.
+3. Preparar prévia local e conferir a página ou o componente afetado no celular e no computador. Uma prévia de branch na Vercel pode ser usada quando adequada ao pedido; confirmar antes que as automações da branch não promovem produção nem gravam dados reais por efeito colateral.
 4. Fazer apenas as verificações relevantes. O build da prévia verifica a compilação. `npm run test:categories` serve para mudanças nas categorias; `npm run lint` está disponível para mudanças no código. Não exigir uma bateria genérica de testes para uma mudança pequena.
-5. Integrar pelo GitHub e deixar a Vercel publicar a partir do commit versionado. Depois, confirmar que o deploy está `READY` e que a rota afetada responde corretamente.
+5. Apresentar a versão/commit revisados e aguardar aprovação explícita de Rafael para aplicar no site publicado. Depois dessa aprovação, integrar pelo GitHub e deixar a Vercel publicar a partir do commit versionado. Confirmar que o deploy está `READY` e que a rota afetada responde corretamente.
 
 ## Aprovação sem repetição
 
-- Para correção visual, texto comum ou bug simples, o pedido explícito autoriza concluir e publicar quando a prévia estiver correta. Não perguntar de novo “posso publicar?”.
+- Para qualquer aplicação em produção, inclusive correção visual, texto comum ou bug simples, apresentar a prévia e aguardar aprovação explícita da versão revisada. Pedir desenvolvimento ou dizer “pode fazer” não autoriza publicação.
 - Para preço, parcelamento, catálogo/estoque ou texto que defina responsabilidade comercial, mostrar o antes e depois e esperar a aprovação final antes de publicar.
 - Se o usuário já pediu para confirmar antes da publicação, essa confirmação continua obrigatória. Um “pode publicar” para a versão revisada basta; não solicitar a mesma aprovação outra vez.
 
