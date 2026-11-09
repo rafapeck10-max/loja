@@ -45,10 +45,17 @@ export function PagesAndShelvesPanel({
   products,
   ready = true,
   demonstration = false,
+  managed,
 }: {
   products: EditorProduct[];
   ready?: boolean;
   demonstration?: boolean;
+  managed?: {
+    value: PageDraft;
+    saved?: PageDraft;
+    onChange: (draft: PageDraft) => void;
+    onSave: (draft: PageDraft) => void;
+  };
 }) {
   const storageKey = DRAFT_KEY + (demonstration ? ":demo" : ":admin");
   const baseline = useMemo(() => initialPageDraft(products), [products]);
@@ -64,10 +71,12 @@ export function PagesAndShelvesPanel({
   const [stored, setStored] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [now] = useState(() => new Date());
-  const current = draft ?? baseline;
-  const dirty = JSON.stringify(current) !== (lastSaved ?? JSON.stringify(baseline));
+  const current = managed?.value ?? draft ?? baseline;
+  const dirty =
+    JSON.stringify(current) !==
+    (managed ? JSON.stringify(managed.saved ?? baseline) : (lastSaved ?? JSON.stringify(baseline)));
   const changedFromSource = JSON.stringify(current) !== JSON.stringify(baseline);
-  const conflict = !!draft && draft.baseVersion !== baseline.baseVersion;
+  const conflict = current.baseVersion !== baseline.baseVersion;
   const section = current.sections.find((s) => s.id === sectionId)!;
   const definition = PAGE_SECTIONS.find((s) => s.id === sectionId)!;
   const byId = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
@@ -79,7 +88,9 @@ export function PagesAndShelvesPanel({
   const sourceLabel = demonstration
     ? "Amostra de apresentação · fotos e preços históricos, não são ofertas atuais"
     : "Catálogo administrativo · dados consultados";
+  const isManaged = !!managed;
   useEffect(() => {
+    if (isManaged) return;
     try {
       setStored(localStorage.getItem(storageKey));
     } catch {
@@ -87,7 +98,7 @@ export function PagesAndShelvesPanel({
         "O navegador não permite acessar rascunhos locais. Suas alterações podem ser revisadas nesta sessão.",
       );
     }
-  }, [storageKey]);
+  }, [storageKey, isManaged]);
   useEffect(() => {
     const leave = (event: BeforeUnloadEvent) => {
       if (dirty) {
@@ -99,7 +110,8 @@ export function PagesAndShelvesPanel({
     return () => window.removeEventListener("beforeunload", leave);
   }, [dirty]);
   const update = (next: PageDraft) => {
-    setDraft(next);
+    if (managed) managed.onChange(next);
+    else setDraft(next);
     setMessage("");
   };
   const patchSection = (change: Partial<typeof section>) =>
@@ -119,6 +131,11 @@ export function PagesAndShelvesPanel({
     }
     try {
       const raw = JSON.stringify(current);
+      if (managed) {
+        managed.onSave(current);
+        setMessage("Rascunho salvo no histórico local. Nada foi aplicado à loja.");
+        return;
+      }
       localStorage.setItem(storageKey, raw);
       setStored(raw);
       setLastSaved(raw);
@@ -138,6 +155,13 @@ export function PagesAndShelvesPanel({
     }
   };
   const reset = () => {
+    if (managed) {
+      managed.onChange(baseline);
+      setMessage(
+        "Edição restaurada para os dados consultados. Salve para registrar uma nova versão local.",
+      );
+      return;
+    }
     setDraft(null);
     setLastSaved(stored);
     setMessage(

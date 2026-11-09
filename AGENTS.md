@@ -36,3 +36,5 @@ Decisão de Rafael em 09/11/2026: sempre retomar os documentos e conferir os det
 - Não publicar, promover deployment ou integrar em branch que publica produção sem Rafael aprovar explicitamente a versão apresentada. Aprovação anterior para a mesma versão não precisa ser repetida.
 
 Para PM-02, retomar também [a conferência do editor de páginas e vitrines](docs/PM02_CONFERENCIA_DOCUMENTAL.md). A edição atual gera somente rascunhos locais da home; não confundir com configuração publicada, CMS completo ou criação automática das páginas da referência.
+
+A ampliação PM-01 a PM-10 está registrada em [PM01_PM10_CONFERENCIA_DOCUMENTAL.md](docs/PM01_PM10_CONFERENCIA_DOCUMENTAL.md). Os dez módulos têm comportamento local e limites explícitos. O catálogo de 141 requisitos não equivale a 141 funções públicas implementadas; estado da referência, implementação e ativação continuam separados. Persistência remota, aplicação de configurações, papéis e auditoria individual seguem pendentes. Preservar rascunhos por ID, versões, detecção de base obsoleta e recuperação de consultas sem apagar edições.

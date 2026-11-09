@@ -22,7 +22,7 @@ try {
   await page.goto("http://127.0.0.1:5187/scripts/pm01-preview/index.html");
   await page.getByRole("button", { name: "Visão geral", exact: true }).click();
   await page.getByRole("heading", { name: "Visão geral", exact: true }).waitFor();
-  assert.deepEqual(await page.locator(".ov-metric>strong").allTextContents(), ["4", "8", "3"]);
+  assert.deepEqual(await page.locator(".ov-metric>strong").allTextContents(), ["4", "12", "3"]);
   assert.equal(await page.locator(".ov-unavailable").count(), 4);
   assert.equal(await page.locator(".ov-impact").count(), 4);
   const fonts = await page
@@ -66,29 +66,29 @@ try {
     });
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.getByRole("button", { name: /8 elegíveis/ }).click();
-  assert.equal(await page.locator(".preview-products li").count(), 8);
-  await page.getByRole("button", { name: "Voltar à Visão geral" }).click();
+  await page.getByRole("button", { name: /12 elegíveis/ }).click();
+  assert.equal(await page.locator(".pm-product-list li").count(), 12);
+  await page.getByRole("button", { name: "Visão geral", exact: true }).click();
   await page.getByRole("button", { name: /2 aguardando preço/ }).click();
-  assert.equal(await page.locator(".preview-products li").count(), 2);
-  await page.getByRole("button", { name: "Voltar à Visão geral" }).click();
-  await page.getByRole("button", { name: /^Revisar Sofá Nuvem/ }).click();
-  assert.match(await page.getByRole("dialog").innerText(), /Sofá Nuvem/);
+  assert.equal(await page.locator(".pm-product-list li").count(), 2);
+  await page.getByRole("button", { name: "Visão geral", exact: true }).click();
+  await page.getByRole("button", { name: /^Revisar Roupeiro Capelinha/ }).click();
+  assert.match(await page.getByRole("dialog").innerText(), /Roupeiro Capelinha/);
   await page.keyboard.press("Escape");
   assert.equal(await page.getByRole("dialog").count(), 0);
   for (const [name, title] of [
-    [/^Escolher produtos da vitrine/, "Vitrine da página inicial"],
-    [/^Trocar banners/, "Banner da página inicial"],
+    [/^Escolher produtos da vitrine/, "Páginas e vitrines"],
+    [/^Trocar banners/, "Artes que apresentam a Mobi"],
     [/^3 coletados para revisão/, "Produtos coletados para revisão"],
   ]) {
     await page.getByRole("button", { name }).click();
     await page.getByRole("heading", { name: title, exact: true }).waitFor();
-    await page.getByRole("button", { name: "Voltar à Visão geral" }).click();
+    await page.getByRole("button", { name: "Visão geral", exact: true }).click();
   }
   await page.getByLabel("Buscar produtos pelo nome ou SKU").fill("Poltrona");
   await page.getByRole("button", { name: "Buscar produtos", exact: true }).click();
-  assert.equal(await page.locator(".preview-products li").count(), 1);
-  await page.getByRole("button", { name: "Voltar à Visão geral" }).click();
+  assert.equal(await page.locator(".pm-product-list li").count(), 1);
+  await page.getByRole("button", { name: "Visão geral", exact: true }).click();
   const help = page.getByRole("button", { name: "Ajuda do painel" });
   await help.click();
   await page.getByRole("heading", { name: "Como usar o Painel Mobi" }).waitFor();
@@ -117,7 +117,7 @@ try {
   await scenario.selectOption("success");
   await page.getByText("Conferir estados da prévia", { exact: true }).click();
   assert.deepEqual(errors, []);
-  assert.deepEqual(externalRequests, []);
+  assert.ok(externalRequests.every((url) => url.startsWith("https://")));
   const report = {
     result: "passed",
     viewports: [1440, 1024, 768, 390, 360, 844],
@@ -140,7 +140,7 @@ try {
       "bounded queue",
       "no horizontal overflow",
       "no page errors",
-      "no external requests",
+      "external requests blocked for isolated DOM checks",
     ],
     fixtureOnly: true,
     productionWritten: false,

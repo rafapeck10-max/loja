@@ -1,4 +1,12 @@
-# PM-01 — Visão geral Mobi
+# Painel Mobi — prévia local PM-01 a PM-10
+
+A versão atual reúne os dez módulos, com rascunhos, revisão e histórico locais. A área Evolução contém os 141 requisitos e 38 fichas originais, com estados Mobi separados e exportação de pedidos. Campanhas são simulações, páginas de ajuda têm renderer local e entrega usa consulta ao WhatsApp. Persistência compartilhada, papéis e aplicação das configurações no site permanecem pendentes.
+
+Comando e endereço permanecem: `npx vite --config scripts/pm01-preview/vite.config.ts` → http://127.0.0.1:5187/scripts/pm01-preview/index.html. A pasta conserva o nome técnico original. A amostra atual tem 16 móveis históricos, com quatro pendências inseridas para conferir estados, e usa a mesma fonte no resumo e nos editores. Não contém credenciais nem chama operações administrativas na demonstração.
+
+Conferência atual: [PM01_PM10_CONFERENCIA_DOCUMENTAL.md](../../docs/PM01_PM10_CONFERENCIA_DOCUMENTAL.md). Chaves locais `mobi:admin-studio:v1:demo` / `:admin`, com versões e recuperação. O rascunho antigo de PM-02 pode ser aberto explicitamente, sem apagar seu arquivo anterior. Foram verificados 90 testes Node, TypeScript, lint direcionado, build e os dez módulos no navegador integrado em 360/768/1440 px. Evidências na pasta irmã `mobi-studio-evidence/`.
+
+As seções abaixo registram as entregas anteriores; a descrição de fixtures/rotas é histórica quando divergir da versão atual. O script `verify.mjs` foi adaptado à navegação atual, mas não foi executado nesta rodada; a conferência de navegador foi pelo ambiente integrado.
 
 ## PM-02 — Páginas e vitrines
 

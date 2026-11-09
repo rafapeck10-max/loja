@@ -6,7 +6,8 @@ import {
   createMemoryHistory,
   RouterProvider,
 } from "@tanstack/react-router";
-import { PagesAndShelvesPanel } from "../../src/components/PagesAndShelvesPanel";
+import { AdminStudio } from "../../src/components/admin-studio/AdminStudio";
+import type { EditorProduct } from "../../src/lib/homepage-curation";
 import pageSample from "./page-products.json";
 import { createRoot } from "react-dom/client";
 import { ArrowLeft, Check, Image, Layers3, Package, X } from "lucide-react";
@@ -17,35 +18,14 @@ import type { OverviewProduct } from "../../src/lib/admin-overview";
 import "../../src/styles.css";
 import "./preview.css";
 
-const names = [
-  "Sofá Areia",
-  "Poltrona Clara",
-  "Mesa Serena",
-  "Cômoda Brisa",
-  "Roupeiro Horizonte",
-  "Rack Essência",
-  "Cadeira Aurora",
-  "Cabeceira Aconchego",
-  "Sofá Nuvem",
-  "Mesa de cabeceira Raiz",
-  "Cozinha Jardim",
-  "Painel Amparo",
-];
-const products: OverviewProduct[] = names.map((nome, index) => ({
-  id: `demo-${index + 1}`,
-  nome: `${nome} · demonstração`,
-  preco_atual: index === 8 || index === 9 ? 0 : 500,
-  preco_atacado: index === 11 ? null : 300,
-  url_imagem: index === 10 ? "" : "https://example.com/demonstracao.jpg",
-}));
-const pageProducts = pageSample.map((p, index) => ({
+const pageProducts: EditorProduct[] = pageSample.map((p, index) => ({
   id: `page-demo-${p.id}`,
   nome: p.name,
   slug: `page-demo-${p.id}`,
   categoria: p.category,
-  preco_atual: p.price,
-  preco_atacado: p.price / 2,
-  url_imagem: p.img,
+  preco_atual: index === 8 || index === 9 ? 0 : p.price,
+  preco_atacado: index === 11 ? null : p.price / 2,
+  url_imagem: index === 10 ? "" : p.img,
   descricao: p.detail,
   sku: `AMOSTRA-${p.id}`,
   created_at: "2026-09-27T12:00:00Z",
@@ -54,6 +34,7 @@ const pageProducts = pageSample.map((p, index) => ({
   vitrine_sala: "automatico",
   vitrine_descoberta: true,
 }));
+const products: OverviewProduct[] = pageProducts;
 const imports = [{ id: "demo-import-1" }, { id: "demo-import-2" }, { id: "demo-import-3" }];
 const tabs = [
   ["overview", "Visão geral"],
@@ -64,7 +45,7 @@ const tabs = [
 ];
 
 export function Preview() {
-  const [tab, setTab] = useState("vitrine");
+  const [tab, setTab] = useState("overview");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | ProductStatus>("all");
   const [editing, setEditing] = useState<OverviewProduct | null>(null);
@@ -98,9 +79,14 @@ export function Preview() {
           setSearch(query);
         }}
       >
-        <div hidden={tab !== "vitrine"}>
-          <PagesAndShelvesPanel demonstration products={pageProducts} />
-        </div>
+        <AdminStudio
+          area={tab}
+          demonstration
+          products={pageProducts}
+          onNavigate={setTab}
+          productQuery={search}
+          productFilter={filter}
+        />
         {tab === "overview" ? (
           <AdminOverview
             demonstration
@@ -117,7 +103,7 @@ export function Preview() {
             onEdit={setEditing}
             onNavigate={setTab}
           />
-        ) : tab === "vitrine" ? null : (
+        ) : tab !== "revisao" ? null : (
           <section className="preview-destination">
             <button className="aw-action" onClick={() => setTab("overview")}>
               <ArrowLeft size={16} /> Voltar à Visão geral

@@ -11,6 +11,7 @@ import {
   importScrapedProducts,
   listAdminProdutos,
   listPendingScrapedProducts,
+  listAdminHomepageBanners,
   upsertProduto,
   type ProdutoInput,
   type ProdutoAdmin,
@@ -21,8 +22,7 @@ import {
 import { formatBRL } from "@/lib/constants";
 import { hasRealReferencePrice } from "@/lib/price-reference";
 import { AdminWorkspace } from "@/components/AdminWorkspace";
-import { PagesAndShelvesPanel } from "@/components/PagesAndShelvesPanel";
-import { HomeBannersPanel } from "@/components/HomeBannersPanel";
+import { AdminStudio } from "@/components/admin-studio/AdminStudio";
 import { AdminOverview } from "@/components/AdminOverview";
 import { ADMIN_REVIEW_QUERY_LIMIT } from "@/lib/admin-overview";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
@@ -301,6 +301,7 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
   const [maximumPrice, setMaximumPrice] = useState("");
   const [page, setPage] = useState(1);
   const perPage = 32;
+  const studioBanners = useQuery({ queryKey: ['admin-homepage-banners',password], queryFn: () => listAdminHomepageBanners({data:{password}}) });
 
   const suppliers = useMemo(
     () =>
@@ -550,7 +551,8 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
     <AdminWorkspace area={workspaceTab} onNavigate={setWorkspaceTab} onLogout={onLogout}
       onSearch={(query) => { clearFilters(); setSearch(query); setWorkspaceTab("produtos"); }}>
       {workspaceTab === "produtos" && <div className="aw-editor-toolbar"><h1>Produtos</h1><button className="aw-action" onClick={startNew}><Plus size={16}/> Novo produto</button></div>}
-      <div hidden={workspaceTab === "overview"} className={workspaceTab === "overview" ? "hidden" : "mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4"}>
+      <AdminStudio area={workspaceTab} products={produtos} ready={!isCatalogPending && !isError} onNavigate={setWorkspaceTab} bannerSource={{status:studioBanners.isPending?'pending':studioBanners.isError?'error':'success',data:studioBanners.data?.banners,available:studioBanners.data?.available}} />
+      <div hidden={workspaceTab !== "produtos" && workspaceTab !== "revisao"} className={workspaceTab !== "produtos" && workspaceTab !== "revisao" ? "hidden" : "mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4"}>
         <button
           type="button"
           onClick={() => selectSummary("all")}
@@ -608,12 +610,6 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
             onEdit={startEdit}
             onNavigate={setWorkspaceTab}
           />
-        </section>
-        <section hidden={workspaceTab !== "vitrine"} data-state={workspaceTab === "vitrine" ? "active" : "inactive"} className="admin-workspace-panel" aria-label="vitrine">
-          <PagesAndShelvesPanel products={produtos} ready={!isCatalogPending && !isError} />
-        </section>
-        <section hidden={workspaceTab !== "banners"} data-state={workspaceTab === "banners" ? "active" : "inactive"} className="admin-workspace-panel" aria-label="banners">
-          <HomeBannersPanel password={password} />
         </section>
         <section hidden={workspaceTab !== "revisao"} data-state={workspaceTab === "revisao" ? "active" : "inactive"} className="admin-workspace-panel" aria-label="revisao">
 

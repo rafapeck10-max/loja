@@ -13,6 +13,10 @@ import {
   Package,
   Search,
   Settings2,
+  BookOpen,
+  Truck,
+  ListFilter,
+  Wrench,
   ShieldCheck,
   X,
 } from "lucide-react";
@@ -21,11 +25,17 @@ import "../admin-overview.css";
 import "../admin-density.css";
 
 const areas = [
-  { id: "overview", title: "Visão geral", icon: LayoutDashboard },
-  { id: "vitrine", title: "Páginas e vitrines", icon: Layers3 },
-  { id: "banners", title: "Banners e mídias", icon: Image },
-  { id: "produtos", title: "Produtos", icon: Package },
-  { id: "revisao", title: "Coletados para revisão", icon: FileClock },
+  { id: "overview", title: "Visão geral", icon: LayoutDashboard, code: "01" },
+  { id: "vitrine", title: "Páginas e vitrines", icon: Layers3, code: "02" },
+  { id: "banners", title: "Banners e mídias", icon: Image, code: "03" },
+  { id: "produtos", title: "Produtos", icon: Package, code: "04" },
+  { id: "campaigns", title: "Preços e campanhas", icon: Settings2, code: "05" },
+  { id: "navigation", title: "Navegação e filtros", icon: ListFilter, code: "06" },
+  { id: "content", title: "Conteúdo e ajuda", icon: BookOpen, code: "07" },
+  { id: "service", title: "Entrega e atendimento", icon: Truck, code: "08" },
+  { id: "evolution", title: "Evolução do site", icon: Wrench, code: "09" },
+  { id: "history", title: "Histórico e configurações", icon: FileClock, code: "10" },
+  { id: "revisao", title: "Coletados para revisão", icon: Package, code: "" },
 ];
 
 export function AdminWorkspace({
@@ -71,7 +81,7 @@ export function AdminWorkspace({
       </a>
       <p className="aw-nav-label">GESTÃO DO SITE</p>
       <nav aria-label="Navegação do painel">
-        {areas.map(({ id, title, icon: Icon }) => (
+        {areas.map(({ id, title, icon: Icon, code }) => (
           <button
             type="button"
             key={id}
@@ -80,22 +90,15 @@ export function AdminWorkspace({
           >
             <Icon size={18} aria-hidden="true" />
             <span>{title}</span>
+            {code && (
+              <small className="aw-nav-code" aria-hidden="true">
+                {code}
+              </small>
+            )}
             {area === id && <span className="aw-active-dot" />}
           </button>
         ))}
       </nav>
-      <div className="aw-future">
-        <p className="aw-nav-label">EM DESENVOLVIMENTO</p>
-        <span>
-          <Settings2 size={17} aria-hidden="true" />
-          Preços e campanhas
-        </span>
-        <span>
-          <Layers3 size={17} aria-hidden="true" />
-          Evolução do site
-        </span>
-        <p>Novas áreas serão habilitadas conforme forem implementadas.</p>
-      </div>
       <div className="aw-sidebar-bottom">
         <ShieldCheck size={18} aria-hidden="true" />
         <div>
@@ -195,7 +198,7 @@ export function AdminWorkspace({
                 <Dialog.Title>Como usar o Painel Mobi</Dialog.Title>
                 <Dialog.Description>
                   Comece pela Visão geral para encontrar pendências. Use o menu para abrir produtos,
-                  vitrines, banners ou a fila de revisão.
+                  vitrines, banners, campanhas ou a evolução do site.
                 </Dialog.Description>
                 <p>
                   A busca do topo encontra produtos por nome ou SKU. “Não integrado” indica que a
@@ -203,8 +206,8 @@ export function AdminWorkspace({
                 </p>
                 <p>
                   {demonstration
-                    ? "Esta prévia usa uma amostra fictícia. Os destinos demonstram a navegação, sem salvar alterações."
-                    : "Os editores existentes mantêm suas próprias ações de salvamento. Abrir uma área não salva alterações."}
+                    ? "Esta prévia usa dados demonstrativos e salva rascunhos somente neste navegador. Revise as diferenças no histórico; a loja publicada permanece preservada."
+                    : "As áreas editoriais salvam rascunhos locais. O cadastro e a importação de produtos mantêm as operações administrativas existentes. Abrir uma área não salva alterações."}
                 </p>
                 <Dialog.Close className="aw-action">Entendi</Dialog.Close>
               </Dialog.Content>

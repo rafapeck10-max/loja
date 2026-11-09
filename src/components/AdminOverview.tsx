@@ -67,25 +67,29 @@ export function AdminOverview<T extends OverviewProduct>({
       name: "Rascunhos em revisão",
       icon: FileCheck2,
       source: "Revisões editoriais",
-      reason: "Depende de rascunhos persistentes e do fluxo de revisão.",
+      reason:
+        "O histórico local está disponível. A sincronização de revisões entre usuários ainda não está integrada.",
     },
     {
       name: "Campanhas vigentes",
       icon: Layers3,
       source: "Campanhas",
-      reason: "Depende do cadastro de campanhas e de suas datas de vigência.",
+      reason:
+        "A simulação local está disponível. Campanhas aplicadas ao site ainda não fornecem uma fonte de contagem.",
     },
     {
       name: "Campanhas terminando",
       icon: Clock3,
       source: "Vigência das campanhas",
-      reason: "Depende das datas da campanha e da definição da janela de encerramento.",
+      reason:
+        "A janela local é de sete dias. A vigência de campanhas publicadas ainda não está integrada.",
     },
     {
       name: "Desenvolvimento",
       icon: Wrench,
       source: "Evolução do site",
-      reason: "Depende do acompanhamento real de solicitações e validações.",
+      reason:
+        "O acompanhamento dos 141 requisitos está disponível neste navegador. A sincronização remota ainda não está integrada.",
     },
   ];
   return (
@@ -343,8 +347,8 @@ export function AdminOverview<T extends OverviewProduct>({
             ))}
           </section>
           <section className="ov-panel ov-pending">
-            <h2>Integrações do painel</h2>
-            <p>Disponíveis nas próximas etapas.</p>
+            <h2>Integrações com o site publicado</h2>
+            <p>Os indicadores locais aparecem na atividade editorial.</p>
             {pendingModules.map(({ name, source, reason }) => (
               <article className="ov-pending-item" key={name}>
                 <details>
