@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { BookOpen, ShoppingCart } from "lucide-react";
+import { BookOpen, ShoppingCart, Menu, MapPin } from "lucide-react";
+import { WHATSAPP_URL, WHATSAPP_DISPLAY } from "../lib/constants";
+import { useHomeConfiguration } from "./HomeConfigurationContext";
 import { MobiliLogo } from "@/components/MobiliLogo";
 import { useCart } from "@/lib/cart-context";
 import { useUI } from "@/lib/ui-context";
 export function Header() {
-  const { searchOpen, closeSearch } = useUI();
+  const { searchOpen, closeSearch, openMenu, closeMenu, menuOpen } = useUI();
+  const configuration = useHomeConfiguration();
   const isAdmin = useRouterState({ select: (state) => state.location.pathname === "/admin" });
   const { count, openCart } = useCart();
   const navigate = useNavigate();
@@ -26,7 +29,27 @@ export function Header() {
   }, [searchOpen, closeSearch]);
   return (
     <header className="mobi-header">
+      {!isAdmin && (
+        <div className="mobi-header-channel mobi-wrap">
+          <span>Loja online · atendimento com a Mobi</span>
+          <a href={WHATSAPP_URL} target="_blank" rel="noreferrer">
+            WhatsApp {WHATSAPP_DISPLAY}
+          </a>
+        </div>
+      )}
       <div className="mobi-header-inner mobi-wrap">
+        {!isAdmin && (
+          <button
+            className="mobi-menu-trigger"
+            aria-label="Abrir categorias"
+            aria-expanded={menuOpen}
+            aria-controls="mobi-navigation-menu"
+            onClick={() => openMenu()}
+          >
+            <Menu size={23} />
+            <span>Categorias</span>
+          </button>
+        )}
         <Link to="/" search={{}} aria-label="Mobi início" className="mobi-logo">
           <MobiliLogo className="mobi-logo-image" />
         </Link>
@@ -64,19 +87,32 @@ export function Header() {
               <span>Catálogo</span>
             </Link>
           )}
-          {count > 0 && (
+          {
             <button
               className="mobi-header-cart"
-              onClick={openCart}
+              onClick={() => {
+                closeMenu();
+                openCart();
+              }}
               aria-label={`Carrinho com ${count} produtos`}
             >
               <ShoppingCart size={22} />
-              <span>{count}</span>
+              <span className={count ? "mobi-cart-count" : "mobi-cart-empty-label"}>
+                {count || "Carrinho"}
+              </span>
             </button>
-          )}
+          }
         </div>
       </div>
+      {!isAdmin && (
+        <div className="mobi-header-region mobi-wrap">
+          <MapPin size={14} aria-hidden="true" />
+          <span>
+            {configuration?.service.regionMessage ??
+              "Nova Iguaçu e região · consulte a entrega para seu endereço"}
+          </span>
+        </div>
+      )}
     </header>
   );
 }
-

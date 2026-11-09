@@ -1,14 +1,9 @@
+import { publicPriceVariations } from "./public-price-variations";
 import { createServerFn } from "@tanstack/react-start";
 import { queryOptions } from "@tanstack/react-query";
 import { createClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/integrations/supabase/types";
 import { categoryMatches, getCategory } from "@/lib/constants";
-import {
-  discoverHomepageProducts,
-  newHomepageProducts,
-  roomHomepageProducts,
-  weeklyHomepageProducts,
-} from "@/lib/home-curation";
 import { rehydrateHomepageSections } from "@/lib/homepage-selection";
 
 export interface Produto {
@@ -103,25 +98,14 @@ type HomepageCandidateRow = Pick<
 
 export interface HomepageProducts {
   products: Produto[];
+  configuration?: import("./home-configuration").HomeConfiguration | null;
+  revisionId?: number | null;
   sectionIds: {
     discovery: string[];
     weekly: string[];
     new: string[];
     room: string[];
   };
-}
-
-function parsePriceVariations(value: Json): ProductPriceVariation[] {
-  if (!Array.isArray(value)) return [];
-  return value.flatMap((entry) => {
-    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [];
-    const name = typeof entry.name === "string" ? entry.name : "";
-    const sku = typeof entry.sku === "string" ? entry.sku : "";
-    if (!name || !sku) return [];
-    const supplierPrice = typeof entry.supplier_price === "number" ? entry.supplier_price : null;
-    const salePrice = typeof entry.sale_price === "number" ? entry.sale_price : null;
-    return [{ name, sku, supplier_price: supplierPrice, sale_price: salePrice }];
-  });
 }
 
 function mapProduto(
@@ -150,7 +134,7 @@ function mapProduto(
     medidas: row.medidas ?? null,
     cores: Array.isArray(row.cores) ? row.cores.filter(Boolean) : null,
     parcelas_sem_juros: Number(row.parcelas_sem_juros ?? 0),
-    variacoes_preco: parsePriceVariations(row.variacoes_preco),
+    variacoes_preco: publicPriceVariations(row.variacoes_preco),
     created_at: row.created_at,
     vitrine_semana_ordem: row.vitrine_semana_ordem ?? null,
     vitrine_novidade: (row.vitrine_novidade ?? "automatico") as Produto["vitrine_novidade"],
@@ -261,20 +245,25 @@ async function readPublicHomepageProducts(): Promise<HomepageProducts> {
     candidateRows = await readHomepageCandidates(false);
   }
 
+  const { readLocalHomeConfiguration } = await import("./home-local-store.server");
+  const { applyHomeCuration, homeProductSelections } = await import("./home-configuration");
+  const local = await readLocalHomeConfiguration();
   const candidates = candidateRows.map((row) => mapHomepageCandidate(row, curadoriaDisponivel));
-  const today = new Date();
-  const weekly = weeklyHomepageProducts(candidates);
-  const fresh = newHomepageProducts(candidates, today);
-  const room = roomHomepageProducts(candidates);
-  const excluded = new Set([...weekly, ...fresh, ...room].map((product) => product.id));
-  const discovery = discoverHomepageProducts(candidates, excluded, today);
-  const selections = { discovery, weekly, new: fresh, room };
+  const selections = homeProductSelections(candidates, local?.config, new Date());
   const selectedIds = rehydrateHomepageSections(selections, []).productIds;
   const detailedRows = await readHomepageProductRows(selectedIds, curadoriaDisponivel);
-  const detailedProducts = detailedRows.map((row) => mapProduto(row, curadoriaDisponivel));
+  const detailedProducts = applyHomeCuration(
+    detailedRows.map((row) => mapProduto(row, curadoriaDisponivel)),
+    local?.config.curation,
+  );
   const hydrated = rehydrateHomepageSections(selections, detailedProducts);
 
-  return { products: hydrated.products, sectionIds: hydrated.sectionIds };
+  return {
+    products: hydrated.products,
+    sectionIds: hydrated.sectionIds,
+    configuration: local?.config ?? null,
+    revisionId: local?.revisionId ?? null,
+  };
 }
 
 async function readPublicRows(withCuration: boolean): Promise<BasicPublicProductRow[]> {
@@ -325,7 +314,6 @@ export const getProdutos = createServerFn({ method: "GET" }).handler(readPublicP
 export const getHomepageProducts = createServerFn({ method: "GET" }).handler(
   readPublicHomepageProducts,
 );
-
 export const getProduto = createServerFn({ method: "GET" })
   .inputValidator((input: { id: string }) => {
     if (typeof input?.id !== "string" || !input.id) throw new Error("id inválido");

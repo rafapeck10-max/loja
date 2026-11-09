@@ -41,6 +41,8 @@ A ampliação PM-01 a PM-10 está registrada em [PM01_PM10_CONFERENCIA_DOCUMENTA
 
 ## Realidade operacional Mobi — MM-P01
 
+Decisão adicional de Rafael: antes de cada aplicação, abrir a MadeiraMadeira ao vivo e conferir o comportamento correspondente, cruzando a observação com a engenharia reversa. Registrar o que foi observado e eventuais barreiras; não alegar interação não testada. Essa conferência não autoriza copiar conteúdo nem alterar a operação da Mobi.
+
 Rafael confirmou em 09/11/2026: **a Mobi não tem loja física**. Adaptar a página inicial ao atendimento online e à operação real; não criar visitação, mapa de unidade, showroom, retirada, aplicativo ou canais inexistentes. Região atendida não é endereço aberto ao público. O código de `moveis-nova-iguacu.tsx` já informa atendimento online sem endereço físico para visitação.
 
 Toda aplicação nova precisa de ligação efetiva ao painel: campo suportado, rascunho, renderer de prévia, revisão, consumidor público e histórico. A prévia administrativa local não comprova integração com a home publicada. Seguir o [plano MM-P01](docs/MM-P01_PLANO_APLICACAO_MOBI.md), mantendo funções futuras e dados não confirmados como pendências. Trechos históricos sobre parcelamento, quantidade de botões móveis e rotação diária precisam ser confrontados com fonte/versão atuais, sem alterar regras comerciais por suposição.

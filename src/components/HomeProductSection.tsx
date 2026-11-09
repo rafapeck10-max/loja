@@ -20,7 +20,7 @@ export function HomeProductSection({
       <div className="mobi-section-title">
         <div>
           <h2>{title}</h2>
-          <p>{subtitle}</p>
+          {subtitle && <p>{subtitle}</p>}
         </div>
         {category ? (
           <Link

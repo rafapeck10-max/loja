@@ -94,16 +94,17 @@ export const EVOLUTION_CAPABILITIES: Record<
   "MM-CMS-05": {
     label: "Prévia de páginas",
     area: "vitrine",
-    files: "src/components/PagesAndShelvesPanel.tsx · src/components/HomepageSectionOrder.tsx",
+    files:
+      "src/components/admin-studio/HomeConnectionPanel.tsx · src/components/HomepageContent.tsx",
     limitation:
-      "Composição local; blocos fixos resumidos e catálogo demonstrativo na prévia. Não equivale a homologação pública.",
+      "Home completa pelo renderer compartilhado; versões no servidor local. A demonstração usa catálogo histórico. Sem homologação do backend remoto ou publicação.",
   },
   "MM-CMS-06": {
     label: "Categorias e cobertura de filtros",
     area: "navigation",
     files: "src/components/admin-studio/OperationsPanels.tsx · src/lib/operational-config.ts",
     limitation:
-      "Taxonomia atual e filtros normalizados consumidos na prévia. Sem publicação da configuração no menu público.",
+      "Taxonomia e filtros na prévia; nomes, destinos e visibilidade chegam ao menu da home local por revisão. Filtros públicos e persistência remota permanecem pendentes.",
   },
   "MM-CMS-07": {
     label: "Conteúdo estruturado e ajuda",
@@ -115,9 +116,10 @@ export const EVOLUTION_CAPABILITIES: Record<
   "MM-CMS-08": {
     label: "Histórico local de revisões",
     area: "history",
-    files: "src/lib/admin-studio.ts · src/components/admin-studio/AdminStudio.tsx",
+    files:
+      "src/lib/admin-studio.ts · src/lib/home-local-store.server.ts · src/components/admin-studio/HomeConnectionPanel.tsx",
     limitation:
-      "Histórico e restauração neste navegador. Sem auditoria remota ou autoria autenticada individual.",
+      "Histórico do navegador preservado; revisões da home também persistidas no servidor local, com conflito e restauração. Sem auditoria remota ou autoria individual.",
   },
 };
 

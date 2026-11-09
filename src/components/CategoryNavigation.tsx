@@ -1,5 +1,4 @@
 import { Armchair, BedDouble, CookingPot, Sofa, Table2, Tv } from "lucide-react";
-import { Link } from "@tanstack/react-router";
 import type { Category } from "@/lib/constants";
 const icons = {
   armchair: Armchair,
@@ -27,19 +26,21 @@ export function CategoryNavigation({
   label = "Categorias",
   variant = "cards",
   mobileCategories,
+  destinations,
 }: {
   categories: readonly Category[];
   activeSlug?: string;
   label?: string;
   variant?: "cards" | "tabs";
   mobileCategories?: readonly Category[];
+  destinations?: readonly { id: string; href: string }[];
 }) {
   const render = (category: Category, mobile = false) => (
-    <Link
+    <a
       key={category.slug}
-      to="/categoria/$slug"
-      params={{ slug: category.slug }}
-      search={{ page: 1 }}
+      href={
+        destinations?.find((n) => n.id === category.slug)?.href ?? `/categoria/${category.slug}`
+      }
       aria-current={category.slug === activeSlug ? "page" : undefined}
       className={category.slug === activeSlug ? "selected" : ""}
     >
@@ -47,7 +48,7 @@ export function CategoryNavigation({
         <FurnitureCategoryIcon category={category} />
       </span>
       <span>{categoryDisplayLabel(category, mobile)}</span>
-    </Link>
+    </a>
   );
   const mobile =
     mobileCategories ??

@@ -49,6 +49,8 @@ import { CampaignsPanel } from "./CampaignsPanel";
 import { EvolutionPanel } from "./EvolutionPanel";
 import { NavigationPanel, ContentPanel, ServicePanel, ProductDraftPanel } from "./OperationsPanels";
 import "../../admin-studio.css";
+import { HomeConnectionPanel } from "./HomeConnectionPanel";
+import type { HomeTransport } from "../../lib/home-transport";
 
 type StudioData = {
   pages: PageDraft;
@@ -103,11 +105,13 @@ export function AdminStudio({
   productQuery = "",
   productFilter = "all",
   bannerSource,
+  homeTransport,
 }: {
   area: string;
   products: EditorProduct[];
   ready?: boolean;
   demonstration?: boolean;
+  homeTransport?: HomeTransport;
   onNavigate: (area: string) => void;
   productQuery?: string;
   productFilter?: "all" | "published" | "awaiting" | "incomplete";
@@ -411,6 +415,10 @@ export function AdminStudio({
     );
   return (
     <section className="pm-panel" aria-label="Estúdio local da Mobi">
+      {homeTransport &&
+        ["vitrine", "banners", "navigation", "service", "history"].includes(area) && (
+          <HomeConnectionPanel transport={homeTransport} draft={data} products={products} />
+        )}
       <div className="pm-studio-toolbar">
         <div>
           <span className="pm-badge">Rascunho local</span>{" "}

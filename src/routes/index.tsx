@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   homepageProductsQueryOptions,
@@ -7,12 +7,11 @@ import {
   type HomepageProducts,
 } from "@/lib/products.functions";
 import type { ProductBadge } from "@/components/ProductCard";
-import { HeroCarousel, MOBI_HERO } from "@/components/HeroCarousel";
-import { CategoryNavigation } from "@/components/CategoryNavigation";
+import { HomepageContent } from "../components/HomepageContent";
+import { useHomeConfiguration } from "../components/HomeConfigurationContext";
+import { getHomepageBanners } from "../lib/homepage-banners.functions";
+import { initialBannerData } from "../lib/banner-drafts";
 import { parsePage } from "@/components/CatalogPagination";
-import { CATEGORIES, MAX_INSTALLMENTS } from "@/lib/constants";
-import { HomepageSectionOrder } from "@/components/HomepageSectionOrder";
-import { HomeProductSection } from "@/components/HomeProductSection";
 import { StoreCatalog } from "@/components/StoreCatalog";
 import { newHomepageProducts, weeklyHomepageProducts } from "@/lib/home-curation";
 import { seoHead } from "@/lib/seo";
@@ -138,153 +137,26 @@ function CatalogIndex({
   );
 }
 
-function HomepageIntro() {
-  const mobileCategories = ["sala-de-estar", "cozinha", "dormitorios"].flatMap((slug) =>
-    CATEGORIES.filter((category) => category.slug === slug),
-  );
-  return (
-    <div>
-      <HeroCarousel />
-      <section className="mobi-wrap py-5" aria-label="Mobi em Nova Iguaçu">
-        <h2 className="text-xl text-deep-green">Móveis para sua casa em Nova Iguaçu</h2>
-        <p className="mt-2 text-sm leading-relaxed text-text-light">
-          Encontre sofás, guarda-roupas, colchões e móveis para sala e cozinha. Compare medidas,
-          materiais e cores no catálogo da Mobi.
-        </p>
-        <Link
-          to="/moveis-nova-iguacu"
-          className="mt-2 inline-flex min-h-11 items-center text-sm text-deep-green underline underline-offset-4"
-        >
-          Conheça o atendimento para Nova Iguaçu
-        </Link>
-      </section>
-      <div className="mobi-trust">
-        <span>Pague somente na entrega</span>
-        <span>PIX com desconto</span>
-        <span>Cartão em até {MAX_INSTALLMENTS}x sem juros</span>
-      </div>
-      <div className="mobi-category-wrap mobi-wrap">
-        <CategoryNavigation categories={CATEGORIES} mobileCategories={mobileCategories} />
-      </div>
-    </div>
-  );
-}
-
 function HomepageIndex() {
+  const configuration = useHomeConfiguration();
   const result = useQuery(homepageProductsQueryOptions());
+  const banners = useQuery({ queryKey: ["homepage-banners"], queryFn: getHomepageBanners });
   const data: HomepageProducts | undefined = result.data;
-  const productById = new Map((data?.products ?? []).map((product) => [product.id, product]));
-  const getProducts = (ids: string[] | undefined) =>
-    (ids ?? []).flatMap((id) => {
-      const product = productById.get(id);
-      return product ? [product] : [];
-    });
-  const discoveryProducts = getProducts(data?.sectionIds.discovery);
-  const weeklyProducts = getProducts(data?.sectionIds.weekly);
-  const newProducts = getProducts(data?.sectionIds.new);
-  const roomProducts = getProducts(data?.sectionIds.room);
-  const badges: Record<string, ProductBadge> = {};
-  newProducts.forEach((product) => {
-    badges[product.id] = "new";
-  });
-  weeklyProducts.forEach((product) => {
-    badges[product.id] = "week";
-  });
-
+  const products = data?.products;
+  const failed = result.isError;
   return (
-    <>
-      <HomepageIntro />
-      {!data && result.isError ? (
+    <HomepageContent
+      products={products ?? []}
+      sectionIds={data?.sectionIds ?? { weekly: [], discovery: [], new: [], room: [] }}
+      configuration={configuration}
+      banners={initialBannerData(banners.data).banners}
+    >
+      {!products && failed ? (
         <IndexError error={result.error} reset={() => void result.refetch()} />
-      ) : !data ? (
+      ) : !products ? (
         <HomepageLoadingState />
-      ) : (
-        <HomepageSectionOrder
-          renderSection={(section) => {
-            if (section.id === "discovery")
-              return (
-                <HomeProductSection
-                  title={section.title}
-                  subtitle={section.subtitle}
-                  products={discoveryProducts}
-                  badges={badges}
-                />
-              );
-            if (section.id === "weekly")
-              return (
-                <HomeProductSection
-                  title={section.title}
-                  subtitle={section.subtitle}
-                  products={weeklyProducts}
-                  badges={badges}
-                />
-              );
-            if (section.id === "inspiration")
-              return (
-                <section className="mobi-inspiration mobi-wrap">
-                  <img src={MOBI_HERO} alt="Inspiração de sala de estar" loading="lazy" />
-                  <div>
-                    <span className="mobi-eyebrow">CONFORTO EM CADA DETALHE</span>
-                    <h2>
-                      Para sua sala,
-                      <br />
-                      mais personalidade.
-                    </h2>
-                    <p>Um lugar para descansar, receber e viver bons momentos.</p>
-                    <Link
-                      to="/categoria/$slug"
-                      params={{ slug: "sala-de-estar" }}
-                      search={{ page: 1 }}
-                      className="mobi-primary"
-                    >
-                      Explorar móveis para sala
-                    </Link>
-                  </div>
-                </section>
-              );
-            if (section.id === "new")
-              return (
-                <HomeProductSection
-                  title={section.title}
-                  subtitle={section.subtitle}
-                  products={newProducts}
-                  badges={badges}
-                />
-              );
-            if (section.id === "room")
-              return (
-                <HomeProductSection
-                  title={section.title}
-                  subtitle={section.subtitle}
-                  products={roomProducts}
-                  badges={badges}
-                  category="sala-de-estar"
-                />
-              );
-            if (section.id === "catalog")
-              return (
-                <section className="mobi-catalog-invite mobi-wrap">
-                  <h2>Móveis para Nova Iguaçu e Baixada Fluminense.</h2>
-                  <p>
-                    Sofás, poltronas, painéis, guarda-roupas, colchões e móveis para cozinha.
-                    Compare modelos, medidas, materiais e cores e consulte as condições de entrega
-                    com a Mobi pelo WhatsApp.
-                  </p>
-                  <Link
-                    to="/"
-                    search={{ all: true, page: 1 }}
-                    hash="catalogo"
-                    className="mobi-primary"
-                  >
-                    Explorar todo o catálogo
-                  </Link>
-                </section>
-              );
-            return null;
-          }}
-        />
-      )}
-    </>
+      ) : null}
+    </HomepageContent>
   );
 }
 

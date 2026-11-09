@@ -670,3 +670,120 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+.pm-home-connection {
+  border: 1px solid #c5a05966;
+  background: #f8f7f1;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  border-radius: 8px;
+}
+.pm-home-connection-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+.pm-home-connection-heading strong {
+  font-size: 14px;
+  color: #2e3f32;
+}
+.pm-home-connection-heading p {
+  font-size: 11px;
+  margin: 3px 0 0;
+  color: #6b6d61;
+}
+.pm-home-connection .pm-muted {
+  margin: 6px 0;
+  font-size: 11px;
+}
+.pm-home-connection summary {
+  cursor: pointer;
+  font-size: 12px;
+  min-height: 44px;
+  align-content: center;
+}
+.pm-home-revisions {
+  list-style: none;
+  padding: 0;
+  max-height: 230px;
+  overflow: auto;
+}
+.pm-home-revisions li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 0;
+  border-top: 1px solid #2e3f321a;
+  align-items: center;
+}
+.pm-home-revisions li small {
+  display: block;
+  font-size: 11px;
+  color: #6b6d61;
+}
+.pm-home-review {
+  position: fixed;
+  inset: 12px;
+  z-index: 1300;
+  background: #f4efe6;
+  overflow: auto;
+  border-radius: 10px;
+  font-family: Manrope, sans-serif;
+}
+.pm-home-review-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 18px;
+  background: #fff;
+  border-bottom: 1px solid #2e3f3220;
+}
+.pm-home-review-toolbar h2 {
+  font-size: 16px;
+  margin: 0;
+  color: #2e3f32;
+}
+.pm-home-review-toolbar p {
+  font-size: 12px;
+  margin: 3px 0 0;
+  color: #6b6d61;
+}
+.pm-home-differences {
+  padding: 10px 18px;
+  background: #fff;
+}
+.pm-home-differences summary {
+  cursor: pointer;
+  font-size: 12px;
+  min-height: 44px;
+  align-content: center;
+}
+.pm-home-differences pre {
+  max-height: 220px;
+  overflow: auto;
+  font-size: 11px;
+  background: #f7f7f1;
+  padding: 10px;
+}
+.pm-home-preview-store .mobi-header {
+  position: relative;
+  z-index: 1;
+}
+@media (max-width: 767px) {
+  .pm-home-review {
+    inset: 0;
+    border-radius: 0;
+  }
+  .pm-home-connection-heading,
+  .pm-home-revisions li {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .pm-home-review-toolbar {
+    padding: 10px 12px;
+  }
+  .pm-home-review-toolbar p {
+    font-size: 11px;
+  }
+}

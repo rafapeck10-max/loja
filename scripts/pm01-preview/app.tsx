@@ -1,4 +1,23 @@
-import { useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { UIProvider } from "../../src/lib/ui-context";
+import { CartProvider } from "../../src/lib/cart-context";
+import { Header } from "../../src/components/Header";
+import { Footer } from "../../src/components/Footer";
+import { MenuDrawer } from "../../src/components/MenuDrawer";
+import { CartDrawer } from "../../src/components/CartDrawer";
+import { MobileBottomBar } from "../../src/components/MobileBottomBar";
+import { WhatsAppFloat } from "../../src/components/WhatsAppFloat";
+import { HomeConfigurationProvider } from "../../src/components/HomeConfigurationContext";
+import { HomepageContent } from "../../src/components/HomepageContent";
+import {
+  toStorefrontProducts,
+  initialPageDraft,
+  sectionProducts,
+} from "../../src/lib/pages-shelves";
+import { applyHomeCuration, type HomeConfiguration } from "../../src/lib/home-configuration";
+import type { HomeTransport } from "../../src/lib/home-transport";
+import previewToken from "virtual:mobi-preview-token";
+import { useState, useEffect } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   createRootRoute,
@@ -7,8 +26,8 @@ import {
   RouterProvider,
 } from "@tanstack/react-router";
 import { AdminStudio } from "../../src/components/admin-studio/AdminStudio";
-import type { EditorProduct } from "../../src/lib/homepage-curation";
-import pageSample from "./page-products.json";
+
+import { pageProducts } from "./data";
 import { createRoot } from "react-dom/client";
 import { ArrowLeft, Check, Image, Layers3, Package, X } from "lucide-react";
 import { AdminOverview } from "../../src/components/AdminOverview";
@@ -18,22 +37,6 @@ import type { OverviewProduct } from "../../src/lib/admin-overview";
 import "../../src/styles.css";
 import "./preview.css";
 
-const pageProducts: EditorProduct[] = pageSample.map((p, index) => ({
-  id: `page-demo-${p.id}`,
-  nome: p.name,
-  slug: `page-demo-${p.id}`,
-  categoria: p.category,
-  preco_atual: index === 8 || index === 9 ? 0 : p.price,
-  preco_atacado: index === 11 ? null : p.price / 2,
-  url_imagem: index === 10 ? "" : p.img,
-  descricao: p.detail,
-  sku: `AMOSTRA-${p.id}`,
-  created_at: "2026-09-27T12:00:00Z",
-  vitrine_semana_ordem: index < 4 ? index + 1 : null,
-  vitrine_novidade: index === 4 ? "incluir" : "automatico",
-  vitrine_sala: "automatico",
-  vitrine_descoberta: true,
-}));
 const products: OverviewProduct[] = pageProducts;
 const imports = [{ id: "demo-import-1" }, { id: "demo-import-2" }, { id: "demo-import-3" }];
 const tabs = [
@@ -45,7 +48,9 @@ const tabs = [
 ];
 
 export function Preview() {
-  const [tab, setTab] = useState("overview");
+  const [tab, setTab] = useState(
+    new URLSearchParams(window.location.search).get("area") ?? "overview",
+  );
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | ProductStatus>("all");
   const [editing, setEditing] = useState<OverviewProduct | null>(null);
@@ -81,6 +86,7 @@ export function Preview() {
       >
         <AdminStudio
           area={tab}
+          homeTransport={localHomeTransport}
           demonstration
           products={pageProducts}
           onNavigate={setTab}
@@ -233,9 +239,94 @@ export function Preview() {
   );
 }
 
-const previewRoot = createRootRoute({ component: Preview });
+const previewRoot = createRootRoute({ component: PreviewShell });
 const previewRouter = createRouter({
   routeTree: previewRoot,
   history: createMemoryHistory({ initialEntries: ["/"] }),
 });
+
+const localQueryClient = new QueryClient();
+const requestHome = async (path: string, options: RequestInit = {}) => {
+  const r = await fetch("/__mobi-local-home" + path, {
+    ...options,
+    headers: {
+      "content-type": "application/json",
+      "x-mobi-preview-token": previewToken,
+      ...options.headers,
+    },
+  });
+  const body = await r.json();
+  if (!r.ok) throw new Error(body.error ?? "Falha na conexão local");
+  return body;
+};
+const localHomeTransport: HomeTransport = {
+  publicPreviewHref: "/scripts/pm01-preview/index.html?view=home",
+  read: () => requestHome("/admin"),
+  change: (command, draft) =>
+    requestHome("/admin", { method: "POST", body: JSON.stringify({ command, draft }) }),
+};
+function LocalStorefront() {
+  const [config, setConfig] = useState<HomeConfiguration | null>(null),
+    [error, setError] = useState("");
+  useEffect(() => {
+    requestHome("")
+      .then((d) => setConfig(d?.config ?? null))
+      .catch((e) => setError(e.message));
+  }, []);
+  const products = applyHomeCuration(
+    toStorefrontProducts(pageProducts, initialPageDraft(pageProducts).curation),
+    config?.curation,
+  );
+  const sectionIds = Object.fromEntries(
+    ["weekly", "discovery", "new", "room"].map((id) => [
+      id,
+      sectionProducts(id as "weekly", products, new Date()).map((p) => p.id),
+    ]),
+  ) as HomeConfiguration["sectionIds"];
+  return (
+    <HomeConfigurationProvider configuration={config}>
+      <div className="store-shell">
+        <div className="mobi-local-review-label">
+          Prévia local · catálogo de amostra histórico · nenhuma oferta atual ·{" "}
+          <a href="?area=vitrine">Voltar ao painel</a>
+        </div>
+        <Header />
+        {error ? (
+          <p role="alert">{error}</p>
+        ) : config ? (
+          <HomepageContent products={products} sectionIds={sectionIds} />
+        ) : (
+          <p className="mobi-wrap py-8">
+            Nenhuma revisão aplicada. Abra Páginas e vitrines no painel e revise uma versão da home.
+          </p>
+        )}
+        <Footer />
+        <MenuDrawer />
+        <CartDrawer />
+        <MobileBottomBar />
+        <WhatsAppFloat />
+      </div>
+    </HomeConfigurationProvider>
+  );
+}
+function PreviewShell() {
+  return (
+    <QueryClientProvider client={localQueryClient}>
+      <UIProvider>
+        <CartProvider>
+          {new URLSearchParams(window.location.search).get("view") === "home" ? (
+            <LocalStorefront />
+          ) : (
+            <>
+              <Preview />
+              <MenuDrawer />
+              <CartDrawer />
+            </>
+          )}
+        </CartProvider>
+      </UIProvider>
+    </QueryClientProvider>
+  );
+}
+
 createRoot(document.getElementById("root")!).render(<RouterProvider router={previewRouter} />);

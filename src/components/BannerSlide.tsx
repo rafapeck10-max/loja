@@ -27,7 +27,7 @@ export function BannerSlide({
   const imageStyle: CSSProperties = {
     width: "100%",
     height: "100%",
-    objectFit: !mobile && previewViewport !== "desktop" ? "contain" : "cover",
+    objectFit: !mobile && previewViewport === "mobile" ? "contain" : "cover",
     objectPosition: "center 57%",
     filter: showText ? "brightness(0.59)" : "none",
   };
@@ -42,7 +42,7 @@ export function BannerSlide({
     : undefined;
   return (
     <section
-      className="mobi-hero"
+      className={`mobi-hero ${!showText ? "mobi-hero-art" : ""}`}
       style={previewStyle}
       aria-label={
         previewViewport
@@ -65,7 +65,7 @@ export function BannerSlide({
             src={source}
             alt={alt}
             style={imageStyle}
-            className="mobi-hero-image"
+            className={`mobi-hero-image ${!mobile ? "mobi-hero-image-no-mobile" : ""}`}
             fetchPriority="high"
           />
         </picture>
