@@ -1,0 +1,600 @@
+/* Revisão de densidade: tokens Mobi, proximidade e informação por tarefa. */
+.aw-layout {
+  background: #f4efe6;
+  grid-template-columns: 220px minmax(0, 1fr);
+  color: #493327;
+}
+.aw-sidebar,
+.aw-drawer {
+  background: #2e3f32;
+}
+.aw-sidebar {
+  padding-top: 24px;
+}
+.aw-brand {
+  padding-bottom: 20px;
+}
+.aw-sidebar nav button[aria-current],
+.aw-drawer nav button[aria-current] {
+  background: #f4efe6;
+  color: #2e3f32;
+  box-shadow: inset 3px 0 #c5a059;
+}
+.aw-main {
+  background: #f7f4ed;
+}
+.aw-topbar {
+  min-height: 62px;
+  padding: 7px 24px;
+}
+.aw-content {
+  padding: 20px 24px;
+}
+.aw-demo-strip {
+  padding: 5px 24px;
+  background: #eee8db;
+  color: #655941;
+}
+.aw-mobile-brand {
+  display: none;
+}
+.aw-mobile-logo {
+  width: 72px;
+  height: 30px;
+}
+.aw-search {
+  background: #faf8f2;
+  border-color: #e0d9c9;
+}
+.aw-action,
+.ov-review-button {
+  color: #2e3f32;
+  border-color: #cfc6b4;
+  border-radius: 4px;
+}
+.ov-heading {
+  margin-bottom: 14px;
+  gap: 12px;
+}
+.ov-heading h1 {
+  font-size: 26px;
+  letter-spacing: -0.8px;
+  color: #2e3f32;
+}
+.ov-heading > div > p:last-child {
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 3px;
+  color: #736650;
+}
+.ov-metrics {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 8px;
+  align-items: stretch;
+}
+.ov-metric {
+  padding: 12px 14px;
+  border-radius: 5px;
+  border-color: #e0d8c8;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0 12px;
+  background: #fffdfa;
+  box-shadow: none;
+}
+.ov-metric-top {
+  grid-column: 1/-1;
+  margin: 0 0 7px;
+  color: #8e754a;
+  font-size: 9px;
+  justify-content: flex-start;
+  gap: 8px;
+  min-height: 18px;
+  letter-spacing: 0.5px;
+}
+.ov-metric h2 {
+  font-size: 12px;
+  line-height: 1.5;
+  min-height: 0;
+  color: #493f30;
+  align-self: end;
+}
+.ov-metric > strong {
+  grid-column: 2;
+  grid-row: 2/4;
+  font-size: 30px;
+  align-self: center;
+  margin: 0;
+  color: #2e3f32;
+  line-height: 1;
+}
+.ov-metric > p {
+  min-height: 0;
+  font-size: 11px;
+  margin-top: 2px;
+  line-height: 1.5;
+  color: #796c56;
+}
+.ov-metric > details,
+.ov-metric > .ov-text-button {
+  grid-column: 1/-1;
+  margin-top: 7px;
+  padding: 0;
+  border-top: 1px solid #eee8db;
+  min-height: 36px;
+  align-content: center;
+  text-align: left;
+  justify-content: flex-start;
+}
+.ov-metric summary {
+  min-height: 36px;
+  align-content: center;
+}
+.ov-metric-live {
+  border-top: 2px solid #c5a059;
+  background: #fffdf6;
+}
+.ov-metric-catalog {
+  border-top: 2px solid #2e3f32;
+}
+.ov-metric-queue {
+  border-top: 2px solid #897359;
+}
+.ov-live-tag {
+  background: #efeadb;
+  color: #76613d;
+  font-size: 9px;
+}
+.ov-metric-live .ov-metric-top {
+  justify-content: space-between;
+}
+.ov-catalog-strip {
+  gap: 0 18px;
+  margin: 0 0 12px;
+  font-size: 11px;
+}
+.ov-catalog-strip button {
+  font-size: 11px;
+  color: #6e5c3d;
+}
+.ov-columns {
+  grid-template-columns: minmax(0, 1fr) 250px;
+  gap: 14px;
+}
+.ov-panel {
+  border-color: #e0d8c8;
+  border-radius: 5px;
+  background: #fffdfa;
+}
+.ov-panel-heading {
+  padding: 15px 16px 12px;
+}
+.ov-panel-heading h2,
+.ov-panel h2 {
+  color: #2e3f32;
+}
+.ov-panel-heading p {
+  margin-top: 2px;
+  color: #7b6d56;
+  font-size: 11px;
+}
+.ov-count {
+  background: #eee8d9;
+  border: 0;
+  color: #765c32;
+}
+.ov-list-head {
+  background: #f4efe6;
+  border-color: #e9e1d1;
+  padding: 7px 16px;
+  color: #8a795d;
+}
+.ov-issues {
+  padding: 0 16px !important;
+}
+.ov-issues li {
+  padding: 12px 0;
+  gap: 10px;
+  border-color: #ece4d6;
+}
+.ov-type-label {
+  display: none;
+}
+.ov-issue-type {
+  width: 28px;
+  height: 28px;
+  margin-top: 3px;
+  background: #f4efe6;
+  color: #9a8050;
+  border-color: #e9e0ce;
+}
+.ov-issue-content h3 {
+  font-size: 13px;
+  margin: 0 0 2px;
+  color: #493327;
+  line-height: 1.45;
+  font-weight: 650;
+}
+.ov-problem {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #8a632f;
+}
+.ov-impact-detail {
+  font-size: 11px;
+  color: #7a6a50;
+}
+.ov-impact-detail summary {
+  cursor: pointer;
+  min-height: 28px;
+  align-content: center;
+  width: fit-content;
+}
+.ov-impact {
+  font-size: 11px;
+  line-height: 1.6;
+  margin: 0 0 5px !important;
+  color: #76664f;
+}
+.ov-review-button {
+  background: #2e3f32;
+  color: #f4efe6;
+  border-color: #2e3f32;
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 11px !important;
+}
+.ov-review-button:hover {
+  background: #40543e;
+  color: #fff;
+  border-color: #40543e;
+}
+.ov-list-footer {
+  padding: 7px 16px;
+  color: #817255;
+  font-size: 10px;
+}
+.ov-review-note {
+  padding: 10px 16px;
+  background: #f4efe1;
+  border-color: #e8dfca;
+  color: #8e7b50;
+}
+.ov-review-note strong {
+  color: #655535;
+  font-size: 11px;
+}
+.ov-review-note p {
+  font-size: 10px;
+  color: #827253;
+}
+.ov-shortcuts {
+  padding: 16px 15px 4px;
+}
+.ov-shortcuts h2 {
+  font-size: 13px;
+  margin-bottom: 5px;
+}
+.ov-shortcut {
+  min-height: 58px;
+  padding: 11px 0;
+  border-color: #eee6d7;
+  color: #9c8351;
+  gap: 10px;
+}
+.ov-shortcut strong {
+  font-size: 12px;
+  line-height: 1.4;
+  color: #493327;
+}
+.ov-shortcut small {
+  margin-top: 2px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #7f6f52;
+}
+.ov-side {
+  gap: 12px;
+}
+.ov-pending {
+  padding: 15px;
+}
+.ov-pending > h2 {
+  font-size: 13px;
+}
+.ov-pending > p {
+  font-size: 10px;
+  color: #8b7b5b;
+  margin: 3px 0 9px;
+}
+.ov-pending-item {
+  padding: 0;
+  border: 0;
+  border-top: 1px solid #eee7d9;
+}
+.ov-pending-item:first-of-type {
+  border-top: 0;
+}
+.ov-pending-item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  cursor: pointer;
+  font-size: 11px;
+  color: #6e5e44;
+}
+.ov-pending-item summary::before {
+  content: "+";
+  color: #a68c59;
+  font-size: 13px;
+}
+.ov-pending-item details[open] summary::before {
+  content: "−";
+}
+.ov-pending-item summary > span:first-child {
+  flex: 1;
+}
+.ov-unavailable {
+  font-size: 8px;
+  background: #f1ede3;
+  color: #8b7859;
+  padding: 3px 4px;
+  border-radius: 3px;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+.ov-pending-item p {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #7d6b4f;
+  padding-bottom: 8px;
+}
+.ov-coverage {
+  padding: 12px 15px;
+  background: #f0eadc;
+}
+.ov-coverage > h2,
+.ov-coverage > div {
+  display: none;
+}
+.ov-coverage details {
+  border: 0;
+  padding: 0;
+}
+.ov-coverage summary {
+  min-height: 32px;
+  font-size: 11px;
+  color: #796747;
+}
+.ov-coverage details p {
+  font-size: 11px;
+  color: #756246;
+}
+.ov-sources {
+  margin-top: 16px;
+  padding: 12px 0;
+  gap: 8px 16px;
+  border-color: #ded5c2;
+  font-size: 10px;
+  color: #8a7857;
+}
+.ov-sources > span:first-child {
+  color: #655637;
+}
+@media (max-width: 1100px) {
+  .aw-layout {
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+  .aw-content {
+    padding: 18px;
+  }
+  .ov-columns {
+    grid-template-columns: minmax(0, 1fr) 225px;
+  }
+  .ov-metric {
+    padding: 10px;
+  }
+  .ov-metric h2 {
+    font-size: 11px;
+  }
+  .ov-metric > p {
+    font-size: 10px;
+  }
+}
+@media (max-width: 1023px) {
+  .aw-layout {
+    display: block;
+  }
+  .aw-mobile-brand {
+    display: flex;
+    background: #2e3f32;
+    border-radius: 3px;
+    padding: 4px 7px;
+    align-items: center;
+  }
+  .aw-topbar {
+    padding: 6px 16px;
+    gap: 8px;
+  }
+  .aw-breadcrumb {
+    font-size: 11px;
+  }
+  .aw-content {
+    padding: 16px;
+  }
+  .ov-columns {
+    grid-template-columns: minmax(0, 1fr) 225px;
+  }
+}
+@media (max-width: 767px) {
+  .aw-breadcrumb > strong {
+    font-size: 11px;
+  }
+  .aw-demo-strip {
+    padding: 5px 16px;
+    font-size: 9px;
+  }
+  .aw-topbar {
+    gap: 6px;
+  }
+  .aw-store-link {
+    font-size: 10px;
+    margin-left: auto;
+  }
+  .aw-mobile-logo {
+    width: 62px;
+    height: 26px;
+  }
+  .aw-content {
+    padding: 16px 12px;
+  }
+  .ov-heading h1 {
+    font-size: 23px;
+  }
+  .ov-heading > div > p:last-child {
+    font-size: 11px;
+    max-width: 250px;
+    margin-top: 2px;
+    line-height: 1.5;
+  }
+  .ov-heading {
+    margin-bottom: 12px;
+  }
+  .ov-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .ov-metric,
+  .ov-metric:first-child {
+    padding: 10px 12px;
+    gap: 0 10px;
+  }
+  .ov-metric:first-child {
+    grid-column: 1/-1;
+  }
+  .ov-metric-top {
+    margin-bottom: 5px !important;
+  }
+  .ov-metric:first-child > strong {
+    font-size: 30px;
+  }
+  .ov-metric:first-child h2,
+  .ov-metric h2 {
+    font-size: 12px;
+    min-height: 0;
+  }
+  .ov-metric > strong {
+    font-size: 25px;
+  }
+  .ov-metric > p {
+    font-size: 10px;
+    min-height: 0;
+  }
+  .ov-metric > details,
+  .ov-metric > .ov-text-button {
+    min-height: 44px;
+    margin-top: 4px;
+  }
+  .ov-metric summary {
+    min-height: 44px;
+    font-size: 10px;
+  }
+  .ov-metric > .ov-text-button {
+    font-size: 11px !important;
+  }
+  .ov-catalog-strip {
+    margin: 0 0 10px;
+    gap: 0 10px;
+  }
+  .ov-catalog-strip button,
+  .ov-catalog-strip > span {
+    font-size: 10px;
+  }
+  .ov-columns {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .ov-panel-heading {
+    padding: 13px;
+  }
+  .ov-panel-heading p {
+    line-height: 1.5;
+  }
+  .ov-panel h2 {
+    font-size: 14px;
+  }
+  .ov-issues {
+    padding: 0 13px !important;
+  }
+  .ov-issues li {
+    padding: 12px 0;
+    gap: 8px;
+    align-items: flex-start;
+    flex-wrap: nowrap;
+  }
+  .ov-issue-type {
+    display: none;
+  }
+  .ov-issue-content {
+    flex-basis: auto;
+    flex: 1;
+  }
+  .ov-issue-content h3 {
+    font-size: 12px;
+  }
+  .ov-problem {
+    font-size: 11px;
+  }
+  .ov-impact-detail summary {
+    min-height: 44px;
+    font-size: 10px;
+  }
+  .ov-impact {
+    font-size: 11px;
+  }
+  .ov-review-button {
+    margin: 0;
+    min-height: 44px;
+    align-self: flex-start;
+    font-size: 10px !important;
+    padding: 5px 8px;
+  }
+  .ov-list-footer {
+    padding: 7px 13px;
+    font-size: 9px;
+  }
+  .ov-review-note {
+    padding: 10px 13px;
+    gap: 8px;
+  }
+  .ov-review-note > .ov-text-button {
+    margin-left: 24px;
+  }
+  .ov-shortcuts {
+    padding: 14px 13px 2px;
+  }
+  .ov-shortcut {
+    min-height: 55px;
+    padding: 9px 0;
+  }
+  .ov-pending {
+    padding: 14px 13px;
+  }
+  .ov-pending-item summary {
+    font-size: 12px;
+  }
+  .ov-unavailable {
+    font-size: 9px;
+  }
+  .ov-coverage {
+    padding: 10px 13px;
+  }
+  .ov-sources {
+    margin-top: 12px;
+    padding: 10px 0;
+    gap: 5px;
+  }
+}

@@ -20,6 +20,7 @@ import {
 } from "../lib/admin-overview";
 import type { ProductStatus } from "../lib/admin-filters";
 import "../admin-overview.css";
+import "../admin-density.css";
 
 export interface AdminOverviewProps<T extends OverviewProduct = OverviewProduct> {
   catalog: OverviewSource<T>;
@@ -91,9 +92,8 @@ export function AdminOverview<T extends OverviewProduct>({
     <section className="mobi-overview" aria-label="Visão geral do painel">
       <header className="ov-heading">
         <div>
-          <p className="ov-eyebrow">GESTÃO DO SITE</p>
           <h1>Visão geral</h1>
-          <p>O que está acontecendo e o que precisa da sua atenção.</p>
+          <p>Revise preço, foto e custo antes de exibir os móveis.</p>
         </div>
         <button type="button" className="aw-action" onClick={onRefresh} disabled={refreshing}>
           <RefreshCw size={16} className={refreshing ? "ov-spin" : ""} />
@@ -114,7 +114,7 @@ export function AdminOverview<T extends OverviewProduct>({
           <strong>{ready ? issues.length : "—"}</strong>
           <p>
             {ready
-              ? "Produtos com pendências de cadastro"
+              ? "Preço, foto ou custo pendente"
               : catalog.status === "error"
                 ? "Não foi possível confirmar a contagem"
                 : "Aguardando o catálogo"}
@@ -130,29 +130,40 @@ export function AdminOverview<T extends OverviewProduct>({
             <span>Critérios: preço de venda, endereço de imagem e custo do fornecedor.</span>
           </details>
         </article>
-        {pendingModules.map(({ name, icon: Icon, source, reason }) => (
-          <article className="ov-metric" key={name}>
-            <div className="ov-metric-top">
-              <span className="ov-icon">
-                <Icon size={18} />
-              </span>
-              <span className="ov-unavailable">Não integrado</span>
-            </div>
-            <h2>{name}</h2>
-            <strong>—</strong>
-            <p>
-              {name === "Desenvolvimento"
-                ? "Solicitações e validações do site"
-                : "Aguardando fonte de dados"}
-            </p>
-            <details>
-              <summary>O que falta integrar</summary>
-              <span>Fonte prevista: {source}.</span>
-              <span>{reason}</span>
-              <span>Sem consulta disponível; não representa zero.</span>
-            </details>
-          </article>
-        ))}
+        <article className="ov-metric ov-metric-catalog">
+          <div className="ov-metric-top">
+            <Package size={18} />
+            <span>CATÁLOGO</span>
+          </div>
+          <h2>Prontos para exibição</h2>
+          <strong>{counts.published ?? "—"}</strong>
+          <p>Conforme as regras atuais de cadastro</p>
+          <button
+            className="ov-text-button"
+            disabled={!ready}
+            onClick={() => onProducts("published")}
+          >
+            Ver produtos <ArrowRight size={14} />
+          </button>
+        </article>
+        <article className="ov-metric ov-metric-queue">
+          <div className="ov-metric-top">
+            <ArrowDownToLine size={18} />
+            <span>FORNECEDORES</span>
+          </div>
+          <h2>Coletados para revisão</h2>
+          <strong>
+            {counts.review == null ? "—" : `${counts.review}${reviewLimitReached ? "+" : ""}`}
+          </strong>
+          <p>Aguardando sua conferência</p>
+          <button
+            className="ov-text-button"
+            disabled={!queueReady}
+            onClick={() => onNavigate("revisao")}
+          >
+            Revisar coleta <ArrowRight size={14} />
+          </button>
+        </article>
       </div>
       <div className="ov-catalog-strip">
         <span>
@@ -177,7 +188,7 @@ export function AdminOverview<T extends OverviewProduct>({
           <div className="ov-panel-heading">
             <div>
               <h2 id="ov-attention-title">Precisa da sua atenção</h2>
-              <p>Pendências identificadas nos dados consultados.</p>
+              <p>Confira o que falta para cada móvel.</p>
             </div>
             <span className="ov-count">
               {ready
@@ -236,7 +247,10 @@ export function AdminOverview<T extends OverviewProduct>({
                       <span className="ov-type-label">CADASTRO</span>
                       <h3>{product.nome}</h3>
                       <p className="ov-problem">{reasons.join(" · ")}</p>
-                      <p className="ov-impact">{overviewImpact(product)}</p>
+                      <details className="ov-impact-detail">
+                        <summary>Por que revisar</summary>
+                        <p className="ov-impact">{overviewImpact(product)}</p>
+                      </details>
                     </div>
                     <button
                       className="ov-review-button"
@@ -326,6 +340,23 @@ export function AdminOverview<T extends OverviewProduct>({
                 </span>
                 <ArrowRight size={16} />
               </button>
+            ))}
+          </section>
+          <section className="ov-panel ov-pending">
+            <h2>Integrações do painel</h2>
+            <p>Disponíveis nas próximas etapas.</p>
+            {pendingModules.map(({ name, source, reason }) => (
+              <article className="ov-pending-item" key={name}>
+                <details>
+                  <summary>
+                    <span>{name}</span>
+                    <span className="ov-unavailable">Não integrado</span>
+                  </summary>
+                  <p>
+                    Fonte prevista: {source}. {reason} Sem consulta disponível; não representa zero.
+                  </p>
+                </details>
+              </article>
             ))}
           </section>
           <section className="ov-panel ov-coverage">

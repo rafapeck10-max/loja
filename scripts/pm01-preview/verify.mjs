@@ -21,13 +21,7 @@ try {
   });
   await page.goto("http://127.0.0.1:5187/scripts/pm01-preview/index.html");
   await page.getByRole("heading", { name: "Visão geral", exact: true }).waitFor();
-  assert.deepEqual(await page.locator(".ov-metric>strong").allTextContents(), [
-    "4",
-    "—",
-    "—",
-    "—",
-    "—",
-  ]);
+  assert.deepEqual(await page.locator(".ov-metric>strong").allTextContents(), ["4", "8", "3"]);
   assert.equal(await page.locator(".ov-unavailable").count(), 4);
   assert.equal(await page.locator(".ov-impact").count(), 4);
   const fonts = await page
@@ -104,13 +98,7 @@ try {
   await page.getByText("Conferir estados da prévia", { exact: true }).click();
   const scenario = page.getByLabel("Cenário da prévia");
   await scenario.selectOption("error");
-  assert.deepEqual(await page.locator(".ov-metric>strong").allTextContents(), [
-    "—",
-    "—",
-    "—",
-    "—",
-    "—",
-  ]);
+  assert.deepEqual(await page.locator(".ov-metric>strong").allTextContents(), ["—", "—", "—"]);
   await page.getByRole("heading", { name: "Não foi possível consultar o catálogo" }).waitFor();
   await page.getByRole("button", { name: "Atualizar dados", exact: true }).click();
   await page.getByRole("button", { name: "Atualizar dados", exact: true }).waitFor();
@@ -121,13 +109,7 @@ try {
   assert.equal(await page.locator(".ov-metric>strong").first().innerText(), "4");
   await page.getByRole("alert").waitFor();
   await scenario.selectOption("empty");
-  assert.deepEqual(await page.locator(".ov-metric>strong").allTextContents(), [
-    "0",
-    "—",
-    "—",
-    "—",
-    "—",
-  ]);
+  assert.deepEqual(await page.locator(".ov-metric>strong").allTextContents(), ["0", "0", "0"]);
   await page.getByRole("heading", { name: "Seu catálogo está vazio" }).waitFor();
   await scenario.selectOption("queue-limit");
   await page.getByRole("button", { name: /3\+ coletados/ }).waitFor();
@@ -140,7 +122,7 @@ try {
     viewports: [1440, 1024, 768, 390, 360, 844],
     fonts,
     checks: [
-      "five operational cards",
+      "three available metrics and four pending integration states",
       "unknown is not zero",
       "impact per issue",
       "shared workspace",

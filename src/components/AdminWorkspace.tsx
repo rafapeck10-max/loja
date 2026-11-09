@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { MobiliLogo } from "./MobiliLogo";
 import "../admin-overview.css";
+import "../admin-density.css";
 
 const areas = [
   { id: "overview", title: "Visão geral", icon: LayoutDashboard },
@@ -66,7 +67,7 @@ export function AdminWorkspace({
         aria-label="Mobi — abrir loja"
       >
         <MobiliLogo className="aw-logo" />
-        <span>Painel de controle</span>
+        <span>mobimb.com.br</span>
       </a>
       <p className="aw-nav-label">GESTÃO DO SITE</p>
       <nav aria-label="Navegação do painel">
@@ -141,6 +142,15 @@ export function AdminWorkspace({
               </Dialog.Content>
             </Dialog.Portal>
           </Dialog.Root>
+          <a
+            className="aw-mobile-brand"
+            href="https://www.mobimb.com.br/"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Mobi — abrir loja"
+          >
+            <MobiliLogo className="aw-mobile-logo" />
+          </a>
           <div className="aw-breadcrumb">
             <span>Painel Mobi</span>
             <ChevronRight size={14} aria-hidden="true" />

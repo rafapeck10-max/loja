@@ -147,3 +147,19 @@ Evidências automatizadas desta revisão: 34 testes disponíveis passaram; TypeS
 Pendências continuam explícitas: integração de campanhas/rascunhos/desenvolvimento; cruzamento específico das seleções reais de vitrine; diagnósticos de banner por viewport; teste de editores autenticados com dados reais em ambiente isolado e teste com leitor de tela. Os atalhos da amostra demonstram destinos; os callbacks da aplicação usam os editores existentes. Nenhum teste gravou catálogo real, preço, banner ou campanha.
 
 Esta é uma nova versão local para revisão visual. Não representa aceitação de Rafael nem autorização para publicar. Capturas e relatório: `.output/pm01-evidence/`. A versão anterior permanece no histórico local; reversão desta entrega se limita ao código, sem restauração de banco.
+
+## 10. Revisão 3 — densidade, hierarquia e identidade Mobi
+
+Pedido adicional de Rafael: tirar a aparência genérica, preservar a identidade da loja, remover espaços desnecessários e pesquisar UX. Foram consultadas fontes primárias, sem copiar seu estilo visual:
+
+- Nielsen Norman Group, [Proximity Principle in Visual Design](https://www.nngroup.com/articles/gestalt-proximity/): agrupar informações relacionadas e separar tarefas distintas. Aplicação: título/descrição próximos; nome, pendência e ação pertencem à mesma linha/cartão.
+- Nielsen Norman Group, [Aesthetic and Minimalist Design](https://www.nngroup.com/articles/aesthetic-minimalist-design/): priorizar informação necessária à tarefa. Aplicação: quatro módulos indisponíveis deixam o topo e ficam em linhas compactas expansíveis, identificadas como não integradas. As categorias documentadas continuam presentes; não foram eliminadas do escopo.
+- IBM [Carbon — Data table](https://www.carbondesignsystem.com/building-blocks/core/components/data-table/guidelines): densidade apropriada ao conteúdo e expansão para informações secundárias. Aplicação: pendências mais compactas, com impacto acessível em “Por que revisar”. Alvos de toque móveis continuam em 44 px; não copiamos alturas compactas de desktop para celular.
+
+Ativo consultado: `ID/logo mobi.png`, na pasta original da marca. Usado no produto o componente oficial `MobiliLogo` já existente, com `mobi-logo-approved.png`. Cabeçalho móvel também passa a exibir a marca. Verde profundo, dourado, areia e cacau foram reaplicados nos fundos, bordas, estado ativo e ações. Não foram criadas fotografias, avaliações ou campanhas fictícias para preencher vazios.
+
+Resumo com três indicadores disponíveis: cadastros a revisar, elegíveis pelas regras atuais e produtos coletados. As quatro categorias sem fonte permanecem em “Integrações do painel”, com origem/dependência disponível ao expandir. O significado do estado desconhecido foi preservado; nenhuma contagem foi inventada.
+
+Conferência pelo navegador integrado: larguras 360, 390, 768, 1024 e 1440, sem transbordamento global; contagens 4/8/3 na amostra; área dos indicadores com cerca de 133 px de altura em 1440 e 301 px em 390. Medidas da versão atual, sem alegação de percentual de melhoria. Verificados destino de produtos, gaveta móvel e expansão de impacto. Capturas desta revisão ficam fora da saída de build, em `../mobi-pm01-evidence-v3/`.
+
+Mantidos os limites anteriores: amostra demonstrativa, sem teste autenticado contra o banco real, sem validação com leitor de tela, sem integração de campanhas/rascunhos/desenvolvimento e sem publicação. Pesquisa de UX fundamenta as escolhas; a aceitação da versão visual continua sendo de Rafael.
