@@ -20,3 +20,15 @@ For clear, small requests, work directly: do not create a planning document, sta
 Keep visual changes separate from Supabase product data. For any requested price or installment change, record and compare the exact 10x value. Respect explicit approval gates, and never ask again after approval for the same reviewed version.
 
 For the fast agent-side catalog lookup and data-edit route, follow [docs/supabase-catalog-access.md](docs/supabase-catalog-access.md). Use the connected Supabase integration; never commit credentials or service-role keys.
+
+## Mobi — conferência documental antes de entregar
+
+Decisão de Rafael em 09/11/2026: sempre retomar os documentos e conferir os detalhes antes de entregar uma etapa. A primeira prévia PM-01 foi rejeitada; não tratá-la como design homologado.
+
+- Antes de implementar e novamente antes de entregar, reabrir `MOBI_PAINEL_CONTROLE_ESPECIFICACAO.md` e `MOBI_ENGENHARIA_REVERSA_MADEIRAMADEIRA (1).md` (nome canônico no texto: `MOBI_ENGENHARIA_REVERSA_MADEIRAMADEIRA.md`). Na máquina de origem estão em `C:/Users/rafap/OneDrive/Área de Trabalho/LOJA MOBI/.md/`. Em outro ambiente, localizar os anexos equivalentes. Se indisponíveis, declarar a lacuna; não alegar leitura.
+- Conferir versão, módulo, IDs relacionados, dependências e aceite; manter uma matriz requisito → fonte → arquivo → evidência → pendência. Para PM-01, retomar [a conferência detalhada](docs/PM01_CONFERENCIA_DOCUMENTAL.md).
+- Os originais prevalecem sobre resumos. A cópia do manifesto em `docs/referencias/` é referência versionada, não fonte de status real ou seleção de trabalho.
+- Conferir separadamente aderência documental, aparência desktop/mobile e funcionamento. Compilação, testes e ausência de overflow não provam qualidade visual ou conformidade total.
+- Não confundir proposta com implementação, amostra com integração real, evidência da concorrente com status Mobi, nem URL de imagem com foto carregada.
+- Adaptar à identidade e à operação Mobi. Desenvolver localmente ou em branch isolada; usar rascunhos/dados de teste; apresentar versão, prévia, validação, limites e reversão.
+- Não publicar, promover deployment ou integrar em branch que publica produção sem Rafael aprovar explicitamente a versão apresentada. Aprovação anterior para a mesma versão não precisa ser repetida.

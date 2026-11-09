@@ -1,0 +1,4011 @@
+{
+  "spec_version": "1.1",
+  "date": "2026-11-06",
+  "timezone": "America/Sao_Paulo",
+  "source_site": "https://www.madeiramadeira.com.br/",
+  "purpose": "catalogo_de_aplicacao_mobi",
+  "implementation_done": false,
+  "publish_authorized": false,
+  "viewports_observed": [
+    {
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "evidence_codes": {
+    "V": "visual_parcial_ou_completa_conforme_ficha",
+    "T": "texto_dom",
+    "P": "proposta_mobi",
+    "B": "nao_verificado_barreira"
+  },
+  "pages": [
+    {
+      "id": "MM-P01",
+      "title": "Página inicial",
+      "source": "https://www.madeiramadeira.com.br/",
+      "groups": [
+        "GLOBAL",
+        "MENU",
+        "HOME",
+        "CARD"
+      ],
+      "coverage": "D/M",
+      "sequence": "Faixas de mensagem e canais, linha principal, CEP/menu, hero, atalhos de oferta, faixa de contagem, navegação por categoria quando carregada, termos e rodapé.",
+      "desktop": "Hero largo com setas e indicadores; linha de atalhos com título à esquerda e controles à direita.",
+      "mobile": "Hambúrguer, logo e três ícones na primeira linha; busca abaixo; CEP em linha própria; hero recomposto, atalhos horizontais.",
+      "limits": "Sequência inferior e vitrines podem depender de campanha e carregamento; não se comprovou ordem universal."
+    },
+    {
+      "id": "MM-P02",
+      "title": "Hub Móveis",
+      "source": "https://www.madeiramadeira.com.br/moveis",
+      "groups": [
+        "GLOBAL",
+        "MENU",
+        "DEPT"
+      ],
+      "coverage": "D/M",
+      "sequence": "Breadcrumb, título e apoio, grupos de ambientes, populares, orientação editorial, perguntas e rodapé.",
+      "desktop": "Seis círculos de ambientes por linha no primeiro grupo.",
+      "mobile": "Links em caixas de uma coluna com seta e mostrar mais.",
+      "limits": "Imagens de algumas categorias ficaram em resolução provisória; hierarquia e forma foram visíveis."
+    },
+    {
+      "id": "MM-P03",
+      "title": "Hub Sala de estar",
+      "source": "https://www.madeiramadeira.com.br/moveis/moveis-para-sala-de-estar",
+      "groups": [
+        "GLOBAL",
+        "MENU",
+        "DEPT"
+      ],
+      "coverage": "D/M",
+      "sequence": "Título, apoio, subcategorias, perguntas frequentes e rodapé.",
+      "desktop": "Miniaturas quadradas arredondadas em seis colunas, rótulos abaixo.",
+      "mobile": "Oito linhas de categoria inicialmente visíveis e mostrar mais.",
+      "limits": "Outros ambientes seguem família de hub; não foram todos abertos individualmente."
+    },
+    {
+      "id": "MM-P04",
+      "title": "Categoria Sofás",
+      "source": "https://www.madeiramadeira.com.br/moveis/moveis-para-sala-de-estar/sofas",
+      "groups": [
+        "GLOBAL",
+        "MENU",
+        "LIST",
+        "CARD"
+      ],
+      "coverage": "D/M",
+      "sequence": "Cabeçalho, filtros, breadcrumb, título/contagem/ordem, produtos, conteúdo orientativo e FAQ.",
+      "desktop": "Sidebar à esquerda, três colunas de produto e ordenação superior direita.",
+      "mobile": "Faixa horizontal de filtros e duas colunas de produto.",
+      "limits": "Não se validaram todas as combinações de filtros, páginas e ordenações."
+    },
+    {
+      "id": "MM-P05",
+      "title": "Busca com resultado",
+      "source": "https://www.madeiramadeira.com.br/busca/sofa",
+      "groups": [
+        "GLOBAL",
+        "MENU",
+        "SEARCH",
+        "LIST",
+        "CARD"
+      ],
+      "coverage": "D/M",
+      "sequence": "Busca global, resumo da consulta, filtros, ordenação e resultados.",
+      "desktop": "Layout de listagem com sidebar e três colunas.",
+      "mobile": "Cabeçalho compacto e duas colunas com filtros horizontais.",
+      "limits": "Quantidade de resultados variou entre consultas; não usar números observados como dado fixo."
+    },
+    {
+      "id": "MM-P06",
+      "title": "Busca sem resultado",
+      "source": "https://www.madeiramadeira.com.br/busca/zzmobi123456789",
+      "groups": [
+        "GLOBAL",
+        "SEARCH",
+        "LIST"
+      ],
+      "coverage": "M; D parcial",
+      "sequence": "Cabeçalho, estado vazio central e orientação de recuperação.",
+      "desktop": "Capture de desktop ainda em skeleton, sem validação do estado final.",
+      "mobile": "Ícone de aviso, mensagem central e orientação para trocar/remover filtros.",
+      "limits": "Desktop final pendente; não contar skeleton como estado aprovado."
+    },
+    {
+      "id": "MM-P07",
+      "title": "Produto com variantes",
+      "source": "https://www.madeiramadeira.com.br/sofa-retratil-e-reclinavel-1-50m-em-tecido-suede-cinza-614749007.html?seller=20943",
+      "groups": [
+        "GLOBAL",
+        "MENU",
+        "PROD",
+        "CARD"
+      ],
+      "coverage": "D/M",
+      "sequence": "Breadcrumb; galeria; título/vendedor/nota; cores e largura; preços; quantidade; adicionar/comprar; serviços; frete; resumo; vendedor; compre junto; descrição; tabela; recomendações; rodapé.",
+      "desktop": "Foto na esquerda com coluna de miniaturas, compra à direita; informações inferiores atravessam a página.",
+      "mobile": "Foto primeiro, informações em sequência, preço/compra fixos embaixo.",
+      "limits": "Uma família de sofá amostrada; não é prova de todos os templates de milhões de SKUs."
+    },
+    {
+      "id": "MM-P08",
+      "title": "Painel de pagamento",
+      "source": "P07: Mais opções de pagamento",
+      "groups": [
+        "GLOBAL",
+        "PROD"
+      ],
+      "coverage": "D/M",
+      "sequence": "Título, fechar, abas de meios, valor total, explicação e fechar inferior.",
+      "desktop": "Gaveta direita com overlay.",
+      "mobile": "Painel praticamente de tela inteira.",
+      "limits": "Pix visto; fluxos de emissão, pagamento e aprovação não foram executados."
+    },
+    {
+      "id": "MM-P09",
+      "title": "Confirmação ao adicionar",
+      "source": "P07: Adicionar ao carrinho",
+      "groups": [
+        "GLOBAL",
+        "CART"
+      ],
+      "coverage": "D; M proposto",
+      "sequence": "Sucesso, foto/nome, quantidade, remover, preços, CEP/serviços, continuar comprando, ir ao carrinho.",
+      "desktop": "Gaveta direita e fundo escurecido.",
+      "mobile": "Proposta de painel adaptado; estado mobile completo não isolado.",
+      "limits": "Somente um item temporário foi usado e removido no fim."
+    },
+    {
+      "id": "MM-P10",
+      "title": "Carrinho preenchido",
+      "source": "https://www.madeiramadeira.com.br/carrinho",
+      "groups": [
+        "GLOBAL",
+        "CART"
+      ],
+      "coverage": "D/M",
+      "sequence": "Título/contador, ações, itens por entrega, quantidade/remover, preço, resumo, cupom, desconto Pix, frete pendente, total e continuar.",
+      "desktop": "Itens à esquerda e resumo à direita.",
+      "mobile": "Itens e resumo empilhados, ações extras em reticências.",
+      "limits": "Continuar levou a identificação; checkout após login não foi acessado."
+    },
+    {
+      "id": "MM-P11",
+      "title": "Carrinho vazio",
+      "source": "https://www.madeiramadeira.com.br/carrinho",
+      "groups": [
+        "GLOBAL",
+        "CART"
+      ],
+      "coverage": "D; M proposto",
+      "sequence": "Título, ícone, mensagem e conferir ofertas.",
+      "desktop": "Bloco central amplo, sem resumo anterior.",
+      "mobile": "Adaptar o mesmo estado em largura única; visual final mobile não capturado.",
+      "limits": "Estado final desktop confirmado após remover item."
+    },
+    {
+      "id": "MM-P12",
+      "title": "Identificação",
+      "source": "https://www.madeiramadeira.com.br/verificar",
+      "groups": [
+        "ACCOUNT"
+      ],
+      "coverage": "D/M",
+      "sequence": "Cabeçalho reduzido, e-mail, continuar, recuperação, Google, Apple, cadastro e aviso do provedor.",
+      "desktop": "Formulário central estreito; busca no cabeçalho.",
+      "mobile": "Logo e compra segura; formulário quase na largura toda.",
+      "limits": "Sem inserir credenciais nem testar autenticação, cadastro ou recuperação completos."
+    },
+    {
+      "id": "MM-P13",
+      "title": "Favoritos autenticados",
+      "source": "https://www.madeiramadeira.com.br/lista-de-favoritos",
+      "groups": [
+        "ACCOUNT",
+        "CARD"
+      ],
+      "coverage": "B",
+      "sequence": "Rota redireciona à identificação.",
+      "desktop": "Não observado além da identificação.",
+      "mobile": "Não observado além da identificação.",
+      "limits": "Não há evidência de layout interno; versão local Mobi é proposta."
+    },
+    {
+      "id": "MM-P14",
+      "title": "Pedidos/área do cliente",
+      "source": "https://www.madeiramadeira.com.br/verificar?url=/minha-conta/pedidos",
+      "groups": [
+        "ACCOUNT",
+        "CHECK"
+      ],
+      "coverage": "B",
+      "sequence": "Link público com redirecionamento para identificação.",
+      "desktop": "Não observado além da barreira.",
+      "mobile": "Não observado além da barreira.",
+      "limits": "Pedidos, endereços, carteira e checkout autenticados permanecem pendentes."
+    },
+    {
+      "id": "MM-P15",
+      "title": "Cupons",
+      "source": "https://www.madeiramadeira.com.br/landing/cupons",
+      "groups": [
+        "GLOBAL",
+        "COUPON"
+      ],
+      "coverage": "D/M",
+      "sequence": "Banner; grade de bilhetes; benefício, condição, validade, código, copiar e produtos elegíveis; rodapé.",
+      "desktop": "Três bilhetes por linha.",
+      "mobile": "Um por linha.",
+      "limits": "Datas variaram entre extração e sessão; validade deve vir da regra atual, não do texto copiado."
+    },
+    {
+      "id": "MM-P16",
+      "title": "Ofertas do dia",
+      "source": "https://www.madeiramadeira.com.br/ofertas-do-dia",
+      "groups": [
+        "GLOBAL",
+        "LANDING",
+        "CARD"
+      ],
+      "coverage": "D/M",
+      "sequence": "Banner com relógio, produtos selecionados e rodapé.",
+      "desktop": "Quatro colunas sem sidebar; relógio no lado direito do banner.",
+      "mobile": "Dois produtos por linha; relógio abaixo da chamada na arte.",
+      "limits": "Timer zerado observado; não reproduzir urgência inválida."
+    },
+    {
+      "id": "MM-P17",
+      "title": "Campanha Black Friday",
+      "source": "https://www.madeiramadeira.com.br/black-friday",
+      "groups": [
+        "GLOBAL",
+        "LANDING",
+        "CARD",
+        "HELP"
+      ],
+      "coverage": "D/M",
+      "sequence": "Hero, apresentação, atalhos, ofertas, conteúdo e FAQ.",
+      "desktop": "Hero panorâmico e quatro atalhos em linha.",
+      "mobile": "Hero vertical alto e conteúdo sequencial.",
+      "limits": "Conteúdo sazonal de novembro de 2026; não assumir identidade permanente da loja."
+    },
+    {
+      "id": "MM-P18",
+      "title": "Hotsite promocional",
+      "source": "https://www.madeiramadeira.com.br/hotsite/esquenta-dd-nov",
+      "groups": [
+        "GLOBAL",
+        "LANDING",
+        "LIST",
+        "CARD"
+      ],
+      "coverage": "T",
+      "sequence": "Destino de campanha com seleção de produtos.",
+      "desktop": "Composição visual específica não inspecionada.",
+      "mobile": "Composição visual específica não inspecionada.",
+      "limits": "Página textual coletada; aplicar família de campanha como proposta até validar visual específico."
+    },
+    {
+      "id": "MM-P19",
+      "title": "Serviços",
+      "source": "https://www.madeiramadeira.com.br/servicos",
+      "groups": [
+        "GLOBAL",
+        "SERVICES"
+      ],
+      "coverage": "D parcial/M",
+      "sequence": "Cabeçalho de serviços, entrada para acompanhar contratação, banner e cards populares.",
+      "desktop": "Captura inicial ficou em carregamento; estrutura textual disponível.",
+      "mobile": "Banner com profissional e cards em trilho; convite para entrar acima.",
+      "limits": "Detalhe de contratação e agenda não testados."
+    },
+    {
+      "id": "MM-P20",
+      "title": "Lojas físicas",
+      "source": "https://www.madeiramadeira.com.br/lojas",
+      "groups": [
+        "GLOBAL",
+        "STORES"
+      ],
+      "coverage": "D/M",
+      "sequence": "Título, busca de localização, instrução, cartões de lojas, conteúdo institucional e rodapé.",
+      "desktop": "Três colunas de cartões em área com rolagem interna.",
+      "mobile": "Cartões em trilho horizontal, primeiro e parte do próximo.",
+      "limits": "Não existe equivalência automática com loja física na Mobi."
+    },
+    {
+      "id": "MM-P21",
+      "title": "Detalhe de loja",
+      "source": "https://www.madeiramadeira.com.br/lojas/sao-paulo-sao-paulo-pinheiros",
+      "groups": [
+        "GLOBAL",
+        "STORES"
+      ],
+      "coverage": "D/M",
+      "sequence": "Breadcrumb, cidade, status, título, endereço, como chegar, horários, equipe, contato e meios de pagamento.",
+      "desktop": "CTA de como chegar à direita do título; horários em faixa.",
+      "mobile": "Título e botões empilhados; barra de contato fixa inferior.",
+      "limits": "Mapa externo e conversa não foram enviados/acionados para comunicar."
+    },
+    {
+      "id": "MM-P22",
+      "title": "Sobre e confiança",
+      "source": "https://www.madeiramadeira.com.br/landing/confiavel",
+      "groups": [
+        "GLOBAL",
+        "LANDING"
+      ],
+      "coverage": "D/M",
+      "sequence": "Sobre nós, confiança, benefícios, imprensa e rodapé.",
+      "desktop": "Faixa textual de destaque; bloco imagem/texto em duas colunas.",
+      "mobile": "Texto e imagem em sequência.",
+      "limits": "Algumas imagens estavam carregando; não deduzir conteúdo ausente."
+    },
+    {
+      "id": "MM-P23",
+      "title": "Marca própria",
+      "source": "https://www.madeiramadeira.com.br/landing/madeira-originals",
+      "groups": [
+        "GLOBAL",
+        "LANDING"
+      ],
+      "coverage": "D/M parcial",
+      "sequence": "Hero, apresentação, diferenciais, marcas, lançamentos, qualidade e produtos.",
+      "desktop": "Hero panorâmico e blocos imagem/texto.",
+      "mobile": "Coluna; hero mobile e mídias ficaram parcialmente carregados.",
+      "limits": "Mobi é revendedora; usar curadoria sem alegar fabricação própria."
+    },
+    {
+      "id": "MM-P24",
+      "title": "Planejados",
+      "source": "https://www.madeiramadeira.com.br/landing/moveis-planejados",
+      "groups": [
+        "GLOBAL",
+        "LANDING",
+        "HELP"
+      ],
+      "coverage": "D/M",
+      "sequence": "Hero, condições, contato consultivo, diferenciais, projetos por ambiente e FAQ.",
+      "desktop": "Faixa de contato horizontal com botão à direita.",
+      "mobile": "Cartão com texto e CTA abaixo.",
+      "limits": "Oferta de projeto/instalação não representa serviço já existente na Mobi."
+    },
+    {
+      "id": "MM-P25",
+      "title": "Para empresas",
+      "source": "https://www.madeiramadeira.com.br/landing/empresas",
+      "groups": [
+        "GLOBAL",
+        "LANDING"
+      ],
+      "coverage": "D/M parcial",
+      "sequence": "Hero de orçamento, benefícios, categorias, processo e contato.",
+      "desktop": "Hero e benefícios em duas colunas.",
+      "mobile": "Coluna única; mídia inicial ficou parcial.",
+      "limits": "Formulário externo e orçamento não enviados."
+    },
+    {
+      "id": "MM-P26",
+      "title": "Arquitetos e designers",
+      "source": "https://www.madeiramadeira.com.br/landing/madeira-decora",
+      "groups": [
+        "GLOBAL",
+        "LANDING"
+      ],
+      "coverage": "D/M",
+      "sequence": "Hero, proposta do programa, CTA e benefícios.",
+      "desktop": "Hero largo, cartão central.",
+      "mobile": "Arte compacta e cartão empilhado.",
+      "limits": "Não criar automaticamente programa de comissão/cupom Mobi."
+    },
+    {
+      "id": "MM-P27",
+      "title": "Venda no marketplace",
+      "source": "https://www.madeiramadeira.com.br/marketplace",
+      "groups": [
+        "GLOBAL",
+        "LANDING",
+        "HELP"
+      ],
+      "coverage": "D/M",
+      "sequence": "Hero, começar/já tenho conta, vantagens, passos, categorias, integrações e FAQ.",
+      "desktop": "Texto à esquerda, mídia à direita, benefícios abaixo.",
+      "mobile": "Mídia, texto e CTAs em sequência.",
+      "limits": "Painel de vendedor e onboarding externos fora da inspeção."
+    },
+    {
+      "id": "MM-P28",
+      "title": "Cashback público",
+      "source": "https://www.madeiramadeira.com.br/landing/cashback-madeira",
+      "groups": [
+        "GLOBAL",
+        "LANDING",
+        "ACCOUNT"
+      ],
+      "coverage": "D/M",
+      "sequence": "Hero, funcionamento, instruções, termos e dúvidas.",
+      "desktop": "Hero largo e conteúdo central.",
+      "mobile": "Hero compacto e explicação em coluna.",
+      "limits": "Carteira autenticada não observada; regras não devem ser transplantadas para Mobi."
+    },
+    {
+      "id": "MM-P29",
+      "title": "Aplicativo",
+      "source": "https://www.madeiramadeira.com.br/landing/baixe-o-app",
+      "groups": [
+        "GLOBAL",
+        "LANDING"
+      ],
+      "coverage": "D/M",
+      "sequence": "Hero, benefícios, ofertas e links de download.",
+      "desktop": "QR code em destaque no hero.",
+      "mobile": "Arte própria com chamada para baixar.",
+      "limits": "Aplicativo Mobi não foi criado nem solicitado nesta tarefa."
+    },
+    {
+      "id": "MM-P30",
+      "title": "Carreiras",
+      "source": "https://www.madeiramadeira.com.br/landing/carreiras",
+      "groups": [
+        "LANDING"
+      ],
+      "coverage": "D/M",
+      "sequence": "Retorno à loja, marca carreiras, perfil, navegação própria, banners, apresentação, grupo e depoimentos.",
+      "desktop": "Fundo claro, menu horizontal largo.",
+      "mobile": "Navegação horizontal rolável e arte vertical.",
+      "limits": "Alguns módulos inferiores estavam em skeleton; vagas externas não percorridas."
+    },
+    {
+      "id": "MM-P31",
+      "title": "Responsabilidade social",
+      "source": "https://www.madeiramadeira.com.br/landing/responsabilidade-social",
+      "groups": [
+        "GLOBAL",
+        "LANDING"
+      ],
+      "coverage": "D/M",
+      "sequence": "Hero, instituições, vídeos e retorno/rodapé.",
+      "desktop": "Hero dividido em texto/imagem.",
+      "mobile": "Arte recomposta e conteúdo em coluna.",
+      "limits": "Vídeos e todos os módulos inferiores não foram reproduzidos."
+    },
+    {
+      "id": "MM-P32",
+      "title": "Guia/mapa HTML",
+      "source": "https://www.madeiramadeira.com.br/mapa-do-site",
+      "groups": [
+        "GLOBAL",
+        "LANDING"
+      ],
+      "coverage": "D/M",
+      "sequence": "Título e grupos de links por ambiente.",
+      "desktop": "Quatro colunas no trecho superior.",
+      "mobile": "Uma coluna extensa.",
+      "limits": "Mapa público cobre categorias, não todas as páginas do domínio."
+    },
+    {
+      "id": "MM-P33",
+      "title": "Privacidade",
+      "source": "https://www.madeiramadeira.com.br/termos-e-privacidade",
+      "groups": [
+        "GLOBAL",
+        "LANDING"
+      ],
+      "coverage": "D parcial/M",
+      "sequence": "Título, introdução e tópicos numerados expansíveis.",
+      "desktop": "Captura inicial parcial; texto público coletado.",
+      "mobile": "Acordeões numerados e leitura em coluna.",
+      "limits": "Não foi realizada análise jurídica nem teste de todos os consentimentos."
+    },
+    {
+      "id": "MM-P34",
+      "title": "Termos",
+      "source": "https://www.madeiramadeira.com.br/termos",
+      "groups": [
+        "GLOBAL",
+        "LANDING"
+      ],
+      "coverage": "T",
+      "sequence": "Conteúdo público de condições.",
+      "desktop": "Visual não inspecionado.",
+      "mobile": "Visual não inspecionado.",
+      "limits": "Somente estrutura textual coletada; não copiar termos comerciais/jurídicos."
+    },
+    {
+      "id": "MM-P35",
+      "title": "Central de ajuda",
+      "source": "https://ajuda.madeiramadeira.com.br/hc/pt-br",
+      "groups": [
+        "HELP"
+      ],
+      "coverage": "D/M",
+      "sequence": "Cabeçalho próprio, hero/busca, voltar à loja, quatro atalhos, temas e contato.",
+      "desktop": "Quatro cartões em linha, fundo claro.",
+      "mobile": "Cartões empilhados com ícone lateral.",
+      "limits": "Portal em subdomínio distinto; não confundir com checkout da loja."
+    },
+    {
+      "id": "MM-P36",
+      "title": "Artigo de ajuda",
+      "source": "https://ajuda.madeiramadeira.com.br/hc/pt-br/articles/36477130382619-Acompanhar-meu-pedido",
+      "groups": [
+        "HELP"
+      ],
+      "coverage": "D/M",
+      "sequence": "Logo, busca, artigos da seção, título/data, conteúdo, utilidade e atendimento.",
+      "desktop": "Lista lateral à esquerda e artigo à direita.",
+      "mobile": "Navegação da seção antes do artigo.",
+      "limits": "Não se votou nem abriu solicitação de atendimento."
+    },
+    {
+      "id": "MM-P37",
+      "title": "Blog",
+      "source": "https://www.madeiramadeira.com.br/central-de-dicas",
+      "groups": [
+        "GLOBAL",
+        "CONTENT"
+      ],
+      "coverage": "D/M",
+      "sequence": "Título, apoio, busca própria, abas temáticas, destaque e listagem de conteúdo.",
+      "desktop": "Texto do destaque à esquerda e imagem à direita.",
+      "mobile": "Busca e abas roláveis, texto antes da imagem.",
+      "limits": "Link do destaque com /artigos/artigos/ retornou 404 na extração."
+    },
+    {
+      "id": "MM-P38",
+      "title": "Artigo editorial e 404",
+      "source": "https://www.madeiramadeira.com.br/central-de-dicas/artigos/artigos/varanda-integrada-sala",
+      "groups": [
+        "CONTENT"
+      ],
+      "coverage": "T/404",
+      "sequence": "Tentativa do link coletado resultou em página de conteúdo indisponível.",
+      "desktop": "Template editorial final não confirmado.",
+      "mobile": "Template editorial final não confirmado.",
+      "limits": "Não corrigir URL por adivinhação e chamar isso de página inspecionada."
+    }
+  ],
+  "features": [
+    {
+      "id": "MM-GLOBAL-01",
+      "group": "GLOBAL",
+      "title": "Faixa de comunicação rotativa",
+      "evidence": "V",
+      "desktop": "Faixa acima do cabeçalho; mensagem central e setas nas extremidades do bloco.",
+      "mobile": "Mensagem em até duas linhas, setas laterais; não reduzir o texto até ficar ilegível.",
+      "behavior": "Trocar mensagem por controles; rotação automática é comportamento a confirmar, não requisito obrigatório.",
+      "data": "Mensagens, destino opcional, vigência, ordem.",
+      "acceptance": "Sem mensagem ativa, remover a faixa e o espaço reservado; teclado consegue acionar setas.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P07",
+        "MM-P10"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-GLOBAL-02",
+      "group": "GLOBAL",
+      "title": "Barra de canais",
+      "evidence": "V",
+      "desktop": "Linha horizontal com ícone e texto para WhatsApp, telefone, aplicativo e lojas.",
+      "mobile": "Linha compacta com WhatsApp, telefone e lojas; aplicativo não aparece nessa faixa na amostra.",
+      "behavior": "Cada atalho abre seu destino próprio; telefone usa ligação, WhatsApp usa conversa.",
+      "data": "Canais reais da Mobi e horários; esconder canais inexistentes.",
+      "acceptance": "Todos os destinos funcionam e não levam aos canais da concorrente.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P07",
+        "MM-P10"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-GLOBAL-03",
+      "group": "GLOBAL",
+      "title": "Logo e retorno ao início",
+      "evidence": "V",
+      "desktop": "Logo à esquerda da linha principal, alinhada verticalmente à busca.",
+      "mobile": "Hambúrguer à esquerda, logo ao lado, ícones à direita.",
+      "behavior": "Clique retorna ao início; manter proporção do arquivo oficial.",
+      "data": "Arquivo oficial Mobi já existente no projeto.",
+      "acceptance": "Logo não é reescrita com fonte nem recebe assinatura adicional.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P07",
+        "MM-P10"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-GLOBAL-04",
+      "group": "GLOBAL",
+      "title": "Busca principal",
+      "evidence": "V",
+      "desktop": "Campo branco largo e arredondado no centro; lupa no início.",
+      "mobile": "Busca ocupa uma segunda linha inteira abaixo de logo e ícones.",
+      "behavior": "Enter e botão de lupa submetem o mesmo termo; limpar texto deve funcionar.",
+      "data": "Termo e serviço de busca existente.",
+      "acceptance": "Campo acessível, sem corte em 360 px, e retorno do resultado com o termo buscado.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P07",
+        "MM-P10"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-GLOBAL-05",
+      "group": "GLOBAL",
+      "title": "Conta do cliente",
+      "evidence": "V",
+      "desktop": "Ícone de usuário e rótulo abaixo, à direita da busca.",
+      "mobile": "Ícone de usuário sem rótulo persistente no topo.",
+      "behavior": "Leva à identificação; navegação de login foi observada, sessão autenticada não.",
+      "data": "Serviço de autenticação, se esta funcionalidade for selecionada.",
+      "acceptance": "Não mostrar botão funcional de conta sem existir destino implementado.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P07",
+        "MM-P10"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-GLOBAL-06",
+      "group": "GLOBAL",
+      "title": "Favoritos no cabeçalho",
+      "evidence": "V",
+      "desktop": "Coração entre conta e carrinho com rótulo.",
+      "mobile": "Coração entre usuário e carrinho, sem texto visível.",
+      "behavior": "Na referência, a rota de favoritos redireciona ao login. Versão Mobi local é uma adaptação proposta.",
+      "data": "IDs dos produtos; escolher persistência local ou conta.",
+      "acceptance": "Adicionar e remover reflete na lista; não exigir conta por acidente se o modo escolhido for local.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P07",
+        "MM-P10"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-GLOBAL-07",
+      "group": "GLOBAL",
+      "title": "Carrinho e contador",
+      "evidence": "V",
+      "desktop": "Carrinho à direita com rótulo e badge no canto do ícone.",
+      "mobile": "Ícone com badge no topo; área de toque independente do coração.",
+      "behavior": "Contador apareceu após inclusão; escolher e documentar soma das quantidades para a Mobi.",
+      "data": "Itens e quantidades do carrinho.",
+      "acceptance": "Badge nunca diverge do estado do carrinho após adicionar, remover e recarregar.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P07",
+        "MM-P10"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-GLOBAL-08",
+      "group": "GLOBAL",
+      "title": "Faixa de localização",
+      "evidence": "V",
+      "desktop": "CEP à esquerda da terceira linha, navegação comercial ao centro e ajuda à direita.",
+      "mobile": "Linha própria abaixo da busca com pin à esquerda e chevron à direita.",
+      "behavior": "Abre consulta de localização; não pressupor permissão de GPS.",
+      "data": "CEP opcional, cidade, resultado de atendimento.",
+      "acceptance": "Sem CEP salvo, mostrar convite; erro não apaga carrinho nem troca produto.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P07",
+        "MM-P10"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-GLOBAL-09",
+      "group": "GLOBAL",
+      "title": "Cabeçalho durante rolagem",
+      "evidence": "V",
+      "desktop": "Na página de produto, cabeçalho compacto apareceu após deslocamento para controles inferiores.",
+      "mobile": "Faixa de busca e ícones permaneceu disponível na amostra deslocada.",
+      "behavior": "Usar sticky com espaço reservado; limiar exato da referência não foi medido.",
+      "data": "Altura real do cabeçalho e posição da página.",
+      "acceptance": "Nenhum título ancorado fica oculto sob o cabeçalho; não haver saltos na troca.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P07",
+        "MM-P10"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-GLOBAL-10",
+      "group": "GLOBAL",
+      "title": "Rodapé informativo",
+      "evidence": "V",
+      "desktop": "Grupos Institucional, Como trabalhamos, Guia de navegação, Atendimento e contatos.",
+      "mobile": "Mesmo conteúdo em sequência vertical; colunas do desktop não devem ser espremidas.",
+      "behavior": "Links para páginas internas e canais; colapsar grupos no celular é proposta, não fato confirmado.",
+      "data": "Links e contatos editáveis.",
+      "acceptance": "Remover links sem página; texto e destinos coerentes com a Mobi.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P07",
+        "MM-P10"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-GLOBAL-11",
+      "group": "GLOBAL",
+      "title": "Pagamentos e confiança no rodapé",
+      "evidence": "V",
+      "desktop": "Blocos de meios de pagamento, certificados e compra segura abaixo dos links.",
+      "mobile": "Quebra de linha sem minúsculos ícones espremidos.",
+      "behavior": "Elementos que forem links precisam de destino; certificados somente se reais.",
+      "data": "Meios aceitos, dados da empresa e selos autorizados.",
+      "acceptance": "Não exibir certificado ou bandeira como garantia se a loja não a possui.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P07",
+        "MM-P10"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-GLOBAL-12",
+      "group": "GLOBAL",
+      "title": "WhatsApp flutuante",
+      "evidence": "V",
+      "desktop": "Cápsula verde no canto inferior direito com ícone e texto Chat.",
+      "mobile": "Botão circular verde no canto inferior direito; também visto sobre a página de produto.",
+      "behavior": "Abre atendimento; Mobi deve levar produto e contexto quando aplicável.",
+      "data": "Número público da Mobi e contexto permitido.",
+      "acceptance": "Botão não cobre comprar, continuar, frete, consentimento ou texto de política.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P07",
+        "MM-P10"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-GLOBAL-13",
+      "group": "GLOBAL",
+      "title": "Aviso de cookies",
+      "evidence": "V",
+      "desktop": "Barra escura inferior com texto à esquerda e ação à direita na visita inicial.",
+      "mobile": "Adaptar em bloco empilhado com botão visível; disposição mobile específica não foi isolada.",
+      "behavior": "Dispensar aviso e persistir escolha conforme política adotada.",
+      "data": "Versão do aviso e configuração de cookies real.",
+      "acceptance": "Dispensar não reabre imediatamente; não criar texto jurídico copiado.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P07",
+        "MM-P10"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-GLOBAL-14",
+      "group": "GLOBAL",
+      "title": "Camadas e sobreposições",
+      "evidence": "V",
+      "desktop": "Painéis de pagamento e carrinho sobre fundo escurecido.",
+      "mobile": "Painel de pagamento usa praticamente toda a tela.",
+      "behavior": "Proposta Mobi: Escape, fechar, restaurar foco e bloquear rolagem do fundo.",
+      "data": "Estado de cada painel e elemento que o abriu.",
+      "acceptance": "Somente uma camada principal aberta; foco não escapa do diálogo.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P07",
+        "MM-P10"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-MENU-01",
+      "group": "MENU",
+      "title": "Menu de departamentos no desktop",
+      "evidence": "V",
+      "desktop": "Menu aberto abaixo de Departamentos, sobre fundo escurecido: Móveis, Móveis Planejados, Reforma e Construção e Outros departamentos, com chevrons nas entradas hierárquicas.",
+      "mobile": "Substituído por menu acionado pelo hambúrguer.",
+      "behavior": "A primeira camada aberta foi vista ao final. As camadas internas completas e o gatilho hover versus clique não foram isolados; implementar clique e teclado na Mobi.",
+      "data": "Árvore de categorias, URLs, ordem e visibilidade.",
+      "acceptance": "Cada folha leva à categoria correta; categorias sem produtos ficam ocultas ou explicadas.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P02",
+        "MM-P03"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-MENU-02",
+      "group": "MENU",
+      "title": "Gaveta principal no celular",
+      "evidence": "V",
+      "desktop": "Recurso de navegação compacta do cabeçalho quando aplicável.",
+      "mobile": "Gaveta lateral escura: boas-vindas, entrar/criar conta, início, pedidos, atendimentos, departamentos, serviços e ajuda.",
+      "behavior": "Fechar por X; Mobi deve incluir overlay e retorno de foco. Não copiar conta e serviços sem escolher esses módulos.",
+      "data": "Itens de menu e módulos habilitados.",
+      "acceptance": "Menu não desloca horizontalmente a página; fechar retorna ao mesmo scroll.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P02",
+        "MM-P03"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-MENU-03",
+      "group": "MENU",
+      "title": "Grupos e separadores do menu",
+      "evidence": "V",
+      "desktop": "Itens agrupados por propósito.",
+      "mobile": "Ícone à esquerda, texto ao centro e chevron à direita; separadores entre grupos.",
+      "behavior": "Chevron indica navegação ou expansão, nunca ação sem efeito.",
+      "data": "Tipo de item: link, submenu ou ação.",
+      "acceptance": "Ícone e texto fazem parte da mesma área de toque, sem dois cliques conflitantes.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P02",
+        "MM-P03"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-MENU-04",
+      "group": "MENU",
+      "title": "Navegação por ambiente",
+      "evidence": "V",
+      "desktop": "Quarto, sala, cozinha, escritório e outros departamentos.",
+      "mobile": "Lista simples nos hubs e acesso pela gaveta.",
+      "behavior": "Ambiente contém tipos de produto; não duplicar produto no cadastro para pertencer a dois ambientes.",
+      "data": "Categorias e associações com produtos.",
+      "acceptance": "Voltar de produto preserva origem da categoria e filtros.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P02",
+        "MM-P03"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-MENU-05",
+      "group": "MENU",
+      "title": "Breadcrumb",
+      "evidence": "V",
+      "desktop": "Ícone de casa, separadores, ancestrais e item atual acima do conteúdo.",
+      "mobile": "Na loja física, trilha comprimida com reticências foi observada.",
+      "behavior": "Ancestrais são links; item atual não deve abrir a própria página de novo.",
+      "data": "Hierarquia canônica da categoria.",
+      "acceptance": "Não gerar duas trilhas contraditórias para uma mesma navegação.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P02",
+        "MM-P03"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-HOME-01",
+      "group": "HOME",
+      "title": "Banner principal responsivo",
+      "evidence": "V",
+      "desktop": "Faixa larga logo depois da navegação; na amostra inicial ocupa aproximadamente 300 px de altura em 1440 px.",
+      "mobile": "Arte recomposta verticalmente, próxima de um quadrado; não é simples redução do banner largo.",
+      "behavior": "Cada slide pode ter destino; imagens desktop e mobile independentes.",
+      "data": "Imagem desktop, imagem mobile, texto alternativo, URL, período.",
+      "acceptance": "A 390 px texto e produto ficam visíveis; banner sem versão mobile não é cortado de forma destrutiva.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-HOME-02",
+      "group": "HOME",
+      "title": "Navegação do carrossel",
+      "evidence": "V",
+      "desktop": "Setas em botões circulares nas laterais e indicadores em traços abaixo.",
+      "mobile": "Indicadores em traços, com ativo laranja; gesto de swipe precisa ser confirmado na referência.",
+      "behavior": "Mobi: botões anterior/próximo, indicador ativo, pausa se houver autoplay e respeito a movimento reduzido.",
+      "data": "Índice ativo e slides habilitados.",
+      "acceptance": "Com um slide, ocultar controles; ao mudar largura não duplicar banners.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-HOME-03",
+      "group": "HOME",
+      "title": "Atalhos promocionais",
+      "evidence": "V",
+      "desktop": "Linha de cartões quadrados, vários visíveis, sob título à esquerda; setas de seção à direita.",
+      "mobile": "Cartões pequenos em trilho horizontal, aproximadamente quatro e parte do seguinte visíveis.",
+      "behavior": "Card inteiro leva à seleção; rolagem do trilho não deve rolar toda a página na horizontal.",
+      "data": "Imagem, rótulo curto, destino e ordem.",
+      "acceptance": "Sem destino válido, item não aparece; foco visível em todos os atalhos.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-HOME-04",
+      "group": "HOME",
+      "title": "Faixa de oferta com contagem",
+      "evidence": "V",
+      "desktop": "Link promocional com título, apoio e relógio em blocos.",
+      "mobile": "Faixa vertical compacta abaixo dos atalhos.",
+      "behavior": "Contagem depende de data final real; não reiniciar em cada visita.",
+      "data": "Fim da campanha com fuso America/Sao_Paulo.",
+      "acceptance": "Ao expirar, ocultar ou mostrar encerrada; nunca número negativo.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-HOME-05",
+      "group": "HOME",
+      "title": "Categorias e ambientes da home",
+      "evidence": "T",
+      "desktop": "Seção de navegação por categoria/ambiente apareceu no conteúdo carregado; ordem varia com carregamento.",
+      "mobile": "Preferir trilho de cards com rótulo abaixo; é regra proposta Mobi, não medição da seção mobile.",
+      "behavior": "Cada item leva ao hub ou listagem, sem inventar produtos para preencher.",
+      "data": "Categorias com imagens reais e link.",
+      "acceptance": "Não renderizar se não há categorias válidas; reserva de altura evita salto de carregamento.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-HOME-06",
+      "group": "HOME",
+      "title": "Vitrines de produtos",
+      "evidence": "T",
+      "desktop": "A presença de vitrines varia com carregamento e campanha; não foi confirmada uma sequência universal da home.",
+      "mobile": "Mobi: trilhos ou grade de duas colunas definidos por seção.",
+      "behavior": "Selecionar produtos por lista editorial; algoritmo de personalização da referência não é conhecido.",
+      "data": "Lista de IDs, título, limite e regra de ordenação.",
+      "acceptance": "Destaques não duplicam o mesmo item na mesma vitrine e não mostram item inativo.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-HOME-07",
+      "group": "HOME",
+      "title": "Termos da campanha",
+      "evidence": "V",
+      "desktop": "Link de regras próximo ao fim do conteúdo promocional.",
+      "mobile": "Texto deve permanecer legível com quebra de linha.",
+      "behavior": "Abre regras da campanha específica.",
+      "data": "Texto e URL dos termos Mobi.",
+      "acceptance": "Frete e desconto exibidos possuem condições acessíveis antes da compra.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-DEPT-01",
+      "group": "DEPT",
+      "title": "Hub de departamentos",
+      "evidence": "V",
+      "desktop": "Título e apoio centralizados; círculos com fotografias em grade de seis colunas na amostra Móveis.",
+      "mobile": "Lista de links em caixas de uma coluna, com seta à direita.",
+      "behavior": "Não confundir hub com listagem de produto; abrir categoria selecionada.",
+      "data": "Título, descrição curta e filhos da categoria.",
+      "acceptance": "Desktop usa imagens; mobile pode usar versão textual observada sem baixar todas as imagens grandes.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P02",
+        "MM-P03"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-DEPT-02",
+      "group": "DEPT",
+      "title": "Hub por ambiente",
+      "evidence": "V",
+      "desktop": "Sala de estar usa miniaturas quadradas arredondadas em grade de seis colunas, em vez dos círculos do hub geral.",
+      "mobile": "Lista vertical de subcategorias, oito inicialmente visíveis e Mostrar mais categorias.",
+      "behavior": "Expandir sem perder scroll; quantidade inicial é configurável na Mobi.",
+      "data": "Subcategorias e imagem por item.",
+      "acceptance": "Categorias adicionais abrem e fecham com rótulo correto.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P02",
+        "MM-P03"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-DEPT-03",
+      "group": "DEPT",
+      "title": "Conteúdo editorial e perguntas na categoria",
+      "evidence": "T",
+      "desktop": "Texto orientativo e perguntas frequentes após navegação/produtos.",
+      "mobile": "Empilhar; acordeões propostos para economizar altura.",
+      "behavior": "Não esconder links de compra atrás de texto extenso.",
+      "data": "Perguntas e respostas próprias, revisadas.",
+      "acceptance": "Título principal único; perguntas relacionadas à categoria correta.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P02",
+        "MM-P03"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-DEPT-04",
+      "group": "DEPT",
+      "title": "Seleção de populares",
+      "evidence": "T",
+      "desktop": "No hub Móveis existe seção de populares com tipos como guarda-roupa e escrivaninha.",
+      "mobile": "Controles de seleção compactos sob a lista de ambientes.",
+      "behavior": "Mobi pode trocar conjunto editorial por aba, sem criar página nova para cada clique.",
+      "data": "Grupos e listas de produtos por aba.",
+      "acceptance": "Aba selecionada tem estado acessível; lista vazia apresenta recuperação.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P02",
+        "MM-P03"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-LIST-01",
+      "group": "LIST",
+      "title": "Coluna de filtros",
+      "evidence": "V",
+      "desktop": "Coluna de aproximadamente 306 px à esquerda; resultados começam em torno de x=365 px no viewport 1440.",
+      "mobile": "Coluna lateral removida; controles compactos em faixa horizontal acima da grade.",
+      "behavior": "Mobi usa mesma consulta para os dois formatos; não duplicar estado.",
+      "data": "Esquema de filtros e valores disponíveis.",
+      "acceptance": "Trocar viewport preserva filtros; barra não força overflow global.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P04",
+        "MM-P05"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-LIST-02",
+      "group": "LIST",
+      "title": "Título e quantidade",
+      "evidence": "V",
+      "desktop": "Breadcrumb acima; título e quantidade à esquerda da linha de ordenação.",
+      "mobile": "Contagem e título no topo não foram visualmente consistentes entre carregamentos; Mobi deve manter resumo visível.",
+      "behavior": "Quantidade representa a consulta filtrada, não tamanho total bruto do catálogo.",
+      "data": "Total da consulta e título da categoria.",
+      "acceptance": "Após filtrar, contagem e produtos refletem a mesma versão da resposta.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P04",
+        "MM-P05"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-LIST-03",
+      "group": "LIST",
+      "title": "Ordenação",
+      "evidence": "V",
+      "desktop": "Controle Mais relevantes à direita, alinhado com título.",
+      "mobile": "Acesso compacto no painel/barra é proposta de Mobi; seletor mobile final não foi isolado.",
+      "behavior": "Definir menor preço, maior preço, novidades e destaques; não afirmar vendas sem dados.",
+      "data": "Critério escolhido e campo de preço usado.",
+      "acceptance": "Menor preço ordena numericamente; desempate estável por identificador.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P04",
+        "MM-P05"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-LIST-04",
+      "group": "LIST",
+      "title": "Grade responsiva",
+      "evidence": "V",
+      "desktop": "Três colunas de produtos na categoria com filtros laterais; gap visual próximo de 16 px.",
+      "mobile": "Duas colunas na categoria e busca, com cards próximos e separação discreta.",
+      "behavior": "Grade de ofertas sem sidebar tem quatro colunas no desktop observado.",
+      "data": "Largura disponível e template da página.",
+      "acceptance": "Em 360, 390, 768, 1024 e 1440 px não há corte de preço ou barra horizontal da página.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P04",
+        "MM-P05"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-LIST-05",
+      "group": "LIST",
+      "title": "Grupos recolhíveis de filtros",
+      "evidence": "V",
+      "desktop": "Grupos de frete, promoção, preço e atributos; título com indicador de expandir/recolher.",
+      "mobile": "Chips de frete, envio, promoção, preço e avaliações em trilho.",
+      "behavior": "Mobi deve abrir painel completo por botão Filtros; comportamento de abertura da referência mobile ficou parcial.",
+      "data": "Grupos e estado expandido.",
+      "acceptance": "Rótulo do filtro e opções usam associação acessível; fechar não apaga seleção sem aviso.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P04",
+        "MM-P05"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-LIST-06",
+      "group": "LIST",
+      "title": "Faixa de preço",
+      "evidence": "V",
+      "desktop": "Campos De e Até, controle de aplicação e slider de intervalo.",
+      "mobile": "Painel de filtros proposto com entradas grandes e teclado numérico.",
+      "behavior": "Normalizar centavos; intervalo mínimo não supera máximo; vazios removem limite.",
+      "data": "Preço atual à vista em centavos.",
+      "acceptance": "R$ 999 vem antes de R$ 1.099; produto sem preço válido não participa.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P04",
+        "MM-P05"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-LIST-07",
+      "group": "LIST",
+      "title": "Filtro de medidas",
+      "evidence": "T",
+      "desktop": "Largura, altura e profundidade aparecem na categoria de sofás.",
+      "mobile": "Mesmas medidas em painel vertical com unidade explícita.",
+      "behavior": "Mobi deve usar número em centímetros; aberto e fechado são campos diferentes.",
+      "data": "width_cm, height_cm, depth_closed_cm, depth_open_cm.",
+      "acceptance": "Sofá 230 cm não passa em largura máxima 210 cm; valores ausentes não são zero.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P04",
+        "MM-P05"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-LIST-08",
+      "group": "LIST",
+      "title": "Filtros de atributos",
+      "evidence": "T",
+      "desktop": "Tipo de sofá, lugares, tecido, cor, espuma, molas e estilo constam da categoria.",
+      "mobile": "Mesma taxonomia em grupos compactos.",
+      "behavior": "Mostrar somente filtros relevantes à categoria e com valores confiáveis.",
+      "data": "Campos estruturados e contagens de facetas.",
+      "acceptance": "Escolher linho não retorna suede por coincidência textual na descrição.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P04",
+        "MM-P05"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-LIST-09",
+      "group": "LIST",
+      "title": "Filtros selecionados e URL",
+      "evidence": "P",
+      "desktop": "Chips removíveis acima dos resultados e botão Limpar todos.",
+      "mobile": "Resumo no topo do painel e indicador de quantidade ativa.",
+      "behavior": "Proposta Mobi: URL serializa seleção, busca, ordem e página; recarregar reconstrói estado.",
+      "data": "Parâmetros canônicos definidos no projeto.",
+      "acceptance": "Copiar URL abre mesma seleção; remover um chip não remove os demais.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P04",
+        "MM-P05"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-LIST-10",
+      "group": "LIST",
+      "title": "Paginação e retorno",
+      "evidence": "P",
+      "desktop": "Controles depois da grade; padrão exato de paginação da referência não foi testado.",
+      "mobile": "Botões confortáveis e retorno à posição anterior.",
+      "behavior": "Proposta Mobi: preservar página e scroll quando cliente visita produto e volta.",
+      "data": "page, pageSize, total e chave da consulta.",
+      "acceptance": "Voltar restaura resultados e posição; filtro novo redefine página para 1.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P04",
+        "MM-P05"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-LIST-11",
+      "group": "LIST",
+      "title": "Carregamento e falha",
+      "evidence": "V",
+      "desktop": "Skeletons foram vistos em produtos, filtros e busca.",
+      "mobile": "Skeleton de duas colunas preserva espaço da foto e preço.",
+      "behavior": "Proposta Mobi: loading, erro com tentar novamente, vazio, sucesso e resposta fora de ordem.",
+      "data": "Estado da requisição e identificador da consulta.",
+      "acceptance": "Resposta lenta de filtro antigo não substitui a consulta nova; falha não simula catálogo vazio.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P04",
+        "MM-P05"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CARD-01",
+      "group": "CARD",
+      "title": "Imagem e proporção",
+      "evidence": "V",
+      "desktop": "Foto ampla quase quadrada, fundo branco ou ambientado conforme ativo.",
+      "mobile": "Foto quadrada domina a parte superior da célula.",
+      "behavior": "Usar contain para manter móvel inteiro; não cortar braço ou encosto para preencher espaço.",
+      "data": "Imagem, dimensões e texto alternativo.",
+      "acceptance": "Ausência de foto usa placeholder discreto; erro de rede não expande altura infinita.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P04",
+        "MM-P07",
+        "MM-P16"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CARD-02",
+      "group": "CARD",
+      "title": "Coração no card",
+      "evidence": "V",
+      "desktop": "No desktop a visibilidade pode variar por estado; botão sobre a imagem foi identificado no DOM.",
+      "mobile": "Coração dentro de círculo no canto superior direito da imagem.",
+      "behavior": "Favoritar não deve abrir produto; evento deve ser separado do link do card.",
+      "data": "ID do produto e estado salvo.",
+      "acceptance": "Uma ação muda somente um favorito e fornece estado pressionado.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P04",
+        "MM-P07",
+        "MM-P16"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CARD-03",
+      "group": "CARD",
+      "title": "Miniaturas e variantes",
+      "evidence": "V",
+      "desktop": "Primeiro produto de sofá apresentou miniaturas abaixo da imagem.",
+      "mobile": "Miniaturas pequenas abaixo da foto na amostra com múltiplas imagens.",
+      "behavior": "Distinguir imagem alternativa de variante comercial; não prometer troca de SKU por hover.",
+      "data": "Imagens e IDs de variantes.",
+      "acceptance": "Selecionar variante atualiza nome, preço e disponibilidade conjuntamente.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P04",
+        "MM-P07",
+        "MM-P16"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CARD-04",
+      "group": "CARD",
+      "title": "Nome e limite de linhas",
+      "evidence": "V",
+      "desktop": "Nome abaixo da imagem; texto de tamanho menor que o preço.",
+      "mobile": "Nome limitado visualmente em poucos trechos para caber em duas colunas.",
+      "behavior": "Mobi: título completo disponível na página e em nome acessível.",
+      "data": "Nome comercial e medida resumida, quando confirmada.",
+      "acceptance": "Reticências não removem a única distinção entre modelos de medidas diferentes.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P04",
+        "MM-P07",
+        "MM-P16"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CARD-05",
+      "group": "CARD",
+      "title": "Avaliações",
+      "evidence": "V",
+      "desktop": "Estrelas amarelas e número entre parênteses abaixo do nome.",
+      "mobile": "Mesmo conjunto compacto abaixo do título.",
+      "behavior": "Mobi só mostra média e contagem reais; sem avaliação, esconder estrelas vazias promocionais.",
+      "data": "ratingAverage e ratingCount verificados.",
+      "acceptance": "Sem dados não renderizar nota fictícia; ícone não é único transmissor da informação.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P04",
+        "MM-P07",
+        "MM-P16"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CARD-06",
+      "group": "CARD",
+      "title": "Hierarquia de preço",
+      "evidence": "V",
+      "desktop": "Preço anterior menor riscado, preço atual grande e centavos menores, condição Pix e parcelamento abaixo.",
+      "mobile": "Conjunto preservado em duas colunas; parcelas quebram em linhas.",
+      "behavior": "Mobi deve explicar total no cartão com taxas reais; percentual pode se referir à condição Pix ou à promoção, definir base.",
+      "data": "Preço base, à vista, referência e taxas vigentes.",
+      "acceptance": "Card, produto, carrinho e mensagem usam o mesmo cálculo e arredondamento.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P04",
+        "MM-P07",
+        "MM-P16"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CARD-07",
+      "group": "CARD",
+      "title": "Selos e condições",
+      "evidence": "V",
+      "desktop": "Selos de campanha, cashback, queda de preço e frete conforme o produto.",
+      "mobile": "Selos compactos abaixo da foto; evitar várias linhas de selos.",
+      "behavior": "Mobi: exibir somente selo habilitado por dado; separar frete por região e disponibilidade.",
+      "data": "Tipo de selo, texto, regra e elegibilidade.",
+      "acceptance": "Não mostrar frete grátis fora da regra regional; selo não cobre foto nem título.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P04",
+        "MM-P07",
+        "MM-P16"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CARD-08",
+      "group": "CARD",
+      "title": "Destino do card",
+      "evidence": "V",
+      "desktop": "Link envolve o conteúdo do produto.",
+      "mobile": "Toque no corpo abre produto, coração continua ação independente.",
+      "behavior": "Propagação do botão favorito não deve acionar navegação.",
+      "data": "URL canônica e ID estável.",
+      "acceptance": "Clique com teclado, toque e abrir em nova aba funcionam.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P04",
+        "MM-P07",
+        "MM-P16"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-SEARCH-01",
+      "group": "SEARCH",
+      "title": "Termo e envio",
+      "evidence": "V",
+      "desktop": "Lupa e campo largo; resultados usam página /busca/termo.",
+      "mobile": "Busca na segunda linha do cabeçalho.",
+      "behavior": "Enter, clique na lupa e limpar têm tratamento consistente.",
+      "data": "Termo normalizado sem perder texto do usuário.",
+      "acceptance": "Acentos e espaço não quebram URL nem criam duas buscas incompatíveis.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P05",
+        "MM-P06"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-SEARCH-02",
+      "group": "SEARCH",
+      "title": "Sugestões de pesquisa",
+      "evidence": "P",
+      "desktop": "Proposta: painel abaixo do campo com categorias e produtos.",
+      "mobile": "Proposta: painel ocupando largura útil, com rolagem própria e fechar.",
+      "behavior": "Sugestões não foram confirmadas na referência; implementar só se selecionado.",
+      "data": "Índice leve de nomes e categorias.",
+      "acceptance": "Resposta antiga não substitui sugestão nova; Escape fecha e teclado navega.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P05",
+        "MM-P06"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-SEARCH-03",
+      "group": "SEARCH",
+      "title": "Sinônimos e medidas",
+      "evidence": "P",
+      "desktop": "Proposta: interpretar sofá/estofado e medidas usuais.",
+      "mobile": "Mesma busca, sem interface adicional.",
+      "behavior": "Normalizar acentos e unidade; busca por medida deve combinar filtro numérico.",
+      "data": "Dicionário de sinônimos e medidas estruturadas.",
+      "acceptance": "2m, 2,00m e 200cm encontram largura 200cm; não tratam 230cm como correspondência exata.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P05",
+        "MM-P06"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-SEARCH-04",
+      "group": "SEARCH",
+      "title": "Nenhum resultado",
+      "evidence": "V",
+      "desktop": "Proposta: termo destacado, limpar filtros e categorias sugeridas.",
+      "mobile": "Estado final centralizado com ícone de alerta, mensagem Nenhum produto encontrado e instrução para remover ou mudar filtros.",
+      "behavior": "Busca de termo sem correspondência foi observada no celular. Desktop final ficou em carregamento na captura; recuperação com botão é adaptação proposta.",
+      "data": "Termo, filtros e sugestões existentes.",
+      "acceptance": "Distinguir busca sem resultado de falha de conexão.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P05",
+        "MM-P06"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-SEARCH-05",
+      "group": "SEARCH",
+      "title": "Histórico local",
+      "evidence": "P",
+      "desktop": "Proposta opcional de termos recentes.",
+      "mobile": "Mesmo comportamento sem exigir cadastro.",
+      "behavior": "Salvar apenas termos locais e permitir limpar; não afirmar existir na referência.",
+      "data": "Lista curta de termos sem dados pessoais.",
+      "acceptance": "Limpar remove histórico; erro de armazenamento não quebra busca.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P05",
+        "MM-P06"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-PROD-01",
+      "group": "PROD",
+      "title": "Composição principal",
+      "evidence": "V",
+      "desktop": "Galeria na metade esquerda, informações de compra na direita; miniaturas em coluna externa à foto.",
+      "mobile": "Galeria primeiro, depois título, vendedor, nota, variações, preço e ações.",
+      "behavior": "Ordem da leitura no DOM deve seguir a ordem visual mobile.",
+      "data": "Produto e mídias.",
+      "acceptance": "Sem galeria duplicada em componentes desktop/mobile; somente um H1.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P07",
+        "MM-P08"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-PROD-02",
+      "group": "PROD",
+      "title": "Galeria e contador",
+      "evidence": "V",
+      "desktop": "Miniaturas à esquerda, contador no canto superior esquerdo da imagem, coração e compartilhar à direita.",
+      "mobile": "Contador no topo da galeria e indicadores embaixo; miniaturas desktop somem.",
+      "behavior": "Mobi: anterior/próximo e ampliação; zoom detalhado da referência não foi testado.",
+      "data": "Imagens ordenadas com texto alternativo.",
+      "acceptance": "Uma imagem oculta navegação desnecessária; a foto carrega antes de considerar tela validada.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P07",
+        "MM-P08"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-PROD-03",
+      "group": "PROD",
+      "title": "Título, código e vendedor",
+      "evidence": "V",
+      "desktop": "Título, vendido e entregue por, avaliações e selo acima da personalização.",
+      "mobile": "Título abaixo da galeria; código aparece junto aos detalhes de identificação.",
+      "behavior": "Mobi apresenta marca e modelo; fornecedor interno não se transforma automaticamente em vendedor público.",
+      "data": "Nome, identificador público e fabricante se autorizado.",
+      "acceptance": "Não expor custo ou dado interno do fornecedor.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P07",
+        "MM-P08"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-PROD-04",
+      "group": "PROD",
+      "title": "Cor por miniatura",
+      "evidence": "V",
+      "desktop": "Fila de pequenas fotos, selecionada com borda de destaque.",
+      "mobile": "Fila quebra ou rola conforme espaço; seleção indica cor por texto.",
+      "behavior": "Na referência são links para produtos/variações, não troca cosmética comprovada.",
+      "data": "Relação entre variantes, preço, imagem e estoque.",
+      "acceptance": "Cinza de 200cm não é associado à foto ou valor de 230cm por engano.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P07",
+        "MM-P08"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-PROD-05",
+      "group": "PROD",
+      "title": "Largura e outras opções",
+      "evidence": "V",
+      "desktop": "Largura em chip contornado abaixo das cores.",
+      "mobile": "Mesmo campo sob a seleção de cor.",
+      "behavior": "Só oferecer combinações válidas; atualizar todos os dados ao trocar SKU.",
+      "data": "Opções de dimensões e vínculo de variante.",
+      "acceptance": "Combinação inexistente fica indisponível; carrinho guarda ID da combinação correta.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P07",
+        "MM-P08"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-PROD-06",
+      "group": "PROD",
+      "title": "Bloco comercial",
+      "evidence": "V",
+      "desktop": "Preço anterior, atual, desconto Pix, parcela e link de mais opções.",
+      "mobile": "Bloco segue as variantes e mantém valores legíveis.",
+      "behavior": "Definir explicitamente se preço promocional é à vista; não somar dois descontos sem regra.",
+      "data": "Valores comerciais reais e taxas.",
+      "acceptance": "Total do parcelamento coincide com soma das parcelas e regra de arredondamento.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P07",
+        "MM-P08"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-PROD-07",
+      "group": "PROD",
+      "title": "Painel de formas de pagamento",
+      "evidence": "V",
+      "desktop": "Gaveta lateral direita com título, X, abas de meios e botão fechar inferior.",
+      "mobile": "Painel ocupa largura da tela; abas em linha para Pix, cartão e outros meios da referência.",
+      "behavior": "Mobi usa apenas Pix, dinheiro e cartão realmente aceitos; não copiar boleto/carnê por aparência.",
+      "data": "Tabela de taxas e meios habilitados.",
+      "acceptance": "Troca de parcela recalcula total; fechar restaura foco ao link que abriu.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P07",
+        "MM-P08"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-PROD-08",
+      "group": "PROD",
+      "title": "Quantidade",
+      "evidence": "V",
+      "desktop": "Decrementar, valor e incrementar em controle único ao lado dos botões.",
+      "mobile": "Controle com adicionar na mesma linha na amostra, comprar abaixo em largura cheia.",
+      "behavior": "Mínimo 1; máximo só quando houver limite real; evitar zero como remoção silenciosa.",
+      "data": "Quantidade e disponibilidade.",
+      "acceptance": "Não aceitar negativo, NaN ou fração se produto é vendido por unidade.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P07",
+        "MM-P08"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-PROD-09",
+      "group": "PROD",
+      "title": "Adicionar e comprar",
+      "evidence": "V",
+      "desktop": "Adicionar contornado e Comprar agora preenchido, lado a lado.",
+      "mobile": "Adicionar junto à quantidade; Comprar agora abaixo e também no rodapé fixo.",
+      "behavior": "Adicionar abre confirmação lateral observada; Mobi comprar inicia fluxo existente de pedido.",
+      "data": "ID, variante, quantidade e preço revalidado.",
+      "acceptance": "Clique duplo não cria duplicata involuntária; erro apresenta recuperação.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P07",
+        "MM-P08"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-PROD-10",
+      "group": "PROD",
+      "title": "Barra fixa inferior",
+      "evidence": "V",
+      "desktop": "Não se aplica como regra geral do desktop; ações na coluna comercial.",
+      "mobile": "Preço à esquerda e Comprar agora à direita em faixa inferior observada.",
+      "behavior": "Reservar altura no fim do conteúdo e respeitar área segura.",
+      "data": "Preço e estado do CTA principal.",
+      "acceptance": "Não encobre entrega, WhatsApp, teclado ou diálogo; acionamento é equivalente ao botão principal.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P07",
+        "MM-P08"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-PROD-11",
+      "group": "PROD",
+      "title": "Entrega e CEP",
+      "evidence": "V",
+      "desktop": "Bloco contornado com caminhão, campo CEP, calcular e link de consulta externa.",
+      "mobile": "Mesmo bloco empilhado sob serviços e compra.",
+      "behavior": "Proposta Mobi: validar formato, consultar cobertura e tratar indisponibilidade separadamente de erro.",
+      "data": "CEP, tabela regional ou serviço real de frete.",
+      "acceptance": "Sem cálculo não mostrar frete zero nem prazo inventado; tratar mudança de CEP.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P07",
+        "MM-P08"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-PROD-12",
+      "group": "PROD",
+      "title": "Serviços associados",
+      "evidence": "V",
+      "desktop": "Bloco de montagem/impermeabilização com ícone e consulta de disponibilidade.",
+      "mobile": "Cartão largo sob botões comerciais.",
+      "behavior": "Só habilitar serviço Mobi se operação estiver definida; fornecedor e região determinam elegibilidade.",
+      "data": "Serviços, cobertura, preço e regras reais.",
+      "acceptance": "Serviço não é adicionado automaticamente ao carrinho.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P07",
+        "MM-P08"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-PROD-13",
+      "group": "PROD",
+      "title": "Resumo de medidas",
+      "evidence": "V",
+      "desktop": "Bloco O que saber com largura, altura, profundidade e necessidade de montagem.",
+      "mobile": "Resumo em coluna; link abre descrição/características.",
+      "behavior": "Proposta Mobi: distinguir profundidade aberta/fechada e dimensões de acesso.",
+      "data": "Medidas confirmadas e unidade.",
+      "acceptance": "Produto com medida ausente mostra ausência honesta; nunca preencher por imagem.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P07",
+        "MM-P08"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-PROD-14",
+      "group": "PROD",
+      "title": "Descrição expandida",
+      "evidence": "V",
+      "desktop": "Descrição abaixo da compra combinada com Ver descrição completa.",
+      "mobile": "Conteúdo em largura única e botão expandir.",
+      "behavior": "Expandir sem navegar; não esconder alerta de entrega relevante atrás do corte.",
+      "data": "Texto higienizado do catálogo.",
+      "acceptance": "HTML do fornecedor não injeta scripts; descrição vazia não mostra bloco sem função.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P07",
+        "MM-P08"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-PROD-15",
+      "group": "PROD",
+      "title": "Tabela técnica",
+      "evidence": "V",
+      "desktop": "Características agrupadas por medidas, garantia, materiais, montagem e itens inclusos.",
+      "mobile": "Tabela ou linhas rótulo/valor em coluna; detalhes expansíveis.",
+      "behavior": "Ordenação por relevância; unidade sempre próxima ao valor.",
+      "data": "Atributos tipados e origem do dado.",
+      "acceptance": "Campos não se contradizem com título e variante; dado conflitante gera pendência interna.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P07",
+        "MM-P08"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-PROD-16",
+      "group": "PROD",
+      "title": "Compre junto",
+      "evidence": "V",
+      "desktop": "Itens com checkbox, preços, total e botão Adicionar N itens.",
+      "mobile": "Lista horizontal ou empilhada é adaptação Mobi; layout completo mobile não foi isolado.",
+      "behavior": "Total recalcula ao desmarcar; não incluir itens sem consentimento.",
+      "data": "IDs editoriais e preços individuais.",
+      "acceptance": "Adicionar leva somente selecionados, com variantes válidas e total correto.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P07",
+        "MM-P08"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-PROD-17",
+      "group": "PROD",
+      "title": "Recomendações e patrocinados",
+      "evidence": "V",
+      "desktop": "Seções Apenas para você e Produtos patrocinados apareceram após carregamento.",
+      "mobile": "Usar trilhos compactos na adaptação Mobi.",
+      "behavior": "Algoritmo da referência desconhecido; Mobi pode usar seleção por categoria/faixa de preço.",
+      "data": "Produtos relacionados e indicação de patrocínio se real.",
+      "acceptance": "Não chamar conteúdo de patrocinado sem relação comercial nem prometer personalização inexistente.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P07",
+        "MM-P08"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-PROD-18",
+      "group": "PROD",
+      "title": "Reputação do vendedor",
+      "evidence": "V",
+      "desktop": "Perfil resumido, volume de produtos e indicadores de atendimento/entrega.",
+      "mobile": "Bloco abaixo do resumo; página do vendedor não foi percorrida.",
+      "behavior": "Mobi revendedora: substituir por confiança e atendimento próprios, salvo mudança explícita de modelo.",
+      "data": "Indicadores verificáveis.",
+      "acceptance": "Não copiar reputação, números ou vendedor da referência como dados Mobi.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P07",
+        "MM-P08"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-PROD-19",
+      "group": "PROD",
+      "title": "Compartilhar produto",
+      "evidence": "V",
+      "desktop": "Ícone de compartilhar abaixo do coração na galeria.",
+      "mobile": "Ícone circular sobre galeria à direita.",
+      "behavior": "Proposta: share nativo quando disponível, copiar link como alternativa.",
+      "data": "URL canônica sem dados pessoais.",
+      "acceptance": "Copiar informa sucesso; cancelamento do compartilhamento não é erro de compra.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P07",
+        "MM-P08"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-PROD-20",
+      "group": "PROD",
+      "title": "Avaliações e perguntas detalhadas",
+      "evidence": "B",
+      "desktop": "Nota resumida existe; lista detalhada de avaliações e perguntas não foi isolada nesta amostra.",
+      "mobile": "Nenhuma composição detalhada confirmada.",
+      "behavior": "Manter como lacuna de observação; Mobi pode criar seção apenas se houver dados e escopo selecionado.",
+      "data": "Avaliações verificadas, moderação e perguntas respondidas.",
+      "acceptance": "Não preencher lista com texto fictício nem afirmar que a referência foi testada nesse estado.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P07",
+        "MM-P08"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CART-01",
+      "group": "CART",
+      "title": "Confirmação de inclusão",
+      "evidence": "V",
+      "desktop": "Gaveta direita com sucesso, produto, quantidade, remover, preço, serviços/CEP e dois botões inferiores.",
+      "mobile": "Versão mobile completa dessa gaveta não foi capturada; adotar painel de tela cheia é proposta.",
+      "behavior": "Continuar comprando fecha; Ir para carrinho navega.",
+      "data": "Item inserido e estado atualizado do carrinho.",
+      "acceptance": "Confirmar só depois da inclusão bem-sucedida; falha não mostra sucesso.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P09",
+        "MM-P10",
+        "MM-P11"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CART-02",
+      "group": "CART",
+      "title": "Cabeçalho do carrinho",
+      "evidence": "V",
+      "desktop": "Carrinho e contador à esquerda; Compartilhar, Importar e Código do vendedor à direita.",
+      "mobile": "Carrinho com contador e menu de ações em reticências.",
+      "behavior": "Mobi: ações adicionais só se selecionadas e implementadas.",
+      "data": "Contador e ações habilitadas.",
+      "acceptance": "Menu não apresenta importação inexistente ou código de vendedor sem finalidade.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P09",
+        "MM-P10",
+        "MM-P11"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CART-03",
+      "group": "CART",
+      "title": "Agrupamento dos itens",
+      "evidence": "V",
+      "desktop": "Lista à esquerda agrupada por responsável pela entrega.",
+      "mobile": "Blocos de uma coluna por entrega.",
+      "behavior": "Mobi pode agrupar por entrega quando houver cálculo separado; não precisa expor fornecedor interno.",
+      "data": "Itens e grupos logísticos.",
+      "acceptance": "Frete de um grupo não é atribuído a todos se a regra é diferente.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P09",
+        "MM-P10",
+        "MM-P11"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CART-04",
+      "group": "CART",
+      "title": "Linha de produto",
+      "evidence": "V",
+      "desktop": "Imagem à esquerda, nome/quantidade ao centro, preço à direita.",
+      "mobile": "Imagem ao lado de nome e preço; remoção e quantidade abaixo.",
+      "behavior": "Alterações recalculam resumo e contador.",
+      "data": "ID, variante, preço, quantidade e disponibilidade.",
+      "acceptance": "Mesmo produto em outra variante não é mesclado indevidamente.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P09",
+        "MM-P10",
+        "MM-P11"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CART-05",
+      "group": "CART",
+      "title": "Remover item",
+      "evidence": "V",
+      "desktop": "Ícone de lixeira junto ao controle de quantidade.",
+      "mobile": "Lixeira em área própria ao lado do decremento.",
+      "behavior": "Remoção recuperável por readicionar; confirmação só se processo precisar.",
+      "data": "Chave única da linha.",
+      "acceptance": "Remover último produto leva a estado vazio sem resumo antigo.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P09",
+        "MM-P10",
+        "MM-P11"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CART-06",
+      "group": "CART",
+      "title": "Resumo financeiro",
+      "evidence": "V",
+      "desktop": "Painel separado à direita com produtos, cupom, desconto Pix, frete, total e continuar.",
+      "mobile": "Painel abaixo dos itens, com largura cheia.",
+      "behavior": "Total observado era sem frete enquanto CEP ausente; Mobi deve explicar isso.",
+      "data": "Subtotal, descontos, frete opcional e total calculado.",
+      "acceptance": "Nenhum rótulo sugere entrega incluída quando frete ainda não foi confirmado.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P09",
+        "MM-P10",
+        "MM-P11"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CART-07",
+      "group": "CART",
+      "title": "Cupom no carrinho",
+      "evidence": "V",
+      "desktop": "Link Adicionar cupom acima dos descontos.",
+      "mobile": "Mesmo link no resumo.",
+      "behavior": "Painel e validação da referência não testados; Mobi deve validar valor, prazo e produtos elegíveis.",
+      "data": "Código e motor de regra, se escolhido.",
+      "acceptance": "Aplicar uma vez; informar expirado, inválido e incompatível sem apagar itens.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P09",
+        "MM-P10",
+        "MM-P11"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CART-08",
+      "group": "CART",
+      "title": "Compartilhar e importar",
+      "evidence": "T",
+      "desktop": "Controles identificados no carrinho desktop.",
+      "mobile": "Ações agrupadas em menu.",
+      "behavior": "Fluxos internos não testados; proposta futura Mobi: URL ou código sem dados pessoais.",
+      "data": "Snapshot público de itens, expiração e revalidação.",
+      "acceptance": "Carrinho importado revalida preço e estoque; não confundir link com reserva.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P09",
+        "MM-P10",
+        "MM-P11"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CART-09",
+      "group": "CART",
+      "title": "Carrinho vazio",
+      "evidence": "V",
+      "desktop": "Estado vazio verificado depois de remover o item de teste: ícone de carrinho, título, texto de orientação e Conferir ofertas; resumo financeiro desaparece.",
+      "mobile": "Mobi: mensagem, botão continuar comprando e categorias.",
+      "behavior": "Remover último item deve renderizar estado vazio.",
+      "data": "Nenhum item e destinos de recuperação.",
+      "acceptance": "Não deixar botão de finalizar ativo com carrinho vazio.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P09",
+        "MM-P10",
+        "MM-P11"
+      ],
+      "dependencies": [
+        "catalogo_publico_valido",
+        "ativos_mobi",
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CHECK-01",
+      "group": "CHECK",
+      "title": "Transição para identificação",
+      "evidence": "V",
+      "desktop": "Continuar do carrinho levou a Acesse sua conta.",
+      "mobile": "Mesma exigência observada no celular.",
+      "behavior": "Na Mobi, preservar fluxo de dados de entrega e WhatsApp definido; não inserir conta obrigatória automaticamente.",
+      "data": "Fluxo atual do repositório.",
+      "acceptance": "Pedido continua comprável sem conta se esse for o modelo existente.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P10",
+        "MM-P12",
+        "MM-P14"
+      ],
+      "dependencies": [
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CHECK-02",
+      "group": "CHECK",
+      "title": "Dados de entrega Mobi",
+      "evidence": "P",
+      "desktop": "Formulário com resumo do pedido ao lado, se o projeto já suportar.",
+      "mobile": "Campos empilhados com teclado adequado, erros junto aos campos.",
+      "behavior": "Proposta baseada no fluxo Mobi; telas de checkout autenticado da referência não foram acessadas.",
+      "data": "Somente dados necessários e regras de cobertura.",
+      "acceptance": "Não enviar WhatsApp antes de validar os campos exigidos.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P10",
+        "MM-P12",
+        "MM-P14"
+      ],
+      "dependencies": [
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CHECK-03",
+      "group": "CHECK",
+      "title": "Escolha de pagamento Mobi",
+      "evidence": "P",
+      "desktop": "Opções e simulação de parcelas com total visível.",
+      "mobile": "Opções de toque, parcelas e total em coluna.",
+      "behavior": "Usar tabela vigente já configurada, não condições da MadeiraMadeira.",
+      "data": "Pix, dinheiro, cartão e taxas reais.",
+      "acceptance": "Total do cartão e à vista consistentes com o produto e carrinho.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P10",
+        "MM-P12",
+        "MM-P14"
+      ],
+      "dependencies": [
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CHECK-04",
+      "group": "CHECK",
+      "title": "Revisão antes de enviar",
+      "evidence": "P",
+      "desktop": "Resumo com produtos, variações, quantidade e entrega.",
+      "mobile": "Resumo legível antes do botão final.",
+      "behavior": "Enviar pedido pelo WhatsApp após ação explícita; mensagem não representa pagamento aprovado.",
+      "data": "Snapshot de preços e condições mostrados ao cliente.",
+      "acceptance": "Mensagem inclui todos os itens e forma de pagamento, sem perder variantes.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P10",
+        "MM-P12",
+        "MM-P14"
+      ],
+      "dependencies": [
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CHECK-05",
+      "group": "CHECK",
+      "title": "Confirmação e retomada",
+      "evidence": "P",
+      "desktop": "Estado de pedido enviado/encaminhado e instrução de atendimento.",
+      "mobile": "Botão para voltar à loja e reabrir conversa.",
+      "behavior": "Não esvaziar carrinho apenas porque o link do WhatsApp foi aberto sem confirmar política do projeto.",
+      "data": "Identificador do pedido apenas se realmente criado.",
+      "acceptance": "Não afirmar venda concluída ou pagamento realizado ao abrir o WhatsApp.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P10",
+        "MM-P12",
+        "MM-P14"
+      ],
+      "dependencies": [
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-COUPON-01",
+      "group": "COUPON",
+      "title": "Página de cupons",
+      "evidence": "V",
+      "desktop": "Banner horizontal acima de grade de três cartões por linha.",
+      "mobile": "Banner compacto e cartões em uma coluna.",
+      "behavior": "Separar desconto aplicável do texto editorial.",
+      "data": "Lista de cupons ativos.",
+      "acceptance": "Cupom expirado não aparece como ativo após recarregar.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P15"
+      ],
+      "dependencies": [
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-COUPON-02",
+      "group": "COUPON",
+      "title": "Cartão em formato de bilhete",
+      "evidence": "V",
+      "desktop": "Imagem e título no topo, condição, separador pontilhado, validade/código e botão Copiar.",
+      "mobile": "Mesmo bilhete em largura única, CTA ao lado do código.",
+      "behavior": "Detalhes visuais do bilhete podem ser reproduzidos com CSS próprio Mobi.",
+      "data": "Imagem, benefício, descrição curta, código, validade.",
+      "acceptance": "Condições não ficam inacessíveis por truncamento; botão não cobre código.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P15"
+      ],
+      "dependencies": [
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-COUPON-03",
+      "group": "COUPON",
+      "title": "Copiar código",
+      "evidence": "V",
+      "desktop": "Botão preenchido ao lado do código.",
+      "mobile": "Botão com toque confortável.",
+      "behavior": "Mobi: feedback Copiado e alternativa selecionar texto se clipboard falhar.",
+      "data": "Código textual.",
+      "acceptance": "Copiar não aplica desconto silenciosamente nem navega.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P15"
+      ],
+      "dependencies": [
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-COUPON-04",
+      "group": "COUPON",
+      "title": "Produtos elegíveis",
+      "evidence": "V",
+      "desktop": "Faixa inferior do cartão leva à lista participante.",
+      "mobile": "Faixa de largura total com chevron.",
+      "behavior": "Página de destino usa regra/lista correspondente.",
+      "data": "IDs/categorias elegíveis e URL.",
+      "acceptance": "Todos os itens listados aceitam o cupom conforme regra.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P15"
+      ],
+      "dependencies": [
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-COUPON-05",
+      "group": "COUPON",
+      "title": "Regras de desconto",
+      "evidence": "P",
+      "desktop": "Painel de condições e referência de validade.",
+      "mobile": "Conteúdo legível, sem nota minúscula.",
+      "behavior": "Mobi: desconto, mínimo, limite, cumulatividade, data e elegibilidade definidos em regra única.",
+      "data": "Regra versionada de promoção.",
+      "acceptance": "Duas fontes de preço não calculam o mesmo desconto de maneiras diferentes.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P15"
+      ],
+      "dependencies": [
+        "calculo_comercial_unico"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-HELP-01",
+      "group": "HELP",
+      "title": "Portal de ajuda",
+      "evidence": "V",
+      "desktop": "Cabeçalho próprio, banner laranja, título central, busca grande e voltar para loja.",
+      "mobile": "Logo e entrar no topo; busca larga abaixo, sem busca de produtos concorrente.",
+      "behavior": "Ajuda tem busca separada do catálogo.",
+      "data": "Artigos e categorias de ajuda.",
+      "acceptance": "Buscar entrega retorna artigos, não produtos.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P35",
+        "MM-P36"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-HELP-02",
+      "group": "HELP",
+      "title": "Atalhos de resolução",
+      "evidence": "V",
+      "desktop": "Quatro cartões: entrega, pedido, agendamento e problema com produto.",
+      "mobile": "Cartões empilhados com ícone à esquerda e conteúdo à direita.",
+      "behavior": "Mobi adapta aos serviços e canais reais.",
+      "data": "Tópicos, descrição curta e destino.",
+      "acceptance": "Nenhum atalho oferece agendamento se não existe serviço contratado.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P35",
+        "MM-P36"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-HELP-03",
+      "group": "HELP",
+      "title": "Perguntas por categoria",
+      "evidence": "V",
+      "desktop": "Grupos recolhíveis com ícone e chevron abaixo dos atalhos.",
+      "mobile": "Mesma lista vertical.",
+      "behavior": "Expandir mostra artigos do tema; Mobi pode começar com FAQ local.",
+      "data": "Árvore de temas e artigos.",
+      "acceptance": "Botão informa expandido; foco e texto permanecem legíveis.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P35",
+        "MM-P36"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-HELP-04",
+      "group": "HELP",
+      "title": "Artigo de ajuda",
+      "evidence": "V",
+      "desktop": "Coluna de artigos à esquerda, conteúdo principal à direita e busca superior.",
+      "mobile": "Navegação de seção acima do artigo, conteúdo em coluna única.",
+      "behavior": "Título, data e conteúdo; links relacionados, útil sim/não e solicitar atendimento na referência.",
+      "data": "Artigo próprio, data de revisão e canal de suporte.",
+      "acceptance": "Conteúdo não promete procedimento da concorrente; solicitações exigem implementação real.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P35",
+        "MM-P36"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-HELP-05",
+      "group": "HELP",
+      "title": "Contato contextual de pós-venda",
+      "evidence": "P",
+      "desktop": "Proposta: selecionar tema e levar contexto ao atendimento.",
+      "mobile": "CTA após artigo, sem cobrir leitura.",
+      "behavior": "Não enviar automaticamente mensagens; usuário inicia conversa.",
+      "data": "Tema e número do pedido se fornecido voluntariamente.",
+      "acceptance": "Pedido só é consultado por mecanismo autorizado; nenhum dado de terceiros exposto por ID previsível.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P35",
+        "MM-P36"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CONTENT-01",
+      "group": "CONTENT",
+      "title": "Blog e busca editorial",
+      "evidence": "V",
+      "desktop": "Título à esquerda, busca do blog à direita e abas temáticas abaixo.",
+      "mobile": "Título, apoio, campo e abas em trilho horizontal.",
+      "behavior": "Blog tem busca própria; não reutilizar query de produto sem distinção.",
+      "data": "Artigos, categorias, capa e resumo.",
+      "acceptance": "Filtrar categoria não altera carrinho nem busca de produto.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P37",
+        "MM-P38"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CONTENT-02",
+      "group": "CONTENT",
+      "title": "Destaque editorial",
+      "evidence": "V",
+      "desktop": "Resumo à esquerda e imagem ampla à direita sobre faixa de contraste.",
+      "mobile": "Texto antes da imagem em coluna.",
+      "behavior": "Card abre artigo; link destacado da amostra retornou 404, registrado como falha da fonte.",
+      "data": "Slug canônico e conteúdo publicado.",
+      "acceptance": "Validar links antes de publicar; não copiar URL quebrada.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P37",
+        "MM-P38"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CONTENT-03",
+      "group": "CONTENT",
+      "title": "Artigo de conteúdo",
+      "evidence": "B",
+      "desktop": "Template interno não foi validado com artigo carregado; tentativa da capa retornou página indisponível.",
+      "mobile": "Mesmo limite de evidência.",
+      "behavior": "Proposta Mobi: capa, H1, data, texto, imagens, produtos relacionados e compartilhar.",
+      "data": "Conteúdo autoral e produtos relacionados.",
+      "acceptance": "Não tratar proposta como engenharia reversa confirmada desse template.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P37",
+        "MM-P38"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CONTENT-04",
+      "group": "CONTENT",
+      "title": "Página indisponível",
+      "evidence": "T",
+      "desktop": "Resposta pública 404 com mensagem e ação para encontrar produtos.",
+      "mobile": "Mobi: mensagem e botão de retorno com largura adequada.",
+      "behavior": "Usar HTTP 404 para ausência e 200 para conteúdo válido.",
+      "data": "Destino de recuperação.",
+      "acceptance": "Produto inexistente não redireciona silenciosamente para outro produto.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P37",
+        "MM-P38"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-SERVICES-01",
+      "group": "SERVICES",
+      "title": "Página de serviços",
+      "evidence": "V",
+      "desktop": "Cabeçalho de serviços, chamada para acompanhar contratação, banner e cards populares.",
+      "mobile": "Banner mais vertical e cards em trilho com partes do seguinte visíveis.",
+      "behavior": "Contratar e Saiba mais são ações distintas.",
+      "data": "Catálogo real de serviços e cobertura.",
+      "acceptance": "Exibir preço a partir de só quando há condição de cálculo definida.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P19"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-SERVICES-02",
+      "group": "SERVICES",
+      "title": "Detalhe de serviço",
+      "evidence": "B",
+      "desktop": "Cards têm ações, mas contratação e detalhe não foram percorridos até o fim.",
+      "mobile": "Layout completo não verificado.",
+      "behavior": "Proposta Mobi: descrição, inclusões, exclusões, região, preço e solicitação.",
+      "data": "Parceiro, termos, agenda e suporte.",
+      "acceptance": "Não contratar serviço que a Mobi não consegue entregar.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P19"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-SERVICES-03",
+      "group": "SERVICES",
+      "title": "Agendamento",
+      "evidence": "B",
+      "desktop": "Há orientação pública e acesso para clientes; agenda autenticada não foi acessada.",
+      "mobile": "Sem layout autenticado confirmado.",
+      "behavior": "Documentar como módulo separado dependente da operação.",
+      "data": "Prestadores, disponibilidade e pedido.",
+      "acceptance": "Não mostrar horários fictícios ou reservar sem confirmar disponibilidade.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P19"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-STORES-01",
+      "group": "STORES",
+      "title": "Localizador de lojas",
+      "evidence": "V",
+      "desktop": "Busca por cidade/rua/CEP, cartões em três colunas numa região rolável.",
+      "mobile": "Busca acima de carrossel horizontal de cartões.",
+      "behavior": "Mobi online pode adaptar para Regiões de entrega; não criar loja física fictícia.",
+      "data": "Regiões ou endereços realmente públicos.",
+      "acceptance": "Consulta não pede geolocalização automaticamente.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P20",
+        "MM-P21"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-STORES-02",
+      "group": "STORES",
+      "title": "Cartão de unidade",
+      "evidence": "V",
+      "desktop": "Nome, endereço, status aberto, mapa e detalhes.",
+      "mobile": "Mesmo conteúdo em cartão de largura quase inteira.",
+      "behavior": "Mapa abre localização; detalhes abre página específica.",
+      "data": "Endereço e horários validados.",
+      "acceptance": "Mobi não apresenta endereço administrativo como ponto de visita sem definição comercial.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P20",
+        "MM-P21"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-STORES-03",
+      "group": "STORES",
+      "title": "Detalhe da unidade",
+      "evidence": "V",
+      "desktop": "Breadcrumb, estado/cidade, funcionamento, nome, endereço, como chegar, horários e contato.",
+      "mobile": "Tudo empilhado; CTA fixo inferior para WhatsApp observado.",
+      "behavior": "Adaptar para atendimento/entrega quando não houver unidade física.",
+      "data": "Dados e política da operação.",
+      "acceptance": "CTA fixo não encobre conteúdo; informações mudam com dia/fuso se houver status aberto.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P20",
+        "MM-P21"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-ACCOUNT-01",
+      "group": "ACCOUNT",
+      "title": "Tela de identificação",
+      "evidence": "V",
+      "desktop": "Cabeçalho simplificado com logo, busca e compra segura; formulário central estreito.",
+      "mobile": "Logo e compra segura no topo; formulário ocupa largura útil.",
+      "behavior": "E-mail, continuar, Google, Apple, esqueci e-mail e cadastro; nenhuma credencial foi enviada.",
+      "data": "Autenticação configurada, somente se selecionada.",
+      "acceptance": "Não criar login decorativo; retorno pós-login preserva destino original.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P12",
+        "MM-P13",
+        "MM-P14",
+        "MM-P28"
+      ],
+      "dependencies": [
+        "decisao_sobre_conta_cliente",
+        "autorizacao_por_usuario"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-ACCOUNT-02",
+      "group": "ACCOUNT",
+      "title": "Cadastro e recuperação",
+      "evidence": "B",
+      "desktop": "Ações de criar conta e recuperar identificação existem; formulários completos não testados.",
+      "mobile": "Mesmo limite de evidência.",
+      "behavior": "Mobi deve usar provedor existente e evitar implementar autenticação própria sem necessidade.",
+      "data": "Provedor e políticas da loja.",
+      "acceptance": "Erros não revelam indevidamente existência de conta; fluxo completo precisa de teste específico.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P12",
+        "MM-P13",
+        "MM-P14",
+        "MM-P28"
+      ],
+      "dependencies": [
+        "decisao_sobre_conta_cliente",
+        "autorizacao_por_usuario"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-ACCOUNT-03",
+      "group": "ACCOUNT",
+      "title": "Lista de favoritos",
+      "evidence": "B",
+      "desktop": "Rota redirecionou ao login; lista autenticada não foi inspecionada.",
+      "mobile": "Mesma barreira.",
+      "behavior": "Proposta Mobi local: grade com remover, abrir e carrinho.",
+      "data": "IDs dos favoritos e consulta atual do catálogo.",
+      "acceptance": "Produto desativado aparece indisponível ou é removido com explicação.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P12",
+        "MM-P13",
+        "MM-P14",
+        "MM-P28"
+      ],
+      "dependencies": [
+        "decisao_sobre_conta_cliente",
+        "autorizacao_por_usuario"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-ACCOUNT-04",
+      "group": "ACCOUNT",
+      "title": "Pedidos e rastreio",
+      "evidence": "B",
+      "desktop": "Link de pedidos leva à identificação; ajuda descreve acompanhamento.",
+      "mobile": "Nenhuma composição autenticada confirmada.",
+      "behavior": "Proposta futura Mobi: integrar pedidos reais e proteger acesso.",
+      "data": "Pedido, entregas e autorização do cliente.",
+      "acceptance": "Nenhum status é gerado apenas para preencher interface.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P12",
+        "MM-P13",
+        "MM-P14",
+        "MM-P28"
+      ],
+      "dependencies": [
+        "decisao_sobre_conta_cliente",
+        "autorizacao_por_usuario"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-ACCOUNT-05",
+      "group": "ACCOUNT",
+      "title": "Carteira e cashback",
+      "evidence": "B",
+      "desktop": "Página pública descreve carteira, saldo, carência e validade; interface autenticada não foi vista.",
+      "mobile": "Sem interface de saldo confirmada.",
+      "behavior": "Módulo futuro separado; não confundir crédito com dinheiro sacável.",
+      "data": "Livro de créditos, eventos e regras financeiras.",
+      "acceptance": "Sem motor financeiro real, não exibir saldo ou promessa de cashback.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P12",
+        "MM-P13",
+        "MM-P14",
+        "MM-P28"
+      ],
+      "dependencies": [
+        "decisao_sobre_conta_cliente",
+        "autorizacao_por_usuario"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-LANDING-01",
+      "group": "LANDING",
+      "title": "Campanha Black Friday",
+      "evidence": "V",
+      "desktop": "Hero amplo, título/apresentação e quatro atalhos em linha; vitrines e FAQ abaixo.",
+      "mobile": "Hero vertical ocupa grande parte da primeira dobra; seções seguem em coluna.",
+      "behavior": "Tema temporário é estado configurável; não alterar permanentemente todos os componentes.",
+      "data": "Campanha, imagens desktop/mobile, período, produtos e condições.",
+      "acceptance": "Desligar campanha restaura tema base, banners e preços conforme regra versionada.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P17",
+        "MM-P22",
+        "MM-P23",
+        "MM-P24",
+        "MM-P25",
+        "MM-P26",
+        "MM-P27",
+        "MM-P28",
+        "MM-P29",
+        "MM-P30",
+        "MM-P31",
+        "MM-P32",
+        "MM-P33",
+        "MM-P34"
+      ],
+      "dependencies": [
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-LANDING-02",
+      "group": "LANDING",
+      "title": "Ofertas do dia",
+      "evidence": "V",
+      "desktop": "Banner com timer à direita e quatro produtos por linha sem sidebar.",
+      "mobile": "Arte e timer empilhados; dois produtos por linha.",
+      "behavior": "Timer observado estava zerado nessa página; não copiar isso como urgência válida.",
+      "data": "Seleção e fim real da oferta.",
+      "acceptance": "Produto expirado perde selo; timer não reinicia em cada acesso.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P17",
+        "MM-P22",
+        "MM-P23",
+        "MM-P24",
+        "MM-P25",
+        "MM-P26",
+        "MM-P27",
+        "MM-P28",
+        "MM-P29",
+        "MM-P30",
+        "MM-P31",
+        "MM-P32",
+        "MM-P33",
+        "MM-P34"
+      ],
+      "dependencies": [
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-LANDING-03",
+      "group": "LANDING",
+      "title": "Marca própria",
+      "evidence": "V",
+      "desktop": "Hero largo e seções sobre diferenciais, marcas, lançamentos e qualidade.",
+      "mobile": "Texto em coluna e arte específica; algumas mídias ficaram parcialmente carregadas.",
+      "behavior": "Mobi pode usar seleção editorial sem afirmar fabricação própria.",
+      "data": "Conteúdo verdadeiro da marca e seleção.",
+      "acceptance": "Não chamar revenda de fabricação própria nem copiar marcas da concorrente.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P17",
+        "MM-P22",
+        "MM-P23",
+        "MM-P24",
+        "MM-P25",
+        "MM-P26",
+        "MM-P27",
+        "MM-P28",
+        "MM-P29",
+        "MM-P30",
+        "MM-P31",
+        "MM-P32",
+        "MM-P33",
+        "MM-P34"
+      ],
+      "dependencies": [
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-LANDING-04",
+      "group": "LANDING",
+      "title": "Móveis planejados",
+      "evidence": "V",
+      "desktop": "Hero panorâmico, faixa de condições, chamada larga com botão à direita e blocos alternados.",
+      "mobile": "Hero vertical, chamada em cartão com botão abaixo e conteúdo empilhado.",
+      "behavior": "Somente habilitar como serviço real; Mobi pode aproveitar composição para atendimento consultivo.",
+      "data": "Escopo, profissionais e capacidade de entrega.",
+      "acceptance": "Não oferecer projeto 3D gratuito ou prazo da concorrente automaticamente.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P17",
+        "MM-P22",
+        "MM-P23",
+        "MM-P24",
+        "MM-P25",
+        "MM-P26",
+        "MM-P27",
+        "MM-P28",
+        "MM-P29",
+        "MM-P30",
+        "MM-P31",
+        "MM-P32",
+        "MM-P33",
+        "MM-P34"
+      ],
+      "dependencies": [
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-LANDING-05",
+      "group": "LANDING",
+      "title": "Atendimento para empresas",
+      "evidence": "V",
+      "desktop": "Hero com CTA de orçamento e grade de benefícios em duas colunas.",
+      "mobile": "Hero específico e benefícios empilhados; algumas imagens ficaram em placeholder.",
+      "behavior": "Orçamento é fluxo próprio, não checkout varejo disfarçado.",
+      "data": "Condições reais de volume, canal e qualificação.",
+      "acceptance": "Não prometer desconto por quantidade sem regra aprovada.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P17",
+        "MM-P22",
+        "MM-P23",
+        "MM-P24",
+        "MM-P25",
+        "MM-P26",
+        "MM-P27",
+        "MM-P28",
+        "MM-P29",
+        "MM-P30",
+        "MM-P31",
+        "MM-P32",
+        "MM-P33",
+        "MM-P34"
+      ],
+      "dependencies": [
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-LANDING-06",
+      "group": "LANDING",
+      "title": "Parceria para arquitetos",
+      "evidence": "V",
+      "desktop": "Hero, cartão explicativo com CTA e benefícios.",
+      "mobile": "Hero compacto e texto/CTA em cartão de uma coluna.",
+      "behavior": "Captar interesse só se existir programa e política.",
+      "data": "Condições comerciais e canal real.",
+      "acceptance": "Não oferecer cupons ou comissão inexistentes.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P17",
+        "MM-P22",
+        "MM-P23",
+        "MM-P24",
+        "MM-P25",
+        "MM-P26",
+        "MM-P27",
+        "MM-P28",
+        "MM-P29",
+        "MM-P30",
+        "MM-P31",
+        "MM-P32",
+        "MM-P33",
+        "MM-P34"
+      ],
+      "dependencies": [
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-LANDING-07",
+      "group": "LANDING",
+      "title": "Captação de vendedores marketplace",
+      "evidence": "V",
+      "desktop": "Hero em duas colunas, botões começar/já tenho conta, benefícios, passos e FAQ.",
+      "mobile": "Imagem acima, título e dois botões; benefícios abaixo.",
+      "behavior": "Mapeado integralmente como tipo comercial, mas onboarding externo não acessado.",
+      "data": "Modelo marketplace, regras, integração e suporte.",
+      "acceptance": "Não implementar cadastro de vendedores na Mobi sem mudança explícita do modelo.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P17",
+        "MM-P22",
+        "MM-P23",
+        "MM-P24",
+        "MM-P25",
+        "MM-P26",
+        "MM-P27",
+        "MM-P28",
+        "MM-P29",
+        "MM-P30",
+        "MM-P31",
+        "MM-P32",
+        "MM-P33",
+        "MM-P34"
+      ],
+      "dependencies": [
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-LANDING-08",
+      "group": "LANDING",
+      "title": "Aplicativo e QR code",
+      "evidence": "V",
+      "desktop": "Hero largo com QR code e benefícios do app.",
+      "mobile": "Arte própria com convite para baixar; QR não é a ação principal.",
+      "behavior": "Mobi pode usar composição para catálogo/WhatsApp; aplicativo depende de produto real.",
+      "data": "Links oficiais das lojas, se existir aplicativo.",
+      "acceptance": "Não criar QR para destino inexistente nem usar link do aplicativo concorrente.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P17",
+        "MM-P22",
+        "MM-P23",
+        "MM-P24",
+        "MM-P25",
+        "MM-P26",
+        "MM-P27",
+        "MM-P28",
+        "MM-P29",
+        "MM-P30",
+        "MM-P31",
+        "MM-P32",
+        "MM-P33",
+        "MM-P34"
+      ],
+      "dependencies": [
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-LANDING-09",
+      "group": "LANDING",
+      "title": "Carreiras",
+      "evidence": "V",
+      "desktop": "Cabeçalho próprio, navegação de vagas/cultura/benefícios e banners.",
+      "mobile": "Navegação horizontal com rolagem e banner vertical; fundo claro nessa área.",
+      "behavior": "Candidatura vai a serviço externo; formulário e envio não testados.",
+      "data": "Vagas reais e canal específico.",
+      "acceptance": "Não habilitar vagas ou coletar currículos sem finalidade definida.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P17",
+        "MM-P22",
+        "MM-P23",
+        "MM-P24",
+        "MM-P25",
+        "MM-P26",
+        "MM-P27",
+        "MM-P28",
+        "MM-P29",
+        "MM-P30",
+        "MM-P31",
+        "MM-P32",
+        "MM-P33",
+        "MM-P34"
+      ],
+      "dependencies": [
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-LANDING-10",
+      "group": "LANDING",
+      "title": "Responsabilidade social",
+      "evidence": "V",
+      "desktop": "Hero de texto e imagem, instituições e vídeos.",
+      "mobile": "Hero recomposto compacto e conteúdo em sequência.",
+      "behavior": "Mapear bloco institucional; Mobi só publica iniciativas comprovadas.",
+      "data": "Projetos, imagens autorizadas e links.",
+      "acceptance": "Não transferir impacto social e números da concorrente para a Mobi.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P17",
+        "MM-P22",
+        "MM-P23",
+        "MM-P24",
+        "MM-P25",
+        "MM-P26",
+        "MM-P27",
+        "MM-P28",
+        "MM-P29",
+        "MM-P30",
+        "MM-P31",
+        "MM-P32",
+        "MM-P33",
+        "MM-P34"
+      ],
+      "dependencies": [
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-LANDING-11",
+      "group": "LANDING",
+      "title": "Mapa HTML do site",
+      "evidence": "V",
+      "desktop": "Guia com quatro colunas de categorias/links no primeiro trecho.",
+      "mobile": "Uma coluna longa com grupos titulados.",
+      "behavior": "Links gerados da taxonomia publicada, não coleção manual divergente.",
+      "data": "Categorias públicas e hierarquia.",
+      "acceptance": "Todos os links retornam página válida e categorias inativas ficam de fora.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P17",
+        "MM-P22",
+        "MM-P23",
+        "MM-P24",
+        "MM-P25",
+        "MM-P26",
+        "MM-P27",
+        "MM-P28",
+        "MM-P29",
+        "MM-P30",
+        "MM-P31",
+        "MM-P32",
+        "MM-P33",
+        "MM-P34"
+      ],
+      "dependencies": [
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-LANDING-12",
+      "group": "LANDING",
+      "title": "Termos e privacidade",
+      "evidence": "V",
+      "desktop": "Conteúdo extenso com grupos de tópicos; captura desktop inicial teve carregamento parcial.",
+      "mobile": "Título, texto introdutório e acordeões numerados observados.",
+      "behavior": "Conteúdo deve ser próprio da operação Mobi; não é revisão jurídica nesta tarefa.",
+      "data": "Políticas vigentes e versão.",
+      "acceptance": "Links permanentes; consentimento e comportamento do site correspondem ao texto real.",
+      "priority": "conforme_negocio",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P17",
+        "MM-P22",
+        "MM-P23",
+        "MM-P24",
+        "MM-P25",
+        "MM-P26",
+        "MM-P27",
+        "MM-P28",
+        "MM-P29",
+        "MM-P30",
+        "MM-P31",
+        "MM-P32",
+        "MM-P33",
+        "MM-P34"
+      ],
+      "dependencies": [
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CMS-01",
+      "group": "CMS",
+      "title": "Biblioteca de banners",
+      "evidence": "P",
+      "desktop": "Proposta de painel: lista, editar, ordenar e prévia desktop/mobile.",
+      "mobile": "Editor com campos empilhados e visualização de ambas as artes.",
+      "behavior": "Salvar rascunho, publicar conforme autorização e restaurar configuração.",
+      "data": "ID, assets por viewport, alt, destino, ordem e período.",
+      "acceptance": "Rascunho não muda produção; exclusão da imagem não deixa banner ativo quebrado.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [],
+      "dependencies": [
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CMS-02",
+      "group": "CMS",
+      "title": "Compositor de seções",
+      "evidence": "P",
+      "desktop": "Proposta: ordenar hero, atalhos, vitrines, conteúdo e FAQ por página.",
+      "mobile": "Prévia específica, sem reordenar o cadastro de produtos.",
+      "behavior": "Configuração declarativa evita editar código a cada campanha.",
+      "data": "Tipo de seção, título, IDs, visibilidade e ordem.",
+      "acceptance": "Uma seção inválida não derruba a página inteira; não permitir HTML arbitrário inseguro.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [],
+      "dependencies": [
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CMS-03",
+      "group": "CMS",
+      "title": "Controle de preço e desconto",
+      "evidence": "P",
+      "desktop": "Painel solicitado por Rafael: campos comerciais e prévia de resultado.",
+      "mobile": "Mesmo cálculo do site e total por parcela visíveis.",
+      "behavior": "Guardar condição, base de cálculo e vigência; desconto percentual e preço fixo têm regra explícita.",
+      "data": "Preço em centavos, referência, promoção, taxas e versão anterior.",
+      "acceptance": "Salvar/restaurar não altera preços fora dos produtos selecionados.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [],
+      "dependencies": [
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CMS-04",
+      "group": "CMS",
+      "title": "Campanha temporária reversível",
+      "evidence": "P",
+      "desktop": "Ativar/desativar tema e seções por configuração.",
+      "mobile": "Mesma chave de campanha altera as duas versões do site.",
+      "behavior": "Snapshot antes de aplicar; restaurar configuração apenas, preservando pedidos e dados novos.",
+      "data": "Versão da campanha e snapshot de configuração.",
+      "acceptance": "Reversão não usa backup integral antigo do banco, que apagaria alterações posteriores.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [],
+      "dependencies": [
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CMS-05",
+      "group": "CMS",
+      "title": "Prévia local",
+      "evidence": "P",
+      "desktop": "Página local mostra alterações antes da aprovação.",
+      "mobile": "Prévia disponível em viewport pequeno e grande.",
+      "behavior": "Não confundir prévia local com produção nem gravar catálogo real durante teste.",
+      "data": "Configuração em rascunho e dados de leitura.",
+      "acceptance": "Exibir claramente ambiente de prévia ao responsável, sem levar termos técnicos ao cliente final.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [],
+      "dependencies": [
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CMS-06",
+      "group": "CMS",
+      "title": "Gerenciar filtros e atributos",
+      "evidence": "P",
+      "desktop": "Painel de atributos relevantes por categoria.",
+      "mobile": "Editor legível, sem tabela excessivamente larga.",
+      "behavior": "Normalizar opções; não criar sinônimo novo para cada importação.",
+      "data": "Taxonomia, unidades e mapeamento do fornecedor.",
+      "acceptance": "Linho/linho não geram dois filtros; número de medida não fica em campo de cor.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [],
+      "dependencies": [
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CMS-07",
+      "group": "CMS",
+      "title": "Conteúdo e ajuda",
+      "evidence": "P",
+      "desktop": "Editor de título, slug, corpo, categoria, status e revisão.",
+      "mobile": "Prévia de leitura e controle de links.",
+      "behavior": "Publicar só conteúdo pronto; manter versão anterior.",
+      "data": "Artigos e metadados.",
+      "acceptance": "Conteúdo em rascunho não entra em busca nem sitemap público.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [],
+      "dependencies": [
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-CMS-08",
+      "group": "CMS",
+      "title": "Auditoria de alterações",
+      "evidence": "P",
+      "desktop": "Registro de o que mudou, quando, antes/depois e responsável.",
+      "mobile": "Consulta de histórico sem editar registros de auditoria.",
+      "behavior": "Aplicar aos preços e campanhas; evitar registrar dados pessoais desnecessários.",
+      "data": "Evento, recurso, versão e responsável autenticado.",
+      "acceptance": "Restaurar gera nova versão e registro; não apaga evidência da alteração anterior.",
+      "priority": "media",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [],
+      "dependencies": [
+        "configuracao_de_campanha_versionada"
+      ],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-QUALITY-01",
+      "group": "QUALITY",
+      "title": "Acessibilidade de controles",
+      "evidence": "P",
+      "desktop": "Todos os ícones têm nomes acessíveis e foco visível.",
+      "mobile": "Áreas de toque de pelo menos 44 x 44 px propostas para a Mobi.",
+      "behavior": "Botão é button, link navega; acordeão expõe expandido; diálogos mantêm foco.",
+      "data": "Sem dado comercial adicional.",
+      "acceptance": "Testar teclado e leitor de tela nos fluxos alterados, além da inspeção visual.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P04",
+        "MM-P07"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-QUALITY-02",
+      "group": "QUALITY",
+      "title": "Imagens e carregamento",
+      "evidence": "V",
+      "desktop": "Placeholders e carregamento gradual foram observados; não são estética final.",
+      "mobile": "Carregar arte menor para celular e reservar proporção.",
+      "behavior": "Mobi: prioridade para primeira imagem, lazy nas inferiores, tratamento de falha.",
+      "data": "Assets de tamanhos adequados.",
+      "acceptance": "Não usar skeleton como imagem final; nenhuma foto do produto é cortada para mascarar erro.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P04",
+        "MM-P07"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-QUALITY-03",
+      "group": "QUALITY",
+      "title": "Responsividade verificável",
+      "evidence": "P",
+      "desktop": "Proposta de homologação a 1024 e 1440 px.",
+      "mobile": "Proposta a 360, 390 e 768 px, inclusive rotação.",
+      "behavior": "Evitar dois estados de carrinho ou galeria independentes por viewport.",
+      "data": "Breakpoints reais existentes do projeto.",
+      "acceptance": "Além de screenshots, verificar scroll, toque, foco, dropdown e banners carregados.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P04",
+        "MM-P07"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-QUALITY-04",
+      "group": "QUALITY",
+      "title": "Medição de funil",
+      "evidence": "P",
+      "desktop": "Eventos de busca, filtro, produto, carrinho e intenção WhatsApp.",
+      "mobile": "Mesmos eventos sem duplicidade causada por componentes mobile/desktop.",
+      "behavior": "Não marcar compra só porque WhatsApp abriu; usar venda confirmada do processo real.",
+      "data": "IDs de produto/campanha e consentimento aplicável.",
+      "acceptance": "Uma interação gera um evento, sem nome, endereço ou telefone nos parâmetros analíticos.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P04",
+        "MM-P07"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-QUALITY-05",
+      "group": "QUALITY",
+      "title": "Metadados e indexação",
+      "evidence": "T",
+      "desktop": "Conteúdo público apresenta títulos e dados sociais; políticas e 404 têm tratamentos distintos.",
+      "mobile": "Mesmo conteúdo sem divergência de preço entre dispositivos.",
+      "behavior": "Mobi: canonical, produto, oferta, breadcrumb e sitemap baseados nos dados reais.",
+      "data": "URLs, disponibilidade, moeda e preço vigente.",
+      "acceptance": "Valor estruturado coincide com preço público; não inventar GTIN/SKU ou avaliação.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P04",
+        "MM-P07"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-QUALITY-06",
+      "group": "QUALITY",
+      "title": "Integração com código existente",
+      "evidence": "P",
+      "desktop": "Inspecionar componentes e funções existentes antes de criar novos.",
+      "mobile": "Reutilizar estado e cálculo; apenas apresentação pode mudar entre telas.",
+      "behavior": "Não definir framework ou nomes de arquivos reais sem examinar o repositório Mobi.",
+      "data": "Inventário do repositório e contratos atuais.",
+      "acceptance": "Entregar tabela ID do requisito para arquivo/componente e evidência de validação.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P04",
+        "MM-P07"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-QUALITY-07",
+      "group": "QUALITY",
+      "title": "Reversão e publicação",
+      "evidence": "P",
+      "desktop": "Branch isolada, commits pequenos e instrução de rollback.",
+      "mobile": "Mesma configuração retorna as versões mobile e desktop.",
+      "behavior": "Rafael pediu prévia local antes de aprovar publicação; não interpretar este documento como autorização de deploy.",
+      "data": "Branch, alteração e configuração anterior.",
+      "acceptance": "Reverter módulo não desfaz pedidos ou registros de produção.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P04",
+        "MM-P07"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    },
+    {
+      "id": "MM-QUALITY-08",
+      "group": "QUALITY",
+      "title": "Dados ausentes e inconsistentes",
+      "evidence": "P",
+      "desktop": "Ausência de dimensão, tecido, foto ou preço tem estado definido.",
+      "mobile": "Mesma regra em card e produto.",
+      "behavior": "Não deduzir atributos pela fotografia; criar pendência para revisão do catálogo.",
+      "data": "Valor, origem e confiabilidade do atributo.",
+      "acceptance": "Sofá com largura contraditória fica sinalizado; não publicar certeza técnica falsa.",
+      "priority": "alta",
+      "implementation_status": "nao_iniciado",
+      "selected": false,
+      "sources": [
+        "MM-P01",
+        "MM-P04",
+        "MM-P07"
+      ],
+      "dependencies": [],
+      "rollback": "Desligar o módulo/configuração ou reverter o commit isolado; preservar pedidos e alterações posteriores.",
+      "application_policy": "ADAPTAR_MOBI"
+    }
+  ],
+  "application_policy": "ADAPTAR_MOBI",
+  "development_environments": [
+    "local",
+    "github_isolated_branch"
+  ],
+  "production_requires_explicit_version_approval": true,
+  "production_data_changes_during_preview_authorized": false
+}
