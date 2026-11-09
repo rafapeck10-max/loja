@@ -1,5 +1,11 @@
 # PM-01 — Visão geral Mobi
 
+## Revisão 2
+
+O resumo e a navegação foram refeitos após a rejeição visual da primeira versão. `AdminWorkspace.tsx` agora é compartilhado pela prévia e pelo admin real: sidebar no computador, gaveta no celular, busca e ajuda. Cinco áreas operacionais são representadas; quatro fontes não integradas permanecem sem valores. Pendências incluem impacto. O feedback sobre espaços foi aplicado removendo alturas reservadas e reduzindo intervalos, sem reduzir os alvos de toque.
+
+O teste de navegador também cobre foco da gaveta/ajuda, retorno após Escape, busca e rotação. Ver a seção 9 de `docs/PM01_CONFERENCIA_DOCUMENTAL.md` para evidências e limites atualizados. A descrição da primeira entrega abaixo permanece como histórico técnico; o estado visual atual é o da revisão 2.
+
 Entrega local em `feature/pm01-visao-geral`, baseada na main `23c0d6749e911b6a9c91376deb71517f439c3c74`.
 
 ## Implementação

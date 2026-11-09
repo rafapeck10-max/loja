@@ -171,7 +171,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const isAdminRoute = useRouterState({ select: (state) => state.location.pathname === "/admin" });
+  const isAdminRoute = useRouterState({ select: (state) => state.location.pathname.replace(/\/$/, "") === "/admin" });
   const isLinksRoute = useRouterState({
     select: (state) => state.location.pathname.replace(/\/$/, "") === "/links",
   });
@@ -184,10 +184,12 @@ function RootComponent() {
             className={
               isLinksRoute
                 ? "flex min-h-screen flex-col bg-[#073f3b]"
-                : "store-shell flex min-h-screen flex-col"
+                : isAdminRoute
+                  ? "admin-shell flex min-h-screen flex-col"
+                  : "store-shell flex min-h-screen flex-col"
             }
           >
-            {!isLinksRoute && <Header />}
+            {!isLinksRoute && !isAdminRoute && <Header />}
             <main
               id="conteudo"
               className={isAdminRoute || isLinksRoute ? "flex-1" : "flex-1 pb-20 md:pb-0"}
@@ -195,7 +197,7 @@ function RootComponent() {
               {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
               <Outlet />
             </main>
-            {!isLinksRoute && <Footer />}
+            {!isLinksRoute && !isAdminRoute && <Footer />}
           </div>
           {!isAdminRoute && !isLinksRoute && <WhatsAppFloat />}
           <CartDrawer />

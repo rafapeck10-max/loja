@@ -3,6 +3,14 @@ import { productStatus } from "./admin-filters.ts";
 
 export const ADMIN_REVIEW_QUERY_LIMIT = 500;
 
+export function overviewImpact(product: OverviewProduct): string {
+  if (!(Number(product.preco_atual) > 0))
+    return "Sem preço de venda válido, o produto não atende aos critérios de exibição do catálogo.";
+  if (!/^https?:\/\//i.test(product.url_imagem ?? ""))
+    return "Sem endereço de imagem válido, o cadastro precisa de revisão antes da exibição.";
+  return "O custo pendente impede a elegibilidade pelas regras atuais do catálogo.";
+}
+
 export type OverviewProduct = Pick<
   ProdutoAdmin,
   "id" | "nome" | "preco_atual" | "preco_atacado" | "url_imagem"

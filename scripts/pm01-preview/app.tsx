@@ -1,8 +1,9 @@
 import { useState } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
 import { createRoot } from "react-dom/client";
 import { ArrowLeft, Check, Image, Layers3, Package, X } from "lucide-react";
 import { AdminOverview } from "../../src/components/AdminOverview";
-import { MobiliLogo } from "../../src/components/MobiliLogo";
+import { AdminWorkspace } from "../../src/components/AdminWorkspace";
 import { productStatus, type ProductStatus } from "../../src/lib/admin-filters";
 import type { OverviewProduct } from "../../src/lib/admin-overview";
 import "../../src/styles.css";
@@ -40,6 +41,7 @@ const tabs = [
 
 export function Preview() {
   const [tab, setTab] = useState("overview");
+  const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | ProductStatus>("all");
   const [editing, setEditing] = useState<OverviewProduct | null>(null);
   const [scenario, setScenario] = useState("success");
@@ -49,6 +51,7 @@ export function Preview() {
   const sample = scenario === "empty" ? [] : products;
   const queue = scenario === "empty" ? [] : imports;
   const openProducts = (next: "all" | ProductStatus) => {
+    setSearch("");
     setFilter(next);
     setTab("produtos");
   };
@@ -62,37 +65,15 @@ export function Preview() {
   };
   return (
     <>
-      <header className="preview-brand">
-        <div>
-          <MobiliLogo className="preview-logo" />
-          <span>Painel da loja</span>
-        </div>
-        <span className="preview-private">Ambiente de demonstração</span>
-      </header>
-      <main className="preview-main">
-        <div className="preview-title">
-          <p>Administração da loja</p>
-          <h1>Painel Mobi</h1>
-          <span>
-            Catálogo, vitrine e banners em um só lugar. Veja o que precisa de atenção e continue de
-            onde parou.
-          </span>
-        </div>
-        <nav className="admin-workspace admin-workspace--overview" aria-label="Áreas da prévia">
-          <div className="admin-workspace-tabs">
-            {tabs.map(([value, label]) => (
-              <button
-                className="admin-workspace-tab"
-                data-state={tab === value ? "active" : "inactive"}
-                key={value}
-                onClick={() => setTab(value)}
-                aria-current={tab === value ? "page" : undefined}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </nav>
+      <AdminWorkspace
+        area={tab}
+        demonstration
+        onNavigate={setTab}
+        onSearch={(query) => {
+          openProducts("all");
+          setSearch(query);
+        }}
+      >
         {tab === "overview" ? (
           <AdminOverview
             demonstration
@@ -111,7 +92,7 @@ export function Preview() {
           />
         ) : (
           <section className="preview-destination">
-            <button className="ov-button" onClick={() => setTab("overview")}>
+            <button className="aw-action" onClick={() => setTab("overview")}>
               <ArrowLeft size={16} /> Voltar à Visão geral
             </button>
             <h2>{tabs.find(([value]) => value === tab)?.[1]}</h2>
@@ -135,12 +116,18 @@ export function Preview() {
                 </label>
                 <ul className="preview-products">
                   {sample
-                    .filter((p) => filter === "all" || productStatus(p) === filter)
+                    .filter(
+                      (p) =>
+                        (filter === "all" || productStatus(p) === filter) &&
+                        p.nome
+                          .toLocaleLowerCase("pt-BR")
+                          .includes(search.toLocaleLowerCase("pt-BR")),
+                    )
                     .map((p) => (
                       <li key={p.id}>
                         <Package size={20} />
                         <span>{p.nome}</span>
-                        <button className="ov-button" onClick={() => setEditing(p)}>
+                        <button className="aw-action" onClick={() => setEditing(p)}>
                           Ver cadastro
                         </button>
                       </li>
@@ -190,47 +177,44 @@ export function Preview() {
           </label>
           <p>Dados fictícios para revisar o comportamento. Não há acesso ao banco da loja.</p>
         </details>
-      </main>
+      </AdminWorkspace>
       {editing && (
-        <div className="preview-backdrop" onClick={() => setEditing(null)}>
-          <section
-            className="preview-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="preview-dialog-title"
-            ref={(element) => element?.focus()}
-            tabIndex={-1}
-            onKeyDown={(event) => {
-              if (event.key === "Escape") setEditing(null);
-            }}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button
-              className="preview-close ov-button"
-              aria-label="Fechar cadastro"
-              onClick={() => setEditing(null)}
-            >
-              <X size={18} />
-            </button>
-            <p className="ov-eyebrow">Cadastro de demonstração</p>
-            <h2 id="preview-dialog-title">{editing.nome}</h2>
-            <p>
-              Este é o produto indicado pela pendência. No painel integrado, o botão Revisar abre o
-              formulário já existente.
-            </p>
-            <dl>
-              <dt>Preço de venda</dt>
-              <dd>{editing.preco_atual ? "Informado" : "Pendente"}</dd>
-              <dt>Imagem principal</dt>
-              <dd>{editing.url_imagem ? "Endereço informado" : "Pendente"}</dd>
-              <dt>Custo do fornecedor</dt>
-              <dd>{editing.preco_atacado ? "Informado" : "Pendente"}</dd>
-            </dl>
-            <p className="preview-safe">
-              <Check size={16} /> Nenhum dado real foi alterado.
-            </p>
-          </section>
-        </div>
+        <Dialog.Root
+          open
+          onOpenChange={(open) => {
+            if (!open) setEditing(null);
+          }}
+        >
+          <Dialog.Portal>
+            <Dialog.Overlay className="aw-overlay" />
+            <Dialog.Content className="aw-help preview-dialog">
+              <button
+                className="preview-close aw-action"
+                aria-label="Fechar cadastro"
+                onClick={() => setEditing(null)}
+              >
+                <X size={18} />
+              </button>
+              <p className="ov-eyebrow">Cadastro de demonstração</p>
+              <Dialog.Title>{editing.nome}</Dialog.Title>
+              <Dialog.Description>
+                Este é o produto indicado pela pendência. No painel integrado, o botão Revisar abre
+                o formulário já existente.
+              </Dialog.Description>
+              <dl>
+                <dt>Preço de venda</dt>
+                <dd>{editing.preco_atual ? "Informado" : "Pendente"}</dd>
+                <dt>Imagem principal</dt>
+                <dd>{editing.url_imagem ? "Endereço informado" : "Pendente"}</dd>
+                <dt>Custo do fornecedor</dt>
+                <dd>{editing.preco_atacado ? "Informado" : "Pendente"}</dd>
+              </dl>
+              <p className="preview-safe">
+                <Check size={16} /> Nenhum dado real foi alterado.
+              </p>
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
       )}
     </>
   );

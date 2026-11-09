@@ -1,6 +1,22 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { summarizeOverview } from "../src/lib/admin-overview.ts";
+import { overviewImpact } from "../src/lib/admin-overview.ts";
+
+test("attention explains the consequence without claiming physical stock or confirmed image loading", () => {
+  assert.equal(
+    overviewImpact(product("a", { preco_atual: 0 })),
+    "Sem preço de venda válido, o produto não atende aos critérios de exibição do catálogo.",
+  );
+  assert.equal(
+    overviewImpact(product("a", { url_imagem: "" })),
+    "Sem endereço de imagem válido, o cadastro precisa de revisão antes da exibição.",
+  );
+  assert.equal(
+    overviewImpact(product("a", { preco_atacado: 0 })),
+    "O custo pendente impede a elegibilidade pelas regras atuais do catálogo.",
+  );
+});
 
 const product = (id, changes = {}) => ({
   id,

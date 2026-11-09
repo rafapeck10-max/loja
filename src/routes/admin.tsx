@@ -20,7 +20,7 @@ import {
 } from "@/lib/admin.functions";
 import { formatBRL } from "@/lib/constants";
 import { hasRealReferencePrice } from "@/lib/price-reference";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { AdminWorkspace } from "@/components/AdminWorkspace";
 import { HomeCurationPanel } from "@/components/HomeCurationPanel";
 import { HomeBannersPanel } from "@/components/HomeBannersPanel";
 import { AdminOverview } from "@/components/AdminOverview";
@@ -547,34 +547,9 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
     (minPrice != null && maxPrice != null && minPrice > maxPrice);
 
   return (
-    <div className="mx-auto max-w-[1280px] px-4 py-6 sm:px-[5%] sm:py-10">
-      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-[2px] text-gold">
-            Administração da loja
-          </p>
-          <h1 className="text-3xl text-deep-green sm:text-4xl">Painel Mobi</h1>
-          <p className="mt-2 max-w-2xl text-sm text-text-light">
-            Catálogo, vitrine e banners em um só lugar. Veja o que precisa de atenção e continue de onde parou.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={startNew}
-            className="flex flex-1 items-center justify-center gap-2 bg-deep-green px-4 py-3 text-xs font-bold uppercase tracking-wider text-sand transition-colors hover:bg-gold hover:text-deep-green sm:flex-none"
-          >
-            <Plus className="h-4 w-4" /> Novo
-          </button>
-          <button
-            onClick={onLogout}
-            aria-label="Sair"
-            className="flex flex-1 items-center justify-center gap-2 border border-cacau/20 px-4 py-3 text-xs font-bold uppercase tracking-wider text-cacau transition-colors hover:border-gold hover:text-gold sm:flex-none"
-          >
-            <LogOut className="h-4 w-4" /> Sair
-          </button>
-        </div>
-      </div>
-
+    <AdminWorkspace area={workspaceTab} onNavigate={setWorkspaceTab} onLogout={onLogout}
+      onSearch={(query) => { clearFilters(); setSearch(query); setWorkspaceTab("produtos"); }}>
+      {workspaceTab === "produtos" && <div className="aw-editor-toolbar"><h1>Produtos</h1><button className="aw-action" onClick={startNew}><Plus size={16}/> Novo produto</button></div>}
       <div hidden={workspaceTab === "overview"} className={workspaceTab === "overview" ? "hidden" : "mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4"}>
         <button
           type="button"
@@ -622,15 +597,8 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
         </button>
       </div>
 
-      <Tabs value={workspaceTab} onValueChange={setWorkspaceTab} className="admin-workspace admin-workspace--overview">
-        <TabsList aria-label="Áreas do painel admin" className="admin-workspace-tabs">
-          <TabsTrigger value="overview" className="admin-workspace-tab">Visão geral</TabsTrigger>
-          <TabsTrigger value="vitrine" className="admin-workspace-tab">Vitrine da página inicial</TabsTrigger>
-          <TabsTrigger value="banners" className="admin-workspace-tab">Banner da página inicial</TabsTrigger>
-          <TabsTrigger value="revisao" className="admin-workspace-tab">Produtos coletados para revisão</TabsTrigger>
-          <TabsTrigger value="produtos" className="admin-workspace-tab">Encontrar produtos</TabsTrigger>
-        </TabsList>
-        <TabsContent value="overview" forceMount className="admin-workspace-panel">
+      <div className="admin-workspace">
+        <section hidden={workspaceTab !== "overview"} data-state={workspaceTab === "overview" ? "active" : "inactive"} className="admin-workspace-panel" aria-label="overview">
           <AdminOverview
             catalog={{ status: isError ? "error" : isCatalogPending ? "pending" : "success", data: produtos, updatedAt: catalogUpdatedAt }}
             review={{ status: isScrapedError ? "error" : isScrapedPending ? "pending" : "success", data: pendingScrapedProducts, updatedAt: reviewUpdatedAt, limit: ADMIN_REVIEW_QUERY_LIMIT }}
@@ -640,14 +608,14 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
             onEdit={startEdit}
             onNavigate={setWorkspaceTab}
           />
-        </TabsContent>
-        <TabsContent value="vitrine" forceMount className="admin-workspace-panel">
+        </section>
+        <section hidden={workspaceTab !== "vitrine"} data-state={workspaceTab === "vitrine" ? "active" : "inactive"} className="admin-workspace-panel" aria-label="vitrine">
           <HomeCurationPanel password={password} products={produtos} />
-        </TabsContent>
-        <TabsContent value="banners" forceMount className="admin-workspace-panel">
+        </section>
+        <section hidden={workspaceTab !== "banners"} data-state={workspaceTab === "banners" ? "active" : "inactive"} className="admin-workspace-panel" aria-label="banners">
           <HomeBannersPanel password={password} />
-        </TabsContent>
-        <TabsContent value="revisao" forceMount className="admin-workspace-panel">
+        </section>
+        <section hidden={workspaceTab !== "revisao"} data-state={workspaceTab === "revisao" ? "active" : "inactive"} className="admin-workspace-panel" aria-label="revisao">
 
       <section className="mb-6 border border-gold/30 bg-gold/5 p-4 sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -761,8 +729,8 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
         )}
       </section>
 
-        </TabsContent>
-        <TabsContent value="produtos" forceMount className="admin-workspace-panel">
+        </section>
+        <section hidden={workspaceTab !== "produtos"} data-state={workspaceTab === "produtos" ? "active" : "inactive"} className="admin-workspace-panel" aria-label="produtos">
       <section
         id="admin-product-filters"
         className="mb-6 scroll-mt-4 border border-cacau/10 bg-sand/50 p-4 sm:p-5"
@@ -1034,8 +1002,8 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
         </div>
       )}
 
-        </TabsContent>
-      </Tabs>
+        </section>
+      </div>
 
       {editing && (
         <ProductForm
@@ -1049,7 +1017,7 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
           saving={saving}
         />
       )}
-    </div>
+    </AdminWorkspace>
   );
 }
 

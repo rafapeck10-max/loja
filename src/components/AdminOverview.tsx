@@ -1,18 +1,19 @@
+import { useState } from "react";
 import {
   ArrowDownToLine,
   ArrowRight,
   Check,
   CircleAlert,
   Clock3,
+  FileCheck2,
   Image,
   Layers3,
-  LayoutDashboard,
   Package,
   RefreshCw,
-  Sparkles,
-  Wallet,
+  Wrench,
 } from "lucide-react";
 import {
+  overviewImpact,
   summarizeOverview,
   type OverviewProduct,
   type OverviewSource,
@@ -30,7 +31,6 @@ export interface AdminOverviewProps<T extends OverviewProduct = OverviewProduct>
   onNavigate: (area: "vitrine" | "banners" | "revisao") => void;
   demonstration?: boolean;
 }
-
 function SourceTime({ value }: { value?: number }) {
   return value ? (
     <time dateTime={new Date(value).toISOString()}>
@@ -44,10 +44,9 @@ function SourceTime({ value }: { value?: number }) {
       · Brasília
     </time>
   ) : (
-    <>Ainda sem atualização concluída</>
+    <>Sem consulta concluída</>
   );
 }
-
 export function AdminOverview<T extends OverviewProduct>({
   catalog,
   review,
@@ -58,306 +57,317 @@ export function AdminOverview<T extends OverviewProduct>({
   onNavigate,
   demonstration = false,
 }: AdminOverviewProps<T>) {
+  const [showAll, setShowAll] = useState(false);
   const { counts, issues, reviewLimitReached } = summarizeOverview(catalog, review);
-  const catalogReady = catalog.status === "success" && catalog.data !== undefined;
-  const reviewReady = review.status === "success" && review.data !== undefined;
-  const metrics = [
+  const ready = catalog.status === "success" && catalog.data !== undefined;
+  const queueReady = review.status === "success" && review.data !== undefined;
+  const pendingModules = [
     {
-      label: "Publicados",
-      value: counts.published,
-      hint: "Pelos critérios do painel",
-      icon: Package,
-      action: () => onProducts("published"),
-      ready: catalogReady,
-      kind: "green",
+      name: "Rascunhos em revisão",
+      icon: FileCheck2,
+      source: "Revisões editoriais",
+      reason: "Depende de rascunhos persistentes e do fluxo de revisão.",
     },
     {
-      label: "Aguardando preço",
-      value: counts.awaiting,
-      hint: "Precisam de preço de venda",
-      icon: Wallet,
-      action: () => onProducts("awaiting"),
-      ready: catalogReady,
-      kind: "gold",
+      name: "Campanhas vigentes",
+      icon: Layers3,
+      source: "Campanhas",
+      reason: "Depende do cadastro de campanhas e de suas datas de vigência.",
     },
     {
-      label: "Incompletos",
-      value: counts.incomplete,
-      hint: "Revisar imagem ou custo",
-      icon: CircleAlert,
-      action: () => onProducts("incomplete"),
-      ready: catalogReady,
-      kind: "clay",
+      name: "Campanhas terminando",
+      icon: Clock3,
+      source: "Vigência das campanhas",
+      reason: "Depende das datas da campanha e da definição da janela de encerramento.",
     },
     {
-      label: "Para revisão",
-      value: counts.review,
-      hint: reviewLimitReached ? "Limite da consulta atingido" : "Coletados de fornecedores",
-      icon: ArrowDownToLine,
-      action: () => onNavigate("revisao"),
-      ready: reviewReady,
-      kind: "neutral",
+      name: "Desenvolvimento",
+      icon: Wrench,
+      source: "Evolução do site",
+      reason: "Depende do acompanhamento real de solicitações e validações.",
     },
   ];
   return (
     <section className="mobi-overview" aria-label="Visão geral do painel">
-      {demonstration && (
-        <div className="ov-demo">
-          <Sparkles size={16} aria-hidden="true" />
-          <span>Prévia local · dados de demonstração · nenhuma alteração na loja</span>
-        </div>
-      )}
       <header className="ov-heading">
         <div>
-          <p className="ov-eyebrow">O essencial da sua operação</p>
-          <h2>Visão geral</h2>
-          <p>Acompanhe o catálogo e encontre o próximo cuidado com a sua loja.</p>
+          <p className="ov-eyebrow">GESTÃO DO SITE</p>
+          <h1>Visão geral</h1>
+          <p>O que está acontecendo e o que precisa da sua atenção.</p>
         </div>
-        <button className="ov-button" onClick={onRefresh} disabled={refreshing}>
-          <RefreshCw size={16} className={refreshing ? "ov-spin" : ""} aria-hidden="true" />
+        <button type="button" className="aw-action" onClick={onRefresh} disabled={refreshing}>
+          <RefreshCw size={16} className={refreshing ? "ov-spin" : ""} />
           {refreshing ? "Atualizando…" : "Atualizar dados"}
         </button>
       </header>
       <div className="ov-metrics">
-        {metrics.map(({ label, value, hint, icon: Icon, action, ready, kind }) => (
-          <button key={label} className={`ov-metric ov-${kind}`} onClick={action} disabled={!ready}>
-            <span className="ov-metric-top">
+        <article className="ov-metric ov-metric-live">
+          <div className="ov-metric-top">
+            <span className="ov-icon">
+              <CircleAlert size={18} />
+            </span>
+            <span className="ov-live-tag">
+              {ready ? "Consultado" : catalog.status === "error" ? "Indisponível" : "Consultando"}
+            </span>
+          </div>
+          <h2>Cadastros para revisar</h2>
+          <strong>{ready ? issues.length : "—"}</strong>
+          <p>
+            {ready
+              ? "Produtos com pendências de cadastro"
+              : catalog.status === "error"
+                ? "Não foi possível confirmar a contagem"
+                : "Aguardando o catálogo"}
+          </p>
+          <details>
+            <summary>Origem e atualização</summary>
+            <span>
+              {demonstration
+                ? "Amostra local · catálogo demonstrativo"
+                : "Consulta administrativa do catálogo"}
+            </span>
+            <SourceTime value={ready ? catalog.updatedAt : undefined} />
+            <span>Critérios: preço de venda, endereço de imagem e custo do fornecedor.</span>
+          </details>
+        </article>
+        {pendingModules.map(({ name, icon: Icon, source, reason }) => (
+          <article className="ov-metric" key={name}>
+            <div className="ov-metric-top">
               <span className="ov-icon">
-                <Icon size={19} aria-hidden="true" />
+                <Icon size={18} />
               </span>
-              <ArrowRight size={17} aria-hidden="true" />
-            </span>
-            <span className="ov-metric-label">{label}</span>
-            <strong>
-              {value == null
-                ? "—"
-                : `${value.toLocaleString("pt-BR")}${label === "Para revisão" && reviewLimitReached ? "+" : ""}`}
-            </strong>
-            <span className="ov-metric-hint">
-              {ready
-                ? hint
-                : (label === "Para revisão" ? review.status : catalog.status) === "error"
-                  ? "Consulta indisponível"
-                  : "Consultando dados…"}
-            </span>
-          </button>
+              <span className="ov-unavailable">Não integrado</span>
+            </div>
+            <h2>{name}</h2>
+            <strong>—</strong>
+            <p>
+              {name === "Desenvolvimento"
+                ? "Solicitações e validações do site"
+                : "Aguardando fonte de dados"}
+            </p>
+            <details>
+              <summary>O que falta integrar</summary>
+              <span>Fonte prevista: {source}.</span>
+              <span>{reason}</span>
+              <span>Sem consulta disponível; não representa zero.</span>
+            </details>
+          </article>
         ))}
+      </div>
+      <div className="ov-catalog-strip">
+        <span>
+          <Package size={17} />
+          <strong>{counts.total ?? "—"}</strong> no catálogo
+        </span>
+        <button type="button" onClick={() => onProducts("published")} disabled={!ready}>
+          <span className="ov-small-dot" />
+          {counts.published ?? "—"} elegíveis <ArrowRight size={13} />
+        </button>
+        <button type="button" onClick={() => onProducts("awaiting")} disabled={!ready}>
+          {counts.awaiting ?? "—"} aguardando preço <ArrowRight size={13} />
+        </button>
+        <button type="button" onClick={() => onNavigate("revisao")} disabled={!queueReady}>
+          <ArrowDownToLine size={15} />
+          {counts.review == null ? "—" : `${counts.review}${reviewLimitReached ? "+" : ""}`}{" "}
+          coletados para revisão <ArrowRight size={13} />
+        </button>
       </div>
       <div className="ov-columns">
         <section className="ov-panel ov-attention" aria-labelledby="ov-attention-title">
           <div className="ov-panel-heading">
             <div>
-              <p className="ov-eyebrow">Próximos passos</p>
-              <h3 id="ov-attention-title">Precisa da sua atenção</h3>
+              <h2 id="ov-attention-title">Precisa da sua atenção</h2>
+              <p>Pendências identificadas nos dados consultados.</p>
             </div>
-            {catalogReady && (
-              <span className="ov-count">
-                {issues.length} {issues.length === 1 ? "produto" : "produtos"}
-              </span>
-            )}
+            <span className="ov-count">
+              {ready
+                ? `${issues.length} ${issues.length === 1 ? "produto" : "produtos"}`
+                : "Sem contagem"}
+            </span>
           </div>
           {catalog.status === "error" ? (
             <div className="ov-message" role="alert">
-              <CircleAlert aria-hidden="true" />
+              <CircleAlert />
               <div>
-                <h4>Não foi possível consultar o catálogo</h4>
-                <p>As pendências não puderam ser verificadas. Tente atualizar os dados.</p>
+                <h3>Não foi possível consultar o catálogo</h3>
+                <p>As pendências não puderam ser verificadas. Nenhum total foi presumido.</p>
                 <button className="ov-text-button" onClick={onRefresh} disabled={refreshing}>
-                  Tentar novamente <ArrowRight size={15} aria-hidden="true" />
+                  Tentar novamente <ArrowRight size={15} />
                 </button>
               </div>
             </div>
-          ) : !catalogReady ? (
-            <p className="ov-loading" role="status">
+          ) : !ready ? (
+            <div className="ov-loading" role="status">
+              <RefreshCw className="ov-spin" size={18} />
               Verificando os cadastros…
-            </p>
+            </div>
           ) : issues.length === 0 ? (
             <div className="ov-message ov-good">
-              <Check aria-hidden="true" />
+              <Check />
               <div>
-                <h4>
-                  {counts.total === 0 ? "Seu catálogo está vazio" : "Cadastros em dia por aqui"}
-                </h4>
+                <h3>
+                  {counts.total === 0
+                    ? "Seu catálogo está vazio"
+                    : "Nenhuma pendência nas regras consultadas"}
+                </h3>
                 <p>
                   {counts.total === 0
                     ? "Abra Produtos para começar o cadastro."
-                    : "Nenhuma pendência de preço, imagem ou custo nos cadastros consultados. Estoque físico não é verificado."}
+                    : "Preço, endereço de imagem e custo conferidos. Estoque físico e carregamento das fotos não foram verificados."}
                 </p>
                 <button className="ov-text-button" onClick={() => onProducts("all")}>
-                  Abrir produtos <ArrowRight size={15} aria-hidden="true" />
+                  Abrir produtos <ArrowRight size={15} />
                 </button>
               </div>
             </div>
           ) : (
             <>
+              <div className="ov-list-head">
+                <span>ITEM E PENDÊNCIA</span>
+                <span>AÇÃO</span>
+              </div>
               <ul className="ov-issues">
-                {issues.slice(0, 5).map(({ product, reasons }) => (
+                {(showAll ? issues : issues.slice(0, 5)).map(({ product, reasons }) => (
                   <li key={product.id}>
-                    <span className="ov-issue-icon">
-                      <CircleAlert size={17} aria-hidden="true" />
-                    </span>
-                    <div>
-                      <h4>{product.nome}</h4>
-                      <p>{reasons.join(" · ")}</p>
+                    <div className="ov-issue-type">
+                      <Package size={17} />
+                    </div>
+                    <div className="ov-issue-content">
+                      <span className="ov-type-label">CADASTRO</span>
+                      <h3>{product.nome}</h3>
+                      <p className="ov-problem">{reasons.join(" · ")}</p>
+                      <p className="ov-impact">{overviewImpact(product)}</p>
                     </div>
                     <button
-                      className="ov-text-button"
+                      className="ov-review-button"
                       aria-label={`Revisar ${product.nome}`}
                       onClick={() => {
-                        const original = catalog.data?.find((item) => item.id === product.id);
+                        const original = catalog.data?.find((p) => p.id === product.id);
                         if (original) onEdit(original);
                       }}
                     >
-                      Revisar <ArrowRight size={15} aria-hidden="true" />
+                      Revisar <ArrowRight size={15} />
                     </button>
                   </li>
                 ))}
               </ul>
               <div className="ov-list-footer">
                 <span>
-                  {issues.length > 5
-                    ? `Mostrando 5 de ${issues.length} produtos com pendências`
-                    : "Cada produto aparece uma vez, com suas pendências."}
+                  Fonte: {demonstration ? "amostra local" : "cadastro de produtos"} ·{" "}
+                  <SourceTime value={catalog.updatedAt} />
                 </span>
-                <button className="ov-text-button" onClick={() => onProducts("all")}>
-                  Ver catálogo <ArrowRight size={15} aria-hidden="true" />
-                </button>
+                {issues.length > 5 && (
+                  <button className="ov-text-button" onClick={() => setShowAll(!showAll)}>
+                    {showAll ? "Mostrar menos" : `Ver as ${issues.length} pendências`}
+                  </button>
+                )}
               </div>
             </>
           )}
           {review.status === "error" ? (
             <div className="ov-review-note" role="alert">
-              <CircleAlert size={18} aria-hidden="true" />
-              <p>A fila de revisão está indisponível. Sua contagem não foi confirmada.</p>
+              <CircleAlert size={17} />
+              <p>Fila de revisão indisponível. A contagem não foi confirmada.</p>
               <button className="ov-text-button" onClick={onRefresh} disabled={refreshing}>
                 Tentar novamente
               </button>
             </div>
           ) : (
-            reviewReady &&
+            queueReady &&
             (counts.review ?? 0) > 0 && (
               <div className="ov-review-note">
-                <ArrowDownToLine size={18} aria-hidden="true" />
-                <p>
+                <ArrowDownToLine size={17} />
+                <div>
                   <strong>
-                    {counts.review}{" "}
-                    {counts.review === 1 ? "produto coletado" : "produtos coletados"}
-                  </strong>{" "}
-                  {reviewLimitReached
-                    ? "retornados pela consulta. A fila pode conter mais itens."
-                    : "aguardando sua revisão."}
-                </p>
+                    {counts.review}
+                    {reviewLimitReached ? "+" : ""} produtos coletados para revisão
+                  </strong>
+                  <p>
+                    {reviewLimitReached
+                      ? "O limite da consulta foi atingido; a fila pode conter mais itens."
+                      : "Precisam ser conferidos antes de entrar no catálogo."}
+                  </p>
+                </div>
                 <button className="ov-text-button" onClick={() => onNavigate("revisao")}>
-                  Abrir fila <ArrowRight size={15} aria-hidden="true" />
+                  Abrir fila <ArrowRight size={15} />
                 </button>
               </div>
             )
           )}
         </section>
-        <aside className="ov-panel ov-shortcuts" aria-labelledby="ov-shortcuts-title">
-          <p className="ov-eyebrow">À mão</p>
-          <h3 id="ov-shortcuts-title">Cuide da sua loja</h3>
-          {[
-            {
-              title: "Gerenciar produtos",
-              detail: "Consultar e revisar cadastros",
-              icon: Package,
-              action: () => onProducts("all"),
-            },
-            {
-              title: "Escolher produtos da vitrine",
-              detail: "Organizar as seleções da página inicial",
-              icon: Layers3,
-              action: () => onNavigate("vitrine"),
-            },
-            {
-              title: "Trocar banners",
-              detail: "Abrir o editor da página inicial",
-              icon: Image,
-              action: () => onNavigate("banners"),
-            },
-          ].map(({ title, detail, icon: Icon, action }) => (
-            <button key={title} className="ov-shortcut" onClick={action}>
-              <span className="ov-icon">
-                <Icon size={19} aria-hidden="true" />
-              </span>
-              <span>
-                <strong>{title}</strong>
-                <small>{detail}</small>
-              </span>
-              <ArrowRight size={16} aria-hidden="true" />
-            </button>
-          ))}
-          <button
-            className="ov-catalog-total"
-            onClick={() => onProducts("all")}
-            disabled={!catalogReady}
-          >
-            <LayoutDashboard size={16} aria-hidden="true" />
-            <span>
-              {counts.total == null
-                ? "Total do catálogo não confirmado"
-                : `${counts.total.toLocaleString("pt-BR")} produtos no catálogo`}
-            </span>
-            <ArrowRight size={15} aria-hidden="true" />
-          </button>
+        <aside className="ov-side">
+          <section className="ov-panel ov-shortcuts">
+            <h2>Ações rápidas</h2>
+            {[
+              {
+                title: "Gerenciar produtos",
+                detail: "Consultar e revisar cadastros",
+                icon: Package,
+                action: () => onProducts("all"),
+              },
+              {
+                title: "Escolher produtos da vitrine",
+                detail: "Seleções da página inicial",
+                icon: Layers3,
+                action: () => onNavigate("vitrine"),
+              },
+              {
+                title: "Trocar banners",
+                detail: "Imagens e conteúdo da página inicial",
+                icon: Image,
+                action: () => onNavigate("banners"),
+              },
+            ].map(({ title, detail, icon: Icon, action }) => (
+              <button type="button" className="ov-shortcut" key={title} onClick={action}>
+                <Icon size={18} />
+                <span>
+                  <strong>{title}</strong>
+                  <small>{detail}</small>
+                </span>
+                <ArrowRight size={16} />
+              </button>
+            ))}
+          </section>
+          <section className="ov-panel ov-coverage">
+            <h2>Sobre este resumo</h2>
+            <div>
+              <span className="ov-small-dot" />
+              <strong>Cadastro e fila de revisão</strong>
+              <small>
+                Consultas {demonstration ? "demonstrativas" : "administrativas"} com atualização
+                independente.
+              </small>
+            </div>
+            <div>
+              <Clock3 size={15} />
+              <strong>Outras áreas em integração</strong>
+              <small>Campanhas, rascunhos e solicitações ainda não fornecem dados ao resumo.</small>
+            </div>
+            <details>
+              <summary>Ver limites da conferência</summary>
+              <p>
+                Elegibilidade segue os critérios existentes de preço, custo e endereço de imagem.
+                Não confirma estoque físico nem carregamento da foto.
+              </p>
+              <p>
+                Banner mobile, campanhas sem prazo e requisitos aguardando validação exigem fontes
+                que ainda não estão integradas.
+              </p>
+            </details>
+          </section>
         </aside>
       </div>
-      <section className="ov-panel ov-planned" aria-labelledby="ov-planned-title">
-        <div>
-          <p className="ov-eyebrow">Evolução do painel</p>
-          <h3 id="ov-planned-title">O que vem depois</h3>
-          <p>Estas áreas precisam de integração para aparecer no resumo.</p>
-        </div>
-        <div className="ov-planned-items">
-          {["Rascunhos e revisões", "Campanhas e vigência", "Solicitações de desenvolvimento"].map(
-            (name) => (
-              <span key={name}>
-                <Clock3 size={15} aria-hidden="true" />
-                <span>
-                  {name}
-                  <small>Pendente de integração</small>
-                </span>
-              </span>
-            ),
-          )}
-        </div>
-      </section>
       <footer className="ov-sources">
-        <div>
-          <strong>Origem dos dados</strong>
-          <p>
-            {demonstration
-              ? "Amostra local identificada; não representa o catálogo real."
-              : "Consultas administrativas do catálogo e da fila de produtos coletados."}
-          </p>
-          <p>
-            “Publicados” segue os critérios atuais do painel: preço de venda, custo e endereço de
-            imagem. Não confirma estoque físico nem carregamento da foto.
-          </p>
-        </div>
-        <div>
-          <p>
-            <strong>Catálogo:</strong>{" "}
-            {catalogReady ? (
-              <SourceTime value={catalog.updatedAt} />
-            ) : catalog.status === "error" ? (
-              "Consulta indisponível"
-            ) : (
-              "Aguardando consulta"
-            )}
-          </p>
-          <p>
-            <strong>Fila de revisão:</strong>{" "}
-            {reviewReady ? (
-              <SourceTime value={review.updatedAt} />
-            ) : review.status === "error" ? (
-              "Consulta indisponível"
-            ) : (
-              "Aguardando consulta"
-            )}
-          </p>
-        </div>
+        <span>
+          <span className="ov-small-dot" />
+          Atualização por fonte
+        </span>
+        <span>
+          Catálogo: {ready ? <SourceTime value={catalog.updatedAt} /> : "consulta não concluída"}
+        </span>
+        <span>
+          Fila: {queueReady ? <SourceTime value={review.updatedAt} /> : "consulta não concluída"}
+        </span>
       </footer>
     </section>
   );

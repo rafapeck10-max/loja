@@ -133,3 +133,17 @@ Não foram especificados: screenshot final do admin, medidas exatas de seus comp
 As 38 fichas são famílias de página/estado, não ordem de criar 38 rotas. O inventário de 995 URLs não significa 995 telas inspecionadas. O status original `nao_iniciado` e a evidência V/T/P/B não confirmam estado atual da Mobi.
 
 Resultado desta etapa: requisitos e falhas documentados para corrigir o PM-01. A tela rejeitada continua sendo a primeira versão; este documento não afirma que o redesenho já ocorreu.
+
+## 9. Segunda implementação local — 09/11/2026
+
+Após o pedido de Rafael para executar a correção, a branch ganhou `AdminWorkspace.tsx`, usado tanto pelo `/admin` quanto pelo harness da prévia. O componente contém sidebar desktop, gaveta Radix no celular, área atual, busca por produto/SKU, acesso à loja e ajuda funcional. A rota administrativa não exibe o cabeçalho/rodapé da loja pública; as rotas públicas os preservam. Seções administrativas permanecem montadas e apenas ocultas ao navegar.
+
+O resumo foi refeito com as cinco categorias do PM-01: cadastros para revisar, rascunhos em revisão, campanhas vigentes, campanhas terminando e desenvolvimento. Apenas cadastro tem contagem fornecida pelas consultas já existentes; os outros quatro cartões têm estado “Não integrado”, explicação de fonte/dependência e nenhum zero inventado. Há origem/atualização por consulta e impacto textual para cada pendência de produto.
+
+Feedback adicional de Rafael: excesso de espaços vazios e separação entre título/subtítulo. Removidas alturas mínimas reservadas aos textos dos cartões e reduzidos padding, margens acumuladas e intervalos. O controle de detalhes continua com área de toque de 44 px no celular.
+
+Evidências automatizadas desta revisão: 34 testes disponíveis passaram; TypeScript e compilação verificados durante o desenvolvimento. O navegador verificou larguras 360, 390, 768, 1024, 1440 e rotação 844×390, estados das consultas, limites, navegação, busca, ajuda, foco preso à gaveta, Escape e retorno de foco. A propriedade CSS calculada confirma a família Manrope com fallbacks sans-serif; isso sozinho não comprova que o arquivo de fonte remoto foi carregado no harness offline.
+
+Pendências continuam explícitas: integração de campanhas/rascunhos/desenvolvimento; cruzamento específico das seleções reais de vitrine; diagnósticos de banner por viewport; teste de editores autenticados com dados reais em ambiente isolado e teste com leitor de tela. Os atalhos da amostra demonstram destinos; os callbacks da aplicação usam os editores existentes. Nenhum teste gravou catálogo real, preço, banner ou campanha.
+
+Esta é uma nova versão local para revisão visual. Não representa aceitação de Rafael nem autorização para publicar. Capturas e relatório: `.output/pm01-evidence/`. A versão anterior permanece no histórico local; reversão desta entrega se limita ao código, sem restauração de banco.

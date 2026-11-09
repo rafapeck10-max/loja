@@ -29,6 +29,7 @@ Decisão de Rafael em 09/11/2026: sempre retomar os documentos e conferir os det
 - Conferir versão, módulo, IDs relacionados, dependências e aceite; manter uma matriz requisito → fonte → arquivo → evidência → pendência. Para PM-01, retomar [a conferência detalhada](docs/PM01_CONFERENCIA_DOCUMENTAL.md).
 - Os originais prevalecem sobre resumos. A cópia do manifesto em `docs/referencias/` é referência versionada, não fonte de status real ou seleção de trabalho.
 - Conferir separadamente aderência documental, aparência desktop/mobile e funcionamento. Compilação, testes e ausência de overflow não provam qualidade visual ou conformidade total.
+- Rafael apontou excesso de vazios na prévia em 09/11/2026. Manter composição compacta: não reservar altura para linhas de texto ausentes, reduzir margens acumuladas entre título/subtítulo e ajustar cartões ao conteúdo. Preservar legibilidade e controles com toque de pelo menos 44 px; não interpretar compactação como fonte minúscula.
 - Não confundir proposta com implementação, amostra com integração real, evidência da concorrente com status Mobi, nem URL de imagem com foto carregada.
 - Adaptar à identidade e à operação Mobi. Desenvolver localmente ou em branch isolada; usar rascunhos/dados de teste; apresentar versão, prévia, validação, limites e reversão.
 - Não publicar, promover deployment ou integrar em branch que publica produção sem Rafael aprovar explicitamente a versão apresentada. Aprovação anterior para a mesma versão não precisa ser repetida.
