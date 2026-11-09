@@ -7,6 +7,7 @@ import {
   type HomepageBannerInput,
 } from "@/lib/homepage-banners";
 import { hasRealReferencePrice } from "@/lib/price-reference";
+import { ADMIN_REVIEW_QUERY_LIMIT } from "@/lib/admin-overview";
 
 export interface ProdutoInput {
   id: string;
@@ -321,7 +322,7 @@ export const listPendingScrapedProducts = createServerFn({ method: "POST" })
       .select("*")
       .eq("status", "pending")
       .order("created_at", { ascending: false })
-      .limit(500);
+      .limit(ADMIN_REVIEW_QUERY_LIMIT);
     if (error) throw new Error(error.message);
     return rows ?? [];
   });

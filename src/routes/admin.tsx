@@ -23,6 +23,8 @@ import { hasRealReferencePrice } from "@/lib/price-reference";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { HomeCurationPanel } from "@/components/HomeCurationPanel";
 import { HomeBannersPanel } from "@/components/HomeBannersPanel";
+import { AdminOverview } from "@/components/AdminOverview";
+import { ADMIN_REVIEW_QUERY_LIMIT } from "@/lib/admin-overview";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
 import {
   matchesPriceFilter,
@@ -267,6 +269,8 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
     error,
     refetch,
     isFetching,
+    dataUpdatedAt: catalogUpdatedAt,
+    isPending: isCatalogPending,
   } = useQuery({
     queryKey: ["admin-produtos"],
     queryFn: () => listAdminProdutos({ data: { password } }),
@@ -277,6 +281,8 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
     isFetching: isFetchingScraped,
     isError: isScrapedError,
     error: scrapedError,
+    isPending: isScrapedPending,
+    dataUpdatedAt: reviewUpdatedAt,
   } = useQuery({
     queryKey: ["admin-scraped-products"],
     queryFn: () => listPendingScrapedProducts({ data: { password } }),
@@ -288,7 +294,7 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
   const [search, setSearch] = useState("");
   const [supplierFilter, setSupplierFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [workspaceTab, setWorkspaceTab] = useState("vitrine");
+  const [workspaceTab, setWorkspaceTab] = useState("overview");
   const [statusFilter, setStatusFilter] = useState<"all" | ProductStatus>("all");
   const [priceField, setPriceField] = useState<"site" | "supplier">("site");
   const [minimumPrice, setMinimumPrice] = useState("");
@@ -545,12 +551,11 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="mb-2 text-xs font-bold uppercase tracking-[2px] text-gold">
-            Catálogo interno
+            Administração da loja
           </p>
-          <h1 className="text-3xl text-deep-green sm:text-4xl">Painel de Produtos</h1>
+          <h1 className="text-3xl text-deep-green sm:text-4xl">Painel Mobi</h1>
           <p className="mt-2 max-w-2xl text-sm text-text-light">
-            Controle a origem, o custo e a publicação de cada produto. Um item só aparece na vitrine
-            quando tem preço de venda e imagem válidos.
+            Catálogo, vitrine e banners em um só lugar. Veja o que precisa de atenção e continue de onde parou.
           </p>
         </div>
         <div className="flex gap-2">
@@ -570,7 +575,7 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
         </div>
       </div>
 
-      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div hidden={workspaceTab === "overview"} className={workspaceTab === "overview" ? "hidden" : "mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4"}>
         <button
           type="button"
           onClick={() => selectSummary("all")}
@@ -617,13 +622,25 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
         </button>
       </div>
 
-      <Tabs value={workspaceTab} onValueChange={setWorkspaceTab} className="admin-workspace">
+      <Tabs value={workspaceTab} onValueChange={setWorkspaceTab} className="admin-workspace admin-workspace--overview">
         <TabsList aria-label="Áreas do painel admin" className="admin-workspace-tabs">
+          <TabsTrigger value="overview" className="admin-workspace-tab">Visão geral</TabsTrigger>
           <TabsTrigger value="vitrine" className="admin-workspace-tab">Vitrine da página inicial</TabsTrigger>
           <TabsTrigger value="banners" className="admin-workspace-tab">Banner da página inicial</TabsTrigger>
           <TabsTrigger value="revisao" className="admin-workspace-tab">Produtos coletados para revisão</TabsTrigger>
           <TabsTrigger value="produtos" className="admin-workspace-tab">Encontrar produtos</TabsTrigger>
         </TabsList>
+        <TabsContent value="overview" forceMount className="admin-workspace-panel">
+          <AdminOverview
+            catalog={{ status: isError ? "error" : isCatalogPending ? "pending" : "success", data: produtos, updatedAt: catalogUpdatedAt }}
+            review={{ status: isScrapedError ? "error" : isScrapedPending ? "pending" : "success", data: pendingScrapedProducts, updatedAt: reviewUpdatedAt, limit: ADMIN_REVIEW_QUERY_LIMIT }}
+            refreshing={isFetching || isFetchingScraped}
+            onRefresh={() => { void refetch(); void refreshScrapedProducts(); }}
+            onProducts={selectSummary}
+            onEdit={startEdit}
+            onNavigate={setWorkspaceTab}
+          />
+        </TabsContent>
         <TabsContent value="vitrine" forceMount className="admin-workspace-panel">
           <HomeCurationPanel password={password} products={produtos} />
         </TabsContent>

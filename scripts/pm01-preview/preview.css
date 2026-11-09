@@ -1,0 +1,237 @@
+body {
+  margin: 0;
+  overflow-x: visible !important;
+  background: #f4efe6;
+  font-family: Manrope, system-ui, sans-serif;
+}
+button,
+select {
+  font: inherit;
+}
+.preview-brand {
+  background: #2e3f32;
+  color: #f4efe6;
+  padding: 17px max(24px, calc((100vw - 1152px) / 2));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+}
+.preview-brand > div {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+}
+.preview-brand > div > span {
+  border-left: 1px solid #ffffff30;
+  padding-left: 26px;
+  font-size: 12px;
+  color: #d4d8c8;
+}
+.preview-logo {
+  height: 40px;
+  width: 110px;
+}
+.preview-private {
+  font-size: 10px;
+  border: 1px solid #ffffff30;
+  padding: 7px 11px;
+  border-radius: 20px;
+  color: #e0dfcd;
+}
+.preview-main {
+  max-width: 1200px;
+  margin: auto;
+  padding: 32px 24px 48px;
+}
+.preview-title {
+  margin-bottom: 25px;
+}
+.preview-title > p {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #897343;
+  margin: 0 0 8px;
+}
+.preview-title h1 {
+  font-size: 32px;
+  color: #2e3f32;
+  letter-spacing: -1px;
+  margin: 0 0 8px;
+}
+.preview-title > span {
+  font-size: 12px;
+  color: #776c5e;
+}
+.preview-main .admin-workspace-tab {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 600;
+}
+.preview-main .admin-workspace-tab[data-state="active"] {
+  background: #2e3f32;
+}
+.preview-controls {
+  margin-top: 32px;
+  border-top: 1px solid #ddd4c4;
+  padding-top: 18px;
+  font-size: 11px;
+  color: #716656;
+}
+.preview-controls summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: list-item;
+  align-content: center;
+}
+.preview-controls p {
+  margin: 12px 0;
+}
+.preview-select {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  font-size: 12px;
+}
+.preview-select select {
+  background: #fffdf9;
+  border: 1px solid #d5cdbc;
+  border-radius: 6px;
+  padding: 12px;
+  min-height: 44px;
+  max-width: 100%;
+}
+.preview-destination {
+  padding: 24px;
+  border: 1px solid #ddd4c4;
+  background: #fffdfa;
+  border-radius: 12px;
+  color: #493327;
+}
+.preview-destination h2 {
+  font-size: 24px;
+  margin: 25px 0 10px;
+  color: #2e3f32;
+}
+.preview-destination > p {
+  font-size: 13px;
+  color: #746957;
+  max-width: 600px;
+}
+.preview-products {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.preview-products li {
+  padding: 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid #e5ddce;
+}
+.preview-products li > span {
+  flex: 1;
+  font-size: 13px;
+}
+.preview-area {
+  margin-top: 25px;
+  background: #f4efe6;
+  border-radius: 8px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  color: #506047;
+  font-size: 13px;
+}
+.preview-backdrop {
+  position: fixed;
+  inset: 0;
+  background: #18251cb0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+.preview-dialog {
+  position: relative;
+  background: #fffdfa;
+  border-radius: 15px;
+  padding: 32px;
+  width: 100%;
+  max-width: 500px;
+  color: #493327;
+  box-shadow: 0 30px 80px #0003;
+  max-height: 90vh;
+  overflow: auto;
+  outline: none;
+}
+.preview-dialog h2 {
+  font-size: 23px;
+  line-height: 1.4;
+  margin: 20px 0;
+}
+.preview-dialog p {
+  font-size: 13px;
+  line-height: 1.7;
+}
+.preview-dialog dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  font-size: 12px;
+  padding: 20px 0;
+}
+.preview-dialog dd {
+  font-weight: 650;
+  margin: 0;
+}
+.preview-close {
+  float: right;
+}
+.preview-safe {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #3e563c;
+}
+@media (max-width: 700px) {
+  .preview-brand {
+    padding: 15px 18px;
+  }
+  .preview-brand > div > span {
+    display: none;
+  }
+  .preview-private {
+    font-size: 9px;
+  }
+  .preview-main {
+    padding: 25px 16px 40px;
+  }
+  .preview-title h1 {
+    font-size: 27px;
+  }
+  .preview-title > span {
+    display: block;
+    line-height: 1.8;
+  }
+  .preview-products li {
+    flex-wrap: wrap;
+  }
+  .preview-products li > span {
+    flex-basis: calc(100% - 40px);
+  }
+  .preview-products li > button {
+    margin-left: 34px;
+  }
+  .preview-dialog {
+    padding: 22px;
+  }
+}
