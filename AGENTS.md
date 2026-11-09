@@ -38,3 +38,9 @@ Decisão de Rafael em 09/11/2026: sempre retomar os documentos e conferir os det
 Para PM-02, retomar também [a conferência do editor de páginas e vitrines](docs/PM02_CONFERENCIA_DOCUMENTAL.md). A edição atual gera somente rascunhos locais da home; não confundir com configuração publicada, CMS completo ou criação automática das páginas da referência.
 
 A ampliação PM-01 a PM-10 está registrada em [PM01_PM10_CONFERENCIA_DOCUMENTAL.md](docs/PM01_PM10_CONFERENCIA_DOCUMENTAL.md). Os dez módulos têm comportamento local e limites explícitos. O catálogo de 141 requisitos não equivale a 141 funções públicas implementadas; estado da referência, implementação e ativação continuam separados. Persistência remota, aplicação de configurações, papéis e auditoria individual seguem pendentes. Preservar rascunhos por ID, versões, detecção de base obsoleta e recuperação de consultas sem apagar edições.
+
+## Realidade operacional Mobi — MM-P01
+
+Rafael confirmou em 09/11/2026: **a Mobi não tem loja física**. Adaptar a página inicial ao atendimento online e à operação real; não criar visitação, mapa de unidade, showroom, retirada, aplicativo ou canais inexistentes. Região atendida não é endereço aberto ao público. O código de `moveis-nova-iguacu.tsx` já informa atendimento online sem endereço físico para visitação.
+
+Toda aplicação nova precisa de ligação efetiva ao painel: campo suportado, rascunho, renderer de prévia, revisão, consumidor público e histórico. A prévia administrativa local não comprova integração com a home publicada. Seguir o [plano MM-P01](docs/MM-P01_PLANO_APLICACAO_MOBI.md), mantendo funções futuras e dados não confirmados como pendências. Trechos históricos sobre parcelamento, quantidade de botões móveis e rotação diária precisam ser confrontados com fonte/versão atuais, sem alterar regras comerciais por suposição.
