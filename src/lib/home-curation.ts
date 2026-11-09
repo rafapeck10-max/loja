@@ -1,6 +1,6 @@
 import type { Produto } from "@/lib/products.functions";
-import { categoryMatches } from "@/lib/constants";
-import { featuredProducts } from "@/lib/featured-products";
+import { categoryMatches } from "./constants.ts";
+import { featuredProducts } from "./featured-products.ts";
 
 const UNAVAILABLE = /indispon[ií]vel|esgotad[oa]|sem estoque|n[aã]o temos dispon[ií]vel/i;
 const SHELF_SIZE = 4;

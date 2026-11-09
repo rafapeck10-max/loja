@@ -21,7 +21,7 @@ import {
 import { formatBRL } from "@/lib/constants";
 import { hasRealReferencePrice } from "@/lib/price-reference";
 import { AdminWorkspace } from "@/components/AdminWorkspace";
-import { HomeCurationPanel } from "@/components/HomeCurationPanel";
+import { PagesAndShelvesPanel } from "@/components/PagesAndShelvesPanel";
 import { HomeBannersPanel } from "@/components/HomeBannersPanel";
 import { AdminOverview } from "@/components/AdminOverview";
 import { ADMIN_REVIEW_QUERY_LIMIT } from "@/lib/admin-overview";
@@ -610,7 +610,7 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
           />
         </section>
         <section hidden={workspaceTab !== "vitrine"} data-state={workspaceTab === "vitrine" ? "active" : "inactive"} className="admin-workspace-panel" aria-label="vitrine">
-          <HomeCurationPanel password={password} products={produtos} />
+          <PagesAndShelvesPanel products={produtos} ready={!isCatalogPending && !isError} />
         </section>
         <section hidden={workspaceTab !== "banners"} data-state={workspaceTab === "banners" ? "active" : "inactive"} className="admin-workspace-panel" aria-label="banners">
           <HomeBannersPanel password={password} />

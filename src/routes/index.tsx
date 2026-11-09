@@ -11,6 +11,7 @@ import { HeroCarousel, MOBI_HERO } from "@/components/HeroCarousel";
 import { CategoryNavigation } from "@/components/CategoryNavigation";
 import { parsePage } from "@/components/CatalogPagination";
 import { CATEGORIES, MAX_INSTALLMENTS } from "@/lib/constants";
+import { HomepageSectionOrder } from "@/components/HomepageSectionOrder";
 import { HomeProductSection } from "@/components/HomeProductSection";
 import { StoreCatalog } from "@/components/StoreCatalog";
 import { newHomepageProducts, weeklyHomepageProducts } from "@/lib/home-curation";
@@ -198,64 +199,90 @@ function HomepageIndex() {
       ) : !data ? (
         <HomepageLoadingState />
       ) : (
-        <>
-          <HomeProductSection
-            title="Descubra algo novo"
-            subtitle="Uma seleção diferente a cada visita. Encontre o que combina com você."
-            products={discoveryProducts}
-            badges={badges}
-          />
-          <HomeProductSection
-            title="Escolhas da semana"
-            subtitle="Uma seleção especial da Mobi para sua casa."
-            products={weeklyProducts}
-            badges={badges}
-          />
-          <section className="mobi-inspiration mobi-wrap">
-            <img src={MOBI_HERO} alt="Inspiração de sala de estar" loading="lazy" />
-            <div>
-              <span className="mobi-eyebrow">CONFORTO EM CADA DETALHE</span>
-              <h2>
-                Para sua sala,
-                <br />
-                mais personalidade.
-              </h2>
-              <p>Um lugar para descansar, receber e viver bons momentos.</p>
-              <Link
-                to="/categoria/$slug"
-                params={{ slug: "sala-de-estar" }}
-                search={{ page: 1 }}
-                className="mobi-primary"
-              >
-                Explorar móveis para sala
-              </Link>
-            </div>
-          </section>
-          <HomeProductSection
-            title="Novidades"
-            subtitle="Novas possibilidades para renovar seus ambientes."
-            products={newProducts}
-            badges={badges}
-          />
-          <HomeProductSection
-            title="Para sua sala"
-            subtitle="Conforto e detalhes que fazem a diferença."
-            products={roomProducts}
-            badges={badges}
-            category="sala-de-estar"
-          />
-          <section className="mobi-catalog-invite mobi-wrap">
-            <h2>Móveis para Nova Iguaçu e Baixada Fluminense.</h2>
-            <p>
-              Sofás, poltronas, painéis, guarda-roupas, colchões e móveis para cozinha. Compare
-              modelos, medidas, materiais e cores e consulte as condições de entrega com a Mobi pelo
-              WhatsApp.
-            </p>
-            <Link to="/" search={{ all: true, page: 1 }} hash="catalogo" className="mobi-primary">
-              Explorar todo o catálogo
-            </Link>
-          </section>
-        </>
+        <HomepageSectionOrder
+          renderSection={(section) => {
+            if (section.id === "discovery")
+              return (
+                <HomeProductSection
+                  title={section.title}
+                  subtitle={section.subtitle}
+                  products={discoveryProducts}
+                  badges={badges}
+                />
+              );
+            if (section.id === "weekly")
+              return (
+                <HomeProductSection
+                  title={section.title}
+                  subtitle={section.subtitle}
+                  products={weeklyProducts}
+                  badges={badges}
+                />
+              );
+            if (section.id === "inspiration")
+              return (
+                <section className="mobi-inspiration mobi-wrap">
+                  <img src={MOBI_HERO} alt="Inspiração de sala de estar" loading="lazy" />
+                  <div>
+                    <span className="mobi-eyebrow">CONFORTO EM CADA DETALHE</span>
+                    <h2>
+                      Para sua sala,
+                      <br />
+                      mais personalidade.
+                    </h2>
+                    <p>Um lugar para descansar, receber e viver bons momentos.</p>
+                    <Link
+                      to="/categoria/$slug"
+                      params={{ slug: "sala-de-estar" }}
+                      search={{ page: 1 }}
+                      className="mobi-primary"
+                    >
+                      Explorar móveis para sala
+                    </Link>
+                  </div>
+                </section>
+              );
+            if (section.id === "new")
+              return (
+                <HomeProductSection
+                  title={section.title}
+                  subtitle={section.subtitle}
+                  products={newProducts}
+                  badges={badges}
+                />
+              );
+            if (section.id === "room")
+              return (
+                <HomeProductSection
+                  title={section.title}
+                  subtitle={section.subtitle}
+                  products={roomProducts}
+                  badges={badges}
+                  category="sala-de-estar"
+                />
+              );
+            if (section.id === "catalog")
+              return (
+                <section className="mobi-catalog-invite mobi-wrap">
+                  <h2>Móveis para Nova Iguaçu e Baixada Fluminense.</h2>
+                  <p>
+                    Sofás, poltronas, painéis, guarda-roupas, colchões e móveis para cozinha.
+                    Compare modelos, medidas, materiais e cores e consulte as condições de entrega
+                    com a Mobi pelo WhatsApp.
+                  </p>
+                  <Link
+                    to="/"
+                    search={{ all: true, page: 1 }}
+                    hash="catalogo"
+                    className="mobi-primary"
+                  >
+                    Explorar todo o catálogo
+                  </Link>
+                </section>
+              );
+            return null;
+          }}
+        />
       )}
     </>
   );

@@ -20,6 +20,7 @@ try {
     return route.continue();
   });
   await page.goto("http://127.0.0.1:5187/scripts/pm01-preview/index.html");
+  await page.getByRole("button", { name: "Visão geral", exact: true }).click();
   await page.getByRole("heading", { name: "Visão geral", exact: true }).waitFor();
   assert.deepEqual(await page.locator(".ov-metric>strong").allTextContents(), ["4", "8", "3"]);
   assert.equal(await page.locator(".ov-unavailable").count(), 4);

@@ -1,5 +1,15 @@
 # PM-01 — Visão geral Mobi
 
+## PM-02 — Páginas e vitrines
+
+O mesmo endereço agora abre o editor PM-02. “Visão geral” continua acessível no menu. A pasta conserva o nome técnico para não quebrar o comando local.
+
+`PagesAndShelvesPanel` edita um rascunho da home: ordem/visibilidade dos blocos internos, título e apoio das vitrines, seleção semanal de até quatro produtos e exceções das seleções automáticas. A ordem inicial e as regras vêm do código atual da Mobi. No computador largo há três colunas; tablet e celular alternam editor/prévia. A representação usa cartões reais e resume os blocos fixos.
+
+Salvar grava apenas `mobi:pages-and-shelves:home:v1:demo` no navegador. Reabrir é explícito; bases desatualizadas são recusadas. Restaurar edição preserva o rascunho salvo até um novo salvamento. A amostra de 16 móveis contém fotos/preços históricos, não ofertas atuais. Não há credenciais, gravação no servidor ou publicação.
+
+Conferência e pendências: [PM02_CONFERENCIA_DOCUMENTAL.md](../../docs/PM02_CONFERENCIA_DOCUMENTAL.md). O teste de navegador `verify.mjs` permanece focado no PM-01; a conferência PM-02 foi feita pelo navegador integrado, com relatório/capturas na pasta irmã `mobi-pm02-evidence/`.
+
 ## Revisão 2
 
 O resumo e a navegação foram refeitos após a rejeição visual da primeira versão. `AdminWorkspace.tsx` agora é compartilhado pela prévia e pelo admin real: sidebar no computador, gaveta no celular, busca e ajuda. Cinco áreas operacionais são representadas; quatro fontes não integradas permanecem sem valores. Pendências incluem impacto. O feedback sobre espaços foi aplicado removendo alturas reservadas e reduzindo intervalos, sem reduzir os alvos de toque.

@@ -1,0 +1,146 @@
+[
+  {
+    "id": 0,
+    "name": "Poltrona Jamile",
+    "detail": "Veludo suede · azul-marinho",
+    "category": "Poltronas",
+    "price": 399,
+    "img": "https://srmoveisatacadao.com.br/imagem/Jamile.Azul.305%20NOVO%20.jpg",
+    "installment": 37.37
+  },
+  {
+    "id": 1,
+    "name": "Aparador Adega New Odin",
+    "detail": "Off white / freijó",
+    "category": "Decoração",
+    "price": 325,
+    "img": "https://srmoveisatacadao.com.br/imagem/NewOdinOffFreijo%20NOVO.jpg",
+    "installment": 30.44
+  },
+  {
+    "id": 2,
+    "name": "Cozinha Cristal",
+    "detail": "Cozinha completa",
+    "category": "Cozinha",
+    "price": 1114,
+    "img": "https://lh3.googleusercontent.com/d/15Z89R9gJSrh0GxaFDZXtm4dn1zXq-CAj",
+    "installment": 104.34
+  },
+  {
+    "id": 3,
+    "name": "Mesa Magic Vieiro",
+    "detail": "Mesa de jantar",
+    "category": "Sala de jantar",
+    "price": 499,
+    "img": "https://lh3.googleusercontent.com/d/12XXY3braL282ThcZilveUPW0VtZUds3g=w1284?authuser=0",
+    "installment": 46.74
+  },
+  {
+    "id": 4,
+    "name": "Camarim Áurea",
+    "detail": "Penteadeira",
+    "category": "Quartos",
+    "price": 619,
+    "img": "https://srmoveisatacadao.com.br/imagem/16527_1.jpg",
+    "installment": 57.98
+  },
+  {
+    "id": 5,
+    "name": "Colchão Essential Pocket",
+    "detail": "Queen · Inovaflex",
+    "category": "Colchões e bases",
+    "price": 1293,
+    "img": "https://lh3.googleusercontent.com/d/1H-c0L0Vc7O7v-RgDT_Jpmvp6J8tPwy2K",
+    "installment": 121.11
+  },
+  {
+    "id": 6,
+    "name": "Roupeiro Itapema II",
+    "detail": "3 portas / 9 gavetas · branco",
+    "category": "Quartos",
+    "price": 1200,
+    "img": "https://srmoveisatacadao.com.br/imagem/Itapema-Branco.jpg",
+    "installment": 112.4
+  },
+  {
+    "id": 7,
+    "name": "Cristaleira Premium",
+    "detail": "Naturale / off white · Mavaular",
+    "category": "Decoração",
+    "price": 1630,
+    "img": "https://srmoveisatacadao.com.br/imagem/16622_1.jpeg",
+    "installment": 152.68
+  },
+  {
+    "id": 8,
+    "name": "Roupeiro Capelinha Plus",
+    "detail": "5 portas / 3 gavetas · cinamomo",
+    "category": "Quartos",
+    "price": 1040,
+    "img": "https://srmoveisatacadao.com.br/imagem/12253_1.jpg",
+    "installment": 97.41
+  },
+  {
+    "id": 9,
+    "name": "Roupeiro Santiago Plus",
+    "detail": "2 portas / 2 gavetas · branco",
+    "category": "Quartos",
+    "price": 909,
+    "img": "https://srmoveisatacadao.com.br/imagem/Roupeiro-Santiago-2P-Branco%20NOVO%20.jpg",
+    "installment": 85.14
+  },
+  {
+    "id": 10,
+    "name": "Roupeiro Athenas",
+    "detail": "3 portas · off white",
+    "category": "Quartos",
+    "price": 2425,
+    "img": "https://srmoveisatacadao.com.br/imagem/Roupeiro-Athenas-3P-Off-White%20NOVO.jpg",
+    "installment": 227.14
+  },
+  {
+    "id": 11,
+    "name": "Sofá Gold 230",
+    "detail": "Retrátil e reclinável · bege",
+    "category": "Sofás",
+    "price": 1755,
+    "img": "https://srmoveisatacadao.com.br/imagem/Gold-230-Bege.05.1.jpg",
+    "installment": 164.39
+  },
+  {
+    "id": 12,
+    "name": "Modulado Carioca",
+    "detail": "5 portas / 2 gavetas · branco",
+    "category": "Quartos",
+    "price": 795,
+    "img": "https://srmoveisatacadao.com.br/imagem/Modulado-5P-Branco-Carioca%20NOVO%20.jpg",
+    "installment": 74.47
+  },
+  {
+    "id": 13,
+    "name": "Roupeiro Dubai",
+    "detail": "3 portas com espelhos · branco",
+    "category": "Quartos",
+    "price": 3019,
+    "img": "https://srmoveisatacadao.com.br/imagem/Roup-Dubai-3P-Branco%20NOVO%20.jpg",
+    "installment": 282.78
+  },
+  {
+    "id": 14,
+    "name": "Base Baú Prime Confort",
+    "detail": "Casal bipartida · corino marrom",
+    "category": "Colchões e bases",
+    "price": 1165,
+    "img": "https://srmoveisatacadao.com.br/imagem/Bau-Casal-Bip-corino-Marrom-Abrt.jpg",
+    "installment": 109.12
+  },
+  {
+    "id": 15,
+    "name": "Mesa Florida",
+    "detail": "120 × 80 cm · canela / off white",
+    "category": "Sala de jantar",
+    "price": 779,
+    "img": "https://srmoveisatacadao.com.br/imagem/Mesa-Florida.jpg",
+    "installment": 72.97
+  }
+]

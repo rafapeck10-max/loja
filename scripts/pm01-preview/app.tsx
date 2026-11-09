@@ -1,5 +1,13 @@
 import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
+import {
+  createRootRoute,
+  createRouter,
+  createMemoryHistory,
+  RouterProvider,
+} from "@tanstack/react-router";
+import { PagesAndShelvesPanel } from "../../src/components/PagesAndShelvesPanel";
+import pageSample from "./page-products.json";
 import { createRoot } from "react-dom/client";
 import { ArrowLeft, Check, Image, Layers3, Package, X } from "lucide-react";
 import { AdminOverview } from "../../src/components/AdminOverview";
@@ -30,6 +38,22 @@ const products: OverviewProduct[] = names.map((nome, index) => ({
   preco_atacado: index === 11 ? null : 300,
   url_imagem: index === 10 ? "" : "https://example.com/demonstracao.jpg",
 }));
+const pageProducts = pageSample.map((p, index) => ({
+  id: `page-demo-${p.id}`,
+  nome: p.name,
+  slug: `page-demo-${p.id}`,
+  categoria: p.category,
+  preco_atual: p.price,
+  preco_atacado: p.price / 2,
+  url_imagem: p.img,
+  descricao: p.detail,
+  sku: `AMOSTRA-${p.id}`,
+  created_at: "2026-09-27T12:00:00Z",
+  vitrine_semana_ordem: index < 4 ? index + 1 : null,
+  vitrine_novidade: index === 4 ? "incluir" : "automatico",
+  vitrine_sala: "automatico",
+  vitrine_descoberta: true,
+}));
 const imports = [{ id: "demo-import-1" }, { id: "demo-import-2" }, { id: "demo-import-3" }];
 const tabs = [
   ["overview", "Visão geral"],
@@ -40,7 +64,7 @@ const tabs = [
 ];
 
 export function Preview() {
-  const [tab, setTab] = useState("overview");
+  const [tab, setTab] = useState("vitrine");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | ProductStatus>("all");
   const [editing, setEditing] = useState<OverviewProduct | null>(null);
@@ -74,6 +98,9 @@ export function Preview() {
           setSearch(query);
         }}
       >
+        <div hidden={tab !== "vitrine"}>
+          <PagesAndShelvesPanel demonstration products={pageProducts} />
+        </div>
         {tab === "overview" ? (
           <AdminOverview
             demonstration
@@ -90,7 +117,7 @@ export function Preview() {
             onEdit={setEditing}
             onNavigate={setTab}
           />
-        ) : (
+        ) : tab === "vitrine" ? null : (
           <section className="preview-destination">
             <button className="aw-action" onClick={() => setTab("overview")}>
               <ArrowLeft size={16} /> Voltar à Visão geral
@@ -220,4 +247,9 @@ export function Preview() {
   );
 }
 
-createRoot(document.getElementById("root")!).render(<Preview />);
+const previewRoot = createRootRoute({ component: Preview });
+const previewRouter = createRouter({
+  routeTree: previewRoot,
+  history: createMemoryHistory({ initialEntries: ["/"] }),
+});
+createRoot(document.getElementById("root")!).render(<RouterProvider router={previewRouter} />);

@@ -34,3 +34,5 @@ Decisão de Rafael em 09/11/2026: sempre retomar os documentos e conferir os det
 - Não confundir proposta com implementação, amostra com integração real, evidência da concorrente com status Mobi, nem URL de imagem com foto carregada.
 - Adaptar à identidade e à operação Mobi. Desenvolver localmente ou em branch isolada; usar rascunhos/dados de teste; apresentar versão, prévia, validação, limites e reversão.
 - Não publicar, promover deployment ou integrar em branch que publica produção sem Rafael aprovar explicitamente a versão apresentada. Aprovação anterior para a mesma versão não precisa ser repetida.
+
+Para PM-02, retomar também [a conferência do editor de páginas e vitrines](docs/PM02_CONFERENCIA_DOCUMENTAL.md). A edição atual gera somente rascunhos locais da home; não confundir com configuração publicada, CMS completo ou criação automática das páginas da referência.
