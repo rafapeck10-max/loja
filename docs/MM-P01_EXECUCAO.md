@@ -10,7 +10,7 @@ A entrega anterior foi rejeitada visualmente. A descrição abaixo dela é hist�
 - Cartões e títulos ficam centralizados. Cada foto preenche a largura do cartão (`object-fit: cover`), com recorte horizontal amplo no desktop e proporção própria no celular. Os títulos ficam abaixo das fotos, sem o CTA repetido “Ver modelos”.
 - Referência ao vivo conferida em 10/11: “Navegue por categorias e ambiente” apresenta cartões horizontais com foto grande e nome sob a foto. A Mobi adota o padrão visual para três ambientes e seus destinos próprios; não copia promoções, conteúdo ou estrutura exclusiva.
 
-- Capturas: `../mobi-studio-evidence/mm-p01-rooms-desktop.png` e `mm-p01-rooms-mobile.png`. Build e lint direcionado passaram. Nenhuma publicação ou gravação no catálogo ocorreu.
+- Capturas: `../mobi-studio-evidence/mm-p01-rooms-desktop.jpg` e `mm-p01-rooms-mobile.jpg`. Build e lint direcionado passaram. Nenhuma publicação ou gravação no catálogo ocorreu.
 
 ## Versão anterior da prévia — antes deste ajuste
 
