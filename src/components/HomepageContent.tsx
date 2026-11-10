@@ -6,7 +6,7 @@ import { ImageWithFallback } from "./ImageWithFallback";
 import { HomepageSectionOrder } from "./HomepageSectionOrder";
 import { HomeProductSection } from "./HomeProductSection";
 
-import { CATEGORIES, MAX_INSTALLMENTS, categoryMatches, WHATSAPP_URL } from "../lib/constants";
+import { MAX_INSTALLMENTS, categoryMatches, WHATSAPP_URL } from "../lib/constants";
 import {
   defaultHomeSections,
   type HomeConfiguration,
@@ -23,12 +23,14 @@ export function HomepageContent({
   configuration,
   banners,
   children,
+  roomImages,
 }: {
   products: Produto[];
   sectionIds: HomeConfiguration["sectionIds"];
   configuration?: HomeConfiguration | null;
   banners?: HomeBanner[];
   children?: React.ReactNode;
+  roomImages?: import("../lib/homepage-room-categories").HomepageRoomImage[];
 }) {
   const context = useHomeConfiguration(),
     config = configuration ?? context;
@@ -37,14 +39,6 @@ export function HomepageContent({
   const badges: Record<string, ProductBadge> = {};
   ids.new.forEach((id) => (badges[id] = "new"));
   ids.weekly.forEach((id) => (badges[id] = "week"));
-  const categories = config
-    ? config.navigation
-        .filter((n) => n.visible)
-        .flatMap((n) => {
-          const c = CATEGORIES.find((c) => c.slug === n.id);
-          return c ? [{ ...c, shortLabel: n.label, label: n.label }] : [];
-        })
-    : CATEGORIES;
   return (
     <HomepageSectionOrder
       sections={config?.sections ?? defaultHomeSections()}
@@ -68,8 +62,8 @@ export function HomepageContent({
                 </a>
               </div>
               <HomepageCategories
-                categories={categories}
                 products={products}
+                roomImages={roomImages}
                 destinations={config?.navigation}
               />
               {children}

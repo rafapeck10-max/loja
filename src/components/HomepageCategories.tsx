@@ -1,44 +1,48 @@
-import { categoryMatches, type Category } from "../lib/constants";
 import type { Produto } from "../lib/products.functions";
-import { categoryDisplayLabel } from "./CategoryNavigation";
+import {
+  HOMEPAGE_ROOMS,
+  selectHomepageRoomImages,
+  type HomepageRoomImage,
+} from "../lib/homepage-room-categories";
 import { ImageWithFallback } from "./ImageWithFallback";
+
 export function HomepageCategories({
-  categories,
   products,
+  roomImages,
   destinations,
 }: {
-  categories: readonly Category[];
   products: Produto[];
+  roomImages?: HomepageRoomImage[];
   destinations?: readonly { id: string; href: string }[];
 }) {
-  const available = categories
-    .filter((c) => c.slug !== "sala-de-estar")
-    .flatMap((category) => {
-      const product = products.find((p) => categoryMatches(p.categoria, category.slug));
-      return product ? [{ category, product }] : [];
-    });
-  if (!available.length) return null;
+  const selectedImages = roomImages?.length ? roomImages : selectHomepageRoomImages(products);
+  const rooms = HOMEPAGE_ROOMS.flatMap((room) => {
+    const image = selectedImages.find((selected) => selected.slug === room.slug)?.imageUrl;
+    return image ? [{ ...room, image }] : [];
+  });
+
+  if (!rooms.length) return null;
+
   return (
     <section className="mobi-shop-categories mobi-wrap">
       <div className="mobi-shop-heading">
-        <h2>Encontre por categoria</h2>
-        <span>Escolha onde começar</span>
+        <h2>Encontre por ambiente</h2>
       </div>
-      <nav className="mobi-photo-categories" aria-label="Comprar por categoria">
-        {available.map(({ category: c, product }) => {
-          return (
-            <a
-              key={c.slug}
-              href={destinations?.find((d) => d.id === c.slug)?.href ?? `/categoria/${c.slug}`}
-            >
-              <span className="mobi-category-photo">
-                <ImageWithFallback src={product.imagem_url} alt="" loading="lazy" />
-              </span>
-              <span>{categoryDisplayLabel(c, true)}</span>
-              <small>Ver modelos →</small>
-            </a>
-          );
-        })}
+      <nav className="mobi-photo-categories" aria-label="Comprar por ambiente">
+        {rooms.map((room) => (
+          <a
+            key={room.slug}
+            href={
+              destinations?.find((destination) => destination.id === room.slug)?.href ??
+              `/categoria/${room.slug}`
+            }
+          >
+            <span className="mobi-category-photo">
+              <ImageWithFallback src={room.image} alt="" loading="lazy" />
+            </span>
+            <span>{room.label}</span>
+          </a>
+        ))}
       </nav>
     </section>
   );

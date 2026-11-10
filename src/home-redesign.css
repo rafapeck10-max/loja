@@ -941,6 +941,97 @@
     padding: 4px 12px;
   }
 }
+
+/* Three centered room shortcuts with close, edge-to-edge catalog photos. */
+.store-shell .mobi-shop-categories {
+  padding-top: 20px;
+  padding-bottom: 12px;
+}
+.store-shell .mobi-shop-heading {
+  justify-content: center;
+  margin-bottom: 14px;
+}
+.store-shell .mobi-shop-heading > span {
+  display: none;
+}
+.store-shell .mobi-photo-categories {
+  width: min(100%, 1120px);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+.store-shell .mobi-photo-categories > a {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  gap: 0;
+  padding: 0 0 13px;
+  border: 1px solid #e7e9e1;
+  border-radius: 9px;
+  background: #fff;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 650;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.store-shell .mobi-photo-categories > a:hover {
+  border-color: #9d8051;
+  box-shadow: 0 5px 18px rgb(46 63 50 / 9%);
+}
+.store-shell .mobi-category-photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1.58;
+  margin-bottom: 12px;
+  padding: 0;
+  overflow: hidden;
+  background: #f4f2eb;
+}
+.store-shell .mobi-category-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.25s ease;
+}
+.store-shell .mobi-photo-categories > a:hover img {
+  transform: scale(1.035);
+}
+@media (max-width: 767px) {
+  .store-shell .mobi-shop-categories {
+    padding-top: 15px;
+    padding-bottom: 8px;
+  }
+  .store-shell .mobi-shop-heading {
+    margin-bottom: 10px;
+  }
+  .store-shell .mobi-shop-heading h2 {
+    text-align: center;
+  }
+  .store-shell .mobi-photo-categories {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .store-shell .mobi-photo-categories > a {
+    padding: 0 0 9px;
+    gap: 0;
+    font-size: 12px;
+  }
+  .store-shell .mobi-category-photo {
+    height: auto;
+    aspect-ratio: 1.18;
+    margin-bottom: 8px;
+    padding: 0;
+  }
+}
 /* The same layout can be forced inside the media editor's responsive frame. */
 .mobi-hero-product[data-preview-format="mobile"] {
   grid-template-columns: 1.12fr 1fr;

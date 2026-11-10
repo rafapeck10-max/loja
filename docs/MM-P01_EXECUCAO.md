@@ -1,11 +1,21 @@
 # MM-P01 — execução local
 
-## Correção visual de 10/11/2026 — estado atual
+## Ajuste solicitado após a prévia — 10/11/2026
 
 A entrega anterior foi rejeitada visualmente. A descrição abaixo dela é histórica, não aprovação. Nova branch: `feature/mm-p01-redesign`, base `ec0aa5e`, sem publicação.
 
+### Categorias da home
+
+- A seleção anterior de cinco vitrines foi substituída por três ambientes fixos: Quarto, Sala e Cozinha. Fotos do catálogo ativo são selecionadas entre os produtos candidatos já consultados pela home, com preferência pelos produtos representativos quando disponíveis; a resposta pública acrescenta somente os três endereços de imagem.
+- Cartões e títulos ficam centralizados. Cada foto preenche a largura do cartão (`object-fit: cover`), com recorte horizontal amplo no desktop e proporção própria no celular. Os títulos ficam abaixo das fotos, sem o CTA repetido “Ver modelos”.
+- Referência ao vivo conferida em 10/11: “Navegue por categorias e ambiente” apresenta cartões horizontais com foto grande e nome sob a foto. A Mobi adota o padrão visual para três ambientes e seus destinos próprios; não copia promoções, conteúdo ou estrutura exclusiva.
+
+- Capturas: `../mobi-studio-evidence/mm-p01-rooms-desktop.png` e `mm-p01-rooms-mobile.png`. Build e lint direcionado passaram. Nenhuma publicação ou gravação no catálogo ocorreu.
+
+## Versão anterior da prévia — antes deste ajuste
+
 - **Retirada expressa de Rafael:** “Descubra algo novo” não é mais renderizado na home nem listado no editor de seções. O identificador antigo permanece apenas para leitura compatível de revisões. Esta decisão substitui o planejamento anterior de rotação diária na home.
-- Categorias agora são cartões com fotos de produtos elegíveis, nomes e acesso ao catálogo filtrado. Na amostra histórica há cinco grupos representados; não foram inventados produtos para preencher categorias vazias. A taxonomia completa continua no menu. A normalização de categorias da demonstração não altera o catálogo real.
+- Esta versão exibia cinco categorias da amostra. Foi substituída pela composição fixa de três ambientes documentada acima. A taxonomia completa continua no menu. A normalização de categorias da demonstração não altera o catálogo real.
 - Cabeçalho mais compacto, busca em destaque, banner com produto do catálogo, benefícios em linha e vitrines sem linhas vazias de selos. Identidade Mobi preservada; atendimento online, sem loja física. Inspiração fica desativada nesta revisão.
 - Banner, navegação, atendimento e curadoria continuam ligados aos campos suportados do painel. “Editar versão aplicada” reabre a configuração vigente nos editores, preservando o fluxo de rascunho, revisão e histórico. Prévia móvel de arte completa usa 1:1; desktop, 16:5.
 - Aplicada apenas a revisão **local 11**, com amostra histórica de 16 produtos. A prévia agora abre em `/`; rotas de categoria, busca, produto e carrinho funcionam no demonstrador. Não equivale a homologação remota ou a catálogo atualizado.

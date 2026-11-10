@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/integrations/supabase/types";
 import { categoryMatches, getCategory } from "@/lib/constants";
 import { rehydrateHomepageSections } from "@/lib/homepage-selection";
+import { selectHomepageRoomImages, type HomepageRoomImage } from "@/lib/homepage-room-categories";
 
 export interface Produto {
   id: string;
@@ -98,6 +99,7 @@ type HomepageCandidateRow = Pick<
 
 export interface HomepageProducts {
   products: Produto[];
+  roomImages: HomepageRoomImage[];
   configuration?: import("./home-configuration").HomeConfiguration | null;
   revisionId?: number | null;
   sectionIds: {
@@ -249,6 +251,7 @@ async function readPublicHomepageProducts(): Promise<HomepageProducts> {
   const { applyHomeCuration, homeProductSelections } = await import("./home-configuration");
   const local = await readLocalHomeConfiguration();
   const candidates = candidateRows.map((row) => mapHomepageCandidate(row, curadoriaDisponivel));
+  const roomImages = selectHomepageRoomImages(candidates);
   const selections = homeProductSelections(candidates, local?.config, new Date());
   const selectedIds = rehydrateHomepageSections(selections, []).productIds;
   const detailedRows = await readHomepageProductRows(selectedIds, curadoriaDisponivel);
@@ -260,6 +263,7 @@ async function readPublicHomepageProducts(): Promise<HomepageProducts> {
 
   return {
     products: hydrated.products,
+    roomImages,
     sectionIds: hydrated.sectionIds,
     configuration: local?.config ?? null,
     revisionId: local?.revisionId ?? null,
