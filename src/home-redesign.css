@@ -942,6 +942,19 @@
   }
 }
 
+/* Product photos fill a square card and keep their visual center in frame. */
+.store-shell .mobi-photo {
+  padding: 0;
+  aspect-ratio: 1;
+}
+.store-shell .mobi-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
 /* Three centered room shortcuts with close, edge-to-edge catalog photos. */
 .store-shell .mobi-shop-categories {
   padding-top: 20px;
