@@ -119,7 +119,7 @@ type HomeCampaignPreview = {
 - `HomepageContent` handles `section.id === "blackFriday"`, selects products by the active local campaign projection, and passes catalog products to the new component. Product data remains the current catalog projection; no campaign price is applied.
 - The section reuses existing product-card behavior and price/installment display. Its demo notice must read `Prévia local · campanha demonstrativa; nenhuma oferta foi aplicada à loja.`
 
-- [ ] **Step 1: Create the component with existing Mobi card primitives** in `BlackFridayHomeSection.tsx`; use title/subtitle from PM-02 and no hero, timer, discount badge, or empty placeholder card.
+- [ ] **Step 1: Create the component with existing Mobi card primitives** in `BlackFridayHomeSection.tsx`; use title/subtitle from PM-02 and no hero, timer, discount badge, or empty card.
 - [ ] **Step 2: Add a local eligibility selector** in `HomepageContent.tsx`: require enabled section, source `local-preview`, valid Brasília interval containing the current instant, and at least one catalog product. Omit scheduled, inactive, invalid, missing, or conflicting campaigns.
 - [ ] **Step 3: Render after the intro section and before weekly by default** through `HomepageSectionOrder`; preserve user reordering and section visibility from PM-02.
 - [ ] **Step 4: Style the section with Mobi green/deep green and gold accents** in `home-redesign.css`; match current home density and use the existing four-column desktop/two-column mobile product grid.
