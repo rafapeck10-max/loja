@@ -248,12 +248,21 @@ async function readPublicHomepageProducts(): Promise<HomepageProducts> {
   }
 
   const { readLocalHomeConfiguration } = await import("./home-local-store.server");
-  const { applyHomeCuration, homeProductSelections } = await import("./home-configuration");
+  const { applyHomeCuration, blackFridayProductIdsToLoad, homeProductSelections } =
+    await import("./home-configuration");
   const local = await readLocalHomeConfiguration();
   const candidates = candidateRows.map((row) => mapHomepageCandidate(row, curadoriaDisponivel));
   const roomImages = selectHomepageRoomImages(candidates);
-  const selections = homeProductSelections(candidates, local?.config, new Date());
-  const selectedIds = rehydrateHomepageSections(selections, []).productIds;
+  const now = new Date();
+  const selections = homeProductSelections(candidates, local?.config, now);
+  const blackFridayIds = local?.config.sections.some(
+    (section) => section.id === "blackFriday" && section.enabled,
+  )
+    ? blackFridayProductIdsToLoad(local.config, now)
+    : [];
+  const selectedIds = [
+    ...new Set([...rehydrateHomepageSections(selections, []).productIds, ...blackFridayIds]),
+  ];
   const detailedRows = await readHomepageProductRows(selectedIds, curadoriaDisponivel);
   const detailedProducts = applyHomeCuration(
     detailedRows.map((row) => mapProduto(row, curadoriaDisponivel)),

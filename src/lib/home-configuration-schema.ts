@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { safeMobiLink } from "./operational-config.ts";
 import { PAGE_SECTIONS } from "./pages-shelves.ts";
+import { isBrasiliaDate } from "./campaigns.ts";
 const text = z.string().max(2000);
 const id = z.string().min(1).max(100);
 const settings = z
@@ -20,6 +21,20 @@ const section = z
   })
   .strict()
   .refine((s) => PAGE_SECTIONS.some((d) => d.id === s.id && d.type === s.type));
+const blackFridayCampaign = z
+  .object({
+    id,
+    startsAt: z.string().refine(isBrasiliaDate),
+    endsAt: z.string().refine(isBrasiliaDate),
+    productIds: z.array(id).min(1).max(1000),
+    source: z.literal("local-preview"),
+  })
+  .strict()
+  .refine(
+    (campaign) =>
+      Date.parse(campaign.endsAt) > Date.parse(campaign.startsAt) &&
+      new Set(campaign.productIds).size === campaign.productIds.length,
+  );
 const banner = z
   .object({
     id,
@@ -41,7 +56,7 @@ const banner = z
 export const homeConfigurationSchema = z
   .object({
     schemaVersion: z.literal(1),
-    sections: z.array(section).max(7),
+    sections: z.array(section).min(7).max(8),
     sectionIds: z
       .object({
         weekly: z.array(id).max(4),
@@ -50,6 +65,7 @@ export const homeConfigurationSchema = z
         room: z.array(id).max(4),
       })
       .strict(),
+    blackFridayCampaigns: z.array(blackFridayCampaign).max(100).optional(),
     curation: z
       .object({ weeklyIds: z.array(id).max(4), settings: z.record(id, settings) })
       .strict()

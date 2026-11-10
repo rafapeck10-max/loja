@@ -1,6 +1,6 @@
 import type { StudioScope } from "./admin-studio.ts";
 import type { EditorProduct } from "./homepage-curation.ts";
-import { validatePageDraft, sourceVersion, type PageDraft } from "./pages-shelves.ts";
+import { normalizePageDraft, sourceVersion } from "./pages-shelves.ts";
 import { validateBannerData, type BannerData } from "./banner-drafts.ts";
 import { validateCampaignData, type CampaignData } from "./campaigns.ts";
 import { validateEvolutionData } from "./evolution.ts";
@@ -27,8 +27,8 @@ export function validateStudioResource(
     const working = products.map((p) => productDraft?.changes?.[p.id]?.product ?? p);
     switch (scope) {
       case "pages": {
-        const d = value as PageDraft;
-        const errors = validatePageDraft(d, working);
+        const d = normalizePageDraft(value, working);
+        const errors: string[] = [];
         if (d?.baseVersion !== sourceVersion(working))
           errors.push(
             "O catálogo mudou desde a base desta página. Restaure os dados consultados e revise antes de salvar, revisar ou restaurar.",

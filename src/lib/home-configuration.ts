@@ -1,5 +1,6 @@
 import {
   initialPageDraft,
+  normalizePageDraft,
   validatePageDraft,
   sourceVersion,
   sectionProducts,
@@ -14,7 +15,14 @@ import {
   type NavigationData,
   type ServiceData,
 } from "./operational-config.ts";
-import type { EditorProduct, CurationDraft } from "./homepage-curation.ts";
+import { isCurationProduct, type EditorProduct, type CurationDraft } from "./homepage-curation.ts";
+import {
+  campaignConflicts,
+  campaignState,
+  isBrasiliaDate,
+  validateCampaignData,
+  type CampaignData,
+} from "./campaigns.ts";
 import type { Produto } from "./products.functions";
 
 export interface HomeDraftInput {
@@ -22,6 +30,7 @@ export interface HomeDraftInput {
   banners: BannerData;
   navigation: NavigationData;
   service: ServiceData;
+  campaigns?: CampaignData;
 }
 export type HomeBanner = Pick<
   BannerDraft,
@@ -44,12 +53,152 @@ export interface HomeConfiguration {
   schemaVersion: 1;
   sections: PageSection[];
   sectionIds: Record<"weekly" | "discovery" | "new" | "room", string[]>;
+  blackFridayCampaigns?: HomeCampaignPreview[];
   curation?: CurationDraft;
   banners: HomeBanner[];
   navigation: { id: string; label: string; href: string; visible: boolean }[];
   service: Pick<ServiceData, "regionMessage" | "deliveryMessage" | "assemblyMessage">;
 }
+export interface HomeCampaignPreview {
+  id: string;
+  startsAt: string;
+  endsAt: string;
+  productIds: string[];
+  source: "local-preview";
+}
 const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
+
+/** Reduces reviewed PM-05 entries to the fields needed by the local home preview. */
+export function projectBlackFridayCampaigns(
+  data: CampaignData | undefined,
+  products: EditorProduct[],
+  at = new Date(),
+): HomeCampaignPreview[] {
+  if (!data || !Array.isArray(data.campaigns)) return [];
+  const publicIds = new Set(products.filter(isCurationProduct).map((product) => product.id));
+  const campaignIds = new Set<string>();
+  for (const campaign of data.campaigns) {
+    if (!campaign || typeof campaign.id !== "string" || !campaign.id.trim()) continue;
+    if (campaignIds.has(campaign.id))
+      throw new Error(`O ID ${campaign.id} aparece mais de uma vez no PM-05.`);
+    campaignIds.add(campaign.id);
+  }
+  const validSimulations = data.campaigns.filter(
+    (campaign) =>
+      campaign?.status === "review" &&
+      campaign.simulation === "enabled" &&
+      !validateCampaignData({ version: 1, campaigns: [campaign] }, products).length &&
+      !campaignConflicts(campaign, products).length,
+  );
+  const eligible = validSimulations.filter(
+    (campaign) =>
+      campaign.sectionIds.includes("blackFriday") &&
+      ["programada", "ativa"].includes(campaignState(campaign, at.toISOString())) &&
+      campaign.participants.some((participant) => publicIds.has(participant.productId)),
+  );
+  for (const campaign of eligible) {
+    for (const other of validSimulations) {
+      if (
+        campaign.id === other.id ||
+        Date.parse(campaign.startsAt) >= Date.parse(other.endsAt) ||
+        Date.parse(other.startsAt) >= Date.parse(campaign.endsAt)
+      )
+        continue;
+      const conflictingProduct = campaign.participants.find(
+        (participant) =>
+          publicIds.has(participant.productId) &&
+          other.participants.some((candidate) => candidate.productId === participant.productId),
+      );
+      if (conflictingProduct)
+        throw new Error(
+          `A campanha ${campaign.id} conflita com ${other.id} para o produto ${conflictingProduct.productId}. Revise as simulações no PM-05.`,
+        );
+    }
+  }
+  const owners = new Map<string, string>();
+  for (const campaign of eligible) {
+    for (const participant of campaign.participants) {
+      if (!publicIds.has(participant.productId)) continue;
+      const owner = owners.get(participant.productId);
+      if (owner)
+        throw new Error(
+          `O produto ${participant.productId} está em mais de uma campanha Black Friday (${owner} e ${campaign.id}). Revise os vínculos no PM-05.`,
+        );
+      owners.set(participant.productId, campaign.id);
+    }
+  }
+  return eligible.flatMap((campaign) => {
+    const productIds = campaign.participants
+      .map((participant) => participant.productId)
+      .filter((id) => publicIds.has(id));
+    return productIds.length
+      ? [
+          {
+            id: campaign.id,
+            startsAt: campaign.startsAt,
+            endsAt: campaign.endsAt,
+            productIds,
+            source: "local-preview" as const,
+          },
+        ]
+      : [];
+  });
+}
+
+/** Only currently active local campaign projections can supply home cards. */
+export function activeBlackFridayProductIds(
+  config: Pick<HomeConfiguration, "blackFridayCampaigns"> | null | undefined,
+  at = new Date(),
+): string[] {
+  const timestamp = at.getTime();
+  if (!Number.isFinite(timestamp)) return [];
+  const seen = new Set<string>();
+  return (config?.blackFridayCampaigns ?? []).flatMap((campaign) => {
+    if (
+      !campaign ||
+      campaign.source !== "local-preview" ||
+      !isBrasiliaDate(campaign.startsAt) ||
+      !isBrasiliaDate(campaign.endsAt) ||
+      !Array.isArray(campaign.productIds) ||
+      Date.parse(campaign.endsAt) <= Date.parse(campaign.startsAt) ||
+      timestamp < Date.parse(campaign.startsAt) ||
+      timestamp >= Date.parse(campaign.endsAt)
+    )
+      return [];
+    return campaign.productIds.filter((id) => {
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+  });
+}
+
+/** Preloads active and scheduled campaign products so a page open before the start can update in place. */
+export function blackFridayProductIdsToLoad(
+  config: Pick<HomeConfiguration, "blackFridayCampaigns"> | null | undefined,
+  at = new Date(),
+): string[] {
+  const timestamp = at.getTime();
+  if (!Number.isFinite(timestamp)) return [];
+  const seen = new Set<string>();
+  return (config?.blackFridayCampaigns ?? []).flatMap((campaign) => {
+    if (
+      !campaign ||
+      campaign.source !== "local-preview" ||
+      !isBrasiliaDate(campaign.startsAt) ||
+      !isBrasiliaDate(campaign.endsAt) ||
+      !Array.isArray(campaign.productIds) ||
+      Date.parse(campaign.endsAt) <= Date.parse(campaign.startsAt) ||
+      Date.parse(campaign.endsAt) <= timestamp
+    )
+      return [];
+    return campaign.productIds.filter((id) => {
+      if (typeof id !== "string" || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+  });
+}
 
 /** Explicit public projection. Never serialize the admin workspace or catalog baseVersion. */
 export function homeConfigurationFromDraft(
@@ -68,6 +217,12 @@ export function homeConfigurationFromDraft(
   if (errors.length) throw new Error(errors.join(" "));
   const publicProducts = toStorefrontProducts(products, d.pages.curation);
   const publicIds = new Set(publicProducts.map((p) => p.id));
+  const blackFridayCampaigns = projectBlackFridayCampaigns(d.campaigns, products, now)
+    .map((campaign) => ({
+      ...campaign,
+      productIds: campaign.productIds.filter((id) => publicIds.has(id)),
+    }))
+    .filter((campaign) => campaign.productIds.length > 0);
   return {
     schemaVersion: 1,
     curation: {
@@ -91,6 +246,7 @@ export function homeConfigurationFromDraft(
         sectionProducts(id as PageSection["id"], publicProducts, now).map((p) => p.id),
       ]),
     ) as HomeConfiguration["sectionIds"],
+    ...(blackFridayCampaigns.length ? { blackFridayCampaigns } : {}),
     banners: d.banners.banners.map((b) => ({
       id: b.id,
       position: b.position,
@@ -148,7 +304,9 @@ export function reopenHomeDraft(
       })),
     },
     service: { ...clone(current.service), ...clone(config.service) },
+    ...(current.campaigns ? { campaigns: clone(current.campaigns) } : {}),
   };
+  next.pages = normalizePageDraft(next.pages, products);
   homeConfigurationFromDraft(next, products);
   return next;
 }

@@ -31,9 +31,15 @@ import {
   type PageDraft,
   type PageSectionId,
 } from "../lib/pages-shelves";
+import {
+  activeBlackFridayProductIds,
+  projectBlackFridayCampaigns,
+} from "../lib/home-configuration";
+import { type CampaignData } from "../lib/campaigns";
 import { isCurationProduct, type EditorProduct } from "../lib/homepage-curation";
 import { HomepageSectionOrder } from "./HomepageSectionOrder";
 import { HomeProductSection } from "./HomeProductSection";
+import { BlackFridayHomeSection } from "./BlackFridayHomeSection";
 import { MobiliLogo } from "./MobiliLogo";
 import { ImageWithFallback } from "./ImageWithFallback";
 import { formatBRL } from "../lib/constants";
@@ -43,11 +49,13 @@ const DRAFT_KEY = "mobi:pages-and-shelves:home:v1";
 const labels = { automatico: "Automático", incluir: "Incluir", ocultar: "Ocultar" } as const;
 export function PagesAndShelvesPanel({
   products,
+  campaigns,
   ready = true,
   demonstration = false,
   managed,
 }: {
   products: EditorProduct[];
+  campaigns?: CampaignData;
   ready?: boolean;
   demonstration?: boolean;
   managed?: {
@@ -85,6 +93,17 @@ export function PagesAndShelvesPanel({
     [products, current.curation],
   );
   const previewProducts = sectionProducts(sectionId, publicProducts, now);
+  let blackFridayCampaigns = [] as ReturnType<typeof projectBlackFridayCampaigns>;
+  let blackFridayError = "";
+  try {
+    blackFridayCampaigns = projectBlackFridayCampaigns(campaigns, products, now);
+  } catch (error) {
+    blackFridayError = error instanceof Error ? error.message : "Revise os vínculos no PM-05.";
+  }
+  const blackFridayProductIds = activeBlackFridayProductIds({ blackFridayCampaigns }, now);
+  const blackFridayProducts = blackFridayProductIds.flatMap(
+    (id) => publicProducts.find((product) => product.id === id) ?? [],
+  );
   const sourceLabel = demonstration
     ? "Amostra de apresentação · fotos e preços históricos, não são ofertas atuais"
     : "Catálogo administrativo · dados consultados";
@@ -425,153 +444,167 @@ export function PagesAndShelvesPanel({
                   onChange={(e) => patchSection({ subtitle: e.target.value })}
                 />
               </label>
-              <div className="ps-rule">
-                <Layers3 size={16} />
-                <p>
-                  {sectionId === "weekly"
-                    ? "Escolha até 4 produtos e defina a ordem."
-                    : sectionId === "new"
-                      ? "Até 4 produtos dos últimos 30 dias, com inclusões e exclusões manuais."
-                      : sectionId === "room"
-                        ? "Até 4 produtos da categoria Sala, com exceções manuais."
-                        : "Até 4 produtos elegíveis, alternados pela regra atual e sem repetir as outras seleções."}
-                </p>
-              </div>
-              {sectionId === "weekly" ? (
-                <>
-                  <div className="ps-subheading">
-                    <h3>Produtos escolhidos</h3>
-                    <span>{current.curation.weeklyIds.length}/4</span>
-                  </div>
-                  <ol className="ps-products">
-                    {current.curation.weeklyIds.map((id, index) => {
-                      const p = byId.get(id);
-                      return (
-                        <li key={id}>
-                          <span className="ps-position">{index + 1}</span>
-                          <div className="ps-product-identity">
-                            {p ? identity(p) : <strong>Produto {id} não encontrado</strong>}
-                          </div>
-                          {(!p || !isCurationProduct(p)) && (
-                            <p className="ps-warning">
-                              Preço, imagem, custo ou disponibilidade precisam de revisão.
-                            </p>
-                          )}
-                          <div className="ps-product-actions">
-                            <button
-                              onClick={() => {
-                                setPicker(index);
-                                setSearch("");
-                                setPickerOpen(true);
-                              }}
-                            >
-                              Trocar
-                            </button>
-                            <button
-                              aria-label={`Remover ${p?.nome ?? id}`}
-                              onClick={() => remove(id)}
-                            >
-                              Remover
-                            </button>
-                            <span />
-                            <button
-                              aria-label={`Subir produto ${index + 1}`}
-                              disabled={index === 0}
-                              onClick={() => moveProduct(index, -1)}
-                            >
-                              <ArrowUp size={14} />
-                            </button>
-                            <button
-                              aria-label={`Descer produto ${index + 1}`}
-                              disabled={index === current.curation.weeklyIds.length - 1}
-                              onClick={() => moveProduct(index, 1)}
-                            >
-                              <ArrowDown size={14} />
-                            </button>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ol>
-                  <button
-                    className="aw-action ps-add"
-                    disabled={current.curation.weeklyIds.length >= 4}
-                    onClick={() => {
-                      setPicker(null);
-                      setSearch("");
-                      setPickerOpen(true);
-                    }}
-                  >
-                    <Plus size={15} /> Escolher produto
-                  </button>
-                </>
+              {sectionId === "blackFriday" ? (
+                <div className="ps-rule ps-black-friday-guide">
+                  <Layers3 size={16} />
+                  <p>
+                    Produtos, condições e vigência são definidos em{" "}
+                    <strong>Preços e campanhas</strong>. Esta seção apenas referencia campanhas
+                    Black Friday; não cria uma segunda lista nem aplica preço promocional ao
+                    catálogo.
+                  </p>
+                </div>
               ) : (
                 <>
-                  <label className="ps-field">
-                    Buscar nas exceções
-                    <div className="ps-search">
-                      <Search size={15} />
-                      <input
-                        value={search}
-                        onChange={(e) => {
-                          setSearch(e.target.value);
-                          setLimit(12);
-                        }}
-                        placeholder="Nome, referência ou categoria"
-                      />
-                    </div>
-                  </label>
-                  <div className="ps-exceptions">
-                    {filtered.slice(0, limit).map((p) => (
-                      <div key={p.id}>
-                        <div className="ps-product-identity">{identity(p)}</div>
-                        {sectionId === "discovery" ? (
-                          <label>
-                            <input
-                              type="checkbox"
-                              checked={current.curation.settings[p.id]?.descoberta ?? true}
-                              onChange={(e) =>
-                                updateSettings(p.id, { descoberta: e.target.checked })
-                              }
-                            />
-                            Participa
-                          </label>
-                        ) : (
-                          <select
-                            aria-label={`Regra para ${p.nome}`}
-                            value={
-                              current.curation.settings[p.id]?.[
-                                sectionId === "new" ? "novidade" : "sala"
-                              ] ?? "automatico"
-                            }
-                            onChange={(e) =>
-                              updateSettings(p.id, {
-                                [sectionId === "new" ? "novidade" : "sala"]: e.target.value,
-                              })
-                            }
-                          >
-                            {Object.entries(labels).map(([value, label]) => (
-                              <option key={value} value={value}>
-                                {label}
-                              </option>
-                            ))}
-                          </select>
-                        )}
-                      </div>
-                    ))}
+                  <div className="ps-rule">
+                    <Layers3 size={16} />
+                    <p>
+                      {sectionId === "weekly"
+                        ? "Escolha até 4 produtos e defina a ordem."
+                        : sectionId === "new"
+                          ? "Até 4 produtos dos últimos 30 dias, com inclusões e exclusões manuais."
+                          : sectionId === "room"
+                            ? "Até 4 produtos da categoria Sala, com exceções manuais."
+                            : "Até 4 produtos elegíveis, alternados pela regra atual e sem repetir as outras seleções."}
+                    </p>
                   </div>
-                  {filtered.length > limit && (
-                    <button className="aw-action" onClick={() => setLimit(limit + 12)}>
-                      Mostrar mais produtos
-                    </button>
+                  {sectionId === "weekly" ? (
+                    <>
+                      <div className="ps-subheading">
+                        <h3>Produtos escolhidos</h3>
+                        <span>{current.curation.weeklyIds.length}/4</span>
+                      </div>
+                      <ol className="ps-products">
+                        {current.curation.weeklyIds.map((id, index) => {
+                          const p = byId.get(id);
+                          return (
+                            <li key={id}>
+                              <span className="ps-position">{index + 1}</span>
+                              <div className="ps-product-identity">
+                                {p ? identity(p) : <strong>Produto {id} não encontrado</strong>}
+                              </div>
+                              {(!p || !isCurationProduct(p)) && (
+                                <p className="ps-warning">
+                                  Preço, imagem, custo ou disponibilidade precisam de revisão.
+                                </p>
+                              )}
+                              <div className="ps-product-actions">
+                                <button
+                                  onClick={() => {
+                                    setPicker(index);
+                                    setSearch("");
+                                    setPickerOpen(true);
+                                  }}
+                                >
+                                  Trocar
+                                </button>
+                                <button
+                                  aria-label={`Remover ${p?.nome ?? id}`}
+                                  onClick={() => remove(id)}
+                                >
+                                  Remover
+                                </button>
+                                <span />
+                                <button
+                                  aria-label={`Subir produto ${index + 1}`}
+                                  disabled={index === 0}
+                                  onClick={() => moveProduct(index, -1)}
+                                >
+                                  <ArrowUp size={14} />
+                                </button>
+                                <button
+                                  aria-label={`Descer produto ${index + 1}`}
+                                  disabled={index === current.curation.weeklyIds.length - 1}
+                                  onClick={() => moveProduct(index, 1)}
+                                >
+                                  <ArrowDown size={14} />
+                                </button>
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ol>
+                      <button
+                        className="aw-action ps-add"
+                        disabled={current.curation.weeklyIds.length >= 4}
+                        onClick={() => {
+                          setPicker(null);
+                          setSearch("");
+                          setPickerOpen(true);
+                        }}
+                      >
+                        <Plus size={15} /> Escolher produto
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <label className="ps-field">
+                        Buscar nas exceções
+                        <div className="ps-search">
+                          <Search size={15} />
+                          <input
+                            value={search}
+                            onChange={(e) => {
+                              setSearch(e.target.value);
+                              setLimit(12);
+                            }}
+                            placeholder="Nome, referência ou categoria"
+                          />
+                        </div>
+                      </label>
+                      <div className="ps-exceptions">
+                        {filtered.slice(0, limit).map((p) => (
+                          <div key={p.id}>
+                            <div className="ps-product-identity">{identity(p)}</div>
+                            {sectionId === "discovery" ? (
+                              <label>
+                                <input
+                                  type="checkbox"
+                                  checked={current.curation.settings[p.id]?.descoberta ?? true}
+                                  onChange={(e) =>
+                                    updateSettings(p.id, { descoberta: e.target.checked })
+                                  }
+                                />
+                                Participa
+                              </label>
+                            ) : (
+                              <select
+                                aria-label={`Regra para ${p.nome}`}
+                                value={
+                                  current.curation.settings[p.id]?.[
+                                    sectionId === "new" ? "novidade" : "sala"
+                                  ] ?? "automatico"
+                                }
+                                onChange={(e) =>
+                                  updateSettings(p.id, {
+                                    [sectionId === "new" ? "novidade" : "sala"]: e.target.value,
+                                  })
+                                }
+                              >
+                                {Object.entries(labels).map(([value, label]) => (
+                                  <option key={value} value={value}>
+                                    {label}
+                                  </option>
+                                ))}
+                              </select>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      {filtered.length > limit && (
+                        <button className="aw-action" onClick={() => setLimit(limit + 12)}>
+                          Mostrar mais produtos
+                        </button>
+                      )}
+                    </>
                   )}
+                  <div className="ps-result-note">
+                    <Check size={15} />
+                    {previewProducts.length} produtos elegíveis nesta seleção do rascunho. Imagens e
+                    estoque físico não são confirmados pela regra.
+                  </div>
                 </>
               )}
-              <div className="ps-result-note">
-                <Check size={15} />
-                {previewProducts.length} produtos elegíveis nesta seleção do rascunho. Imagens e
-                estoque físico não são confirmados pela regra.
-              </div>
             </>
           ) : (
             <div className="ps-fixed-note">
@@ -636,7 +669,14 @@ export function PagesAndShelvesPanel({
                     data-preview-section={s.id}
                     className={s.id === sectionId ? "ps-preview-selected" : ""}
                   >
-                    {s.type === "vitrine" ? (
+                    {s.id === "blackFriday" ? (
+                      <BlackFridayHomeSection
+                        title={s.title}
+                        subtitle={s.subtitle}
+                        products={blackFridayProducts}
+                        demonstration
+                      />
+                    ) : s.type === "vitrine" ? (
                       <HomeProductSection
                         title={s.title}
                         subtitle={s.subtitle}
@@ -656,10 +696,17 @@ export function PagesAndShelvesPanel({
                       </div>
                     )}
                     {s.type === "vitrine" &&
-                      sectionProducts(s.id, publicProducts, now).length === 0 && (
+                      (s.id === "blackFriday"
+                        ? blackFridayProducts.length === 0
+                        : sectionProducts(s.id, publicProducts, now).length === 0) && (
                         <div className="ps-layout-block">
                           <h3>{s.title}</h3>
-                          <p>Sem produtos elegíveis. A loja omite vitrines vazias.</p>
+                          <p>
+                            {s.id === "blackFriday"
+                              ? blackFridayError ||
+                                "Associe uma campanha revisada no PM-05, com produtos válidos e período vigente, para ver esta seção."
+                              : "Sem produtos elegíveis. A loja omite vitrines vazias."}
+                          </p>
                         </div>
                       )}
                   </div>

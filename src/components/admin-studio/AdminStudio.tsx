@@ -15,7 +15,12 @@ import {
   type StudioScope,
   type StudioWorkspace,
 } from "../../lib/admin-studio";
-import { initialPageDraft, restorePageDraft, type PageDraft } from "../../lib/pages-shelves";
+import {
+  initialPageDraft,
+  normalizePageDraft,
+  restorePageDraft,
+  type PageDraft,
+} from "../../lib/pages-shelves";
 import { initialBannerData, validateBannerData, type BannerData } from "../../lib/banner-drafts";
 import {
   initialCampaignData,
@@ -146,8 +151,15 @@ export function AdminStudio({
     [conflict, setConflict] = useState(false),
     [reviewOpen, setReviewOpen] = useState(false),
     [historyScope, setHistoryScope] = useState("all");
-  const data = { ...defaults, ...workspace.entries, ...edits } as StudioData;
-  const workingProducts = products.map((p) => data.products.changes[p.id]?.product ?? p);
+  const rawData = { ...defaults, ...workspace.entries, ...edits } as StudioData;
+  const workingProducts = products.map((p) => rawData.products.changes[p.id]?.product ?? p);
+  let editorPages = rawData.pages;
+  try {
+    editorPages = normalizePageDraft(rawData.pages, workingProducts);
+  } catch {
+    // Keep invalid saved data visible to the existing recovery flow without rewriting it.
+  }
+  const data = { ...rawData, pages: editorPages } as StudioData;
   const productNames = Object.fromEntries(products.map((p) => [p.id, p.nome]));
   const humanDiff = (path: string) => describeDifferencePath(path, productNames);
   const scope = areaScopes[area];
@@ -536,6 +548,7 @@ export function AdminStudio({
       {area === "vitrine" && (
         <PagesAndShelvesPanel
           products={workingProducts}
+          campaigns={data.campaigns}
           demonstration={demonstration}
           managed={{
             value: data.pages,

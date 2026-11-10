@@ -1,14 +1,17 @@
 import { Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { HeroCarouselView } from "./HeroCarouselView";
 import { HomepageCategories } from "./HomepageCategories";
 import { CreditCard, Truck, MessageCircle } from "lucide-react";
 import { ImageWithFallback } from "./ImageWithFallback";
 import { HomepageSectionOrder } from "./HomepageSectionOrder";
 import { HomeProductSection } from "./HomeProductSection";
+import { BlackFridayHomeSection } from "./BlackFridayHomeSection";
 
 import { MAX_INSTALLMENTS, categoryMatches, WHATSAPP_URL } from "../lib/constants";
 import {
   defaultHomeSections,
+  activeBlackFridayProductIds,
   type HomeConfiguration,
   type HomeBanner,
 } from "../lib/home-configuration";
@@ -36,6 +39,35 @@ export function HomepageContent({
     config = configuration ?? context;
   const ids = sectionIds;
   const byId = new Map(products.map((p) => [p.id, p]));
+  const campaigns = config?.blackFridayCampaigns;
+  const [campaignClock, setCampaignClock] = useState(() => new Date());
+  useEffect(() => {
+    setCampaignClock(new Date());
+    let timer: number | undefined;
+    let cancelled = false;
+    const scheduleNextBoundary = () => {
+      const now = Date.now();
+      const nextBoundary = campaigns
+        ?.flatMap((campaign) => [Date.parse(campaign.startsAt), Date.parse(campaign.endsAt)])
+        .filter((timestamp) => Number.isFinite(timestamp) && timestamp > now)
+        .sort((a, b) => a - b)[0];
+      if (nextBoundary === undefined) return;
+      timer = window.setTimeout(
+        () => {
+          if (cancelled) return;
+          setCampaignClock(new Date());
+          scheduleNextBoundary();
+        },
+        Math.min(nextBoundary - now + 25, 2_147_483_647),
+      );
+    };
+    scheduleNextBoundary();
+    return () => {
+      cancelled = true;
+      if (timer !== undefined) window.clearTimeout(timer);
+    };
+  }, [campaigns]);
+  const blackFridayIds = activeBlackFridayProductIds(config, campaignClock);
   const badges: Record<string, ProductBadge> = {};
   ids.new.forEach((id) => (badges[id] = "new"));
   ids.weekly.forEach((id) => (badges[id] = "week"));
@@ -68,6 +100,15 @@ export function HomepageContent({
               />
               {children}
             </>
+          );
+        if (section.id === "blackFriday")
+          return (
+            <BlackFridayHomeSection
+              title={section.title}
+              subtitle={section.subtitle}
+              products={blackFridayIds.flatMap((id) => byId.get(id) ?? [])}
+              demonstration={!!config?.blackFridayCampaigns?.length}
+            />
           );
         if (["weekly", "discovery", "new", "room"].includes(section.id))
           return (

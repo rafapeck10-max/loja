@@ -21,6 +21,13 @@ export const PAGE_SECTIONS = [
     subtitle: "Estrutura existente da página inicial",
   },
   {
+    id: "blackFriday",
+    title: "Black Friday da Mobi",
+    type: "vitrine",
+    locked: false,
+    subtitle: "Veja os produtos selecionados para a campanha.",
+  },
+  {
     id: "discovery",
     title: "Descubra algo novo",
     type: "vitrine",
@@ -110,7 +117,7 @@ export function initialPageDraft(products: EditorProduct[]): PageDraft {
       title,
       type,
       subtitle,
-      enabled: id !== "discovery" && id !== "inspiration",
+      enabled: id !== "discovery" && id !== "inspiration" && id !== "blackFriday",
     })),
     curation: {
       weeklyIds: products
@@ -207,10 +214,41 @@ export function validatePageDraft(draft: PageDraft, products: EditorProduct[]): 
   }
   return [...new Set(errors)];
 }
+/** Adds the new Black Friday section to valid legacy drafts without touching their saved copy. */
+export function normalizePageDraft(value: unknown, products: EditorProduct[]): PageDraft {
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    throw new Error("Rascunho inválido.");
+  const draft = value as PageDraft;
+  if (!Array.isArray(draft.sections)) throw new Error("Revise a lista de seções.");
+  const ids = draft.sections.map((section) => section?.id);
+  if (
+    ids.some((id) => !PAGE_SECTIONS.some((definition) => definition.id === id)) ||
+    new Set(ids).size !== ids.length
+  )
+    throw new Error("Revise a lista de seções.");
+  const hasBlackFriday = ids.includes("blackFriday");
+  if (draft.sections.length !== (hasBlackFriday ? PAGE_SECTIONS.length : PAGE_SECTIONS.length - 1))
+    throw new Error("Revise a lista de seções.");
+  const sections = [...draft.sections];
+  if (!hasBlackFriday) {
+    const introIndex = sections.findIndex((section) => section.id === "intro");
+    const definition = PAGE_SECTIONS.find((section) => section.id === "blackFriday")!;
+    if (introIndex < 0) throw new Error("Preserve o início e o encerramento da página.");
+    sections.splice(introIndex + 1, 0, {
+      id: definition.id,
+      title: definition.title,
+      type: definition.type,
+      subtitle: definition.subtitle,
+      enabled: false,
+    });
+  }
+  const normalized = { ...draft, sections };
+  const errors = validatePageDraft(normalized, products);
+  if (errors.length) throw new Error(errors.join(" "));
+  return normalized;
+}
 export function restorePageDraft(raw: string, products: EditorProduct[]): PageDraft {
-  const parsed = JSON.parse(raw) as PageDraft;
-  if (validatePageDraft(parsed, products).length)
-    throw new Error("Rascunho inválido ou com produtos indisponíveis.");
+  const parsed = normalizePageDraft(JSON.parse(raw), products);
   if (parsed.baseVersion !== sourceVersion(products))
     throw new Error(
       "O catálogo mudou desde este rascunho. Preserve a versão atual e revise os conflitos.",

@@ -115,8 +115,8 @@ export function HomeConnectionPanel({
         </div>
       </div>
       <p className="pm-muted">
-        Reúne Páginas, Banners, Navegação e Atendimento. Cadastros e campanhas simuladas não são
-        aplicados.
+        Reúne Páginas, Banners, Navegação e Atendimento. Campanhas seguem locais; Black Friday usa
+        somente a seleção válida do PM-05 e o preço atual do catálogo nesta prévia.
       </p>
       {applied && onOpenApplied && (
         <button

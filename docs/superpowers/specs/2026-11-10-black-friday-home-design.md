@@ -1,6 +1,6 @@
 # Seção Black Friday na página inicial da Mobi
 
-**Status:** especificação para revisão de Rafael. Nenhum código, preço, configuração publicada ou banco foi alterado.
+**Status:** desenho aprovado por Rafael para implementação local em branch. A prévia visual ainda depende de acesso ao PM-02 com catálogo carregado. Nada foi publicado; nenhum preço ou dado remoto foi alterado.
 
 **Escopo aprovado para desenho em 10/11/2026:** adicionar uma seção à home da Mobi, ligada ao PM-02 e às campanhas do PM-05, exibida somente durante uma campanha válida. Esta aprovação não autoriza ativação comercial nem publicação.
 
@@ -75,4 +75,4 @@ O código atual oferece simulação local, mas ainda não fornece uma campanha p
 
 ## Próxima etapa
 
-Rafael revisa esta especificação e pede ajustes ou a aprova. Só depois será elaborado e revisado um plano de implementação. A implementação permanecerá em branch e a publicação seguirá o aceite da versão final.
+Revisar a implementação e a prévia local. A aprovação do desenho não aprova uma campanha comercial nem publicação. A ativação pública continua dependendo de fonte persistente autorizada, comportamento de preço consistente e aprovação explícita da versão apresentada.

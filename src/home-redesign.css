@@ -423,6 +423,27 @@
   margin: 5px 0 0;
   color: #73796d;
 }
+.mobi-black-friday .mobi-section-title {
+  margin-bottom: 10px;
+}
+.mobi-black-friday-kicker {
+  display: block;
+  margin-bottom: 3px;
+  color: #947135;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  line-height: 1.3;
+}
+.mobi-black-friday-notice {
+  margin: 0 0 12px;
+  padding: 7px 10px;
+  border-left: 3px solid #c5a059;
+  background: #f5f0e4;
+  color: #716143;
+  font-size: 11px;
+  line-height: 1.45;
+}
 .store-shell .mobi-text-link {
   font-size: 12px;
   min-height: 44px;
@@ -848,6 +869,17 @@
     font-size: 11px;
     margin-top: 4px;
     line-height: 1.4;
+  }
+  .mobi-black-friday .mobi-section-title {
+    margin-bottom: 8px;
+  }
+  .mobi-black-friday-kicker {
+    font-size: 8px;
+  }
+  .mobi-black-friday-notice {
+    margin-bottom: 8px;
+    padding: 6px 8px;
+    font-size: 10px;
   }
   .store-shell .mobi-text-link {
     font-size: 11px;

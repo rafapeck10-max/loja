@@ -35,6 +35,7 @@
 - `src/lib/pages-shelves.ts`: catálogo ordenável de seções, padrão e migração compatível de `PageDraft` antigo.
 - `src/lib/studio-validation.ts` e `src/components/admin-studio/AdminStudio.tsx`: validar e abrir rascunhos locais compatíveis sem modificar snapshots antigos.
 - `src/lib/home-configuration.ts` e `src/lib/home-configuration-schema.ts`: projeção local versionada e validação dos dados mínimos da campanha.
+- `src/lib/products.functions.ts`: carregar no mesmo snapshot local os produtos elegíveis de campanhas futuras, para a home atualizar na hora de início sem recarregar a página.
 - `src/components/PagesAndShelvesPanel.tsx`: edição do título, apoio, ordem e estado; ligação explicada ao PM-05 sem lista duplicada de produtos.
 - `src/components/admin-studio/HomeConnectionPanel.tsx`: prévia da revisão usando a configuração de campanhas fornecida pelo mesmo estado do estúdio.
 - `src/components/HomepageContent.tsx` e novo `src/components/BlackFridayHomeSection.tsx`: consumidor e seção de produtos pelo renderer da home.
@@ -60,12 +61,12 @@
 - On workspace load, present the normalized `pages` value to the editor but leave `history[].before/after` and the saved workspace untouched. Saving creates a new revision; it does not rewrite past snapshots.
 - `reopenHomeDraft()` supplies the disabled default when an older applied home lacks the section.
 
-- [ ] **Step 1: Inspect the committed schema and migration paths.** Confirm `parseWorkspace` validates history against the saved current entry before page normalization; identify where `data.pages` can use a normalized view without mutating `workspace.history`.
-- [ ] **Step 2: Add the `blackFriday` page definition and `normalizePageDraft()`** in `src/lib/pages-shelves.ts`; preserve all existing IDs and their relative order.
-- [ ] **Step 3: Use normalization at editor load and legacy reopen** in `AdminStudio.tsx`, `studio-validation.ts`, and `home-configuration.ts`; leave original persisted snapshots unchanged until a user saves a new revision.
-- [ ] **Step 4: Extend the Zod home DTO compatibly** in `home-configuration-schema.ts`; keep schema version 1 and accept both legacy and current section counts.
+- [x] **Step 1: Inspect the committed schema and migration paths.** Confirm `parseWorkspace` validates history against the saved current entry before page normalization; identify where `data.pages` can use a normalized view without mutating `workspace.history`.
+- [x] **Step 2: Add the `blackFriday` page definition and `normalizePageDraft()`** in `src/lib/pages-shelves.ts`; preserve all existing IDs and their relative order.
+- [x] **Step 3: Use normalization at editor load and legacy reopen** in `AdminStudio.tsx`, `studio-validation.ts`, and `home-configuration.ts`; leave original persisted snapshots unchanged until a user saves a new revision.
+- [x] **Step 4: Extend the Zod home DTO compatibly** in `home-configuration-schema.ts`; keep schema version 1 and accept both legacy and current section counts.
 - [ ] **Step 5: Check the migration manually** by opening a saved seven-section PM-02 draft and an older home revision; verify that all existing settings remain and Black Friday starts disabled.
-- [ ] **Step 6: Commit the model and compatibility change** on the feature branch with message `feat: add compatible Black Friday section model`.
+- [x] **Step 6: Include the model and compatibility change** in the cohesive local feature commit recorded in Task 4; no separate intermediate commit was needed.
 
 ### Task 2: Connect PM-02 sections to PM-05 campaigns
 
@@ -97,11 +98,11 @@ type HomeCampaignPreview = {
 - PM-02 shows title, support text, enabled state, and order. Its Black Friday properties explain that selection, period, and conditions are set in **Preços e campanhas**.
 
 - [ ] **Step 1: Define `HomeCampaignPreview` and optional `HomeConfiguration.blackFridayCampaigns`** in `home-configuration.ts`; add a strict Zod shape for it in `home-configuration-schema.ts`, leaving old configurations valid.
-- [ ] **Step 2: Extend `HomeDraftInput` and `homeConfigurationFromDraft()`** to read PM-05 `CampaignData`, include only valid reviewed simulations associated with `blackFriday`, and emit the safe `HomeCampaignPreview` fields.
-- [ ] **Step 3: Reject ambiguous projection** when multiple eligible Black Friday campaigns include the same product; return a visible validation message instead of choosing an order implicitly.
-- [ ] **Step 4: Add the Black Friday PM-02 property state** in `PagesAndShelvesPanel.tsx`; do not expose the generic sala/new product exception controls for this section.
+- [x] **Step 2: Extend `HomeDraftInput` and `homeConfigurationFromDraft()`** to read PM-05 `CampaignData`, include only valid reviewed simulations associated with `blackFriday`, and emit the safe `HomeCampaignPreview` fields.
+- [x] **Step 3: Reject ambiguous projection** when multiple eligible Black Friday campaigns include the same product; return a visible validation message instead of choosing an order implicitly.
+- [x] **Step 4: Add the Black Friday PM-02 property state** in `PagesAndShelvesPanel.tsx`; do not expose the generic sala/new product exception controls for this section.
 - [ ] **Step 5: Keep `HomeConnectionPanel` wired to current PM-02/PM-05 drafts** and check in the browser that selecting a Black Friday destination in PM-05 appears in the local storefront only after saving, reviewing, and applying that home revision locally.
-- [ ] **Step 6: Commit the panel and safe-projection change** on the feature branch with message `feat: connect Black Friday campaigns to home revisions`.
+- [x] **Step 6: Include the panel and safe-projection change** in the cohesive local feature commit recorded in Task 4; no separate intermediate commit was needed.
 
 ### Task 3: Render the responsive home section
 
@@ -119,12 +120,12 @@ type HomeCampaignPreview = {
 - `HomepageContent` handles `section.id === "blackFriday"`, selects products by the active local campaign projection, and passes catalog products to the new component. Product data remains the current catalog projection; no campaign price is applied.
 - The section reuses existing product-card behavior and price/installment display. Its demo notice must read `Prévia local · campanha demonstrativa; nenhuma oferta foi aplicada à loja.`
 
-- [ ] **Step 1: Create the component with existing Mobi card primitives** in `BlackFridayHomeSection.tsx`; use title/subtitle from PM-02 and no hero, timer, discount badge, or empty card.
-- [ ] **Step 2: Add a local eligibility selector** in `HomepageContent.tsx`: require enabled section, source `local-preview`, valid Brasília interval containing the current instant, and at least one catalog product. Omit scheduled, inactive, invalid, missing, or conflicting campaigns.
-- [ ] **Step 3: Render after the intro section and before weekly by default** through `HomepageSectionOrder`; preserve user reordering and section visibility from PM-02.
-- [ ] **Step 4: Style the section with Mobi green/deep green and gold accents** in `home-redesign.css`; match current home density and use the existing four-column desktop/two-column mobile product grid.
-- [ ] **Step 5: Update the PM-02 composition preview** to show the section with the same renderer, a local-demonstration label, and an explanatory empty state in the editor when no valid campaign is associated.
-- [ ] **Step 6: Commit the renderer and responsive section** on the feature branch with message `feat: render local Black Friday home section`.
+- [x] **Step 1: Create the component with existing Mobi card primitives** in `BlackFridayHomeSection.tsx`; use title/subtitle from PM-02 and no hero, timer, discount badge, or empty card.
+- [x] **Step 2: Add a local eligibility selector** in `HomepageContent.tsx`: require enabled section, source `local-preview`, valid Brasília interval containing the current instant, and at least one catalog product. Omit scheduled, inactive, invalid, missing, or conflicting campaigns.
+- [x] **Step 3: Render after the intro section and before weekly by default** through `HomepageSectionOrder`; preserve user reordering and section visibility from PM-02.
+- [x] **Step 4: Style the section with Mobi green/deep green and gold accents** in `home-redesign.css`; match current home density and use the existing four-column desktop/two-column mobile product grid.
+- [x] **Step 5: Update the PM-02 composition preview** to show the section with the same renderer, a local-demonstration label, and an explanatory empty state in the editor when no valid campaign is associated.
+- [x] **Step 6: Include the renderer and responsive section** in the cohesive local feature commit recorded in Task 4; no separate intermediate commit was needed.
 
 ### Task 4: Inspect, verify, and hand off the preview
 
@@ -132,8 +133,8 @@ type HomeCampaignPreview = {
 
 - Modify documentation only if observed behavior or a remaining dependency differs from the approved spec: `docs/PM01_PM10_CONFERENCIA_DOCUMENTAL.md` or the feature spec.
 
-- [ ] **Step 1: Before implementation, reopen the original engineering-reversal and panel documents** and open the current MadeiraMadeira Black Friday page to compare only the relevant behavior; record observation and any access barrier. Adapt it to Mobi; do not copy sale data.
-- [ ] **Step 2: Run `npm run build` and lint only the changed TypeScript/CSS scope.** Expected: build succeeds; changed files have no new lint errors.
+- [x] **Step 1: Before implementation, reopen the original engineering-reversal and panel documents** and open the current MadeiraMadeira Black Friday page to compare only the relevant behavior; record observation and any access barrier. Adapt it to Mobi; do not copy sale data.
+- [x] **Step 2: Run `npm run build` and lint only the changed TypeScript scope.** Expected: build succeeds; changed files have no new lint errors. CSS was reviewed in the diff; this project has no CSS lint command in this plan.
 - [ ] **Step 3: Manually inspect the local branch preview** at 1440 px and 390 px with no campaign, scheduled campaign, active simulation, invalid date, expired campaign, and canceled campaign after a new reviewed-and-applied local home revision. Confirm there are no duplicate products, price changes, fake countdowns, or horizontal overflow.
 - [ ] **Step 4: Confirm `MOBI_LOCAL_HOME` remains disabled in production/Vercel** and that missing public campaign persistence omits the section publicly; do not edit Supabase, prices, or live campaign data.
 - [ ] **Step 5: Provide the local preview and exact commit range, then stop for Rafael's version approval. Do not push or publish.**
@@ -151,3 +152,13 @@ This work is limited to a branch/local preview. Current project records say PM-0
 - The preview uses catalog prices and existing installment calculation; no simulated promotional price is presented as live.
 - Desktop and mobile follow the approved layout and the local demo warning is visible.
 - Production/Vercel has no newly enabled local adapter and no published campaign source.
+
+## Execução registrada em 10/11/2026
+
+- A engenharia reversa v1.1 e a especificação do painel v0.2 foram reabertas; a página pública Black Friday da MadeiraMadeira (`https://www.madeiramadeira.com.br/black-friday`) foi consultada. Ela apresenta ofertas, cupons, ofertas do dia e compra por ambiente, além de benefícios/conteúdo/FAQ. Isso orientou apenas a hierarquia e a descoberta por ambiente; a Mobi recebe uma seção curta na home, sem copiar promoção, texto comercial ou presença física.
+- Implementado na branch local: seção PM-02 desativada por padrão, normalização aditiva dos rascunhos antigos, projeção local e mínima das campanhas PM-05 válidas, tratamento de conflitos, uso dos cartões/preços correntes da Mobi, carga dos produtos de campanhas futuras, prévia administrativa e atualização da elegibilidade no início/fim da vigência.
+- A revisão de código não encontrou problemas concretos no agendamento encadeado de fronteiras da campanha.
+- `npm run build` e lint direcionado passaram; `git diff --check` não encontrou erros de whitespace. Não foram executados testes automatizados, conforme a restrição desta etapa.
+- A inspeção visual completa da campanha permanece pendente: `http://127.0.0.1:8080/` abriu, mas a home local exibiu falha ao carregar o catálogo; o painel administrativo exige autenticação. Portanto, a lista de cenários de desktop/mobile ainda não foi aceita visualmente.
+- Nenhum dado, preço, banco remoto, Supabase, `main` ou produção foi alterado. O adaptador local continua condicionado a `MOBI_LOCAL_HOME=1` e desativado em produção/Vercel. A branch não deve ser publicada; apresentar a prévia ao Rafael e aguardar aprovação da versão.
+- Os passos de migração manual de histórico antigo e revisão visual foram deixados pendentes porque dependem de abrir o painel autenticado com catálogo disponível. Uma demonstração do código e um build bem-sucedido não substituem essa validação.
