@@ -1,0 +1,1051 @@
+/* Mobi retail composition. Public renderer and revision preview share these rules. */
+.store-shell {
+  background: #fff;
+  color: #29392e;
+}
+.mobi-wrap {
+  max-width: 1280px;
+  width: 100%;
+  padding-left: 32px;
+  padding-right: 32px;
+}
+.mobi-header {
+  background: #2e3f32;
+  box-shadow: 0 1px 0 #2e3f3214;
+}
+.mobi-header-channel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 24px;
+  border-bottom: 1px solid #ffffff18;
+  font-size: 11px;
+  color: #e8e4d8;
+}
+.mobi-header-channel a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: inherit;
+  text-decoration: none;
+  min-height: 26px;
+}
+.mobi-header .mobi-header-inner {
+  display: flex;
+  gap: 30px;
+  min-height: 64px;
+}
+.mobi-header .mobi-logo-image {
+  width: 108px;
+  height: 44px;
+}
+.mobi-header .mobi-search {
+  max-width: none;
+  flex: 1;
+  min-height: 46px;
+  padding: 3px 3px 3px 18px;
+  background: #fff;
+  border: 0;
+  border-radius: 6px;
+}
+.mobi-header .mobi-search input {
+  color: #29392e;
+  font-size: 14px;
+}
+.mobi-header .mobi-search input::placeholder {
+  color: #71786d;
+}
+.mobi-header .mobi-search button {
+  border-radius: 4px;
+  min-height: 40px;
+  padding: 0 20px;
+  font-size: 12px;
+}
+.mobi-header .mobi-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+.mobi-header-whatsapp {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #f4efe6;
+  text-decoration: none;
+  min-height: 44px;
+}
+.mobi-header-whatsapp > span {
+  display: flex;
+  flex-direction: column;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #d6dbd1;
+}
+.mobi-header-whatsapp strong {
+  font-size: 12px;
+  color: #fff;
+  font-weight: 650;
+}
+.mobi-header .mobi-header-cart {
+  display: flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: #f4efe6;
+  font-size: 12px;
+}
+.mobi-cart-count {
+  background: #c5a059;
+  color: #233729;
+  padding: 2px 6px;
+  border-radius: 20px;
+  font-weight: 800;
+}
+.mobi-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  min-width: 44px;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.mobi-menu-mobile {
+  display: none;
+}
+.mobi-head-browse {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  min-height: 44px;
+  border-top: 1px solid #ffffff12;
+  color: #f4efe6;
+}
+.mobi-head-browse nav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex: 1;
+  min-width: 0;
+}
+.mobi-head-browse a {
+  font-size: 12px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  white-space: nowrap;
+  color: inherit;
+}
+.mobi-head-browse .mobi-head-service {
+  font-size: 11px;
+  color: #dfc494;
+}
+.mobi-header a:hover,
+.mobi-head-browse button:hover {
+  color: #e7c888;
+}
+.mobi-header :is(a, button, input):focus-visible {
+  outline: 2px solid #c5a059;
+  outline-offset: 3px;
+}
+.store-shell :is(#catalogo, #conteudo, .mobi-catalog) {
+  scroll-margin-top: calc(var(--mobi-header-height, 152px) + 12px);
+}
+.mobi-home-carousel {
+  position: relative;
+  max-width: 1216px;
+  margin: 20px auto 0;
+  background: #f0eadc;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.mobi-home-carousel .mobi-hero,
+.mobi-hero.mobi-hero-product {
+  background: #f0eadc;
+  color: #2e3f32;
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+  height: auto;
+  min-height: 240px;
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  isolation: isolate;
+}
+.mobi-hero.mobi-hero-product .mobi-hero-copy {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 20px 32px;
+  z-index: 1;
+  min-width: 0;
+}
+.mobi-hero.mobi-hero-product .mobi-eyebrow {
+  color: #796039;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  margin: 0 0 10px;
+  font-weight: 750;
+}
+.mobi-hero.mobi-hero-product h1 {
+  font-size: 36px;
+  line-height: 1.08;
+  letter-spacing: -1.4px;
+  color: #2e3f32;
+  max-width: 450px;
+  margin: 0 0 12px;
+  font-weight: 750;
+  overflow-wrap: break-word;
+}
+.mobi-hero.mobi-hero-product p {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #535e51;
+  max-width: 370px;
+  margin: 0 0 18px;
+}
+.mobi-hero.mobi-hero-product .mobi-gold {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  background: #2e3f32;
+  color: #fff;
+  border-radius: 5px;
+  min-height: 44px;
+  padding: 12px 17px;
+  font-size: 12px;
+  letter-spacing: 0;
+  font-weight: 700;
+  text-transform: none;
+  margin: 0;
+  white-space: normal;
+  text-decoration: none;
+}
+.mobi-hero.mobi-hero-product .mobi-hero-media {
+  display: block;
+  position: relative;
+  margin: 0;
+  background: #fff;
+  min-width: 0;
+  height: 100%;
+  width: 100%;
+  padding: 14px 24px;
+}
+.mobi-hero.mobi-hero-product .mobi-hero-image {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-height: 240px;
+  object-fit: contain;
+  filter: none;
+}
+.mobi-hero.mobi-hero-art {
+  position: relative;
+  display: block;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 16/5;
+  background: #f0eadc;
+}
+.mobi-hero-art .mobi-hero-media {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.mobi-hero-art .mobi-hero-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.mobi-hero-art-link {
+  position: absolute;
+  inset: 0;
+}
+.mobi-carousel-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  position: absolute;
+  bottom: 5px;
+  right: 12px;
+  background: #ffffffeb;
+  border: 1px solid #2e3f3214;
+  border-radius: 30px;
+  z-index: 3;
+  padding: 0 5px;
+}
+.mobi-carousel-controls button {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #2e3f32;
+}
+.mobi-carousel-indicators {
+  display: flex;
+}
+.mobi-carousel-indicators button span {
+  display: block;
+  width: 16px;
+  height: 3px;
+  background: #c5c9bd;
+  border-radius: 4px;
+}
+.mobi-carousel-indicators button[aria-pressed="true"] span {
+  background: #2e3f32;
+}
+.mobi-home-benefits {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 50px;
+  min-height: 48px;
+  font-size: 12px;
+  color: #52604e;
+  border-bottom: 1px solid #edece5;
+}
+.mobi-home-benefits > * {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+  min-height: 36px;
+}
+.mobi-home-benefits svg {
+  color: #8b744a;
+  flex-shrink: 0;
+}
+.mobi-shop-categories {
+  padding-top: 20px;
+  padding-bottom: 4px;
+}
+.mobi-shop-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.mobi-shop-heading h2 {
+  font-size: 20px;
+  line-height: 1.2;
+  color: #2e3f32;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.4px;
+}
+.mobi-shop-heading > span {
+  font-size: 12px;
+  color: #7b8176;
+}
+.mobi-photo-categories {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 12px;
+}
+.mobi-photo-categories > a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #344130;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 650;
+  text-align: center;
+  line-height: 1.3;
+  padding: 0 2px 4px;
+}
+.mobi-category-photo {
+  width: 78px;
+  height: 78px;
+  border: 1px solid #e9e8df;
+  background: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  transition: border-color 0.15s;
+}
+.mobi-category-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.mobi-category-photo svg {
+  width: 28px;
+  height: 28px;
+  color: #65775b;
+}
+.mobi-photo-categories > a:hover .mobi-category-photo {
+  border-color: #9d8051;
+}
+.store-shell .mobi-shelf {
+  padding-top: 24px;
+  padding-bottom: 4px;
+}
+.store-shell .mobi-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.store-shell .mobi-section-title h2 {
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.6px;
+  margin: 0;
+  color: #2e3f32;
+}
+.store-shell .mobi-section-title p {
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 5px 0 0;
+  color: #73796d;
+}
+.store-shell .mobi-text-link {
+  font-size: 12px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  color: #3b5239;
+}
+.store-shell .mobi-grid {
+  gap: 16px;
+}
+.store-shell .mobi-product {
+  border: 1px solid #e5e8df;
+  border-radius: 8px;
+  box-shadow: none;
+  background: #fff;
+  overflow: hidden;
+}
+.store-shell .mobi-photo {
+  aspect-ratio: 1.35;
+  padding: 12px 16px;
+}
+.store-shell .mobi-badge-row {
+  min-height: 0;
+  height: auto;
+  padding: 0 14px;
+  margin: 0;
+}
+.store-shell .mobi-badge-row .mobi-badge {
+  font-size: 9px;
+  border: 0;
+  padding: 4px 6px;
+  min-height: 0;
+  border-radius: 3px;
+  background: #f5f0e5;
+  box-shadow: none;
+  gap: 4px;
+}
+.store-shell .mobi-product-body {
+  padding: 10px 14px 14px;
+  gap: 0;
+}
+.store-shell .mobi-product small {
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: #7b8375;
+  line-height: 1.3;
+}
+.store-shell .mobi-product h3 {
+  font-size: 15px;
+  line-height: 1.35;
+  height: auto;
+  min-height: 0;
+  margin: 5px 0 4px;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: #2e3f32;
+}
+.store-shell .mobi-detail {
+  height: auto;
+  min-height: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  margin: 0 0 10px;
+  color: #7b8174;
+}
+.store-shell .mobi-price-panel {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  min-height: 0;
+  margin: 0 0 12px;
+}
+.store-shell .mobi-price-label {
+  font-size: 10px;
+  line-height: 1.4;
+  margin: 0 0 1px;
+  color: #71796b;
+}
+.store-shell .mobi-price {
+  font-size: 25px;
+  line-height: 1.2;
+  letter-spacing: -0.7px;
+  color: #2e573c;
+}
+.store-shell .mobi-installments {
+  margin-top: 5px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #596551;
+}
+.store-shell .mobi-installments strong {
+  font-weight: 600;
+}
+.store-shell .mobi-installments span {
+  font-size: 10px;
+  margin-top: 2px;
+  color: #7a8174;
+}
+.store-shell .mobi-product-cta {
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 5px;
+  background: #f5f6f1;
+  border: 1px solid #d9dfd1;
+  color: #31482f;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: auto;
+}
+.store-shell .mobi-product-cta:hover {
+  background: #2e3f32;
+  color: #fff;
+}
+.mobi-room-highlights {
+  padding-top: 24px;
+  padding-bottom: 4px;
+}
+.mobi-room-highlights > div:last-child {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.mobi-room-highlights a {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #f4f1e8;
+  border-radius: 7px;
+  padding: 16px;
+  text-decoration: none;
+  color: #2e3f32;
+}
+.mobi-room-highlights img {
+  width: 40%;
+  height: 145px;
+  object-fit: contain;
+}
+.mobi-room-highlights a > span {
+  font-size: 24px;
+  font-weight: 650;
+}
+.mobi-room-highlights small {
+  display: block;
+  font-size: 12px;
+  margin-top: 8px;
+  text-decoration: underline;
+}
+.store-shell .mobi-catalog-invite {
+  padding-top: 24px;
+  padding-bottom: 26px;
+  margin-top: 22px;
+  border-top: 1px solid #e9e8e0;
+  text-align: center;
+}
+.store-shell .mobi-catalog-invite h2 {
+  font-size: 23px;
+  letter-spacing: -0.4px;
+  margin-bottom: 8px;
+}
+.store-shell .mobi-catalog-invite p {
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0 auto 14px;
+  max-width: 660px;
+}
+.store-shell .mobi-primary {
+  min-height: 44px;
+  border-radius: 5px;
+  text-transform: none;
+  font-size: 12px;
+  letter-spacing: 0;
+  padding: 12px 18px;
+}
+.mobi-local-review-label {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  background: #f3f4ed;
+  color: #69705f;
+  padding: 5px 16px;
+  font-size: 10px;
+  line-height: 1.4;
+}
+.mobi-local-review-label a {
+  text-decoration: underline;
+  white-space: nowrap;
+}
+@media (max-width: 1100px) {
+  .mobi-header-whatsapp {
+    display: none;
+  }
+  .mobi-head-browse nav {
+    gap: 18px;
+  }
+  .mobi-head-service {
+    display: none !important;
+  }
+  .mobi-home-carousel {
+    margin-left: 24px;
+    margin-right: 24px;
+  }
+  .mobi-photo-categories {
+    gap: 6px;
+  }
+  .mobi-category-photo {
+    width: 68px;
+    height: 68px;
+  }
+}
+@media (max-width: 767px) {
+  .mobi-wrap {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .mobi-header-channel,
+  .mobi-head-browse {
+    display: none;
+  }
+  .mobi-header .mobi-header-inner {
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    gap: 3px 8px;
+    padding-top: 5px;
+    padding-bottom: 8px;
+    min-height: 0;
+  }
+  .mobi-header .mobi-menu-mobile {
+    display: flex;
+    grid-column: 1;
+    grid-row: 1;
+    color: #fff;
+  }
+  .mobi-menu-mobile > span {
+    display: none;
+  }
+  .mobi-header .mobi-logo {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: center;
+  }
+  .mobi-header .mobi-logo-image {
+    width: 96px;
+    height: 40px;
+  }
+  .mobi-header .mobi-header-actions {
+    grid-column: 3;
+    grid-row: 1;
+    display: flex;
+  }
+  .mobi-header .mobi-header-cart {
+    display: flex;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .mobi-cart-empty-label {
+    display: none;
+  }
+  .mobi-header .mobi-search {
+    grid-column: 1/-1;
+    grid-row: 2;
+    min-height: 44px;
+    width: 100%;
+    padding-left: 12px;
+    margin: 0;
+    border-radius: 5px;
+  }
+  .mobi-header .mobi-search input {
+    font-size: 14px !important;
+  }
+  .mobi-header .mobi-search button {
+    padding: 0 13px;
+    min-height: 38px;
+  }
+  .mobi-home-carousel {
+    margin: 12px 16px 0;
+    border-radius: 7px;
+  }
+  .mobi-home-carousel .mobi-hero,
+  .mobi-hero.mobi-hero-product {
+    min-height: 140px;
+    border-radius: 7px;
+    grid-template-columns: 1.12fr 1fr;
+  }
+  .mobi-hero.mobi-hero-product .mobi-hero-copy {
+    padding: 16px 4px 16px 16px;
+    justify-content: center;
+  }
+  .mobi-hero.mobi-hero-product .mobi-eyebrow {
+    font-size: 8px;
+    letter-spacing: 0.07em;
+    line-height: 1.4;
+    margin-bottom: 7px;
+  }
+  .mobi-hero.mobi-hero-product h1 {
+    font-size: 25px;
+    line-height: 1.08;
+    letter-spacing: -0.8px;
+    margin-bottom: 6px;
+    max-width: none;
+  }
+  .mobi-hero.mobi-hero-product p {
+    display: none;
+  }
+  .mobi-hero.mobi-hero-product .mobi-gold {
+    font-size: 11px;
+    min-height: 44px;
+    gap: 8px;
+    padding: 10px 11px;
+    line-height: 1.35;
+  }
+  .mobi-hero.mobi-hero-product .mobi-hero-media {
+    padding: 12px 4px 12px 2px;
+    display: flex;
+    align-items: center;
+    background: transparent;
+  }
+  .mobi-hero.mobi-hero-product .mobi-hero-image {
+    height: 140px;
+    max-height: 190px;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+  }
+  .mobi-hero.mobi-hero-art {
+    aspect-ratio: 1;
+    min-height: 0;
+    display: block;
+  }
+  .mobi-carousel-controls {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    border: 0;
+    border-radius: 0;
+    background: #faf9f5;
+    padding: 0;
+  }
+  .mobi-home-benefits {
+    gap: 14px;
+    justify-content: flex-start;
+    overflow-x: auto;
+    scrollbar-width: none;
+    min-height: 36px;
+    font-size: 10px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .mobi-home-benefits > * {
+    gap: 5px;
+    min-height: 36px;
+    flex-shrink: 0;
+  }
+  .mobi-home-benefits svg {
+    height: 14px;
+    width: 14px;
+  }
+  .mobi-home-benefits a {
+    display: none;
+  }
+  .mobi-shop-categories {
+    padding-top: 12px;
+    padding-bottom: 0;
+  }
+  .mobi-shop-heading {
+    margin-bottom: 9px;
+  }
+  .mobi-shop-heading h2 {
+    font-size: 17px;
+    letter-spacing: -0.3px;
+  }
+  .mobi-shop-heading > span {
+    display: none;
+  }
+  .mobi-photo-categories {
+    display: flex;
+    gap: 13px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+  .mobi-photo-categories > a {
+    flex: 0 0 64px;
+    gap: 6px;
+    font-size: 10px;
+    font-weight: 650;
+    scroll-snap-align: start;
+    padding: 0;
+    line-height: 1.25;
+  }
+  .mobi-category-photo {
+    width: 52px;
+    height: 52px;
+    padding: 6px;
+    border-radius: 50%;
+  }
+  .mobi-category-photo svg {
+    width: 24px;
+    height: 24px;
+  }
+  .store-shell .mobi-shelf {
+    padding-top: 14px;
+    padding-bottom: 0;
+  }
+  .store-shell .mobi-section-title {
+    gap: 8px;
+    margin-bottom: 10px;
+    align-items: center;
+  }
+  .store-shell .mobi-section-title h2 {
+    font-size: 21px;
+    letter-spacing: -0.5px;
+  }
+  .store-shell .mobi-section-title p {
+    font-size: 11px;
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+  .store-shell .mobi-text-link {
+    font-size: 11px;
+  }
+  .store-shell .mobi-grid {
+    gap: 10px;
+  }
+  .store-shell .mobi-photo {
+    aspect-ratio: 1.15;
+    padding: 9px;
+  }
+  .store-shell .mobi-product-body {
+    padding: 9px 10px 10px;
+  }
+  .store-shell .mobi-product h3 {
+    font-size: 13px;
+    line-height: 1.3;
+    margin: 4px 0;
+  }
+  .store-shell .mobi-product small {
+    font-size: 8px;
+  }
+  .store-shell .mobi-detail {
+    font-size: 10px;
+    margin-bottom: 8px;
+  }
+  .store-shell .mobi-badge-row {
+    padding: 0 10px;
+  }
+  .store-shell .mobi-badge-row .mobi-badge {
+    font-size: 8px;
+    min-height: 0;
+    padding: 3px 5px;
+  }
+  .store-shell .mobi-badge svg {
+    height: 10px;
+    width: 10px;
+  }
+  .store-shell .mobi-price-panel {
+    min-height: 0;
+    margin-bottom: 10px;
+    padding: 0;
+  }
+  .store-shell .mobi-price {
+    font-size: 22px;
+  }
+  .store-shell .mobi-price-label {
+    font-size: 9px;
+  }
+  .store-shell .mobi-installments {
+    font-size: 10px;
+    line-height: 1.4;
+  }
+  .store-shell .mobi-installments span {
+    font-size: 9px;
+    line-height: 1.4;
+  }
+  .store-shell .mobi-product-cta {
+    font-size: 11px;
+    padding: 10px 5px;
+  }
+  .mobi-room-highlights {
+    padding-top: 20px;
+  }
+  .mobi-room-highlights > div:last-child {
+    gap: 10px;
+  }
+  .mobi-room-highlights a {
+    padding: 10px;
+    gap: 5px;
+    flex-direction: column-reverse;
+    text-align: center;
+  }
+  .mobi-room-highlights img {
+    height: 110px;
+    width: 100%;
+  }
+  .mobi-room-highlights a > span {
+    font-size: 18px;
+  }
+  .store-shell .mobi-catalog-invite {
+    padding-top: 22px;
+    padding-bottom: 24px;
+    margin-top: 22px;
+  }
+  .store-shell .mobi-catalog-invite h2 {
+    font-size: 21px;
+  }
+  .mobi-local-review-label {
+    font-size: 9px;
+    padding: 4px 12px;
+  }
+}
+/* The same layout can be forced inside the media editor's responsive frame. */
+.mobi-hero-product[data-preview-format="mobile"] {
+  grid-template-columns: 1.12fr 1fr;
+  min-height: 190px;
+  max-width: 390px;
+}
+.mobi-hero-product[data-preview-format="mobile"] .mobi-hero-copy {
+  padding: 16px;
+}
+.mobi-hero-product[data-preview-format="mobile"] h1 {
+  font-size: 25px;
+}
+.mobi-hero-product[data-preview-format="mobile"] p {
+  display: none;
+}
+.mobi-hero-product[data-preview-format="mobile"] .mobi-hero-media {
+  padding: 8px;
+}
+.mobi-hero-product[data-preview-format="mobile"] .mobi-hero-image {
+  max-height: 200px;
+  object-fit: contain;
+}
+
+@media (max-width: 767px) {
+  .mobi-header .mobi-header-inner {
+    grid-template-columns: 88px 1fr 88px;
+  }
+  .mobi-header .mobi-header-actions {
+    gap: 0;
+    justify-self: end;
+  }
+  .mobi-header .mobi-header-actions .mobi-header-whatsapp {
+    display: flex;
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+    color: #f4efe6;
+  }
+  .mobi-header-whatsapp > span {
+    display: none;
+  }
+  .mobi-photo-categories > a > span:last-child {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/* Photo-led category links replace the old nine generic icon boxes. */
+.mobi-hero-art[data-preview-format="mobile"] {
+  aspect-ratio: 1;
+}
+
+.mobi-photo-categories {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px;
+}
+.mobi-photo-categories > a {
+  gap: 5px;
+  padding: 8px 8px 10px;
+  border: 1px solid #e7e9e1;
+  border-radius: 7px;
+  background: #fff;
+  font-size: 13px;
+  text-align: left;
+  align-items: flex-start;
+}
+.mobi-category-photo {
+  border: 0;
+  border-radius: 0;
+  width: 100%;
+  height: 105px;
+  padding: 4px;
+  background: #fff;
+}
+.mobi-photo-categories small {
+  font-size: 10px;
+  font-weight: 400;
+  color: #7a816f;
+}
+@media (max-width: 767px) {
+  .mobi-photo-categories {
+    display: flex;
+    gap: 10px;
+  }
+  .mobi-photo-categories > a {
+    flex-basis: 105px;
+    padding: 6px;
+    gap: 4px;
+    font-size: 11px;
+  }
+  .mobi-category-photo {
+    width: 100%;
+    height: 70px;
+    padding: 2px;
+  }
+  .mobi-photo-categories small {
+    font-size: 9px;
+  }
+  .mobi-photo-categories > a > span:last-of-type {
+    display: block;
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

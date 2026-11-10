@@ -31,6 +31,17 @@ export function localHomePlugin(): Plugin {
           res.end("Acesso negado");
           return;
         }
+        // Serve the same entry on real storefront URLs so anchors, refresh and
+        // opening a category/product in a new tab work in this isolated preview.
+        const storefrontPage =
+          path === "/" ||
+          path === "/moveis-nova-iguacu" ||
+          /^\/(?:categoria|produto)\/[a-zA-Z0-9_-]+\/?$/.test(path);
+        if (req.method === "GET" && storefrontPage && req.headers.accept?.includes("text/html")) {
+          const query = req.url?.includes("?") ? req.url.slice(req.url.indexOf("?")) : "";
+          req.url = "/scripts/pm01-preview/index.html" + query;
+          return next();
+        }
         if (!path.startsWith("/__mobi-local-home")) return next();
         res.setHeader("Cache-Control", "no-store");
         res.setHeader("Content-Type", "application/json");

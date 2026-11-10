@@ -23,10 +23,14 @@ export function HomeConnectionPanel({
   transport,
   draft,
   products,
+  onOpenApplied,
+  editorDirty = false,
 }: {
   transport: HomeTransport;
   draft: HomeDraftInput;
   products: EditorProduct[];
+  onOpenApplied?: (config: import("../../lib/home-configuration").HomeConfiguration) => void;
+  editorDirty?: boolean;
 }) {
   const queryClient = useQueryClient();
   const [document, setDocument] = useState<HomeDocument | null>(null),
@@ -114,6 +118,15 @@ export function HomeConnectionPanel({
         Reúne Páginas, Banners, Navegação e Atendimento. Cadastros e campanhas simuladas não são
         aplicados.
       </p>
+      {applied && onOpenApplied && (
+        <button
+          className="pm-button"
+          disabled={busy || editorDirty}
+          onClick={() => onOpenApplied(applied.config)}
+        >
+          Editar versão aplicada
+        </button>
+      )}
       {document?.publishedId && (
         <a
           className="pm-button"

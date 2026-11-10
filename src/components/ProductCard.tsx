@@ -80,18 +80,20 @@ export function ProductCard({
           loading="lazy"
         />
       </Link>
-      <div className="mobi-badge-row">
-        {badge && (
-          <span className={`mobi-badge mobi-badge-${badge}`}>
-            {badge === "new" ? (
-              <Sparkles size={13} strokeWidth={1.8} aria-hidden="true" />
-            ) : (
-              <Star size={13} strokeWidth={1.8} aria-hidden="true" />
-            )}
-            <span>{badge === "new" ? "Novo no catálogo" : "Escolha da semana"}</span>
-          </span>
-        )}
-      </div>
+      {badge && (
+        <div className="mobi-badge-row">
+          {
+            <span className={`mobi-badge mobi-badge-${badge}`}>
+              {badge === "new" ? (
+                <Sparkles size={13} strokeWidth={1.8} aria-hidden="true" />
+              ) : (
+                <Star size={13} strokeWidth={1.8} aria-hidden="true" />
+              )}
+              <span>{badge === "new" ? "Novo no catálogo" : "Escolha da semana"}</span>
+            </span>
+          }
+        </div>
+      )}
       <div className="mobi-product-body">
         <small>{categoryLabel}</small>
         <h3 title={produto.nome}>{produto.nome}</h3>
@@ -102,7 +104,6 @@ export function ProductCard({
           <ProductDiscountLine
             oldPrice={hasPricedVariations ? 0 : produto.preco_antigo}
             currentPrice={price}
-            reserveSpace
           />
           <div className="mobi-price-label">À vista no Pix ou dinheiro</div>
           <div className="mobi-price">{formatBRL(price)}</div>

@@ -1,5 +1,20 @@
 # MM-P01 — execução local
 
+## Correção visual de 10/11/2026 — estado atual
+
+A entrega anterior foi rejeitada visualmente. A descrição abaixo dela é histórica, não aprovação. Nova branch: `feature/mm-p01-redesign`, base `ec0aa5e`, sem publicação.
+
+- **Retirada expressa de Rafael:** “Descubra algo novo” não é mais renderizado na home nem listado no editor de seções. O identificador antigo permanece apenas para leitura compatível de revisões. Esta decisão substitui o planejamento anterior de rotação diária na home.
+- Categorias agora são cartões com fotos de produtos elegíveis, nomes e acesso ao catálogo filtrado. Na amostra histórica há cinco grupos representados; não foram inventados produtos para preencher categorias vazias. A taxonomia completa continua no menu. A normalização de categorias da demonstração não altera o catálogo real.
+- Cabeçalho mais compacto, busca em destaque, banner com produto do catálogo, benefícios em linha e vitrines sem linhas vazias de selos. Identidade Mobi preservada; atendimento online, sem loja física. Inspiração fica desativada nesta revisão.
+- Banner, navegação, atendimento e curadoria continuam ligados aos campos suportados do painel. “Editar versão aplicada” reabre a configuração vigente nos editores, preservando o fluxo de rascunho, revisão e histórico. Prévia móvel de arte completa usa 1:1; desktop, 16:5.
+- Aplicada apenas a revisão **local 11**, com amostra histórica de 16 produtos. A prévia agora abre em `/`; rotas de categoria, busca, produto e carrinho funcionam no demonstrador. Não equivale a homologação remota ou a catálogo atualizado.
+- Conferência no navegador: cinco categorias com fotos; ausência de “Descubra algo novo”; categoria Cozinha abre Cozinha Cristal; busca, detalhe e carrinho exercitados; sem transbordamento horizontal em 390 px. Desktop conferido em 1440 px. Preço de referência preservado: R$399 à vista, 10 × R$45,40, total R$454.
+- Suíte: 108/108 testes; TypeScript e build aprovados. Revisão independente corrigiu recuperação do editor e proporção da arte móvel. Capturas atuais: `../mobi-studio-evidence/mm-p01-redesign-desktop.png` e `mm-p01-redesign-mobile.png`.
+- Originais de engenharia reversa v1.1 e painel v0.2 retomados na implementação e na entrega. Referência MadeiraMadeira aberta ao vivo; composição adaptada à operação Mobi. Persistência e autorização remotas continuam pendentes. Nenhum push, integração em produção, publicação ou gravação no banco real.
+
+## Registro anterior — substituído visualmente
+
 Plano: `docs/MM-P01_PLANO_APLICACAO_MOBI.md`. Base de trabalho: de67c42; branch `feature/mm-p01-home-integrada`. Publicação não autorizada.
 
 - [x] Conferir originais v1.1/v0.2 e referência ao vivo.

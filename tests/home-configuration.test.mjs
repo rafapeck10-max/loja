@@ -26,6 +26,21 @@ const source = () => ({
   products: { changes: { secret: "custo" } },
   notes: "privado",
 });
+test("reopening the applied home fills existing editors without changing the catalog or service invariants", () => {
+  assert.equal(typeof home.reopenHomeDraft, "function");
+  const old = source();
+  const config = home.homeConfigurationFromDraft(old, products);
+  config.banners[0].title = "Novo destaque";
+  config.sections.find((s) => s.id === "weekly").subtitle = "Comparar os móveis";
+  const before = JSON.stringify(old);
+  const draft = home.reopenHomeDraft(config, products, old);
+  assert.equal(draft.banners.banners[0].title, "Novo destaque");
+  assert.equal(draft.pages.sections.find((s) => s.id === "weekly").subtitle, "Comparar os móveis");
+  assert.equal(draft.service.number, old.service.number);
+  assert.equal(draft.service.template, old.service.template);
+  assert.equal(JSON.stringify(old), before);
+  assert.deepEqual(home.homeConfigurationFromDraft(draft, products), config);
+});
 test("public curation omits identifiers of ineligible unpublished catalog rows", () => {
   const catalog = [
     ...products,

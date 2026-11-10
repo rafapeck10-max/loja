@@ -168,7 +168,12 @@ export function PagesAndShelvesPanel({
       "Edição restaurada para os dados consultados. O arquivo local salvo foi preservado.",
     );
   };
-  const move = (id: PageSectionId, delta: number) => update(movePageSection(current, id, delta));
+  const move = (id: PageSectionId, delta: number) => {
+    const from = current.sections.findIndex((section) => section.id === id);
+    const next = current.sections[from + delta];
+    const distance = Math.abs(delta) === 1 && next?.id === "discovery" ? delta * 2 : delta;
+    update(movePageSection(current, id, distance));
+  };
   const updateSettings = (id: string, value: Record<string, string | boolean>) =>
     update({
       ...current,
@@ -320,11 +325,12 @@ export function PagesAndShelvesPanel({
         <aside className="ps-section-list">
           <div className="ps-box-title">
             <h2>Seções da página</h2>
-            <span>{current.sections.length}</span>
+            <span>{current.sections.filter((section) => section.id !== "discovery").length}</span>
           </div>
           <p>Mova pelas setas ou arraste uma seção.</p>
           <ol>
             {current.sections.map((s, index) => {
+              if (s.id === "discovery") return null;
               const pinned = PAGE_SECTIONS.find((d) => d.id === s.id)?.locked;
               return (
                 <li

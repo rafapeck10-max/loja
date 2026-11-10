@@ -312,7 +312,7 @@ export function BannersPanel({ data, onChange }: BannersPanelProps) {
           </p>
           <div className="pm-grid" key={banner.id}>
             <MediaField
-              label="Computador · 16:7"
+              label="Computador · 16:5"
               value={banner.image_url}
               onApply={(source) => applyMedia(banner.id, "image_url", source)}
             />
@@ -407,7 +407,7 @@ export function BannersPanel({ data, onChange }: BannersPanelProps) {
                 aria-pressed={previewViewport === "desktop"}
                 onClick={() => setPreviewViewport("desktop")}
               >
-                Computador · 16:7
+                Computador · 16:5
               </button>
               <button
                 type="button"

@@ -1,10 +1,11 @@
 import type { EditorProduct } from "../../src/lib/homepage-curation";
 import pageSample from "./page-products.json";
+import { demoCategoryFor } from "./demo-category";
 export const pageProducts: EditorProduct[] = pageSample.map((p, index) => ({
   id: `page-demo-${p.id}`,
   nome: p.name,
   slug: `page-demo-${p.id}`,
-  categoria: p.category,
+  categoria: demoCategoryFor(p),
   preco_atual: index === 8 || index === 9 ? 0 : p.price,
   preco_atacado: index === 11 ? null : p.price / 2,
   url_imagem: index === 10 ? "" : p.img,

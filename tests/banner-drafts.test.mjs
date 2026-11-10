@@ -1,3 +1,4 @@
+import { DEFAULT_HOMEPAGE_BANNERS } from "../src/lib/homepage-banners.ts";
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
@@ -12,6 +13,14 @@ import {
   toBannerSlide,
 } from "../src/lib/banner-drafts.ts";
 
+const multipleBannerData = () => ({
+  banners: Array.from({ length: 3 }, (_, i) => ({
+    ...initialBannerData().banners[0],
+    id: `hero-${i + 1}`,
+    position: i + 1,
+  })),
+});
+
 // Real 2×3 RGB images encoded by Pillow; validators inspect structure, not pixel decoding.
 const rasterFixtures = {
   png: "iVBORw0KGgoAAAANSUhEUgAAAAIAAAADCAIAAAA2iEnWAAAAFElEQVR42mPUCKhgYGBgYmBgQFAAEdQA9mEkEVcAAAAASUVORK5CYII=",
@@ -24,7 +33,7 @@ test("defaults remain editable copies of the current hero and adapt responsive m
   assert.deepEqual(validateBannerData(data), []);
   assert.equal(data.banners[0].id, "hero-1");
   data.banners[0].title = "Outra chamada";
-  assert.equal(initialBannerData().banners[0].title, "Ambientes que fazem sentido.");
+  assert.equal(initialBannerData().banners[0].title, DEFAULT_HOMEPAGE_BANNERS[0].title);
   data.banners[0].mobile_image_url = "https://cdn.example.com/mobile.webp";
   data.banners[0].show_text = false;
   assert.equal(
@@ -150,7 +159,7 @@ test("optional Brasília schedule controls visibility and rejects reversed or im
 });
 
 test("removing active media is blocked and order moves keep stable IDs", () => {
-  const data = initialBannerData();
+  const data = multipleBannerData();
   assert.throws(() => removeBanner(data, "hero-1"), /Desative/);
   const moved = moveBanner(data, "hero-1", 1);
   assert.equal(moved.banners[1].id, "hero-1");
@@ -165,7 +174,7 @@ test("removing active media is blocked and order moves keep stable IDs", () => {
 test("malformed stored data is reported without throwing", () => {
   for (const data of [null, {}, { banners: [null] }, { banners: [{}] }, { banners: "bad" }])
     assert.ok(validateBannerData(data).length);
-  const data = initialBannerData();
+  const data = multipleBannerData();
   data.banners[0].alt = "";
   assert.ok(validateBannerData(data).some((e) => /alternativo/i.test(e)));
   data.banners[1].id = data.banners[0].id;

@@ -1,3 +1,4 @@
+import { reopenHomeDraft } from "../../lib/home-configuration";
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { validateStudioResource, shouldLoadWorkspace } from "../../lib/studio-validation";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -417,7 +418,21 @@ export function AdminStudio({
     <section className="pm-panel" aria-label="Estúdio local da Mobi">
       {homeTransport &&
         ["vitrine", "banners", "navigation", "service", "history"].includes(area) && (
-          <HomeConnectionPanel transport={homeTransport} draft={data} products={products} />
+          <HomeConnectionPanel
+            transport={homeTransport}
+            draft={data}
+            products={products}
+            editorDirty={dirty}
+            onOpenApplied={(configuration) =>
+              attempt(() => {
+                const opened = reopenHomeDraft(configuration, products, data);
+                setEdits((previous) => ({ ...previous, ...opened }));
+                setMessage(
+                  "Versão aplicada aberta nos editores. Salve os rascunhos para registrar as alterações; o histórico anterior foi preservado.",
+                );
+              })
+            }
+          />
         )}
       <div className="pm-studio-toolbar">
         <div>

@@ -13,6 +13,7 @@ export function HomepageSectionOrder({
       {sections.map((section) => {
         const definition = PAGE_SECTIONS.find((s) => s.id === section?.id);
         if (
+          section.id === "discovery" || // Retired by Rafael; ID remains readable in old revisions.
           !definition ||
           definition.type !== section.type ||
           !section.enabled ||

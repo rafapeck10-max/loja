@@ -44,6 +44,7 @@ export function AdminWorkspace({
   onSearch,
   onLogout,
   demonstration = false,
+  storefrontHref = "https://www.mobimb.com.br/",
   children,
 }: {
   area: string;
@@ -51,6 +52,7 @@ export function AdminWorkspace({
   onSearch: (query: string) => void;
   onLogout?: () => void;
   demonstration?: boolean;
+  storefrontHref?: string;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -71,7 +73,7 @@ export function AdminWorkspace({
     <>
       <a
         className="aw-brand"
-        href="https://www.mobimb.com.br/"
+        href={storefrontHref}
         target="_blank"
         rel="noreferrer"
         aria-label="Mobi — abrir loja"
@@ -147,7 +149,7 @@ export function AdminWorkspace({
           </Dialog.Root>
           <a
             className="aw-mobile-brand"
-            href="https://www.mobimb.com.br/"
+            href={storefrontHref}
             target="_blank"
             rel="noreferrer"
             aria-label="Mobi — abrir loja"
@@ -178,12 +180,7 @@ export function AdminWorkspace({
               <ArrowUpRight size={16} />
             </button>
           </form>
-          <a
-            className="aw-store-link"
-            href="https://www.mobimb.com.br/"
-            target="_blank"
-            rel="noreferrer"
-          >
+          <a className="aw-store-link" href={storefrontHref} target="_blank" rel="noreferrer">
             Ver loja <ArrowUpRight size={15} />
           </a>
           <Dialog.Root>

@@ -121,6 +121,37 @@ export function homeConfigurationFromDraft(
   };
 }
 export const defaultHomeSections = () => initialPageDraft([]).sections;
+export function reopenHomeDraft(
+  config: HomeConfiguration,
+  products: EditorProduct[],
+  current: HomeDraftInput,
+): HomeDraftInput {
+  const base = initialPageDraft(products);
+  const next: HomeDraftInput = {
+    pages: {
+      ...base,
+      sections: clone(config.sections),
+      curation: config.curation
+        ? {
+            weeklyIds: [...config.curation.weeklyIds],
+            settings: { ...base.curation.settings, ...clone(config.curation.settings) },
+          }
+        : base.curation,
+    },
+    banners: {
+      banners: config.banners.map((b) => ({ ...clone(b), name: b.title || b.id, updated_at: "" })),
+    },
+    navigation: {
+      items: config.navigation.map((n) => ({
+        ...clone(current.navigation.items.find((i) => i.id === n.id)!),
+        ...clone(n),
+      })),
+    },
+    service: { ...clone(current.service), ...clone(config.service) },
+  };
+  homeConfigurationFromDraft(next, products);
+  return next;
+}
 export function applyHomeCuration(products: Produto[], curation?: CurationDraft): Produto[] {
   if (!curation) return products;
   return products.map((p) => ({

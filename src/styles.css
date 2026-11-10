@@ -3,6 +3,7 @@
 @source "../src";
 @import "tw-animate-css";
 @import "./storefront.css";
+@import "./home-redesign.css";
 
 @custom-variant dark (&:is(.dark *));
 

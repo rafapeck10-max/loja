@@ -1,10 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { HeroCarouselView } from "./HeroCarouselView";
-import { CategoryNavigation } from "./CategoryNavigation";
+import { HomepageCategories } from "./HomepageCategories";
+import { CreditCard, Truck, MessageCircle } from "lucide-react";
+import { ImageWithFallback } from "./ImageWithFallback";
 import { HomepageSectionOrder } from "./HomepageSectionOrder";
 import { HomeProductSection } from "./HomeProductSection";
-import { DEFAULT_HOMEPAGE_BANNERS } from "../lib/homepage-banners";
-import { CATEGORIES, MAX_INSTALLMENTS } from "../lib/constants";
+
+import { CATEGORIES, MAX_INSTALLMENTS, categoryMatches, WHATSAPP_URL } from "../lib/constants";
 import {
   defaultHomeSections,
   type HomeConfiguration,
@@ -51,26 +53,25 @@ export function HomepageContent({
           return (
             <>
               <HeroCarouselView banners={config?.banners ?? banners} />
-              <section className="mobi-wrap mobi-home-intro" aria-label="Atendimento online Mobi">
-                <div>
-                  <span className="mobi-home-kicker">MOBI · SUA CASA, DO SEU JEITO</span>
-                  <h2>Móveis para sua casa em Nova Iguaçu</h2>
-                  <p>Escolha pelo catálogo. Tire suas dúvidas com a Mobi pelo WhatsApp.</p>
-                </div>
-                <Link to="/moveis-nova-iguacu" className="mobi-text-link">
-                  Conheça nosso atendimento
-                </Link>
-              </section>
-              <div className="mobi-trust">
-                <span>Pague somente na entrega</span>
-                <span>PIX com desconto</span>
-                <span>Cartão em até {MAX_INSTALLMENTS}x sem juros</span>
+              <div className="mobi-home-benefits mobi-wrap" aria-label="Como comprar na Mobi">
+                <span>
+                  <Truck size={16} />
+                  Pague na entrega
+                </span>
+                <span>
+                  <CreditCard size={16} />
+                  Cartão em até {MAX_INSTALLMENTS}x
+                </span>
+                <a href={WHATSAPP_URL} target="_blank" rel="noreferrer">
+                  <MessageCircle size={16} />
+                  Ajuda pelo WhatsApp
+                </a>
               </div>
-              {!!categories.length && (
-                <div className="mobi-category-wrap mobi-wrap">
-                  <CategoryNavigation categories={categories} destinations={config?.navigation} />
-                </div>
-              )}
+              <HomepageCategories
+                categories={categories}
+                products={products}
+                destinations={config?.navigation}
+              />
               {children}
             </>
           );
@@ -82,33 +83,45 @@ export function HomepageContent({
               products={(ids[section.id as keyof typeof ids] ?? []).flatMap(
                 (id) => byId.get(id) ?? [],
               )}
-              badges={badges}
+              badges={section.id === "weekly" || section.id === "new" ? {} : badges}
               category={section.id === "room" ? "sala-de-estar" : undefined}
             />
           );
-        if (section.id === "inspiration")
+        if (section.id === "inspiration") {
+          const rooms = [
+            { slug: "sala-de-estar", label: "Para a sala" },
+            { slug: "dormitorios", label: "Para o quarto" },
+          ].flatMap((room) => {
+            const product = products.find((p) => categoryMatches(p.categoria, room.slug));
+            return product ? [{ ...room, product }] : [];
+          });
+          if (!rooms.length) return null;
           return (
-            <section className="mobi-inspiration mobi-wrap">
-              <img
-                src={DEFAULT_HOMEPAGE_BANNERS[0].image_url}
-                alt="Inspiração de sala de estar"
-                loading="lazy"
-              />
+            <section className="mobi-room-highlights mobi-wrap">
+              <div className="mobi-section-title">
+                <div>
+                  <h2>{section.title}</h2>
+                  {section.subtitle && <p>{section.subtitle}</p>}
+                </div>
+              </div>
               <div>
-                <span className="mobi-eyebrow">CONFORTO EM CADA DETALHE</span>
-                <h2>{section.title}</h2>
-                {section.subtitle && <p>{section.subtitle}</p>}
-                <Link
-                  to="/categoria/$slug"
-                  params={{ slug: "sala-de-estar" }}
-                  search={{ page: 1 }}
-                  className="mobi-primary"
-                >
-                  Explorar móveis para sala
-                </Link>
+                {rooms.map((room) => (
+                  <a href={`/categoria/${room.slug}`} key={room.slug}>
+                    <ImageWithFallback
+                      src={room.product.imagem_url}
+                      alt={room.product.nome}
+                      loading="lazy"
+                    />
+                    <span>
+                      {room.label}
+                      <small>Ver móveis →</small>
+                    </span>
+                  </a>
+                ))}
               </div>
             </section>
           );
+        }
         if (section.id === "catalog")
           return (
             <section className="mobi-catalog-invite mobi-wrap">

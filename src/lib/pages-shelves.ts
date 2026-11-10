@@ -110,7 +110,7 @@ export function initialPageDraft(products: EditorProduct[]): PageDraft {
       title,
       type,
       subtitle,
-      enabled: true,
+      enabled: id !== "discovery" && id !== "inspiration",
     })),
     curation: {
       weeklyIds: products
