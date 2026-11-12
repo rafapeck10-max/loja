@@ -48,14 +48,14 @@
 
 **Files:** Create `docs/supabase-migration-inventory.md`.
 
-- [ ] Confirmar que o projeto alvo é `ehdxfbutcsqnunxlvval` (referência em `supabase/config.toml`) antes de consultar. Se a referência não corresponder ao destino autorizado, parar e registrar a divergência.
-- [ ] Usar integração Supabase conectada ou CLI oficial descoberta por `supabase --help`; listar migrations, tabelas/colunas, constraints, RLS/grants, RPCs e buckets relevantes.
-- [ ] Registrar apenas schema, contagens agregadas e diferenças necessárias; não exportar dados pessoais nem valores individuais de custo.
-- [ ] Conferir se `compre_junto_ids` já existe e se a migration `20261110190000_add_product_bundle_ids.sql` aparece no histórico remoto.
-- [ ] Confirmar ambiente descartável/local já disponível. Não criar branch ou projeto pago sem apresentar custo e obter a confirmação requerida.
-- [ ] Se acesso ou ambiente de teste não estiver disponível, parar antes de DDL e informar a dependência; não fabricar uma migration manual.
+- [x] Confirmar que o destino documentado é `mobi-loja` (`xzgafeqifikqrxrjaueb`) pelo registro Mobi, `docs/supabase-catalog-access.md` e dashboard. A ref antiga `ehdxfbutcsqnunxlvval` não apareceu na organização; `supabase/config.toml` foi alinhado localmente.
+- [x] Inventariar no dashboard migrations, tabelas/colunas, constraints/índices, RLS/grants, funções/triggers e buckets relevantes; MCP e CLI não estavam disponíveis.
+- [x] Registrar schema, contagens agregadas e diferenças sem exportar dados pessoais, nomes de fornecedor ou valores comerciais em `docs/supabase-migration-inventory.md`.
+- [x] Confirmar que `compre_junto_ids` não existe no schema remoto observado e que o ID da migration local não aparece na lista remota.
+- [ ] Confirmar ambiente descartável/local já disponível. O projeto aberto não mostrou branches nem backups; não criar branch/projeto com custo sem autorização.
+- [x] Parar antes de DDL por ausência de ambiente de teste, registrar a dependência e não fabricar migration manual.
 
-**Verification:** comparar o relatório com `supabase/migrations/`, `src/integrations/supabase/types.ts` e os contratos em `admin.functions.ts`. Expected: projeto e diferenças identificados, nenhuma escrita remota.
+**Verification:** inventário comparado com os arquivos locais e contratos; a discrepância `compre_junto_ids` entre código/types e banco foi registrada. Nenhuma escrita remota.
 
 ## Task 2: Fixar o contrato de comandos remotos com testes
 

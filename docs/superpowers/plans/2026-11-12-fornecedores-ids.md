@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Usar o inventário `docs/supabase-migration-inventory.md` do plano de persistência; confirmar alvo `ehdxfbutcsqnunxlvval` antes de qualquer leitura/escrita remota.
+- Usar o inventário `docs/supabase-migration-inventory.md` do plano de persistência; o destino confirmado é `mobi-loja` (`xzgafeqifikqrxrjaueb`). Não fazer escrita até existir ambiente de teste descartável e backup verificável.
 - Não fazer backfill em produção nesta execução; aplicar schema/backfill apenas em banco local descartável ou ambiente de teste confirmado.
 - Não remover `produtos.fornecedor` nem `scraped_products.supplier` nesta migração.
 - Não fundir diferenças de caixa, acento, abreviação, domínio ou nome parecido; casos sem aprovação ficam com `fornecedor_id = null` e em revisão.

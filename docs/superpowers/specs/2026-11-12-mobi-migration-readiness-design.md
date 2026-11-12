@@ -36,10 +36,11 @@ Decisões já confirmadas: a Mobi vende e atende online, não possui loja físic
 2. O estúdio do painel mantém rascunhos e revisões no navegador. A home pública atual não lê esses rascunhos.
 3. `src/lib/admin.functions.ts` já tem operações administrativas para catálogo e módulos existentes. Elas validam a senha no servidor e acessam Supabase pelo cliente server-only com `SUPABASE_SERVICE_ROLE_KEY`. Esse cliente ignora RLS; a chave não pode chegar ao navegador e cada operação precisa manter verificação server-side.
 4. Produto continua na tabela `produtos`; fornecedor é texto. A importação usa `scraped_products`. O painel já agrupa fornecedores por nome, mas não existe relacionamento confirmado por UUID.
-5. `produto_preco_historico` foi visto em uma consulta anterior e não aparece nos tipos locais consultados; schema e uso precisam ser confirmados antes de alterar os tipos ou preços.
-6. `supabase/migrations/20261110190000_add_product_bundle_ids.sql` existe no repositório. Sua aplicação no Supabase não foi confirmada.
-7. Nesta sessão o conector Supabase não forneceu a listagem de projetos: `list_projects` retornou “tool not available to the model”. Portanto o projeto alvo, schema, histórico de migrations, RLS, políticas, buckets e situação dos dados ainda não foram verificados.
-8. A contagem 2.233 produtos registrada em PM-04 é uma observação histórica, não contagem atual nem valor para fixar no código.
+5. O inventário remoto de 12/11 confirmou `produto_preco_historico`, sete colunas, uma chave estrangeira de produto e 1.510 linhas agregadas. A relação não aparece nos tipos locais; não alterar tipos ou preços antes de alinhar o fluxo oficial de geração.
+6. `supabase/migrations/20261110190000_add_product_bundle_ids.sql` existe no repositório, mas o painel não mostrou a migration e `produtos.compre_junto_ids` não existe no schema remoto observado. Os tipos e `admin.functions.ts` locais já usam esse campo, então publicar o código atual antes de resolver a divergência pode quebrar operações de catálogo.
+7. O projeto alvo foi identificado como `mobi-loja`, ref `xzgafeqifikqrxrjaueb`, pelo registro de entrega Mobi, `docs/supabase-catalog-access.md` e painel autenticado. O `supabase/config.toml` estava em `ehdxfbutcsqnunxlvval` e foi alinhado localmente para `xzgafeqifikqrxrjaueb`. O inventário de migrations, tabelas/colunas, constraints/índices, RLS/grants, funções/triggers e Storage está em `docs/supabase-migration-inventory.md`; não houve escrita remota.
+8. O projeto Supabase aberto não mostrou branches nem backups e não há destino descartável confirmado. A ferramenta Supabase MCP e a CLI não estavam disponíveis. Por isso, DDL, backfill e integração remota continuam bloqueados até haver ambiente de teste e plano de reversão.
+9. A consulta agregada de 12/11 encontrou 2.233 produtos; essa é uma observação da sessão, não valor para fixar no código.
 
 ## 4. Abordagens consideradas
 
@@ -129,7 +130,7 @@ Se o acesso remoto continuar indisponível, as etapas locais de contrato, adapta
 | Manter catálogo e preços como fonte existente         | Painel §8; PM-04                        | `produtos`/`scraped_products` identificados no código                      | Conferir schema e todas as escritas/importações remotas.                            |
 | Fornecedor por UUID sem perder nomes                  | PM-04; MM-CMS-03                        | UI agrupa texto; proposta de schema não aplicada                           | Auditoria de nomes, aprovação de mapa, migration em teste.                          |
 | Privacidade de custo/fornecedor                       | AGENTS.md; PM-04                        | Mapeadores públicos ocultam esses campos; cliente privilegiado server-only | Verificar funções/tipos/policies do destino e incluir regressão.                    |
-| Migração “compre junto”                               | MM-PROD-09; SQL local                   | Migration local adiciona `compre_junto_ids`                                | Confirmar se já aplicada; evitar duplicar ou sobrescrever.                          |
+| Migração “compre junto”                               | MM-PROD-09; SQL local                   | Migration local existe; coluna e ID estão ausentes no painel remoto         | Resolver drift antes de publicar código que lê ou grava o campo.                   |
 | Desktop/mobile e retorno seguro                       | AGENTS.md; QUALITY-01/03/07             | Auditoria local de 12/11                                                   | Homologar migração remota em ambiente de teste; físico permanece fora da cobertura. |
 
 ## 10. Questões dependentes do inventário
@@ -144,8 +145,8 @@ Essas respostas não autorizam gravação em produção; definem o schema e o pl
 
 ## 11. Auto-revisão do desenho
 
-- Não afirma que a migration local de `compre_junto_ids` está no Supabase.
-- Não fixa a contagem histórica de produtos como dado atual.
+- Distingue a migration local de `compre_junto_ids` da ausência confirmada no schema/histórico remoto observado.
+- Registra a contagem agregada atual de 2.233 sem fixá-la no código.
 - Não assume sete tabelas, não duplica catálogo e adia nomes finais até conferir o schema.
 - Não usa service role como se RLS o limitasse; exige verificação explícita server-side e chaves somente no servidor.
 - Permite que rascunhos PM-04 guardem deltas privados com custos, sem serializá-los na projeção pública.
