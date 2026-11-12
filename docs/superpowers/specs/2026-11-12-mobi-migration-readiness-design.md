@@ -1,6 +1,7 @@
 # Mobi — desenho de prontidão para migração
 
-**Data:** 12/11/2026  
+**Data:** 12/11/2026
+
 **Estado:** desenho aprovado por Rafael em 12/11/2026. Execução local iniciada em 12/11/2026: contratos puros de persistência e resolução exata de fornecedor implementados e verificados. Integração remota, alteração de schema/dados e publicação continuam pendentes; nenhuma escrita remota foi feita.
 **Escopo:** preparar o painel e a loja para sair de rascunhos locais e operar com persistência remota, sem duplicar o catálogo e sem publicar antes da aprovação da versão.
 
