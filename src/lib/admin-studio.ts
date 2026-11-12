@@ -25,6 +25,7 @@ export interface StudioWorkspace {
   history: StudioRevision[];
 }
 export const MAX_WORKSPACE_BYTES = 3_500_000;
+const byteLength = (value: string): number => new TextEncoder().encode(value).byteLength;
 export const emptyWorkspace = (): StudioWorkspace => ({
   schema: 1,
   revision: 0,
@@ -36,7 +37,7 @@ const known = (scope: unknown): scope is StudioScope =>
   STUDIO_SCOPES.includes(scope as StudioScope);
 export function parseWorkspace(raw: string): StudioWorkspace {
   try {
-    if (raw.length > MAX_WORKSPACE_BYTES) throw new Error();
+    if (byteLength(raw) > MAX_WORKSPACE_BYTES) throw new Error();
     const w = JSON.parse(raw) as StudioWorkspace;
     if (
       w?.schema !== 1 ||
@@ -102,7 +103,7 @@ export function reviseWorkspace(
       },
     ],
   };
-  if (JSON.stringify(next).length > MAX_WORKSPACE_BYTES)
+  if (byteLength(JSON.stringify(next)) > MAX_WORKSPACE_BYTES)
     throw new Error(
       "O histórico atingiu o limite local. Exporte uma cópia; a versão salva foi preservada.",
     );
