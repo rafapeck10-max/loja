@@ -63,7 +63,11 @@
 **Interfaces:**
 
 ```ts
-export interface SupplierIdentity { id: string; name: string; active: boolean }
+export interface SupplierIdentity {
+  id: string;
+  name: string;
+  active: boolean;
+}
 export type SupplierResolution =
   | { status: "matched"; supplierId: string; canonicalName: string }
   | { status: "missing"; sourceName: string }

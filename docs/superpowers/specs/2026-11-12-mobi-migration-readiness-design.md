@@ -91,14 +91,14 @@ Armazenar versões de configuração e o estado publicado com controle transacio
 
 ## 6. Etapas e entregáveis
 
-| Etapa | Entregável | Regra de conclusão |
-|---|---|---|
-| 0 — Inventário remoto | Relatório somente de leitura de projeto, tabelas/colunas, migrations, RPCs, policies/RLS, buckets e contagens agregadas | Projeto alvo confirmado; diferenças entre tipos locais e schema registradas; nenhuma escrita. |
-| 1 — Contrato e persistência do painel | Adaptador server-side, revisões persistentes, controle de base, revisão e ponteiro aplicado | Rascunho sobrevive a sessão; conflito não sobrescreve; visitante só lê publicação. |
-| 2 — Consumidores e prévia | Conectar apenas campos com editor, renderer e consumidor real; revisar mídias necessárias | A mesma configuração é visível na prévia e, após aplicação de teste, no consumidor isolado. |
-| 3 — Fornecedores | Migration compatível, mapa de correspondência, backfill em teste e tipos/leituras atualizados | Contagens, nulos, IDs, custos, fontes e importação conciliados; campos textuais preservados. |
-| 4 — Homologação | Casos de acesso público/admin, revisão, conflito, publicação, rollback, catálogo, WhatsApp e telas | Evidências de ambiente de teste, desktop e celular; preços/10x comparados quando tocados. |
-| 5 — Aprovação de produção | Apresentação da versão/commit exatos, plano de corte e reversão | Rafael aprova explicitamente a versão antes de qualquer escrita/migração/publicação em produção. |
+| Etapa                                 | Entregável                                                                                                              | Regra de conclusão                                                                               |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| 0 — Inventário remoto                 | Relatório somente de leitura de projeto, tabelas/colunas, migrations, RPCs, policies/RLS, buckets e contagens agregadas | Projeto alvo confirmado; diferenças entre tipos locais e schema registradas; nenhuma escrita.    |
+| 1 — Contrato e persistência do painel | Adaptador server-side, revisões persistentes, controle de base, revisão e ponteiro aplicado                             | Rascunho sobrevive a sessão; conflito não sobrescreve; visitante só lê publicação.               |
+| 2 — Consumidores e prévia             | Conectar apenas campos com editor, renderer e consumidor real; revisar mídias necessárias                               | A mesma configuração é visível na prévia e, após aplicação de teste, no consumidor isolado.      |
+| 3 — Fornecedores                      | Migration compatível, mapa de correspondência, backfill em teste e tipos/leituras atualizados                           | Contagens, nulos, IDs, custos, fontes e importação conciliados; campos textuais preservados.     |
+| 4 — Homologação                       | Casos de acesso público/admin, revisão, conflito, publicação, rollback, catálogo, WhatsApp e telas                      | Evidências de ambiente de teste, desktop e celular; preços/10x comparados quando tocados.        |
+| 5 — Aprovação de produção             | Apresentação da versão/commit exatos, plano de corte e reversão                                                         | Rafael aprova explicitamente a versão antes de qualquer escrita/migração/publicação em produção. |
 
 Se o acesso remoto continuar indisponível, as etapas locais de contrato, adaptador e teste não usam dados de produção; inventário e migração de banco ficam bloqueados até existir acesso ao projeto correto.
 
@@ -121,16 +121,16 @@ Se o acesso remoto continuar indisponível, as etapas locais de contrato, adapta
 
 ## 9. Matriz de rastreabilidade inicial
 
-| Necessidade | Fonte | Evidência atual | Pendência |
-|---|---|---|---|
-| Adaptar à Mobi e não copiar a concorrente | Engenharia reversa §0; painel §0 | Regra registrada no `AGENTS.md` | Aplicar ao conteúdo/renderer novo. |
-| Rascunho separado do publicado e revisão com conflito | Painel §§8–10; MM-CMS-05/08, QUALITY-07 | Revisões locais existentes; painel ainda usa browser storage | Persistência e aplicação atômica remotas. |
-| Configuração publicada consumida pelo visitante | MM-CMS-02/05/06/07; MM-QUALITY-06 | Home local lê arquivo quando explicitamente habilitada | Conectar ao consumidor publicado por adaptador validado. |
-| Manter catálogo e preços como fonte existente | Painel §8; PM-04 | `produtos`/`scraped_products` identificados no código | Conferir schema e todas as escritas/importações remotas. |
-| Fornecedor por UUID sem perder nomes | PM-04; MM-CMS-03 | UI agrupa texto; proposta de schema não aplicada | Auditoria de nomes, aprovação de mapa, migration em teste. |
-| Privacidade de custo/fornecedor | AGENTS.md; PM-04 | Mapeadores públicos ocultam esses campos; cliente privilegiado server-only | Verificar funções/tipos/policies do destino e incluir regressão. |
-| Migração “compre junto” | MM-PROD-09; SQL local | Migration local adiciona `compre_junto_ids` | Confirmar se já aplicada; evitar duplicar ou sobrescrever. |
-| Desktop/mobile e retorno seguro | AGENTS.md; QUALITY-01/03/07 | Auditoria local de 12/11 | Homologar migração remota em ambiente de teste; físico permanece fora da cobertura. |
+| Necessidade                                           | Fonte                                   | Evidência atual                                                            | Pendência                                                                           |
+| ----------------------------------------------------- | --------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Adaptar à Mobi e não copiar a concorrente             | Engenharia reversa §0; painel §0        | Regra registrada no `AGENTS.md`                                            | Aplicar ao conteúdo/renderer novo.                                                  |
+| Rascunho separado do publicado e revisão com conflito | Painel §§8–10; MM-CMS-05/08, QUALITY-07 | Revisões locais existentes; painel ainda usa browser storage               | Persistência e aplicação atômica remotas.                                           |
+| Configuração publicada consumida pelo visitante       | MM-CMS-02/05/06/07; MM-QUALITY-06       | Home local lê arquivo quando explicitamente habilitada                     | Conectar ao consumidor publicado por adaptador validado.                            |
+| Manter catálogo e preços como fonte existente         | Painel §8; PM-04                        | `produtos`/`scraped_products` identificados no código                      | Conferir schema e todas as escritas/importações remotas.                            |
+| Fornecedor por UUID sem perder nomes                  | PM-04; MM-CMS-03                        | UI agrupa texto; proposta de schema não aplicada                           | Auditoria de nomes, aprovação de mapa, migration em teste.                          |
+| Privacidade de custo/fornecedor                       | AGENTS.md; PM-04                        | Mapeadores públicos ocultam esses campos; cliente privilegiado server-only | Verificar funções/tipos/policies do destino e incluir regressão.                    |
+| Migração “compre junto”                               | MM-PROD-09; SQL local                   | Migration local adiciona `compre_junto_ids`                                | Confirmar se já aplicada; evitar duplicar ou sobrescrever.                          |
+| Desktop/mobile e retorno seguro                       | AGENTS.md; QUALITY-01/03/07             | Auditoria local de 12/11                                                   | Homologar migração remota em ambiente de teste; físico permanece fora da cobertura. |
 
 ## 10. Questões dependentes do inventário
 
