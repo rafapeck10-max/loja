@@ -178,6 +178,12 @@ function RootComponent() {
   const isLinksRoute = useRouterState({
     select: (state) => state.location.pathname.replace(/\/$/, "") === "/links",
   });
+  const isHelpRoute = useRouterState({
+    select: (state) => {
+      const pathname = state.location.pathname.replace(/\/$/, "");
+      return pathname === "/ajuda" || pathname.startsWith("/ajuda/");
+    },
+  });
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -193,7 +199,7 @@ function RootComponent() {
                     : "store-shell flex min-h-screen flex-col"
               }
             >
-              {!isLinksRoute && !isAdminRoute && <Header />}
+              {!isLinksRoute && !isAdminRoute && !isHelpRoute && <Header />}
               <main
                 id="conteudo"
                 className={isAdminRoute || isLinksRoute ? "flex-1" : "flex-1 pb-20 md:pb-0"}
@@ -201,12 +207,12 @@ function RootComponent() {
                 {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
                 <Outlet />
               </main>
-              {!isLinksRoute && !isAdminRoute && <Footer />}
+              {!isLinksRoute && !isAdminRoute && !isHelpRoute && <Footer />}
             </div>
-            {!isAdminRoute && !isLinksRoute && <WhatsAppFloat />}
-            <CartDrawer />
-            <MenuDrawer />
-            {!isAdminRoute && !isLinksRoute && <MobileBottomBar />}
+            {!isAdminRoute && !isLinksRoute && !isHelpRoute && <WhatsAppFloat />}
+            {!isHelpRoute && <CartDrawer />}
+            {!isHelpRoute && <MenuDrawer />}
+            {!isAdminRoute && !isLinksRoute && !isHelpRoute && <MobileBottomBar />}
             <Toaster
               position="bottom-left"
               toastOptions={{

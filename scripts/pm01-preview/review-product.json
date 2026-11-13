@@ -1,0 +1,31 @@
+{
+  "sourceUrl": "https://www.mobimb.com.br/produto/sofa-roma-retratil-e-reclinavel-2-00-m-veludo-marrom",
+  "capturedOn": "2026-11-11",
+  "note": "Cópia local de dados públicos para revisar a interface. Não é conexão com o catálogo atual nem oferta publicada.",
+  "product": {
+    "id": "review-sofa-roma",
+    "nome": "Sofá Roma Retrátil e Reclinável 2,00 m – Veludo Marrom",
+    "slug": "sofa-roma-retratil-e-reclinavel-2-00-m-veludo-marrom",
+    "preco_atual": 1999,
+    "preco_antigo": 1999,
+    "url_imagem": "https://alpoimdistribuidora.com.br/wp-content/uploads/15614282378-sofa-retratil-reclinavel-2-0-m-modelo-roma-marrom-500-7.jpg",
+    "imagens": [
+      "https://alpoimdistribuidora.com.br/wp-content/uploads/15614281517-sofa-retratil-reclinavel-2-0-m-modelo-roma-marrom-500.jpg",
+      "https://alpoimdistribuidora.com.br/wp-content/uploads/15614281575-sofa-retratil-reclinavel-2-0-m-modelo-roma-marrom-500-2.jpg",
+      "https://alpoimdistribuidora.com.br/wp-content/uploads/15614281636-sofa-retratil-reclinavel-2-0-m-modelo-roma-marrom-500-3.jpg",
+      "https://alpoimdistribuidora.com.br/wp-content/uploads/15614281872-sofa-retratil-reclinavel-2-0-m-modelo-roma-marrom-500-4.jpg",
+      "https://alpoimdistribuidora.com.br/wp-content/uploads/15614282086-sofa-retratil-reclinavel-2-0-m-modelo-roma-marrom-500-5.jpg",
+      "https://alpoimdistribuidora.com.br/wp-content/uploads/15614282187-sofa-retratil-reclinavel-2-0-m-modelo-roma-marrom-500-6.jpg",
+      "https://alpoimdistribuidora.com.br/wp-content/uploads/15614282434-sofa-retratil-reclinavel-2-0-m-modelo-roma-medidas.jpg"
+    ],
+    "categoria": "Sofás",
+    "sku": "9750",
+    "descricao": "Sofá Roma retrátil e reclinável com revestimento em veludo marrom. Assento com pillow top de 20 cm, espuma D33, percintas elásticas e molas ensacadas; almofadas com fibras de poliéster siliconada. Encosto reclinável com fibra de silicone e braços com detalhe em madeira. Estrutura em madeira de eucalipto reflorestada e seca em estufa, pés em madeira e rodízios de silicone.\n\nMedidas: altura 95 cm, largura 2,00 m, profundidade fechado 1,00 m e aberto 1,55 m. Imagens ilustrativas; a cor pode variar conforme iluminação e tela.",
+    "medidas": "Altura 95 cm; largura 2,00 m; profundidade fechado 1,00 m e aberto 1,55 m.",
+    "cores": [
+      "Marrom"
+    ],
+    "variacoes_preco": [],
+    "compre_junto_ids": []
+  }
+}

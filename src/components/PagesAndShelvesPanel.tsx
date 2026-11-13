@@ -62,7 +62,7 @@ export function PagesAndShelvesPanel({
     value: PageDraft;
     saved?: PageDraft;
     onChange: (draft: PageDraft) => void;
-    onSave: (draft: PageDraft) => void;
+    onSave: (draft: PageDraft) => void | Promise<void>;
   };
 }) {
   const storageKey = DRAFT_KEY + (demonstration ? ":demo" : ":admin");
@@ -138,7 +138,7 @@ export function PagesAndShelvesPanel({
       ...current,
       sections: current.sections.map((s) => (s.id === sectionId ? { ...s, ...change } : s)),
     });
-  const saveLocal = () => {
+  const saveLocal = async () => {
     const errors = validatePageDraft(current, products);
     if (conflict || errors.length) {
       setMessage(
@@ -151,16 +151,20 @@ export function PagesAndShelvesPanel({
     try {
       const raw = JSON.stringify(current);
       if (managed) {
-        managed.onSave(current);
-        setMessage("Rascunho salvo no histórico local. Nada foi aplicado à loja.");
+        await managed.onSave(current);
+        setMessage("Rascunho salvo no histórico. Nada foi aplicado à loja.");
         return;
       }
       localStorage.setItem(storageKey, raw);
       setStored(raw);
       setLastSaved(raw);
       setMessage("Rascunho salvo neste navegador. A loja publicada continua igual.");
-    } catch {
-      setMessage("Não foi possível salvar no navegador. O rascunho continua aberto para revisão.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível salvar. O rascunho continua aberto para revisão.",
+      );
     }
   };
   const restore = () => {
@@ -288,9 +292,11 @@ export function PagesAndShelvesPanel({
           <p>Organize a página inicial e escolha os móveis de cada seleção.</p>
         </div>
         <div className="ps-save-actions">
-          <span className={dirty ? "ps-dirty" : "ps-clean"}>
-            {dirty ? "Alterações na edição" : "Edição em dia"}
-          </span>
+          {!managed && (
+            <span className={dirty ? "ps-dirty" : "ps-clean"}>
+              {dirty ? "Alterações na edição" : "Edição em dia"}
+            </span>
+          )}
           <button
             className="aw-action"
             onClick={reset}
@@ -298,24 +304,23 @@ export function PagesAndShelvesPanel({
           >
             <RotateCcw size={15} /> Restaurar edição
           </button>
-          <button
-            className="aw-action ps-primary"
-            onClick={saveLocal}
-            disabled={!dirty || conflict}
-          >
-            <Save size={15} /> Salvar rascunho
-          </button>
+          {!managed && (
+            <button
+              className="aw-action ps-primary"
+              onClick={saveLocal}
+              disabled={!dirty || conflict}
+            >
+              <Save size={15} /> Salvar rascunho
+            </button>
+          )}
         </div>
       </header>
       <div className="ps-pagebar">
-        <label>
-          Página{" "}
-          <select aria-label="Página para editar" value="home" onChange={() => {}}>
-            <option value="home">Página inicial · /</option>
-            <option disabled>Catálogo e categorias · ainda sem composição editável</option>
-          </select>
-        </label>
-        <span className="ps-draft-tag">Rascunho local</span>
+        <span className="ps-page-current">
+          <strong>Página inicial</strong>
+          <small>/</small>
+        </span>
+        {!managed && <span className="ps-draft-tag">Rascunho local</span>}
         <a href="https://www.mobimb.com.br/" target="_blank" rel="noreferrer">
           Ver loja atual <ArrowUpRight size={14} />
         </a>

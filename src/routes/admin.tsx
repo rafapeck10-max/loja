@@ -11,6 +11,7 @@ import {
   deleteProduto,
   importScrapedProducts,
   listAdminProdutos,
+  getAdminStudioStorageMode,
   listPendingScrapedProducts,
   listAdminHomepageBanners,
   upsertProduto,
@@ -27,6 +28,10 @@ import { AdminStudio } from "@/components/admin-studio/AdminStudio";
 import { AdminOverview } from "@/components/AdminOverview";
 import { ADMIN_REVIEW_QUERY_LIMIT } from "@/lib/admin-overview";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
+import { SupplierPricingPanel } from "@/components/admin/SupplierPricingPanel";
+import { createRemoteStudioTransport } from "@/lib/admin-studio-remote";
+import { isEligibleBundleProduct } from "@/lib/product-bundles";
+import type { AdminViewId } from "@/lib/admin-navigation";
 import {
   matchesPriceFilter,
   parsePriceFilter,
@@ -44,14 +49,15 @@ function normalizeFilterText(value: unknown): string {
     .trim();
 }
 
-// These are the names stored in the catalog. Keep the current value in the
-// select as well so older/custom supplier names are never cleared on edit.
-const SUPPLIER_OPTIONS = [
-  "Alpoim Distribuidora",
-  "Tropical Móveis",
-  "SR Móveis Atacadão",
-  "Outro",
-] as const;
+// Suggestions only. The catalog field remains text until supplier IDs are
+// introduced through a reviewed database migration.
+const SUPPLIER_OPTIONS = ["Alpoim Distribuidora", "Tropical Móveis", "SR Móveis Atacadão"] as const;
+
+const MISSING_SUPPLIER_FILTER = "__missing_supplier__";
+
+function supplierFilterValue(name: string): string {
+  return `supplier:${name}`;
+}
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -175,6 +181,7 @@ const EMPTY: ProdutoInput = {
   descricao: "",
   medidas: "",
   cores: [],
+  compre_junto_ids: [],
 };
 
 const STATUS_LABELS: Record<ProductStatus, string> = {
@@ -196,6 +203,10 @@ function sourceName(product: ProdutoAdmin): string {
   } catch {
     return "Fonte cadastrada";
   }
+}
+
+function supplierGroupName(product: ProdutoAdmin): string {
+  return product.fornecedor?.trim() || "Sem fornecedor cadastrado";
 }
 
 function moneyOrDash(value: number | null | undefined): string {
@@ -238,11 +249,17 @@ async function readScrapeFile(file: File): Promise<ProdutoScrapImportInput[]> {
   return parsed as ProdutoScrapImportInput[];
 }
 
-function marginLabel(product: ProdutoAdmin): string {
+function grossPriceDifference(product: ProdutoAdmin): number | null {
   const cost = Number(product.preco_atacado ?? 0);
   const price = Number(product.preco_atual ?? 0);
-  if (cost <= 0 || price <= 0) return "—";
-  return formatBRL(price - cost);
+  if (cost <= 0 || price <= 0) return null;
+  return price - cost;
+}
+
+function grossPriceDifferenceLabel(product: ProdutoAdmin): string {
+  const difference = grossPriceDifference(product);
+  if (difference == null) return "—";
+  return `${difference < 0 ? "−" : "+"}${formatBRL(Math.abs(difference))}`;
 }
 
 function StatusBadge({ status }: { status: ProductStatus }) {
@@ -295,13 +312,23 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
   const [search, setSearch] = useState("");
   const [supplierFilter, setSupplierFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [workspaceTab, setWorkspaceTab] = useState("overview");
+  const [workspaceTab, setWorkspaceTab] = useState<AdminViewId>("overview");
   const [statusFilter, setStatusFilter] = useState<"all" | ProductStatus>("all");
   const [priceField, setPriceField] = useState<"site" | "supplier">("site");
+  const [priceFiltersOpen, setPriceFiltersOpen] = useState(false);
   const [minimumPrice, setMinimumPrice] = useState("");
   const [maximumPrice, setMaximumPrice] = useState("");
   const [page, setPage] = useState(1);
   const perPage = 32;
+  const storageMode = useQuery({
+    queryKey: ["admin-studio-storage-mode"],
+    queryFn: () => getAdminStudioStorageMode({ data: { password } }),
+    retry: false,
+  });
+  const workspaceTransport = useMemo(
+    () => (storageMode.data?.remote ? createRemoteStudioTransport(password) : undefined),
+    [storageMode.data?.remote, password],
+  );
   const homeTransport = useMemo(
     () => ({
       read: () => adminLocalHome({ data: { password } }),
@@ -317,12 +344,92 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
     queryFn: () => listAdminHomepageBanners({ data: { password } }),
   });
 
-  const suppliers = useMemo(
+  const supplierPricingGroups = useMemo(() => {
+    const groups = new Map<
+      string,
+      {
+        key: string;
+        label: string;
+        total: number;
+        missingCost: number;
+        missingSitePrice: number;
+        belowCost: number;
+      }
+    >();
+
+    for (const product of produtos) {
+      const supplier = product.fornecedor?.trim() ?? "";
+      const key = supplier ? supplierFilterValue(supplier) : MISSING_SUPPLIER_FILTER;
+      const label = supplier || "Sem fornecedor cadastrado";
+      const summary = groups.get(key) ?? {
+        key,
+        label,
+        total: 0,
+        missingCost: 0,
+        missingSitePrice: 0,
+        belowCost: 0,
+      };
+      const cost = Number(product.preco_atacado ?? 0);
+      const sitePrice = Number(product.preco_atual ?? 0);
+
+      summary.total += 1;
+      if (cost <= 0) summary.missingCost += 1;
+      if (sitePrice <= 0) summary.missingSitePrice += 1;
+      if (cost > 0 && sitePrice > 0 && sitePrice < cost) summary.belowCost += 1;
+      groups.set(key, summary);
+    }
+
+    return Array.from(groups.values()).sort((a, b) => {
+      if (a.key === MISSING_SUPPLIER_FILTER) return 1;
+      if (b.key === MISSING_SUPPLIER_FILTER) return -1;
+      return a.label.localeCompare(b.label, "pt-BR");
+    });
+  }, [produtos]);
+  const allSupplierPricing = useMemo(
     () =>
-      Array.from(
-        new Set(produtos.map((product) => product.fornecedor).filter(Boolean) as string[]),
-      ).sort((a, b) => a.localeCompare(b, "pt-BR")),
+      produtos.reduce(
+        (summary, product) => {
+          const cost = Number(product.preco_atacado ?? 0);
+          const sitePrice = Number(product.preco_atual ?? 0);
+          summary.total += 1;
+          if (cost <= 0) summary.missingCost += 1;
+          if (sitePrice <= 0) summary.missingSitePrice += 1;
+          if (cost > 0 && sitePrice > 0 && sitePrice < cost) summary.belowCost += 1;
+          return summary;
+        },
+        { total: 0, missingCost: 0, missingSitePrice: 0, belowCost: 0 },
+      ),
     [produtos],
+  );
+  const supplierPricingChoices = useMemo(
+    () => [
+      { key: "all", label: "Todos os fornecedores", ...allSupplierPricing },
+      ...supplierPricingGroups,
+    ],
+    [allSupplierPricing, supplierPricingGroups],
+  );
+  const supplierFilteredProducts = useMemo(
+    () =>
+      produtos
+        .filter((product) => {
+          const supplier = product.fornecedor?.trim() ?? "";
+          return (
+            supplierFilter === "all" ||
+            (supplierFilter === MISSING_SUPPLIER_FILTER
+              ? !supplier
+              : supplierFilter === supplierFilterValue(supplier))
+          );
+        })
+        .sort((a, b) => {
+          const supplierA = a.fornecedor?.trim() ?? "";
+          const supplierB = b.fornecedor?.trim() ?? "";
+          return (
+            supplierA.localeCompare(supplierB, "pt-BR") ||
+            Number(a.ordem ?? 0) - Number(b.ordem ?? 0) ||
+            a.nome.localeCompare(b.nome, "pt-BR")
+          );
+        }),
+    [produtos, supplierFilter],
   );
   const categories = useMemo(
     () =>
@@ -333,38 +440,54 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
   );
   const filteredProdutos = useMemo(() => {
     const normalizedSearch = normalizeFilterText(search);
-    const normalizedSupplier = normalizeFilterText(supplierFilter);
     const normalizedCategory = normalizeFilterText(categoryFilter);
-    return produtos.filter((product) => {
-      const searchableText = normalizeFilterText(
-        [
-          product.nome,
-          product.slug,
-          product.sku,
-          product.fornecedor,
-          product.categoria,
-          product.fonte_preco,
-          product.url_fornecedor,
-          product.descricao,
-          product.medidas,
-          ...(product.cores ?? []),
-        ]
-          .filter(Boolean)
-          .join(" "),
-      );
-      const matchesSearch = !normalizedSearch || searchableText.includes(normalizedSearch);
-      const matchesSupplier =
-        supplierFilter === "all" || normalizeFilterText(product.fornecedor) === normalizedSupplier;
-      const matchesCategory =
-        categoryFilter === "all" || normalizeFilterText(product.categoria) === normalizedCategory;
-      const matchesStatus = statusFilter === "all" || productStatus(product) === statusFilter;
-      const matchesPrice = matchesPriceFilter(
-        priceField === "site" ? product.preco_atual : product.preco_atacado,
-        minimumPrice,
-        maximumPrice,
-      );
-      return matchesSearch && matchesSupplier && matchesCategory && matchesStatus && matchesPrice;
-    });
+    return produtos
+      .filter((product) => {
+        const searchableText = normalizeFilterText(
+          [
+            product.nome,
+            product.slug,
+            product.sku,
+            product.fornecedor,
+            product.categoria,
+            product.fonte_preco,
+            product.url_fornecedor,
+            product.descricao,
+            product.medidas,
+            ...(product.cores ?? []),
+          ]
+            .filter(Boolean)
+            .join(" "),
+        );
+        const matchesSearch = !normalizedSearch || searchableText.includes(normalizedSearch);
+        const supplier = product.fornecedor?.trim() ?? "";
+        const matchesSupplier =
+          supplierFilter === "all" ||
+          (supplierFilter === MISSING_SUPPLIER_FILTER
+            ? !supplier
+            : supplierFilter === supplierFilterValue(supplier));
+        const matchesCategory =
+          categoryFilter === "all" || normalizeFilterText(product.categoria) === normalizedCategory;
+        const matchesStatus = statusFilter === "all" || productStatus(product) === statusFilter;
+        const matchesPrice = matchesPriceFilter(
+          priceField === "site" ? product.preco_atual : product.preco_atacado,
+          minimumPrice,
+          maximumPrice,
+        );
+        return matchesSearch && matchesSupplier && matchesCategory && matchesStatus && matchesPrice;
+      })
+      .sort((a, b) => {
+        const supplierA = a.fornecedor?.trim() ?? "";
+        const supplierB = b.fornecedor?.trim() ?? "";
+        if (!supplierA && supplierB) return 1;
+        if (supplierA && !supplierB) return -1;
+        const supplierOrder = supplierA.localeCompare(supplierB, "pt-BR");
+        return (
+          supplierOrder ||
+          Number(a.ordem ?? 0) - Number(b.ordem ?? 0) ||
+          a.nome.localeCompare(b.nome, "pt-BR")
+        );
+      });
   }, [
     produtos,
     search,
@@ -388,6 +511,20 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
   );
   const totalPages = Math.max(1, Math.ceil(filteredProdutos.length / perPage));
   const visibleProdutos = filteredProdutos.slice((page - 1) * perPage, page * perPage);
+  const visibleProductGroups = useMemo(() => {
+    const groups = new Map<string, { label: string; products: ProdutoAdmin[] }>();
+    for (const product of visibleProdutos) {
+      const supplier = product.fornecedor?.trim() ?? "";
+      const key = supplier ? supplierFilterValue(supplier) : MISSING_SUPPLIER_FILTER;
+      const group = groups.get(key) ?? {
+        label: supplier || "Sem fornecedor cadastrado",
+        products: [],
+      };
+      group.products.push(product);
+      groups.set(key, group);
+    }
+    return Array.from(groups.entries()).map(([key, group]) => ({ key, ...group }));
+  }, [visibleProdutos]);
 
   useEffect(() => {
     setPage(1);
@@ -404,6 +541,12 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
+
+  useEffect(() => {
+    if (!supplierPricingChoices.some((choice) => choice.key === supplierFilter)) {
+      setSupplierFilter("all");
+    }
+  }, [supplierFilter, supplierPricingChoices]);
 
   const refresh = async () => {
     await qc.invalidateQueries({ queryKey: ["admin-produtos"] });
@@ -439,6 +582,7 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
       descricao: p.descricao ?? "",
       medidas: p.medidas ?? "",
       cores: p.cores ?? [],
+      compre_junto_ids: p.compre_junto_ids ?? [],
     });
   };
 
@@ -461,6 +605,7 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
       fonte_preco: product.source_url ?? "",
       descricao: product.description ?? "",
       medidas: product.measurements ?? "",
+      compre_junto_ids: undefined,
       cores:
         Array.isArray(product.availability) && product.availability.length
           ? product.availability
@@ -562,6 +707,12 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
     Number.isNaN(minPrice) ||
     Number.isNaN(maxPrice) ||
     (minPrice != null && maxPrice != null && minPrice > maxPrice);
+  const priceFiltersActive =
+    priceField !== "site" || minimumPrice.trim() !== "" || maximumPrice.trim() !== "";
+
+  useEffect(() => {
+    setPriceFiltersOpen(priceFiltersActive || invalidPrices);
+  }, [priceFiltersActive, invalidPrices]);
 
   return (
     <AdminWorkspace
@@ -582,11 +733,20 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
           </button>
         </div>
       )}
+      {storageMode.isError && (
+        <div role="alert" className="pm-note">
+          Não foi possível confirmar onde salvar os rascunhos.{" "}
+          <button className="pm-button" onClick={() => storageMode.refetch()}>
+            Tentar novamente
+          </button>
+        </div>
+      )}
       <AdminStudio
+        workspaceTransport={workspaceTransport}
         homeTransport={homeTransport}
         area={workspaceTab}
         products={produtos}
-        ready={!isCatalogPending && !isError}
+        ready={!isCatalogPending && !isError && storageMode.isSuccess}
         onNavigate={setWorkspaceTab}
         bannerSource={{
           status: studioBanners.isPending ? "pending" : studioBanners.isError ? "error" : "success",
@@ -595,7 +755,7 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
         }}
       />
       <div
-        hidden={workspaceTab !== "produtos" && workspaceTab !== "revisao"}
+        hidden={workspaceTab !== "produtos"}
         className={
           workspaceTab !== "produtos" && workspaceTab !== "revisao"
             ? "hidden"
@@ -826,7 +986,7 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
                 Limpar filtros
               </button>
             </div>
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
               <input
                 aria-label="Buscar produto no painel"
                 value={search}
@@ -841,9 +1001,9 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
                 className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold"
               >
                 <option value="all">Todos os fornecedores</option>
-                {suppliers.map((supplier) => (
-                  <option key={supplier} value={supplier}>
-                    {supplier}
+                {supplierPricingGroups.map((group) => (
+                  <option key={group.key} value={group.key}>
+                    {group.label}
                   </option>
                 ))}
               </select>
@@ -872,46 +1032,53 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
                 <option value="incomplete">Dados incompletos</option>
               </select>
             </div>
-            <div className="mt-3 grid gap-3 sm:grid-cols-3">
-              <label className="text-xs text-cacau">
-                Filtrar preço de
-                <select
-                  value={priceField}
-                  onChange={(event) => setPriceField(event.target.value as "site" | "supplier")}
-                  className="mt-1 min-h-11 w-full border border-cacau/15 bg-white px-3 text-sm"
-                >
-                  <option value="site">Preço no site</option>
-                  <option value="supplier">Preço do fornecedor</option>
-                </select>
-              </label>
-              <label className="text-xs text-cacau">
-                Preço mínimo (R$)
-                <input
-                  inputMode="decimal"
-                  value={minimumPrice}
-                  onChange={(event) => setMinimumPrice(event.target.value)}
-                  placeholder="Sem mínimo"
-                  aria-invalid={invalidPrices}
-                  className="mt-1 min-h-11 w-full border border-cacau/15 bg-white px-3 text-sm"
-                />
-              </label>
-              <label className="text-xs text-cacau">
-                Preço máximo (R$)
-                <input
-                  inputMode="decimal"
-                  value={maximumPrice}
-                  onChange={(event) => setMaximumPrice(event.target.value)}
-                  placeholder="Sem máximo"
-                  aria-invalid={invalidPrices}
-                  className="mt-1 min-h-11 w-full border border-cacau/15 bg-white px-3 text-sm"
-                />
-              </label>
-            </div>
-            {invalidPrices && (
-              <p role="alert" className="mt-2 text-xs text-destructive">
-                Informe valores válidos; o mínimo não pode ser maior que o máximo.
-              </p>
-            )}
+            <details
+              className="admin-advanced-price-filters"
+              open={priceFiltersOpen}
+              onToggle={(event) => setPriceFiltersOpen(event.currentTarget.open)}
+            >
+              <summary>Faixa de preço{priceFiltersActive ? " · aplicada" : ""}</summary>
+              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                <label className="text-xs text-cacau">
+                  Aplicar faixa a
+                  <select
+                    value={priceField}
+                    onChange={(event) => setPriceField(event.target.value as "site" | "supplier")}
+                    className="mt-1 min-h-11 w-full border border-cacau/15 bg-white px-3 text-sm"
+                  >
+                    <option value="site">Preço no site</option>
+                    <option value="supplier">Custo informado pelo fornecedor</option>
+                  </select>
+                </label>
+                <label className="text-xs text-cacau">
+                  Preço mínimo (R$)
+                  <input
+                    inputMode="decimal"
+                    value={minimumPrice}
+                    onChange={(event) => setMinimumPrice(event.target.value)}
+                    placeholder="Sem mínimo"
+                    aria-invalid={invalidPrices}
+                    className="mt-1 min-h-11 w-full border border-cacau/15 bg-white px-3 text-sm"
+                  />
+                </label>
+                <label className="text-xs text-cacau">
+                  Preço máximo (R$)
+                  <input
+                    inputMode="decimal"
+                    value={maximumPrice}
+                    onChange={(event) => setMaximumPrice(event.target.value)}
+                    placeholder="Sem máximo"
+                    aria-invalid={invalidPrices}
+                    className="mt-1 min-h-11 w-full border border-cacau/15 bg-white px-3 text-sm"
+                  />
+                </label>
+              </div>
+              {invalidPrices && (
+                <p role="alert" className="mt-2 text-xs text-destructive">
+                  Informe valores válidos; o mínimo não pode ser maior que o máximo.
+                </p>
+              )}
+            </details>
             {statusFilter === "awaiting" && (
               <p className="mt-3 text-xs text-cacau">
                 Produtos sem preço de venda, inclusive os que ainda não têm custo cadastrado. Edite
@@ -956,100 +1123,115 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
                   Nenhum produto corresponde aos filtros atuais.
                 </div>
               ) : (
-                <div className="grid gap-3 xl:grid-cols-2">
-                  {visibleProdutos.map((p) => {
-                    const status = productStatus(p);
-                    const source = sourceUrl(p);
-                    return (
-                      <article
-                        key={p.id}
-                        className="border border-cacau/10 bg-white p-4 transition-shadow hover:shadow-premium sm:p-5"
-                      >
-                        <div className="flex gap-3">
-                          <ImageWithFallback
-                            src={p.url_imagem}
-                            alt={`Imagem de ${p.nome}`}
-                            className="h-20 w-20 shrink-0 border border-cacau/10 object-cover sm:h-24 sm:w-24"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-start justify-between gap-2">
-                              <button
-                                type="button"
-                                onClick={() => startEdit(p)}
-                                className="text-left font-semibold text-cacau hover:text-gold"
-                              >
-                                {p.nome}
-                              </button>
-                              <StatusBadge status={status} />
-                            </div>
-                            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-text-light">
-                              <span>{p.sku || "Sem SKU"}</span>
-                              <span>{p.categoria || "Sem categoria"}</span>
-                            </div>
-                            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                              <span className="font-semibold text-deep-green">{sourceName(p)}</span>
-                              {source ? (
-                                <a
-                                  href={source}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="text-gold underline underline-offset-2"
-                                >
-                                  Abrir fonte
-                                </a>
-                              ) : (
-                                <span className="text-text-light">Fonte não cadastrada</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="mt-4 grid grid-cols-3 gap-2 border-y border-cacau/10 py-3 text-xs">
-                          <div>
-                            <div className="text-text-light">Custo fornecedor</div>
-                            <div className="mt-1 font-bold text-cacau">
-                              {moneyOrDash(p.preco_atacado)}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-text-light">Preço no site</div>
-                            <div className="mt-1 font-bold text-price-green">
-                              {moneyOrDash(p.preco_atual)}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-text-light">Diferença</div>
-                            <div
-                              className={`mt-1 font-bold ${Number(p.preco_atual ?? 0) >= Number(p.preco_atacado ?? 0) ? "text-price-green" : "text-destructive"}`}
+                <div className="space-y-5">
+                  {visibleProductGroups.map((group) => (
+                    <section key={group.key} aria-label={`Produtos de ${group.label}`}>
+                      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2 border-b border-cacau/10 pb-2">
+                        <h3 className="font-semibold text-deep-green">{group.label}</h3>
+                        <span className="text-xs text-text-light">
+                          {group.products.length} produto(s) nesta página
+                        </span>
+                      </div>
+                      <div className="grid gap-3 xl:grid-cols-2">
+                        {group.products.map((p) => {
+                          const status = productStatus(p);
+                          const source = sourceUrl(p);
+                          const difference = grossPriceDifference(p);
+                          return (
+                            <article
+                              key={p.id}
+                              className="border border-cacau/10 bg-white p-4 transition-shadow hover:shadow-premium sm:p-5"
                             >
-                              {marginLabel(p)}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between gap-3 pt-1">
-                          <span className="text-xs text-text-light">
-                            {p.vendas_ultimos_30_dias ?? 0} venda(s) em 30 dias
-                          </span>
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={() => startEdit(p)}
-                              className="inline-flex items-center gap-1.5 border border-cacau/20 px-3 py-2 text-xs font-bold uppercase tracking-wider text-cacau hover:border-gold hover:text-gold"
-                            >
-                              <Pencil className="h-3.5 w-3.5" /> Editar
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => remove(p.id, p.nome)}
-                              aria-label={`Remover ${p.nome}`}
-                              className="border border-cacau/20 p-2 text-cacau hover:border-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </div>
-                      </article>
-                    );
-                  })}
+                              <div className="flex gap-3">
+                                <ImageWithFallback
+                                  src={p.url_imagem}
+                                  alt={`Imagem de ${p.nome}`}
+                                  className="h-20 w-20 shrink-0 border border-cacau/10 object-cover sm:h-24 sm:w-24"
+                                />
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex flex-wrap items-start justify-between gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => startEdit(p)}
+                                      className="text-left font-semibold text-cacau hover:text-gold"
+                                    >
+                                      {p.nome}
+                                    </button>
+                                    <StatusBadge status={status} />
+                                  </div>
+                                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-text-light">
+                                    <span>{p.sku || "Sem SKU"}</span>
+                                    <span>{p.categoria || "Sem categoria"}</span>
+                                  </div>
+                                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                                    <span className="font-semibold text-deep-green">
+                                      {sourceName(p)}
+                                    </span>
+                                    {source ? (
+                                      <a
+                                        href={source}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-gold underline underline-offset-2"
+                                      >
+                                        Abrir fonte
+                                      </a>
+                                    ) : (
+                                      <span className="text-text-light">Fonte não cadastrada</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="mt-4 grid grid-cols-3 gap-2 border-y border-cacau/10 py-3 text-xs">
+                                <div>
+                                  <div className="text-text-light">Custo informado</div>
+                                  <div className="mt-1 font-bold text-cacau">
+                                    {moneyOrDash(p.preco_atacado)}
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="text-text-light">Preço no site</div>
+                                  <div className="mt-1 font-bold text-price-green">
+                                    {moneyOrDash(p.preco_atual)}
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="text-text-light">Diferença bruta</div>
+                                  <div
+                                    className={`mt-1 font-bold ${difference == null ? "text-text-light" : difference >= 0 ? "text-price-green" : "text-destructive"}`}
+                                  >
+                                    {grossPriceDifferenceLabel(p)}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-between gap-3 pt-1">
+                                <span className="text-xs text-text-light">
+                                  {p.vendas_ultimos_30_dias ?? 0} venda(s) em 30 dias
+                                </span>
+                                <div className="flex gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => startEdit(p)}
+                                    className="inline-flex min-h-11 items-center gap-1.5 border border-cacau/20 px-3 py-2 text-xs font-bold uppercase tracking-wider text-cacau hover:border-gold hover:text-gold"
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" /> Editar
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => remove(p.id, p.nome)}
+                                    aria-label={`Remover ${p.nome}`}
+                                    className="min-h-11 min-w-11 border border-cacau/20 p-2 text-cacau hover:border-destructive hover:text-destructive"
+                                  >
+                                    <Trash2 className="mx-auto h-4 w-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            </article>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  ))}
                 </div>
               )}
               {totalPages > 1 && (
@@ -1078,11 +1260,48 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
             </div>
           )}
         </section>
+        <section
+          hidden={workspaceTab !== "fornecedores"}
+          data-state={workspaceTab === "fornecedores" ? "active" : "inactive"}
+          className="admin-workspace-panel"
+          aria-label="Fornecedores e preços"
+        >
+          {isCatalogPending ? (
+            <p className="text-text-light">Carregando catálogo…</p>
+          ) : isError ? (
+            <div
+              className="border border-destructive/25 bg-destructive/5 p-5 text-cacau"
+              role="alert"
+            >
+              <h2 className="font-semibold">Não foi possível carregar a precificação</h2>
+              <p className="mt-1 text-sm text-text-light">
+                {error instanceof Error ? error.message : "Tente atualizar os dados."}
+              </p>
+              <button
+                type="button"
+                onClick={() => refetch()}
+                disabled={isFetching}
+                className="mt-3 min-h-11 border border-cacau/20 px-3 text-xs font-semibold"
+              >
+                {isFetching ? "Atualizando…" : "Tentar novamente"}
+              </button>
+            </div>
+          ) : (
+            <SupplierPricingPanel
+              summaries={supplierPricingChoices}
+              products={supplierFilteredProducts}
+              selectedSupplier={supplierFilter}
+              onSelectSupplier={setSupplierFilter}
+              onEdit={startEdit}
+            />
+          )}
+        </section>
       </div>
 
       {editing && (
         <ProductForm
           value={editing}
+          products={produtos}
           onChange={setEditing}
           onCancel={() => {
             setEditing(null);
@@ -1098,12 +1317,14 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
 
 function ProductForm({
   value,
+  products,
   onChange,
   onCancel,
   onSave,
   saving,
 }: {
   value: ProdutoInput;
+  products: ProdutoAdmin[];
   onChange: (v: ProdutoInput) => void;
   onCancel: () => void;
   onSave: () => void;
@@ -1117,7 +1338,24 @@ function ProductForm({
   const sitePrice = Number(value.preco_novo ?? 0);
   const pricingDifference = supplierPrice > 0 && sitePrice > 0 ? sitePrice - supplierPrice : null;
   const supplierOptions = Array.from(
-    new Set([...(value.fornecedor ? [value.fornecedor] : []), ...SUPPLIER_OPTIONS]),
+    new Set([
+      ...(value.fornecedor ? [value.fornecedor] : []),
+      ...products
+        .map((product) => product.fornecedor?.trim())
+        .filter((supplier): supplier is string => Boolean(supplier)),
+      ...SUPPLIER_OPTIONS,
+    ]),
+  ).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  const pricingDifferenceLabel =
+    pricingDifference == null
+      ? "—"
+      : `${pricingDifference < 0 ? "−" : "+"}${formatBRL(Math.abs(pricingDifference))}`;
+  const bundleCandidates = products.filter(
+    (product) => product.id !== value.id && isEligibleBundleProduct(product),
+  );
+  const selectedBundleIds = value.compre_junto_ids ?? [];
+  const invalidBundleIds = selectedBundleIds.filter(
+    (id) => !bundleCandidates.some((product) => product.id === id),
   );
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1236,7 +1474,7 @@ function ProductForm({
           </div>
           <div className="grid grid-cols-2 gap-3 sm:col-span-2 sm:gap-4">
             <div className="min-w-0">
-              <label className={label}>Preço do fornecedor (R$)</label>
+              <label className={label}>Custo informado pelo fornecedor (R$)</label>
               <input
                 type="number"
                 step="0.01"
@@ -1297,21 +1535,23 @@ function ProductForm({
             </p>
           </div>
           <div>
-            <label className={label}>Fornecedor do catálogo</label>
-            <select
+            <label className={label}>Fornecedor (uso interno)</label>
+            <input
+              type="text"
               value={value.fornecedor ?? ""}
               onChange={(e) => onChange({ ...value, fornecedor: e.target.value })}
+              list="admin-product-supplier-options"
+              maxLength={120}
+              placeholder="Digite ou selecione um fornecedor"
               className={field}
-            >
-              <option value="">Selecione</option>
+            />
+            <datalist id="admin-product-supplier-options">
               {supplierOptions.map((supplier) => (
-                <option key={supplier} value={supplier}>
-                  {supplier}
-                </option>
+                <option key={supplier} value={supplier} />
               ))}
-            </select>
+            </datalist>
             <p className="mt-1 text-[11px] text-text-light">
-              O fornecedor já cadastrado é carregado automaticamente ao editar.
+              O nome fica no painel para organizar o catálogo; não aparece como vendedor no site.
             </p>
           </div>
           <div>
@@ -1326,9 +1566,9 @@ function ProductForm({
             <div className="mb-2 text-xs font-bold uppercase tracking-wide text-cacau">
               Conferência de preço
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               <div>
-                <div className="text-xs text-text-light">Custo do fornecedor</div>
+                <div className="text-xs text-text-light">Custo informado</div>
                 <div className="mt-1 font-bold text-cacau">
                   {moneyOrDash(value.preco_fornecedor)}
                 </div>
@@ -1339,10 +1579,26 @@ function ProductForm({
                   {moneyOrDash(value.preco_novo)}
                 </div>
               </div>
+              <div>
+                <div className="text-xs text-text-light">Diferença bruta</div>
+                <div
+                  className={`mt-1 font-bold ${pricingDifference == null ? "text-text-light" : pricingDifference >= 0 ? "text-price-green" : "text-destructive"}`}
+                >
+                  {pricingDifferenceLabel}
+                </div>
+              </div>
             </div>
             {pricingDifference != null && pricingDifference < 0 && (
               <p className="mt-2 text-xs font-semibold text-destructive">
                 Atenção: o preço do site está abaixo do custo do fornecedor.
+              </p>
+            )}
+            <p className="mt-2 text-xs text-text-light">
+              Diferença bruta: não considera taxas, frete, impostos ou outros custos.
+            </p>
+            {pricingDifference == null && (
+              <p className="mt-2 text-xs text-text-light">
+                Informe custo e preço no site para comparar os valores.
               </p>
             )}
           </div>
@@ -1374,13 +1630,20 @@ function ProductForm({
             />
           </div>
           <div>
-            <label className={label}>Medidas</label>
+            <label className={label} htmlFor="admin-product-measurements">
+              Medidas
+            </label>
             <input
+              id="admin-product-measurements"
               value={value.medidas ?? ""}
               onChange={(e) => onChange({ ...value, medidas: e.target.value })}
-              placeholder="ex.: 1,80 × 0,80 m"
+              placeholder="Largura: 200 cm; Altura: 90 cm; Profundidade fechada: 100 cm"
               className={field}
             />
+            <small className="mt-1 block text-xs text-muted-foreground">
+              Para filtros por medida, informe cada valor identificado. Sofás podem ter profundidade
+              fechada e aberta separadas.
+            </small>
           </div>
           <div className="sm:col-span-2">
             <label className={label}>Cores (separadas por vírgula)</label>
@@ -1398,6 +1661,83 @@ function ProductForm({
               rows={3}
               className={field}
             />
+          </div>
+          <div className="sm:col-span-2 border border-cacau/10 bg-white p-3">
+            <div className="mb-1 text-xs font-bold uppercase tracking-wide text-cacau">
+              Compre junto · seleção da Mobi
+            </div>
+            <p className="mb-3 text-xs text-text-light">
+              Escolha até 3 móveis que realmente combinam com este produto. A vitrine não escolhe
+              complementos automaticamente.
+            </p>
+            {invalidBundleIds.map((id) => (
+              <div
+                key={id}
+                className="flex items-center justify-between gap-3 border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-cacau"
+              >
+                <span>
+                  {products.find((product) => product.id === id)?.nome ?? id}: complemento
+                  indisponível para exibição.
+                </span>
+                <button
+                  type="button"
+                  className="min-h-11 font-semibold underline"
+                  onClick={() =>
+                    onChange({
+                      ...value,
+                      compre_junto_ids: selectedBundleIds.filter((item) => item !== id),
+                    })
+                  }
+                >
+                  Remover vínculo
+                </button>
+              </div>
+            ))}
+            <div className="max-h-56 divide-y divide-cacau/10 overflow-y-auto border border-cacau/10">
+              {bundleCandidates.map((candidate) => {
+                const checked = selectedBundleIds.includes(candidate.id);
+                return (
+                  <label
+                    key={candidate.id}
+                    className="flex min-h-14 items-center gap-3 px-3 py-2 text-sm text-cacau"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      disabled={!checked && selectedBundleIds.length >= 3}
+                      onChange={(event) =>
+                        onChange({
+                          ...value,
+                          compre_junto_ids: event.target.checked
+                            ? [...selectedBundleIds, candidate.id]
+                            : selectedBundleIds.filter((id) => id !== candidate.id),
+                        })
+                      }
+                      className="h-4 w-4 shrink-0 accent-[#304a32]"
+                    />
+                    <ImageWithFallback
+                      src={candidate.url_imagem}
+                      alt=""
+                      className="h-10 w-10 shrink-0 object-contain"
+                    />
+                    <span className="min-w-0 flex-1 truncate">{candidate.nome}</span>
+                    <strong className="shrink-0 text-xs">
+                      {formatBRL(Number(candidate.preco_atual))}
+                    </strong>
+                  </label>
+                );
+              })}
+              {bundleCandidates.length === 0 && (
+                <p className="p-3 text-xs text-text-light">
+                  Nenhum complemento com custo, preço, foto HTTPS e disponibilidade informada
+                  elegíveis no catálogo.
+                </p>
+              )}
+            </div>
+            <p className="mb-0 mt-2 text-[11px] text-text-light">
+              {selectedBundleIds.length}/3 selecionados. A lista aparece no produto somente enquanto
+              cada complemento continuar disponível no catálogo.
+            </p>
           </div>
           <div className="sm:col-span-2">
             <label className={label}>Imagem do produto *</label>

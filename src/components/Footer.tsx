@@ -31,6 +31,40 @@ export function Footer() {
           >
             Móveis e atendimento em Nova Iguaçu
           </Link>
+          <nav className="mt-4" aria-label="Informações e ajuda">
+            <h2 className="mb-1 text-xs font-semibold text-gold">Informações e ajuda</h2>
+            <ul className="flex flex-col">
+              <li>
+                <Link
+                  to="/ajuda"
+                  className="inline-flex min-h-10 items-center text-xs text-sand underline underline-offset-4"
+                >
+                  Central de ajuda
+                </Link>
+              </li>
+              {(configuration?.content?.pages ?? []).map((page) => (
+                <li key={page.id}>
+                  <Link
+                    to="/ajuda/$slug"
+                    params={{ slug: page.slug }}
+                    className="inline-flex min-h-10 items-center text-xs text-sand underline underline-offset-4"
+                  >
+                    {page.title}
+                  </Link>
+                </li>
+              ))}
+              {!!configuration?.content?.articles?.length && (
+                <li>
+                  <Link
+                    to="/inspiracao"
+                    className="inline-flex min-h-10 items-center text-xs text-sand underline underline-offset-4"
+                  >
+                    Inspiração
+                  </Link>
+                </li>
+              )}
+            </ul>
+          </nav>
           <p className="mt-3 flex items-center gap-2 text-xs font-semibold text-gold">
             <Truck className="h-5 w-5 shrink-0" /> Pague somente na entrega
           </p>
@@ -59,7 +93,6 @@ export function Footer() {
             </span>
             <span className="flex items-center gap-2">
               <CreditCard className="h-6 w-6 shrink-0 text-gold" /> Cartão até {MAX_INSTALLMENTS}x
-              sem juros
             </span>
           </div>
           <p className="mt-3 text-xs leading-relaxed text-sand/80">

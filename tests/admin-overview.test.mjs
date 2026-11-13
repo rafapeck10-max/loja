@@ -14,7 +14,7 @@ test("attention explains the consequence without claiming physical stock or conf
   );
   assert.equal(
     overviewImpact(product("a", { preco_atacado: 0 })),
-    "O custo pendente impede a elegibilidade pelas regras atuais do catálogo.",
+    "Sem custo do fornecedor, a equipe não consegue comparar o preço de compra com o preço no site.",
   );
 });
 

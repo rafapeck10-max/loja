@@ -1,4 +1,5 @@
 import bundledManifest from "../../docs/referencias/madeira-manifesto-v1.1.json" with { type: "json" };
+import type { AdminViewId } from "./admin-navigation";
 
 export const EVOLUTION_IMPORT_MAX_BYTES = 2_000_000;
 export const EVOLUTION_OBSERVATIONS = {
@@ -61,7 +62,7 @@ export interface EvolutionData {
 // These mappings document actual editors, not completion of the reference requirement.
 export const EVOLUTION_CAPABILITIES: Record<
   string,
-  { label: string; area: string; files: string; limitation: string }
+  { label: string; area: AdminViewId; files: string; limitation: string }
 > = {
   "MM-CMS-01": {
     label: "Banners da home",

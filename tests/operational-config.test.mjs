@@ -27,6 +27,7 @@ test("coverage counts normalized catalog attributes and identifies missing data"
       nome: "Sofá Veludo Azul",
       categoria: "Sofás",
       descricao: "Veludo",
+      materiais: ["Veludo"],
       cores: ["Azul"],
       medidas: "Largura 200 cm",
     },

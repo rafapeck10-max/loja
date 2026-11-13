@@ -18,6 +18,8 @@ import { HomeConfigurationProvider } from "../HomeConfigurationContext";
 import { HomepageContent } from "../HomepageContent";
 import { Header } from "../Header";
 import { Footer } from "../Footer";
+import { StoreCatalog } from "../StoreCatalog";
+import { HelpContentPage } from "../HelpContentPage";
 
 export function HomeConnectionPanel({
   transport,
@@ -25,12 +27,14 @@ export function HomeConnectionPanel({
   products,
   onOpenApplied,
   editorDirty = false,
+  compact = false,
 }: {
   transport: HomeTransport;
   draft: HomeDraftInput;
   products: EditorProduct[];
   onOpenApplied?: (config: import("../../lib/home-configuration").HomeConfiguration) => void;
   editorDirty?: boolean;
+  compact?: boolean;
 }) {
   const queryClient = useQueryClient();
   const [document, setDocument] = useState<HomeDocument | null>(null),
@@ -57,26 +61,39 @@ export function HomeConnectionPanel({
       alive = false;
     };
   }, [transport]);
-  async function run(command?: HomeTransportCommand) {
+  async function run(command?: HomeTransportCommand): Promise<HomeDocument | null> {
     setBusy(true);
     setMessage("");
     try {
       const r = command
         ? await transport.change(command, command.action === "save" ? draft : undefined)
         : await transport.read();
+      const nextDocument = r.document ?? null;
       setEnabled(r.enabled);
-      setDocument(r.document ?? null);
+      setDocument(nextDocument);
       if (command?.action === "apply") void invalidateHomeRevision(queryClient);
+      if (command?.action === "save" && nextDocument) {
+        const created = nextDocument.revisions.find(
+          (revision) => revision.id === nextDocument.sequence,
+        );
+        if (created) setPreview(created);
+      }
       if (command)
         setMessage(
           command.action === "apply"
-            ? "Revisão aplicada somente à home local. A loja publicada permanece preservada."
-            : "Revisão salva no servidor local.",
+            ? "Revisão aplicada somente à prévia local. A loja publicada permanece preservada."
+            : command.action === "review"
+              ? "Revisão conferida. A versão continua local e ainda não altera a loja."
+              : command.action === "restore"
+                ? "Versão restaurada como rascunho local."
+                : "Revisão da home criada. Confira a prévia antes de aplicar somente no ambiente local.",
         );
+      return nextDocument;
     } catch (e) {
       setMessage(
         e instanceof Error ? e.message : "Não foi possível salvar. A edição foi preservada.",
       );
+      return null;
     } finally {
       setBusy(false);
     }
@@ -88,11 +105,11 @@ export function HomeConnectionPanel({
   const previewIds = Object.fromEntries(
     Object.entries(previewSelections).map(([key, ps]) => [key, ps.map((p) => p.id)]),
   ) as import("../../lib/home-configuration").HomeConfiguration["sectionIds"];
-  return (
-    <section className="pm-home-connection" aria-label="Painel ligado à home local">
+  const homeControls = (
+    <>
       <div className="pm-home-connection-heading">
         <div>
-          <strong>Home em revisão</strong>
+          <strong>Prévia local da loja</strong>
           <p>
             Servidor local ·{" "}
             {document?.publishedId
@@ -103,20 +120,21 @@ export function HomeConnectionPanel({
         </div>
         <div className="pm-actions">
           <button className="pm-button" disabled={busy} onClick={() => void run()}>
-            Reabrir servidor
+            Atualizar estado local
           </button>
           <button
             className="pm-button primary"
             disabled={busy || !document}
+            data-create-home-preview="true"
             onClick={() => void run({ action: "save", expected: document!.sequence })}
           >
-            Salvar versão da home
+            Criar revisão para prévia
           </button>
         </div>
       </div>
       <p className="pm-muted">
-        Reúne Páginas, Banners, Navegação e Atendimento. Campanhas seguem locais; Black Friday usa
-        somente a seleção válida do PM-05 e o preço atual do catálogo nesta prévia.
+        Reúne Páginas, Banners, Navegação, Filtros, Conteúdo e Atendimento. Campanhas seguem locais;
+        Black Friday usa somente a seleção válida do PM-05 e o preço atual do catálogo nesta prévia.
       </p>
       {applied && onOpenApplied && (
         <button
@@ -136,11 +154,6 @@ export function HomeConnectionPanel({
         >
           Abrir home local aplicada
         </a>
-      )}
-      {message && (
-        <p role="status" className="pm-note">
-          {message}
-        </p>
       )}
       {!!document?.revisions.length && (
         <details>
@@ -180,6 +193,33 @@ export function HomeConnectionPanel({
           </ol>
         </details>
       )}
+    </>
+  );
+  return (
+    <section className="pm-home-connection" aria-label="Painel ligado à home local">
+      {compact ? (
+        <details
+          id={compact ? "pm-local-home-preview" : undefined}
+          className="pm-home-connection-compact"
+        >
+          <summary>
+            <strong>Prévia local da loja</strong>
+            <small>
+              {document?.publishedId
+                ? `Revisão ${document.publishedId} aplicada · loja publicada preservada`
+                : "Nenhuma versão aplicada · loja publicada preservada"}
+            </small>
+          </summary>
+          {homeControls}
+        </details>
+      ) : (
+        homeControls
+      )}
+      {message && (
+        <p role="status" className="pm-note">
+          {message}
+        </p>
+      )}
       <Dialog.Root
         open={!!preview}
         onOpenChange={(o) => {
@@ -191,10 +231,10 @@ export function HomeConnectionPanel({
           <Dialog.Content className="pm-home-review">
             <div className="pm-home-review-toolbar">
               <div>
-                <Dialog.Title>Home · revisão {preview?.id}</Dialog.Title>
+                <Dialog.Title>Loja local · revisão {preview?.id}</Dialog.Title>
                 <Dialog.Description>
-                  Prévia local completa. Mesmo renderer da loja; produtos consultados na fonte desta
-                  sessão.
+                  Prévia local da home, do menu, dos filtros e das páginas revisadas. Produtos
+                  consultados na fonte desta sessão.
                 </Dialog.Description>
               </div>
               <Dialog.Close className="pm-button" aria-label="Fechar prévia completa">
@@ -219,12 +259,15 @@ export function HomeConnectionPanel({
                         className="pm-button"
                         disabled={busy || !document}
                         onClick={async () => {
-                          await run({
+                          const nextDocument = await run({
                             action: "review",
                             expected: document!.sequence,
                             id: preview.id,
                           });
-                          setPreview(null);
+                          const reviewed = nextDocument?.revisions.find(
+                            (revision) => revision.id === preview.id,
+                          );
+                          if (reviewed) setPreview(reviewed);
                         }}
                       >
                         Marcar como revisada
@@ -243,7 +286,7 @@ export function HomeConnectionPanel({
                           setPreview(null);
                         }}
                       >
-                        Aplicar somente na home local
+                        Aplicar somente na prévia local
                       </button>
                     )}
                   </div>
@@ -252,15 +295,42 @@ export function HomeConnectionPanel({
                   Prévia visual com links desativados. Confira a navegação na home local aplicada.
                 </p>
                 <HomeConfigurationProvider configuration={preview.config}>
-                  <div inert className="store-shell pm-home-preview-store">
-                    <Header />
-                    <HomepageContent
-                      configuration={preview.config}
-                      sectionIds={previewIds}
-                      products={previewProducts}
-                    />
-                    <Footer />
-                  </div>
+                  <>
+                    <div inert className="store-shell pm-home-preview-store">
+                      <Header />
+                      <HomepageContent
+                        configuration={preview.config}
+                        sectionIds={previewIds}
+                        products={previewProducts}
+                      />
+                      <Footer />
+                    </div>
+                    <section className="mobi-wrap py-8" aria-labelledby="pm-navigation-preview">
+                      <h2 id="pm-navigation-preview" className="mb-3 text-xl text-deep-green">
+                        Prévia de categoria e filtros
+                      </h2>
+                      <div inert>
+                        <StoreCatalog products={previewProducts} initialCategory="sofas" />
+                      </div>
+                    </section>
+                    {!!preview.config.content?.pages.length && (
+                      <section
+                        className="border-t border-deep-green/15"
+                        aria-labelledby="pm-content-preview"
+                      >
+                        <div className="mobi-wrap pt-6">
+                          <h2 id="pm-content-preview" className="text-xl text-deep-green">
+                            Conteúdo PM-07 nesta revisão
+                          </h2>
+                        </div>
+                        {preview.config.content.pages.map((page) => (
+                          <div inert key={page.id}>
+                            <HelpContentPage page={page} />
+                          </div>
+                        ))}
+                      </section>
+                    )}
+                  </>
                 </HomeConfigurationProvider>
               </>
             )}

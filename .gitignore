@@ -7,3 +7,6 @@ dist/
 .env*
 .tanstack/
 .mobi-local-preview/
+artifacts/
+supabase/.temp/
+.mobi-backups/

@@ -16,18 +16,77 @@ import { StoreCatalog } from "@/components/StoreCatalog";
 import { newHomepageProducts, weeklyHomepageProducts } from "@/lib/home-curation";
 import { seoHead } from "@/lib/seo";
 import { SITE_TITLE, SITE_DESCRIPTION, SITE_URL } from "@/lib/site-metadata";
+import {
+  catalogUrlSearch,
+  parseCatalogUrlState,
+  DEFAULT_CATALOG_FILTERS,
+  type CatalogFilterState,
+  type CatalogUrlState,
+} from "@/lib/catalog-url-state";
+
+type IndexSearch = Partial<CatalogUrlState> & {
+  q?: string;
+  ofertas?: boolean;
+  all?: boolean;
+};
 
 export const Route = createFileRoute("/")({
-  validateSearch: (
-    search: Record<string, unknown>,
-  ): { q?: string; ofertas?: boolean; all?: boolean; page?: number } => ({
-    page: search.page === undefined ? undefined : parsePage(search.page),
-    q: typeof search.q === "string" && search.q ? search.q : undefined,
-    ofertas: search.ofertas === true || search.ofertas === "true" ? true : undefined,
-    all: search.all === true || search.all === "true" ? true : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): IndexSearch => {
+    const state = parseCatalogUrlState(search);
+    const hasListingParams = [
+      "sort",
+      "minPrice",
+      "maxPrice",
+      "material",
+      "color",
+      "feature",
+      "dimension",
+      "widthMaxCm",
+      "heightMaxCm",
+      "depthClosedMaxCm",
+      "depthOpenMaxCm",
+    ].some((key) => search[key] !== undefined);
+    return {
+      page: search.page === undefined ? undefined : parsePage(search.page),
+      q: typeof search.q === "string" && search.q ? search.q : undefined,
+      ofertas: search.ofertas === true || search.ofertas === "true" ? true : undefined,
+      all:
+        search.all === true ||
+        search.all === "true" ||
+        (hasListingParams && !search.q && !search.ofertas)
+          ? true
+          : undefined,
+      sort: search.sort === undefined ? undefined : state.sort,
+      minPrice: search.minPrice === undefined ? undefined : state.minPrice,
+      maxPrice: search.maxPrice === undefined ? undefined : state.maxPrice,
+      material: search.material === undefined ? undefined : state.material,
+      color: search.color === undefined ? undefined : state.color,
+      feature: search.feature === undefined ? undefined : state.feature,
+      dimension: search.dimension === undefined ? undefined : state.dimension,
+      widthMaxCm: search.widthMaxCm === undefined ? undefined : state.widthMaxCm,
+      heightMaxCm: search.heightMaxCm === undefined ? undefined : state.heightMaxCm,
+      depthClosedMaxCm: search.depthClosedMaxCm === undefined ? undefined : state.depthClosedMaxCm,
+      depthOpenMaxCm: search.depthOpenMaxCm === undefined ? undefined : state.depthOpenMaxCm,
+    };
+  },
   loaderDeps: ({ search }) => ({
-    catalog: Boolean(search.all || search.ofertas || search.q || search.page),
+    catalog: Boolean(
+      search.all ||
+      search.ofertas ||
+      search.q ||
+      search.page ||
+      search.sort ||
+      search.minPrice ||
+      search.maxPrice ||
+      search.material ||
+      search.color ||
+      search.feature ||
+      search.dimension ||
+      search.widthMaxCm ||
+      search.heightMaxCm ||
+      search.depthClosedMaxCm ||
+      search.depthOpenMaxCm,
+    ),
     q: search.q,
     ofertas: search.ofertas,
     all: search.all,
@@ -37,8 +96,40 @@ export const Route = createFileRoute("/")({
     if (deps.catalog) return context.queryClient.ensureQueryData(produtosQueryOptions());
   },
   head: ({ match }) => {
-    const { q, ofertas, all, page } = match.search;
-    const catalog = Boolean(all || ofertas || q || page);
+    const {
+      q,
+      ofertas,
+      all,
+      page,
+      sort,
+      minPrice,
+      maxPrice,
+      material,
+      color,
+      feature,
+      dimension,
+      widthMaxCm,
+      heightMaxCm,
+      depthClosedMaxCm,
+      depthOpenMaxCm,
+    } = match.search;
+    const catalog = Boolean(
+      all ||
+      ofertas ||
+      q ||
+      page ||
+      sort ||
+      minPrice ||
+      maxPrice ||
+      material ||
+      color ||
+      feature ||
+      dimension ||
+      widthMaxCm ||
+      heightMaxCm ||
+      depthClosedMaxCm ||
+      depthOpenMaxCm,
+    );
     const catalogPage = page ?? 1;
     const url = catalog
       ? `${SITE_URL}/?all=true${catalogPage > 1 ? `&page=${catalogPage}` : ""}`
@@ -54,7 +145,21 @@ export const Route = createFileRoute("/")({
       ...head,
       meta: [
         ...head.meta,
-        ...(q || ofertas ? [{ name: "robots", content: "noindex,follow" }] : []),
+        ...(q ||
+        ofertas ||
+        sort ||
+        minPrice ||
+        maxPrice ||
+        material ||
+        color ||
+        feature ||
+        dimension ||
+        widthMaxCm ||
+        heightMaxCm ||
+        depthClosedMaxCm ||
+        depthOpenMaxCm
+          ? [{ name: "robots", content: "noindex,follow" }]
+          : []),
       ],
     };
   },
@@ -82,19 +187,72 @@ function IndexError({ reset }: { error: unknown; reset: () => void }) {
 }
 
 function Index() {
-  const { q, ofertas, all, page } = Route.useSearch();
-  const catalog = Boolean(all || ofertas || q || page);
-  return catalog ? <CatalogIndex query={q} offers={ofertas} page={page} /> : <HomepageIndex />;
+  const search = Route.useSearch();
+  const {
+    q,
+    ofertas,
+    all,
+    page,
+    sort,
+    minPrice,
+    maxPrice,
+    material,
+    color,
+    feature,
+    dimension,
+    widthMaxCm,
+    heightMaxCm,
+    depthClosedMaxCm,
+    depthOpenMaxCm,
+  } = search;
+  const catalog = Boolean(
+    all ||
+    ofertas ||
+    q ||
+    page ||
+    sort ||
+    minPrice ||
+    maxPrice ||
+    material ||
+    color ||
+    feature ||
+    dimension ||
+    widthMaxCm ||
+    heightMaxCm ||
+    depthClosedMaxCm ||
+    depthOpenMaxCm,
+  );
+  const filters: CatalogFilterState = {
+    ...DEFAULT_CATALOG_FILTERS,
+    sort: sort ?? (q?.trim() ? "relevant" : "recommended"),
+    minPrice: minPrice ?? "",
+    maxPrice: maxPrice ?? "",
+    material: material ?? "all",
+    color: color ?? "all",
+    feature: feature ?? "all",
+    dimension: dimension ?? "",
+    widthMaxCm: widthMaxCm ?? "",
+    heightMaxCm: heightMaxCm ?? "",
+    depthClosedMaxCm: depthClosedMaxCm ?? "",
+    depthOpenMaxCm: depthOpenMaxCm ?? "",
+  };
+  return catalog ? (
+    <CatalogIndex query={q} offers={ofertas} page={page} filters={filters} />
+  ) : (
+    <HomepageIndex />
+  );
 }
 
 function CatalogIndex({
   query,
   offers,
   page,
+  filters,
 }: {
   query?: string;
   offers?: boolean;
   page?: number;
+  filters: CatalogFilterState;
 }) {
   const navigate = useNavigate({ from: "/" });
   const [rotationDate, setRotationDate] = useState(() => new Date("2000-01-01T12:00:00.000Z"));
@@ -117,6 +275,11 @@ function CatalogIndex({
   weeklyProducts.forEach((product) => {
     badges[product.id] = "week";
   });
+  const shareParams = new URLSearchParams();
+  if (query) shareParams.set("q", query);
+  if (offers) shareParams.set("ofertas", "true");
+  if (!query && !offers) shareParams.set("all", "true");
+  const shareBaseUrl = `${SITE_URL}/${shareParams.toString() ? `?${shareParams.toString()}` : ""}`;
 
   return (
     <StoreCatalog
@@ -125,10 +288,22 @@ function CatalogIndex({
       query={query}
       offers={offers}
       requestedPage={page}
+      initialFilters={filters}
       badges={badges}
-      onPageChange={(nextPage) => {
+      shareCategory={{
+        label: query
+          ? `resultados para “${query}”`
+          : offers
+            ? "ofertas para sua casa"
+            : "todos os móveis",
+        url: shareBaseUrl,
+      }}
+      onCatalogStateChange={(nextState, nextPage) => {
         void navigate({
-          search: (previous) => ({ ...previous, page: nextPage }),
+          search: (previous) => ({
+            ...previous,
+            ...catalogUrlSearch(nextState, nextPage, query ? "relevant" : "recommended"),
+          }),
           replace: true,
           resetScroll: false,
         });

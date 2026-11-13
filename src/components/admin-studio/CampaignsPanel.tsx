@@ -554,7 +554,7 @@ export function CampaignsPanel({
           )}
           <div className="pm-actions">
             <button type="button" className="pm-button" onClick={review}>
-              Marcar em revisão local
+              Validar e marcar para revisão
             </button>
             <button
               type="button"
@@ -564,27 +564,38 @@ export function CampaignsPanel({
             >
               Habilitar simulação local
             </button>
-            <button
-              type="button"
-              className="pm-button"
-              onClick={() => update({ ...campaign, simulation: "disabled" })}
-            >
-              Desativar simulação
-            </button>
-            <button
-              type="button"
-              className="pm-button"
-              onClick={() => {
-                const result = endCampaign(data, campaign.id, products);
-                onChange(result.data);
-                setMessage(
-                  `Simulação encerrada. Overrides removidos; ${result.conflicts.length} conflito(s) indicado(s). Base atual preservada.`,
-                );
-              }}
-            >
-              Encerrar e remover overrides locais
-            </button>
           </div>
+          <details className="pm-campaign-actions-more">
+            <summary>Ações locais da simulação</summary>
+            <p className="pm-muted">
+              Desativar pausa a simulação. Encerrar remove os preços temporários locais e preserva o
+              preço-base atual.
+            </p>
+            <div className="pm-actions">
+              <button
+                type="button"
+                className="pm-button"
+                disabled={campaign.simulation === "off" || campaign.simulation === "disabled"}
+                onClick={() => update({ ...campaign, simulation: "disabled" })}
+              >
+                Desativar simulação
+              </button>
+              <button
+                type="button"
+                className="pm-button pm-danger"
+                disabled={campaign.simulation === "off"}
+                onClick={() => {
+                  const result = endCampaign(data, campaign.id, products);
+                  onChange(result.data);
+                  setMessage(
+                    `Simulação encerrada. Preços temporários locais removidos; ${result.conflicts.length} conflito(s) indicado(s). Base atual preservada.`,
+                  );
+                }}
+              >
+                Encerrar simulação e remover preços temporários
+              </button>
+            </div>
+          </details>
           <details className="pm-muted">
             <summary>Limites e versão da base</summary>
             <p>

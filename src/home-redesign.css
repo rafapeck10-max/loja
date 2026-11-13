@@ -1,9 +1,12 @@
 /* Mobi retail composition. Public renderer and revision preview share these rules. */
 .store-shell {
+  width: 100%;
+  min-width: 0;
   background: #fff;
   color: #29392e;
 }
 .mobi-wrap {
+  min-width: 0;
   max-width: 1280px;
   width: 100%;
   padding-left: 32px;
@@ -61,6 +64,9 @@
   min-height: 40px;
   padding: 0 20px;
   font-size: 12px;
+}
+.mobi-search-submit-icon {
+  display: none;
 }
 .mobi-header .mobi-header-actions {
   display: flex;
@@ -161,7 +167,7 @@
 .mobi-home-carousel {
   position: relative;
   max-width: 1216px;
-  margin: 20px auto 0;
+  margin: 12px auto 0;
   background: #f0eadc;
   border-radius: 10px;
   overflow: hidden;
@@ -239,14 +245,14 @@
   min-width: 0;
   height: 100%;
   width: 100%;
-  padding: 14px 24px;
+  padding: 10px 20px;
 }
 .mobi-hero.mobi-hero-product .mobi-hero-image {
   display: block;
   position: relative;
   width: 100%;
   height: 100%;
-  max-height: 240px;
+  max-height: 220px;
   object-fit: contain;
   filter: none;
 }
@@ -399,15 +405,15 @@
   border-color: #9d8051;
 }
 .store-shell .mobi-shelf {
-  padding-top: 24px;
-  padding-bottom: 4px;
+  padding-top: 22px;
+  padding-bottom: 0;
 }
 .store-shell .mobi-section-title {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 .store-shell .mobi-section-title h2 {
   font-size: 24px;
@@ -601,21 +607,31 @@
   text-decoration: underline;
 }
 .store-shell .mobi-catalog-invite {
-  padding-top: 24px;
-  padding-bottom: 26px;
-  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-top: 22px;
+  padding-bottom: 22px;
+  margin-top: 24px;
   border-top: 1px solid #e9e8e0;
-  text-align: center;
+  text-align: left;
+}
+.store-shell .mobi-catalog-invite > div {
+  max-width: 760px;
+}
+.store-shell .mobi-catalog-invite > a {
+  flex-shrink: 0;
 }
 .store-shell .mobi-catalog-invite h2 {
-  font-size: 23px;
+  font-size: 21px;
   letter-spacing: -0.4px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 .store-shell .mobi-catalog-invite p {
   font-size: 13px;
   line-height: 1.6;
-  margin: 0 auto 14px;
+  margin: 0;
   max-width: 660px;
 }
 .store-shell .mobi-primary {
@@ -662,69 +678,109 @@
     height: 68px;
   }
 }
-@media (max-width: 767px) {
-  .mobi-wrap {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
+@media (max-width: 1023px) {
   .mobi-header-channel,
   .mobi-head-browse {
     display: none;
   }
   .mobi-header .mobi-header-inner {
     display: grid;
-    grid-template-columns: 44px 1fr 44px;
-    gap: 3px 8px;
-    padding-top: 5px;
-    padding-bottom: 8px;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    grid-template-areas: "menu logo actions" "search search search";
+    justify-content: normal;
+    gap: 6px 8px;
+    padding: 6px 16px 10px;
     min-height: 0;
   }
   .mobi-header .mobi-menu-mobile {
     display: flex;
-    grid-column: 1;
-    grid-row: 1;
+    grid-area: menu;
+    justify-self: start;
+    width: 44px;
+    height: 44px;
+    padding: 0;
     color: #fff;
   }
   .mobi-menu-mobile > span {
     display: none;
   }
   .mobi-header .mobi-logo {
-    grid-column: 2;
-    grid-row: 1;
-    justify-self: center;
+    grid-area: logo;
+    justify-self: start;
+    min-width: 0;
   }
   .mobi-header .mobi-logo-image {
     width: 96px;
     height: 40px;
   }
   .mobi-header .mobi-header-actions {
-    grid-column: 3;
-    grid-row: 1;
+    grid-area: actions;
+    justify-self: end;
     display: flex;
+    gap: 0;
+    min-width: 0;
+  }
+  .mobi-header .mobi-header-actions .mobi-header-whatsapp {
+    display: flex;
+    width: 44px;
+    min-height: 44px;
+    justify-content: center;
+  }
+  .mobi-header-whatsapp > span {
+    display: none;
   }
   .mobi-header .mobi-header-cart {
+    position: relative;
     display: flex;
+    width: 44px;
     min-width: 44px;
     min-height: 44px;
+    padding: 0;
+  }
+  .mobi-header-cart .mobi-cart-count {
+    position: absolute;
+    top: 1px;
+    right: 0;
+    min-width: 18px;
+    padding: 0 4px;
+    font-size: 10px;
+    line-height: 18px;
   }
   .mobi-cart-empty-label {
     display: none;
   }
   .mobi-header .mobi-search {
-    grid-column: 1/-1;
-    grid-row: 2;
-    min-height: 44px;
+    grid-area: search;
+    min-width: 0;
+    min-height: 48px;
+    max-width: 100%;
     width: 100%;
     padding-left: 12px;
     margin: 0;
     border-radius: 5px;
   }
   .mobi-header .mobi-search input {
-    font-size: 14px !important;
+    font-size: 16px;
   }
-  .mobi-header .mobi-search button {
-    padding: 0 13px;
-    min-height: 38px;
+  .mobi-header .mobi-search > button {
+    display: grid;
+    place-items: center;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+  }
+  .mobi-search-submit-icon {
+    display: block;
+  }
+  .mobi-search-submit-label {
+    display: none;
+  }
+}
+@media (max-width: 767px) {
+  .mobi-wrap {
+    padding-left: 16px;
+    padding-right: 16px;
   }
   .mobi-home-carousel {
     margin: 12px 16px 0;
@@ -987,24 +1043,27 @@
   object-position: center;
 }
 
-/* Three centered room shortcuts with close, edge-to-edge catalog photos. */
+/* Compact room shortcuts preserve the entire furniture photo on every screen. */
 .store-shell .mobi-shop-categories {
-  padding-top: 20px;
-  padding-bottom: 12px;
+  padding-top: 14px;
+  padding-bottom: 0;
 }
 .store-shell .mobi-shop-heading {
   justify-content: center;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 .store-shell .mobi-shop-heading > span {
   display: none;
 }
 .store-shell .mobi-photo-categories {
-  width: min(100%, 1120px);
+  width: min(100%, 600px);
   margin-inline: auto;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
+  gap: 12px;
+  overflow: visible;
+  scroll-snap-type: none;
+  padding-bottom: 0;
 }
 .store-shell .mobi-photo-categories > a {
   min-width: 0;
@@ -1013,7 +1072,7 @@
   align-items: center;
   overflow: hidden;
   gap: 0;
-  padding: 0 0 13px;
+  padding: 0 0 10px;
   border: 1px solid #e7e9e1;
   border-radius: 9px;
   background: #fff;
@@ -1028,25 +1087,29 @@
   border-color: #9d8051;
   box-shadow: 0 5px 18px rgb(46 63 50 / 9%);
 }
+.store-shell .mobi-photo-categories > a:focus-visible {
+  outline: 3px solid #c5a059;
+  outline-offset: 3px;
+}
 .store-shell .mobi-category-photo {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 1.58;
-  margin-bottom: 12px;
+  aspect-ratio: 1;
+  margin-bottom: 9px;
   padding: 0;
   overflow: hidden;
-  background: #f4f2eb;
+  background: #fff;
 }
 .store-shell .mobi-category-photo img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
-  transition: transform 0.25s ease;
 }
-.store-shell .mobi-photo-categories > a:hover img {
-  transform: scale(1.035);
+.store-shell .mobi-category-photo .mobi-image-fallback {
+  width: 100%;
+  height: 100%;
 }
 @media (max-width: 767px) {
   .store-shell .mobi-shop-categories {
@@ -1072,7 +1135,7 @@
   }
   .store-shell .mobi-category-photo {
     height: auto;
-    aspect-ratio: 1.18;
+    aspect-ratio: 1;
     margin-bottom: 8px;
     padding: 0;
   }
@@ -1101,23 +1164,6 @@
 }
 
 @media (max-width: 767px) {
-  .mobi-header .mobi-header-inner {
-    grid-template-columns: 88px 1fr 88px;
-  }
-  .mobi-header .mobi-header-actions {
-    gap: 0;
-    justify-self: end;
-  }
-  .mobi-header .mobi-header-actions .mobi-header-whatsapp {
-    display: flex;
-    min-width: 44px;
-    min-height: 44px;
-    justify-content: center;
-    color: #f4efe6;
-  }
-  .mobi-header-whatsapp > span {
-    display: none;
-  }
   .mobi-photo-categories > a > span:last-child {
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -1157,6 +1203,148 @@
   font-size: 10px;
   font-weight: 400;
   color: #7a816f;
+}
+
+/* Shared home shelves keep the panel's selections and adapt to their real size. */
+.store-shell .mobi-home-product-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  align-items: stretch;
+}
+.store-shell .mobi-home-product-grid .mobi-product h3 {
+  font-size: 16px;
+}
+.store-shell .mobi-home-product-grid .mobi-detail {
+  font-size: 12px;
+}
+.store-shell .mobi-home-product-grid .mobi-price-label {
+  font-size: 11px;
+}
+.store-shell .mobi-home-product-grid .mobi-installments {
+  font-size: 13px;
+}
+.store-shell .mobi-home-product-grid .mobi-installments span {
+  font-size: 11px;
+}
+.store-shell .mobi-black-friday .mobi-section-title {
+  padding: 16px 20px;
+  border-left: 4px solid #c5a059;
+  border-radius: 7px;
+  background: #2e3f32;
+}
+.store-shell .mobi-black-friday .mobi-black-friday-kicker {
+  color: #e1c789;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+.store-shell .mobi-black-friday .mobi-section-title h2 {
+  color: #fff;
+}
+.store-shell .mobi-black-friday .mobi-section-title p {
+  color: #e0e6db;
+  margin-top: 4px;
+}
+@media (min-width: 768px) {
+  .store-shell .mobi-home-product-grid.is-single {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .store-shell .mobi-home-product-grid.is-single .mobi-product {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    align-items: center;
+  }
+  .store-shell .mobi-home-product-grid.is-single .mobi-photo {
+    height: 100%;
+    min-height: 230px;
+    aspect-ratio: auto;
+    border-right: 1px solid #e5e8df;
+  }
+  .store-shell .mobi-home-product-grid.is-single .mobi-product-body {
+    padding: 20px;
+  }
+  .store-shell .mobi-home-product-grid.is-single .mobi-product h3 {
+    font-size: 21px;
+    -webkit-line-clamp: unset;
+    white-space: normal;
+  }
+  .store-shell .mobi-home-product-grid.is-single .mobi-detail {
+    white-space: normal;
+  }
+  .store-shell .mobi-home-product-grid.is-single .mobi-badge-row {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1;
+    padding: 0;
+  }
+  .store-shell .mobi-home-product-grid.is-single .mobi-badge {
+    position: static;
+  }
+}
+@media (min-width: 1024px) {
+  .store-shell .mobi-home-product-grid.is-single .mobi-product-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(200px, 0.7fr);
+    grid-template-areas: "category price" "name price" "details price" "action price";
+    gap: 5px 24px;
+    align-items: start;
+  }
+  .store-shell .mobi-home-product-grid.is-single .mobi-product-body > small {
+    grid-area: category;
+  }
+  .store-shell .mobi-home-product-grid.is-single h3 {
+    grid-area: name;
+    margin: 0;
+  }
+  .store-shell .mobi-home-product-grid.is-single .mobi-detail {
+    grid-area: details;
+    margin: 0;
+  }
+  .store-shell .mobi-home-product-grid.is-single .mobi-price-panel {
+    grid-area: price;
+    align-self: center;
+    margin: 0;
+    padding: 14px;
+    border-radius: 6px;
+    background: #f3f6ef;
+  }
+  .store-shell .mobi-home-product-grid.is-single .mobi-product-cta {
+    grid-area: action;
+    margin-top: 8px;
+    max-width: 240px;
+  }
+}
+@media (max-width: 767px) {
+  .store-shell .mobi-home-product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .store-shell .mobi-home-product-grid.is-single {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .store-shell .mobi-home-product-grid.is-single .mobi-photo {
+    aspect-ratio: 1.5;
+  }
+  .store-shell .mobi-home-product-grid .mobi-product h3 {
+    font-size: 14px;
+  }
+  .store-shell .mobi-home-product-grid .mobi-detail,
+  .store-shell .mobi-home-product-grid .mobi-installments {
+    font-size: 11px;
+  }
+  .store-shell .mobi-home-product-grid .mobi-price-label,
+  .store-shell .mobi-home-product-grid .mobi-installments span {
+    font-size: 10px;
+  }
+  .store-shell .mobi-black-friday .mobi-section-title {
+    padding: 13px 14px;
+  }
+  .store-shell .mobi-catalog-invite {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding-top: 18px;
+    padding-bottom: 18px;
+  }
 }
 @media (max-width: 767px) {
   .mobi-photo-categories {

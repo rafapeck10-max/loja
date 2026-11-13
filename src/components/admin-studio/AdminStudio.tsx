@@ -22,12 +22,7 @@ import {
   type PageDraft,
 } from "../../lib/pages-shelves";
 import { initialBannerData, validateBannerData, type BannerData } from "../../lib/banner-drafts";
-import {
-  initialCampaignData,
-  validateCampaignData,
-  campaignState,
-  type CampaignData,
-} from "../../lib/campaigns";
+import { initialCampaignData, validateCampaignData, type CampaignData } from "../../lib/campaigns";
 import {
   initialEvolutionData,
   validateEvolutionData,
@@ -57,6 +52,13 @@ import { NavigationPanel, ContentPanel, ServicePanel, ProductDraftPanel } from "
 import "../../admin-studio.css";
 import { HomeConnectionPanel } from "./HomeConnectionPanel";
 import type { HomeTransport } from "../../lib/home-transport";
+import type { AdminViewId } from "../../lib/admin-navigation";
+import {
+  validatedSnapshot,
+  inspectLocalWorkspaceImport,
+  type StudioWorkspaceTransport,
+  type StudioWorkspaceCommand,
+} from "../../lib/admin-studio-transport";
 
 type StudioData = {
   pages: PageDraft;
@@ -78,10 +80,20 @@ const titles: Record<StudioScope, string> = {
   service: "Entrega e atendimento",
   evolution: "Evolução do site",
 };
-const areaScopes: Record<string, StudioScope> = {
+const areaScopes: Partial<Record<AdminViewId, StudioScope>> = {
   vitrine: "pages",
   banners: "banners",
   produtos: "products",
+  campaigns: "campaigns",
+  navigation: "navigation",
+  content: "content",
+  service: "service",
+  evolution: "evolution",
+};
+const scopeViews: Record<StudioScope, AdminViewId> = {
+  pages: "vitrine",
+  banners: "banners",
+  products: "produtos",
   campaigns: "campaigns",
   navigation: "navigation",
   content: "content",
@@ -112,13 +124,15 @@ export function AdminStudio({
   productFilter = "all",
   bannerSource,
   homeTransport,
+  workspaceTransport,
 }: {
-  area: string;
+  area: AdminViewId;
   products: EditorProduct[];
   ready?: boolean;
   demonstration?: boolean;
   homeTransport?: HomeTransport;
-  onNavigate: (area: string) => void;
+  workspaceTransport?: StudioWorkspaceTransport;
+  onNavigate: (area: AdminViewId) => void;
   productQuery?: string;
   productFilter?: "all" | "published" | "awaiting" | "incomplete";
   bannerSource?: {
@@ -129,6 +143,11 @@ export function AdminStudio({
 }) {
   const storageKey = `mobi:admin-studio:v1:${demonstration ? "demo" : "admin"}`;
   const loadedKey = useRef<string | null>(null);
+  const serverVersion = useRef(0);
+  const busyRef = useRef(false);
+  const [busy, setBusy] = useState(false);
+  const remote = Boolean(workspaceTransport);
+  const sourceKey = `${storageKey}:${remote ? "remote" : "local"}`;
   const defaults = useMemo<StudioData>(
     () => ({
       pages: initialPageDraft(products),
@@ -171,10 +190,15 @@ export function AdminStudio({
   const validate = (key: StudioScope, value: unknown): string[] => {
     return validateStudioResource(key, value, products, data);
   };
-  const load = useCallback(() => {
+  const load = useCallback(async () => {
+    setLoaded(false);
     try {
-      const raw = localStorage.getItem(storageKey);
-      const next = raw ? parseWorkspace(raw) : emptyWorkspace();
+      const snapshot = workspaceTransport
+        ? validatedSnapshot(await workspaceTransport.read())
+        : null;
+      const raw = snapshot ? null : localStorage.getItem(storageKey);
+      const next = snapshot?.workspace ?? (raw ? parseWorkspace(raw) : emptyWorkspace());
+      serverVersion.current = snapshot?.serverVersion ?? 0;
       const invalid: StudioScope[] = [];
       const reasons: string[] = [];
       for (const [key, value] of Object.entries(next.entries)) {
@@ -203,13 +227,13 @@ export function AdminStudio({
         `Não foi possível reabrir os rascunhos. ${error instanceof Error ? error.message : ""} A cópia salva foi preservada.`,
       );
     }
-  }, [storageKey, products]);
+  }, [storageKey, products, workspaceTransport]);
   useEffect(() => {
-    if (shouldLoadWorkspace(loadedKey.current, storageKey, ready)) {
-      loadedKey.current = storageKey;
-      load();
+    if (shouldLoadWorkspace(loadedKey.current, sourceKey, ready)) {
+      loadedKey.current = sourceKey;
+      void load();
     }
-  }, [storageKey, ready, load]);
+  }, [sourceKey, ready, load]);
   useEffect(() => {
     setReviewOpen(false);
     if (!conflict) setMessage("");
@@ -226,7 +250,7 @@ export function AdminStudio({
   }, [dirty]);
   useEffect(() => {
     const changed = (e: StorageEvent) => {
-      if (e.key === storageKey) {
+      if (!remote && e.key === storageKey) {
         setConflict(true);
         setMessage(
           "Outra aba alterou os rascunhos. Sua edição foi preservada; exporte-a e reabra a versão salva para comparar.",
@@ -235,7 +259,26 @@ export function AdminStudio({
     };
     window.addEventListener("storage", changed);
     return () => window.removeEventListener("storage", changed);
-  }, [storageKey]);
+  }, [storageKey, remote]);
+  const commitRemote = async (command: StudioWorkspaceCommand) => {
+    if (!workspaceTransport) throw new Error("Transporte remoto indisponível.");
+    if (busyRef.current) throw new Error("Aguarde o salvamento em andamento.");
+    busyRef.current = true;
+    setBusy(true);
+    try {
+      const next = validatedSnapshot(await workspaceTransport.change(command));
+      serverVersion.current = next.serverVersion;
+      setWorkspace(next.workspace);
+      setConflict(false);
+      return next.workspace;
+    } catch (error) {
+      setConflict(true);
+      throw error;
+    } finally {
+      busyRef.current = false;
+      setBusy(false);
+    }
+  };
   const currentPersisted = () => {
     const raw = localStorage.getItem(storageKey);
     return raw ? parseWorkspace(raw) : emptyWorkspace();
@@ -245,71 +288,94 @@ export function AdminStudio({
     setWorkspace(next);
     setConflict(false);
   };
-  const save = (key: StudioScope, value: unknown = data[key]) => {
+  const save = async (key: StudioScope, value: unknown = data[key]) => {
+    if (conflict || busyRef.current)
+      throw new Error("Reabra a versão salva ou aguarde a operação em andamento antes de salvar.");
     const errors = validate(key, value);
     if (errors.length) throw new Error(errors.join(" "));
-    if (!loaded) throw new Error("Aguarde a leitura do histórico local.");
-    const actual = currentPersisted();
+    if (!loaded) throw new Error("Aguarde a leitura do histórico.");
+    const actual = remote ? workspace : currentPersisted();
     if (actual.revision !== workspace.revision) {
       setConflict(true);
       throw new Error(
         "Conflito entre abas. A versão mais recente foi preservada. Exporte sua edição antes de reabrir.",
       );
     }
-    const next = reviseWorkspace(
-      actual,
-      workspace.revision,
-      key,
-      value,
-      new Date().toISOString(),
-      defaults[key],
-    );
-    persist(next);
+    const next = remote
+      ? await commitRemote({
+          action: "save",
+          expectedServerVersion: serverVersion.current,
+          scope: key,
+          value,
+        })
+      : reviseWorkspace(
+          actual,
+          workspace.revision,
+          key,
+          value,
+          new Date().toISOString(),
+          defaults[key],
+        );
+    if (!remote) persist(next);
     setEdits((e) => {
       const updated = { ...e };
       delete updated[key];
       return updated;
     });
     setMessage(
-      `Rascunho de ${titles[key]} salvo · versão local ${next.revision}. Nada foi publicado.`,
+      `Rascunho de ${titles[key]} salvo ${remote ? "no servidor" : "neste navegador"} · versão ${next.revision}. Nada foi publicado.`,
     );
   };
-  const attempt = (fn: () => void) => {
+  const attempt = async (fn: () => void | Promise<void>) => {
     try {
-      fn();
+      await fn();
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "A operação falhou. A edição foi preservada.",
       );
     }
   };
-  const change = <K extends StudioScope>(key: K, value: StudioData[K]) =>
+  const change = <K extends StudioScope>(key: K, value: StudioData[K]) => {
+    if (!loaded || busyRef.current) return;
     setEdits((current) => ({ ...current, [key]: value }));
+  };
   const review = () =>
-    attempt(() => {
+    attempt(async () => {
       if (!scope || dirtyScopes.includes(scope))
         throw new Error("Salve esta edição antes de concluir a revisão.");
       const errors = validate(scope, data[scope]);
       if (errors.length) throw new Error(errors.join(" "));
-      const actual = currentPersisted();
-      const next = reviewRevision(actual, workspace.revision, scope, new Date().toISOString());
-      persist(next);
+      const actual = remote ? workspace : currentPersisted();
+      const next = remote
+        ? await commitRemote({
+            action: "review",
+            expectedServerVersion: serverVersion.current,
+            scope,
+          })
+        : reviewRevision(actual, workspace.revision, scope, new Date().toISOString());
+      if (!remote) persist(next);
       setReviewOpen(false);
       setMessage(
-        `Revisão local ${next.revision} registrada. Aplicação ao site depende de aprovação e integração no servidor.`,
+        `Revisão ${next.revision} registrada ${remote ? "no servidor" : "neste navegador"}. Nada foi publicado.`,
       );
     });
   const restore = (id: number) =>
-    attempt(() => {
+    attempt(async () => {
       if (dirty)
         throw new Error("Há alterações abertas. Salve ou exporte sua edição antes de restaurar.");
-      const actual = currentPersisted();
+      const actual = remote ? workspace : currentPersisted();
       const original = actual.history.find((x) => x.id === id);
       if (!original) throw new Error("Versão ausente.");
       const errors = validate(original.scope, original.after);
       if (errors.length) throw new Error(`Restauração bloqueada: ${errors.join(" ")}`);
-      const next = restoreRevision(actual, workspace.revision, id, new Date().toISOString());
-      persist(next);
+      const next = remote
+        ? await commitRemote({
+            action: "restore",
+            expectedServerVersion: serverVersion.current,
+            revisionId: id,
+          })
+        : restoreRevision(actual, workspace.revision, id, new Date().toISOString());
+      if (!remote) persist(next);
       setEdits((e) => {
         const updated = { ...e };
         delete updated[original.scope];
@@ -344,9 +410,22 @@ export function AdminStudio({
     );
   };
   const recover = () =>
-    attempt(() => {
+    attempt(async () => {
       if (!blockedWorkspace || dirty)
         throw new Error("Exporte e preserve a edição aberta antes de recuperar a fonte.");
+      if (remote) {
+        await commitRemote({
+          action: "recover",
+          expectedServerVersion: serverVersion.current,
+          scopes: blockedScopes,
+        });
+        setBlockedWorkspace(null);
+        setBlockedScopes([]);
+        setMessage(
+          "Fonte atual recuperada no servidor em novas revisões. O histórico anterior foi preservado.",
+        );
+        return;
+      }
       let next = currentPersisted();
       if (next.revision !== blockedWorkspace.revision)
         throw new Error(
@@ -370,54 +449,6 @@ export function AdminStudio({
     ? [...workspace.history].reverse().find((x) => x.scope === scope)
     : undefined;
   const differences = scope ? diffValues(selectedLast?.before ?? defaults[scope], data[scope]) : [];
-  const activeCampaigns = data.campaigns.campaigns.filter((c) => campaignState(c) === "ativa");
-  const ending = activeCampaigns.filter(
-    (c) => Date.parse(c.endsAt) - Date.now() <= 7 * 24 * 3600 * 1000,
-  );
-  const evolutionRequested = Object.values(data.evolution.tracking).filter(
-    (t) => t.implementation !== "nao_iniciado" || t.observation !== "nao_avaliado",
-  ).length;
-  if (area === "overview")
-    return (
-      <section className="pm-panel" aria-label="Atividade local do painel">
-        <div className="pm-local-summary">
-          <button onClick={() => onNavigate("history")}>
-            <span>Rascunhos locais</span>
-            <strong>
-              {
-                STUDIO_SCOPES.filter(
-                  (k) =>
-                    [...workspace.history].reverse().find((r) => r.scope === k)?.status === "draft",
-                ).length
-              }
-            </strong>
-            <small>Histórico deste navegador</small>
-          </button>
-          <button onClick={() => onNavigate("campaigns")}>
-            <span>Campanhas em simulação</span>
-            <strong>{activeCampaigns.length}</strong>
-            <small>Fonte local · sem agendamento público</small>
-          </button>
-          <button onClick={() => onNavigate("campaigns")}>
-            <span>Encerram em até 7 dias</span>
-            <strong>{ending.length}</strong>
-            <small>Campanhas locais em simulação</small>
-          </button>
-          <button onClick={() => onNavigate("evolution")}>
-            <span>Requisitos acompanhados</span>
-            <strong>{evolutionRequested}</strong>
-            <small>Manifesto v1.1 · acompanhamento local</small>
-          </button>
-        </div>
-        <p className="pm-muted">
-          Atividade deste navegador ·{" "}
-          {workspace.history.length
-            ? `${time(workspace.history.at(-1)!.date)}, Brasília`
-            : "nenhuma revisão salva"}
-          . Indicadores públicos de campanhas e vendas não estão integrados.
-        </p>
-      </section>
-    );
   if (!managedArea && area !== "history") return null;
   if (!ready)
     return (
@@ -427,14 +458,15 @@ export function AdminStudio({
       </div>
     );
   return (
-    <section className="pm-panel" aria-label="Estúdio local da Mobi">
+    <section className="pm-panel" aria-label="Estúdio da Mobi" aria-busy={busy}>
       {homeTransport &&
-        ["vitrine", "banners", "navigation", "service", "history"].includes(area) && (
+        ["vitrine", "banners", "navigation", "content", "service", "history"].includes(area) && (
           <HomeConnectionPanel
             transport={homeTransport}
             draft={data}
             products={products}
             editorDirty={dirty}
+            compact
             onOpenApplied={(configuration) =>
               attempt(() => {
                 const opened = reopenHomeDraft(configuration, products, data);
@@ -448,17 +480,19 @@ export function AdminStudio({
         )}
       <div className="pm-studio-toolbar">
         <div>
-          <span className="pm-badge">Rascunho local</span>{" "}
+          <span className="pm-badge">
+            {busy ? "Salvando…" : remote ? "Rascunho no servidor" : "Rascunho local"}
+          </span>{" "}
           <small>
             Versão {workspace.revision} · {dirty ? "há alterações abertas" : "edição em dia"} · loja
             preservada
           </small>
         </div>
         <div className="pm-actions">
-          {scope && scope !== "pages" && (
+          {scope && (
             <button
               className="pm-button pm-primary"
-              disabled={!loaded || !dirtyScopes.includes(scope) || conflict}
+              disabled={busy || !loaded || !dirtyScopes.includes(scope) || conflict}
               onClick={() => attempt(() => save(scope))}
             >
               <Save size={15} /> Salvar rascunho
@@ -468,6 +502,8 @@ export function AdminStudio({
             <button
               className="pm-button"
               disabled={
+                busy ||
+                !loaded ||
                 !workspace.entries[scope] ||
                 dirtyScopes.includes(scope) ||
                 conflict ||
@@ -483,6 +519,32 @@ export function AdminStudio({
           </button>
         </div>
       </div>
+      {remote && scope && (
+        <button
+          className="pm-button"
+          disabled={busy || !loaded}
+          onClick={() =>
+            attempt(() => {
+              const local = inspectLocalWorkspaceImport(localStorage, storageKey);
+              if (local.status !== "ready" || !Object.hasOwn(local.workspace.entries, scope))
+                throw new Error("Não há rascunho local válido desta área para comparar.");
+              if (
+                dirty &&
+                !window.confirm(
+                  "Substituir somente a edição aberta pela cópia local para comparação?",
+                )
+              )
+                return;
+              change(scope, local.workspace.entries[scope] as never);
+              setMessage(
+                "Cópia local aberta para comparação. Confira as diferenças e salve para importar. O original permanece neste navegador.",
+              );
+            })
+          }
+        >
+          Comparar rascunho deste navegador
+        </button>
+      )}
       {message && (
         <div className="pm-note" role="status">
           {message}
@@ -495,6 +557,7 @@ export function AdminStudio({
           </button>
           <button
             className="pm-button"
+            disabled={busy}
             onClick={() => {
               if (
                 !dirty ||
@@ -522,7 +585,12 @@ export function AdminStudio({
         </div>
       )}
       {area === "vitrine" && (
-        <div className="pm-actions" style={{ marginBottom: 10 }}>
+        <details className="pm-legacy-draft">
+          <summary>Recuperar rascunho antigo de vitrines</summary>
+          <p className="pm-muted">
+            Importa uma cópia da edição anterior deste navegador para o rascunho atual. A cópia
+            antiga é mantida.
+          </p>
           <button
             className="pm-button"
             onClick={() =>
@@ -532,18 +600,18 @@ export function AdminStudio({
                 );
                 if (!raw)
                   throw new Error(
-                    "Nenhum rascunho da versão anterior foi encontrado neste navegador.",
+                    "Nenhum rascunho antigo de vitrines foi encontrado neste navegador.",
                   );
                 change("pages", restorePageDraft(raw, workingProducts));
                 setMessage(
-                  "Rascunho anterior aberto para comparação. Salve para criar uma revisão neste histórico; o arquivo anterior foi preservado.",
+                  "Rascunho antigo aberto para comparação. Salve para criar uma revisão; a cópia anterior foi preservada.",
                 );
               })
             }
           >
-            Abrir rascunho do PM-02 anterior
+            Abrir rascunho antigo
           </button>
-        </div>
+        </details>
       )}
       {area === "vitrine" && (
         <PagesAndShelvesPanel
@@ -565,7 +633,7 @@ export function AdminStudio({
             : bannerSource.status === "error"
               ? "A consulta de banners falhou. O editor não está disponível até confirmar a fonte."
               : bannerSource.available
-                ? "Base: banners administrativos consultados. Edição somente em rascunho local."
+                ? "Base: banners administrativos consultados. Edição somente em rascunho."
                 : "A estrutura remota de banners não está disponível. A base desta proposta local usa os padrões do código; não representa configuração publicada."}
         </div>
       )}
@@ -596,7 +664,11 @@ export function AdminStudio({
         />
       )}
       {area === "content" && (
-        <ContentPanel data={data.content} onChange={(value) => change("content", value)} />
+        <ContentPanel
+          data={data.content}
+          products={workingProducts}
+          onChange={(value) => change("content", value)}
+        />
       )}
       {area === "service" && (
         <ServicePanel
@@ -616,8 +688,8 @@ export function AdminStudio({
         <>
           <header className="pm-heading">
             <div>
-              <h1>Histórico e configurações</h1>
-              <p>Revisões locais, diferenças e recuperação sem apagar versões anteriores.</p>
+              <h1>Histórico e versões</h1>
+              <p>Compare alterações e recupere uma versão sem apagar as anteriores.</p>
             </div>
             <button className="pm-button" onClick={exportData}>
               <Download size={15} /> Exportar cópia
@@ -625,9 +697,12 @@ export function AdminStudio({
           </header>
           <div className="pm-grid">
             <section className="pm-card">
-              <h2>Ambiente e acesso</h2>
+              <h2>Onde os dados ficam</h2>
               <p>Contexto: {demonstration ? "demonstração local" : "sessão administrativa"}.</p>
-              <p>Origem: este navegador · {workspace.history.length} registros.</p>
+              <p>
+                Rascunhos e histórico: {remote ? "servidor" : "este navegador"} ·{" "}
+                {workspace.history.length} versões.
+              </p>
               <p className="pm-note">
                 Nenhuma versão foi aplicada ao site por este estúdio. Uma URL de prévia não
                 representa publicação.
@@ -675,10 +750,10 @@ export function AdminStudio({
                 <details key={r.id}>
                   <summary>
                     Versão {r.id} · {titles[r.scope]} ·{" "}
-                    {r.status === "reviewed" ? "Revisada localmente" : "Rascunho"} · {time(r.date)}
+                    {r.status === "reviewed" ? "Revisada" : "Rascunho"} · {time(r.date)}
                   </summary>
                   <p>
-                    Origem: navegador · Brasília
+                    Armazenamento: {remote ? "servidor" : "navegador"} · horário de Brasília
                     {r.restoredFrom ? ` · restaurada da versão ${r.restoredFrom}` : ""}.
                   </p>
                   <ul className="pm-review-list">
@@ -686,8 +761,14 @@ export function AdminStudio({
                       <li key={i}>
                         <h3>{humanDiff(d.path)}</h3>
                         <div className="pm-grid">
-                          <pre className="pm-diff-value">{JSON.stringify(d.before, null, 2)}</pre>
-                          <pre className="pm-diff-value">{JSON.stringify(d.after, null, 2)}</pre>
+                          <div>
+                            <small>Antes</small>
+                            <pre className="pm-diff-value">{JSON.stringify(d.before, null, 2)}</pre>
+                          </div>
+                          <div>
+                            <small>Depois</small>
+                            <pre className="pm-diff-value">{JSON.stringify(d.after, null, 2)}</pre>
+                          </div>
                         </div>
                       </li>
                     ))}
@@ -695,12 +776,7 @@ export function AdminStudio({
                   <div className="pm-actions">
                     <button
                       className="pm-button"
-                      onClick={() =>
-                        onNavigate(
-                          Object.entries(areaScopes).find(([, s]) => s === r.scope)?.[0] ??
-                            "overview",
-                        )
-                      }
+                      onClick={() => onNavigate(scopeViews[r.scope] ?? "overview")}
                     >
                       Abrir área
                     </button>
@@ -751,7 +827,7 @@ export function AdminStudio({
             )}
             <div className="pm-actions">
               <button className="pm-button pm-primary" onClick={review}>
-                Concluir revisão local
+                Concluir revisão
               </button>
               <Dialog.Close className="pm-button">Voltar ao editor</Dialog.Close>
             </div>

@@ -5,6 +5,8 @@
 **Estado:** desenho aprovado por Rafael em 12/11/2026. Execução local iniciada em 12/11/2026: contratos puros de persistência e resolução exata de fornecedor implementados e verificados. Integração remota, alteração de schema/dados e publicação continuam pendentes; nenhuma escrita remota foi feita.
 **Escopo:** preparar o painel e a loja para sair de rascunhos locais e operar com persistência remota, sem duplicar o catálogo e sem publicar antes da aprovação da versão.
 
+**Avanço local:** interface ligada ao adaptador RPC Supabase com endpoints autenticados e fonte de recuperação server-side; migration gerada pela CLI oficial e executada em PostgreSQL isolado. Fluxo assíncrono salvar/revisar/restaurar conferido por fixture no navegador. Desativado no ambiente real por padrão. Ver `docs/MIGRACAO_RASCUNHOS_PREPARO.md`. Aplicação no destino remoto e configuração pública continuam pendentes; não há publicação aplicada.
+
 ## 1. Objetivo e critérios de sucesso
 
 Conectar as configurações que o painel realmente edita à loja Mobi, preservar os dados existentes e tornar a migração verificável e reversível. A mudança precisa manter separados rascunho, revisão, prévia e configuração publicada.

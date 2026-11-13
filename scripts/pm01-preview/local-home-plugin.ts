@@ -10,10 +10,10 @@ import {
   type HomeDraftInput,
 } from "../../src/lib/home-configuration";
 import type { HomeTransportCommand } from "../../src/lib/home-transport";
-export function localHomePlugin(): Plugin {
+export function localHomePlugin(storeDirectory?: string): Plugin {
   const token = randomBytes(32).toString("hex");
   const store = createLocalHomeStore(
-    fileURLToPath(new URL("../../.mobi-local-preview/demo", import.meta.url)),
+    storeDirectory ?? fileURLToPath(new URL("../../.mobi-local-preview/demo", import.meta.url)),
   );
   return {
     name: "mobi-local-home",
@@ -36,6 +36,9 @@ export function localHomePlugin(): Plugin {
         const storefrontPage =
           path === "/" ||
           path === "/moveis-nova-iguacu" ||
+          path === "/ajuda" ||
+          path === "/inspiracao" ||
+          /^\/(?:ajuda|inspiracao)\/[a-z0-9]+(?:-[a-z0-9]+)*\/?$/.test(path) ||
           /^\/(?:categoria|produto)\/[a-zA-Z0-9_-]+\/?$/.test(path);
         if (req.method === "GET" && storefrontPage && req.headers.accept?.includes("text/html")) {
           const query = req.url?.includes("?") ? req.url.slice(req.url.indexOf("?")) : "";
@@ -46,10 +49,14 @@ export function localHomePlugin(): Plugin {
         res.setHeader("Cache-Control", "no-store");
         res.setHeader("Content-Type", "application/json");
         try {
+          const address = server.httpServer?.address();
+          const port =
+            address && typeof address === "object" ? address.port : server.config.server.port;
+          const hosts = [`127.0.0.1:${port}`, `localhost:${port}`];
           if (
-            !["127.0.0.1:5187", "localhost:5187"].includes(req.headers.host ?? "") ||
+            !hosts.includes(req.headers.host ?? "") ||
             (req.headers.origin &&
-              !["http://127.0.0.1:5187", "http://localhost:5187"].includes(req.headers.origin))
+              !hosts.map((host) => `http://${host}`).includes(req.headers.origin))
           )
             throw new Error("Origem local inválida.");
           if (path === "/__mobi-local-home" && req.method === "GET") {

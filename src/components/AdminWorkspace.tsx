@@ -4,39 +4,36 @@ import {
   ArrowUpRight,
   ChevronRight,
   CircleHelp,
-  FileClock,
-  Image,
   LayoutDashboard,
-  Layers3,
   LogOut,
+  MessageCircle,
   Menu,
+  MoreHorizontal,
   Package,
+  PanelsTopLeft,
   Search,
-  Settings2,
-  BookOpen,
-  Truck,
-  ListFilter,
-  Wrench,
+  Tag,
   ShieldCheck,
   X,
 } from "lucide-react";
 import { MobiliLogo } from "./MobiliLogo";
+import {
+  ADMIN_NAV_GROUPS,
+  getAdminNavGroup,
+  getAdminViewLabel,
+  type AdminViewId,
+} from "../lib/admin-navigation";
 import "../admin-overview.css";
 import "../admin-density.css";
 
-const areas = [
-  { id: "overview", title: "Visão geral", icon: LayoutDashboard, code: "01" },
-  { id: "vitrine", title: "Páginas e vitrines", icon: Layers3, code: "02" },
-  { id: "banners", title: "Banners e mídias", icon: Image, code: "03" },
-  { id: "produtos", title: "Produtos", icon: Package, code: "04" },
-  { id: "campaigns", title: "Preços e campanhas", icon: Settings2, code: "05" },
-  { id: "navigation", title: "Navegação e filtros", icon: ListFilter, code: "06" },
-  { id: "content", title: "Conteúdo e ajuda", icon: BookOpen, code: "07" },
-  { id: "service", title: "Entrega e atendimento", icon: Truck, code: "08" },
-  { id: "evolution", title: "Evolução do site", icon: Wrench, code: "09" },
-  { id: "history", title: "Histórico e configurações", icon: FileClock, code: "10" },
-  { id: "revisao", title: "Coletados para revisão", icon: Package, code: "" },
-];
+const groupIcons = {
+  start: LayoutDashboard,
+  catalog: Package,
+  storeContent: PanelsTopLeft,
+  offers: Tag,
+  service: MessageCircle,
+  more: MoreHorizontal,
+};
 
 export function AdminWorkspace({
   area,
@@ -47,8 +44,8 @@ export function AdminWorkspace({
   storefrontHref = "https://www.mobimb.com.br/",
   children,
 }: {
-  area: string;
-  onNavigate: (area: string) => void;
+  area: AdminViewId;
+  onNavigate: (area: AdminViewId) => void;
   onSearch: (query: string) => void;
   onLogout?: () => void;
   demonstration?: boolean;
@@ -57,6 +54,7 @@ export function AdminWorkspace({
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const activeGroup = getAdminNavGroup(area);
   useEffect(() => {
     const desktop = window.matchMedia("(min-width: 1024px)");
     const close = () => {
@@ -65,7 +63,7 @@ export function AdminWorkspace({
     desktop.addEventListener("change", close);
     return () => desktop.removeEventListener("change", close);
   }, []);
-  const navigate = (next: string) => {
+  const navigate = (next: AdminViewId) => {
     onNavigate(next);
     setOpen(false);
   };
@@ -81,25 +79,24 @@ export function AdminWorkspace({
         <MobiliLogo className="aw-logo" />
         <span>mobimb.com.br</span>
       </a>
-      <p className="aw-nav-label">GESTÃO DO SITE</p>
+      <p className="aw-nav-label">OPERAÇÃO DA MOBI</p>
       <nav aria-label="Navegação do painel">
-        {areas.map(({ id, title, icon: Icon, code }) => (
-          <button
-            type="button"
-            key={id}
-            aria-current={area === id ? "page" : undefined}
-            onClick={() => navigate(id)}
-          >
-            <Icon size={18} aria-hidden="true" />
-            <span>{title}</span>
-            {code && (
-              <small className="aw-nav-code" aria-hidden="true">
-                {code}
-              </small>
-            )}
-            {area === id && <span className="aw-active-dot" />}
-          </button>
-        ))}
+        {ADMIN_NAV_GROUPS.map((group) => {
+          const Icon = groupIcons[group.id];
+          const active = activeGroup.id === group.id;
+          return (
+            <button
+              type="button"
+              key={group.id}
+              aria-current={active ? "page" : undefined}
+              onClick={() => navigate(group.defaultView)}
+            >
+              <Icon size={18} aria-hidden="true" />
+              <span>{group.label}</span>
+              {active && <span className="aw-active-dot" />}
+            </button>
+          );
+        })}
       </nav>
       <div className="aw-sidebar-bottom">
         <ShieldCheck size={18} aria-hidden="true" />
@@ -159,7 +156,13 @@ export function AdminWorkspace({
           <div className="aw-breadcrumb">
             <span>Painel Mobi</span>
             <ChevronRight size={14} aria-hidden="true" />
-            <strong>{areas.find((item) => item.id === area)?.title ?? "Visão geral"}</strong>
+            <strong>{activeGroup.label}</strong>
+            {getAdminViewLabel(area) !== activeGroup.label && (
+              <>
+                <ChevronRight size={14} aria-hidden="true" />
+                <strong>{getAdminViewLabel(area)}</strong>
+              </>
+            )}
           </div>
           <form
             className="aw-search"
@@ -216,6 +219,20 @@ export function AdminWorkspace({
             <span className="aw-status-dot" />
             Prévia em revisão <span>•</span> Dados demonstrativos. Nenhuma alteração na loja.
           </div>
+        )}
+        {activeGroup.views.length > 1 && (
+          <nav className="aw-subnav" aria-label={`Abas de ${activeGroup.label}`}>
+            {activeGroup.views.map((view) => (
+              <button
+                type="button"
+                key={view.id}
+                aria-current={area === view.id ? "page" : undefined}
+                onClick={() => navigate(view.id)}
+              >
+                {view.label}
+              </button>
+            ))}
+          </nav>
         )}
         <div className="aw-content">{children}</div>
       </div>

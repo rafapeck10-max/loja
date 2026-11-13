@@ -81,7 +81,7 @@ function assertScope(value: unknown): asserts value is StudioScope {
   if (!STUDIO_SCOPES.includes(value as StudioScope)) throw new Error("Escopo inválido.");
 }
 
-function validatedSnapshot(value: unknown): StudioWorkspaceSnapshot {
+export function validatedSnapshot(value: unknown): StudioWorkspaceSnapshot {
   if (
     !isRecord(value) ||
     !Number.isSafeInteger(value.serverVersion) ||

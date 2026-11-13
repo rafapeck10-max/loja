@@ -6,7 +6,7 @@ import {
   getCatalogMaterials,
   getCatalogColors,
   getCatalogFeatures,
-  getCatalogDimensionLabel,
+  getCatalogDimensions,
 } from "../../lib/catalog-search";
 import {
   FILTER_LABELS,
@@ -17,14 +17,18 @@ import {
   type NavigationData,
   type NavigationItem,
   type ContentData,
+  type ContentArticle,
+  type ContentArticleImage,
   type ContentPage,
   type ServiceData,
   type ProductDraftData,
   type FilterKey,
 } from "../../lib/operational-config";
-import type { EditorProduct } from "../../lib/homepage-curation";
+import { isCurationProduct, type EditorProduct } from "../../lib/homepage-curation";
 import { ImageWithFallback } from "../ImageWithFallback";
+import { ArticleBody } from "../ArticleBody";
 import { cardQuote } from "../../lib/payment";
+import { isEligibleBundleProduct } from "../../lib/product-bundles.ts";
 
 export function NavigationPanel({
   data,
@@ -58,8 +62,15 @@ export function NavigationPanel({
     material: getCatalogMaterials,
     color: getCatalogColors,
     features: getCatalogFeatures,
-    dimensions: (p: (typeof normalized)[number]) =>
-      getCatalogDimensionLabel(p) ? [getCatalogDimensionLabel(p)] : [],
+    dimensions: (p: (typeof normalized)[number]) => {
+      const dimensions = getCatalogDimensions(p);
+      return [
+        dimensions.widthCm !== undefined ? "Largura" : "",
+        dimensions.heightCm !== undefined ? "Altura" : "",
+        dimensions.depthClosedCm !== undefined ? "Profundidade fechada" : "",
+        dimensions.depthOpenCm !== undefined ? "Profundidade aberta" : "",
+      ].filter(Boolean);
+    },
   };
   const [facet, setFacet] = useState<FilterKey>("material");
   const activeFacet =
@@ -300,14 +311,44 @@ export function StructuredPage({ page }: { page: ContentPage }) {
 export function ContentPanel({
   data,
   onChange,
+  products,
 }: {
   data: ContentData;
   onChange: (d: ContentData) => void;
+  products: EditorProduct[];
 }) {
   const [id, setId] = useState(data.pages[0]?.id);
+  const [mode, setMode] = useState<"help" | "editorial">("help");
+  const [mobilePane, setMobilePane] = useState<"editor" | "preview">("editor");
+  const [articleId, setArticleId] = useState<string | null>(null);
   const page = data.pages.find((p) => p.id === id) ?? data.pages[0];
+  const articles = data.articles ?? [];
+  const relatedProductCandidates = products.filter(isCurationProduct);
+  const article = articles.find((candidate) => candidate.id === articleId) ?? articles[0];
+  const articleParagraphCount = article?.body.split(/\n\s*\n/).filter(Boolean).length ?? 0;
+  const articleImages = article?.images ?? [];
+  const editorPreviewTabs = (
+    <nav className="pm-content-preview-tabs" aria-label="Alternar entre edição e prévia">
+      <button
+        type="button"
+        className="pm-button"
+        aria-pressed={mobilePane === "editor"}
+        onClick={() => setMobilePane("editor")}
+      >
+        Editar
+      </button>
+      <button
+        type="button"
+        className="pm-button"
+        aria-pressed={mobilePane === "preview"}
+        onClick={() => setMobilePane("preview")}
+      >
+        Prévia
+      </button>
+    </nav>
+  );
   const patch = (next: Partial<ContentPage>) =>
-    onChange({ pages: data.pages.map((p) => (p.id === page.id ? { ...p, ...next } : p)) });
+    onChange({ ...data, pages: data.pages.map((p) => (p.id === page.id ? { ...p, ...next } : p)) });
   const add = () => {
     const next: ContentPage = {
       id: crypto.randomUUID(),
@@ -319,47 +360,411 @@ export function ContentPanel({
       faqs: [],
       links: [],
     };
-    onChange({ pages: [...data.pages, next] });
+    onChange({ ...data, pages: [...data.pages, next] });
     setId(next.id);
   };
+  const patchArticle = (next: Partial<ContentArticle>) => {
+    if (!article) return;
+    onChange({
+      ...data,
+      articles: articles.map((candidate) =>
+        candidate.id === article.id ? { ...candidate, ...next } : candidate,
+      ),
+    });
+  };
+  const patchArticleImage = (index: number, next: Partial<ContentArticleImage>) => {
+    if (!article) return;
+    patchArticle({
+      images: articleImages.map((image, imageIndex) =>
+        imageIndex === index ? { ...image, ...next } : image,
+      ),
+    });
+  };
+  const addArticle = () => {
+    const next: ContentArticle = {
+      id: crypto.randomUUID(),
+      title: "Novo artigo",
+      slug: `artigo-${articles.length + 1}`,
+      category: "",
+      excerpt: "",
+      imageUrl: "",
+      imageAlt: "",
+      images: [],
+      body: "",
+      status: "draft",
+      reviewedAt: "",
+      featured: false,
+      relatedProductIds: [],
+    };
+    onChange({ ...data, articles: [...articles, next] });
+    setArticleId(next.id);
+  };
+  if (mode === "editorial")
+    return (
+      <>
+        <header className="pm-heading">
+          <div>
+            <h1>Conteúdo editorial</h1>
+            <p>Rascunhos originais da Mobi, com destaque, imagem e produtos relacionados.</p>
+          </div>
+          <button className="pm-button" disabled={articles.length >= 100} onClick={addArticle}>
+            <Plus size={16} /> Novo artigo
+          </button>
+        </header>
+        <nav className="pm-tabs" aria-label="Tipo de conteúdo">
+          <button className="pm-button" aria-pressed={false} onClick={() => setMode("help")}>
+            Ajuda e FAQ
+          </button>
+          <button className="pm-button" aria-pressed={true}>
+            Editorial
+          </button>
+        </nav>
+        <ContentWorkflow />
+        <p className="pm-note">
+          Antes de marcar para revisão, confira os dados comerciais e selecione capas e produtos
+          reais. O rascunho não é publicado.
+        </p>
+        <section className="pm-card pm-content-picker">
+          <h2>
+            Artigos da Mobi <span className="pm-count">{articles.length}</span>
+          </h2>
+          {articles.length ? (
+            <ul className="pm-list pm-content-picker-list">
+              {articles.map((candidate) => (
+                <li key={candidate.id}>
+                  <button
+                    className="pm-item-button pm-content-choice"
+                    onClick={() => setArticleId(candidate.id)}
+                    aria-current={article?.id === candidate.id ? "true" : undefined}
+                  >
+                    <span>
+                      <strong>{candidate.title}</strong>
+                      <small>
+                        /inspiracao/{candidate.slug} ·{" "}
+                        {candidate.status === "review" ? "Em revisão" : "Rascunho"}
+                      </small>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="pm-muted">Nenhum conteúdo editorial cadastrado.</p>
+          )}
+        </section>
+        {editorPreviewTabs}
+        <div
+          className="pm-content-layout pm-content-layout--editorial"
+          data-mobile-pane={mobilePane}
+        >
+          <section className="pm-card pm-content-editor">
+            {article ? (
+              <>
+                <label className="pm-field">
+                  Título
+                  <input
+                    value={article.title}
+                    maxLength={120}
+                    onChange={(event) => patchArticle({ title: event.target.value })}
+                  />
+                </label>
+                <div className="pm-grid">
+                  <label className="pm-field">
+                    Endereço do artigo
+                    <input
+                      value={article.slug}
+                      maxLength={100}
+                      onChange={(event) => patchArticle({ slug: event.target.value })}
+                    />
+                  </label>
+                  <label className="pm-field">
+                    Tema
+                    <input
+                      value={article.category}
+                      maxLength={60}
+                      onChange={(event) => patchArticle({ category: event.target.value })}
+                    />
+                  </label>
+                </div>
+                <label className="pm-field">
+                  Resumo
+                  <textarea
+                    rows={2}
+                    maxLength={360}
+                    value={article.excerpt}
+                    onChange={(event) => patchArticle({ excerpt: event.target.value })}
+                  />
+                </label>
+                <div className="pm-grid">
+                  <label className="pm-field">
+                    Imagem de capa · URL HTTPS
+                    <input
+                      type="url"
+                      value={article.imageUrl}
+                      onChange={(event) => patchArticle({ imageUrl: event.target.value })}
+                    />
+                  </label>
+                  <label className="pm-field">
+                    Texto alternativo da imagem
+                    <input
+                      value={article.imageAlt}
+                      maxLength={160}
+                      onChange={(event) => patchArticle({ imageAlt: event.target.value })}
+                    />
+                  </label>
+                </div>
+                <label className="pm-field">
+                  Texto do artigo · parágrafos separados por linha em branco
+                  <textarea
+                    rows={10}
+                    maxLength={30000}
+                    value={article.body}
+                    onChange={(event) => {
+                      const body = event.target.value;
+                      const paragraphCount = body.split(/\n\s*\n/).filter(Boolean).length;
+                      patchArticle({
+                        body,
+                        images: articleImages.map((image) => ({
+                          ...image,
+                          afterParagraph: Math.min(
+                            image.afterParagraph,
+                            Math.max(1, paragraphCount),
+                          ),
+                        })),
+                      });
+                    }}
+                  />
+                </label>
+                <fieldset className="pm-field pm-content-media">
+                  <legend>Imagens dentro do artigo · até 6</legend>
+                  <p className="pm-muted">
+                    Use uma URL HTTPS e descreva a imagem. A prévia local não hospeda nem envia
+                    arquivos.
+                  </p>
+                  {articleImages.map((image, index) => (
+                    <div className="pm-content-media-item" key={`${article.id}-image-${index}`}>
+                      <label className="pm-field">
+                        URL da imagem · HTTPS
+                        <input
+                          type="url"
+                          maxLength={2000}
+                          value={image.url}
+                          onChange={(event) =>
+                            patchArticleImage(index, { url: event.target.value })
+                          }
+                        />
+                      </label>
+                      <label className="pm-field">
+                        Texto alternativo
+                        <input
+                          maxLength={160}
+                          value={image.alt}
+                          onChange={(event) =>
+                            patchArticleImage(index, { alt: event.target.value })
+                          }
+                        />
+                      </label>
+                      <label className="pm-field">
+                        Posição no texto
+                        <select
+                          value={image.afterParagraph}
+                          disabled={!articleParagraphCount}
+                          onChange={(event) =>
+                            patchArticleImage(index, { afterParagraph: Number(event.target.value) })
+                          }
+                        >
+                          {Array.from({ length: Math.max(1, articleParagraphCount) }, (_, i) => (
+                            <option value={i + 1} key={i}>
+                              Após o parágrafo {i + 1}
+                            </option>
+                          ))}
+                        </select>
+                        {!articleParagraphCount && (
+                          <small>Escreva o texto antes de escolher onde inserir a imagem.</small>
+                        )}
+                      </label>
+                      <button
+                        type="button"
+                        className="pm-button pm-danger"
+                        onClick={() =>
+                          patchArticle({
+                            images: articleImages.filter((_, imageIndex) => imageIndex !== index),
+                          })
+                        }
+                      >
+                        <Trash2 size={15} aria-hidden="true" /> Remover imagem
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    className="pm-button"
+                    disabled={articleImages.length >= 6 || !articleParagraphCount}
+                    onClick={() =>
+                      patchArticle({
+                        images: [
+                          ...articleImages,
+                          { url: "", alt: "", afterParagraph: Math.max(articleParagraphCount, 1) },
+                        ],
+                      })
+                    }
+                  >
+                    <Plus size={15} aria-hidden="true" /> Adicionar imagem no texto
+                  </button>
+                </fieldset>
+                <div className="pm-grid">
+                  <label className="pm-field">
+                    Estado
+                    <select
+                      value={article.status}
+                      onChange={(event) =>
+                        patchArticle({ status: event.target.value as ContentArticle["status"] })
+                      }
+                    >
+                      <option value="draft">Rascunho</option>
+                      <option value="review">Em revisão</option>
+                    </select>
+                    <small>
+                      Em revisão sinaliza que o artigo aguarda conferência; não publica.
+                    </small>
+                  </label>
+                  <label className="pm-field">
+                    Data da revisão
+                    <input
+                      type="date"
+                      value={article.reviewedAt.slice(0, 10)}
+                      onInput={(event) =>
+                        patchArticle({
+                          reviewedAt: event.currentTarget.value
+                            ? `${event.currentTarget.value}T12:00:00-03:00`
+                            : "",
+                        })
+                      }
+                    />
+                  </label>
+                </div>
+                <label className="flex min-h-11 items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={article.featured}
+                    onChange={(event) =>
+                      onChange({
+                        ...data,
+                        articles: articles.map((candidate) =>
+                          candidate.id === article.id
+                            ? { ...candidate, featured: event.target.checked }
+                            : event.target.checked
+                              ? { ...candidate, featured: false }
+                              : candidate,
+                        ),
+                      })
+                    }
+                  />
+                  Destacar na página de inspiração
+                </label>
+                <fieldset className="pm-field">
+                  <legend>Produtos relacionados · até 6</legend>
+                  <div className="max-h-48 divide-y overflow-y-auto border border-cacau/10">
+                    {relatedProductCandidates.map((product) => {
+                      const checked = article.relatedProductIds.includes(product.id);
+                      return (
+                        <label
+                          key={product.id}
+                          className="pm-check min-h-11 gap-2 border-b border-cacau/10 px-3 text-sm last:border-0"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            disabled={!checked && article.relatedProductIds.length >= 6}
+                            onChange={(event) =>
+                              patchArticle({
+                                relatedProductIds: event.target.checked
+                                  ? [...article.relatedProductIds, product.id]
+                                  : article.relatedProductIds.filter((id) => id !== product.id),
+                              })
+                            }
+                          />
+                          <span>{product.nome}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+              </>
+            ) : (
+              <p className="pm-muted">Crie um rascunho para editar e revisar o primeiro artigo.</p>
+            )}
+          </section>
+          <section className="pm-card pm-content-live-preview">
+            <h2>Como ficará o artigo</h2>
+            {article ? (
+              <>
+                {article.imageUrl && (
+                  <ImageWithFallback
+                    src={article.imageUrl}
+                    alt={article.imageAlt}
+                    className="pm-product-photo"
+                  />
+                )}
+                <span className="pm-badge">{article.category || "Tema"}</span>
+                <h3 className="mt-2">{article.title}</h3>
+                <p className="pm-muted">{article.excerpt}</p>
+                <ArticleBody body={article.body} images={article.images} variant="admin" />
+              </>
+            ) : (
+              <p className="pm-muted">Selecione ou crie um artigo para ver a prévia.</p>
+            )}
+          </section>
+        </div>
+      </>
+    );
   return (
     <>
       <header className="pm-heading">
         <div>
           <h1>Conteúdo e ajuda</h1>
-          <p>Informações próprias da Mobi, com texto estruturado e perguntas por tema.</p>
+          <p>Páginas de compra, entrega, pagamento e contato, com respostas da operação Mobi.</p>
         </div>
-        <button className="pm-button" disabled={data.pages.length >= 40} onClick={add}>
-          <Plus size={16} /> Nova página
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button className="pm-button" aria-pressed={true}>
+            Ajuda e FAQ
+          </button>
+          <button className="pm-button" aria-pressed={false} onClick={() => setMode("editorial")}>
+            Editorial
+          </button>
+          <button className="pm-button" disabled={data.pages.length >= 40} onClick={add}>
+            <Plus size={16} /> Nova página
+          </button>
+        </div>
       </header>
-      <p className="pm-note">
-        As páginas aparecem nesta prévia. As rotas públicas de ajuda serão integradas após revisão;
-        artigos da referência continuam em Evolução.
-      </p>
-      <div className="pm-split">
-        <section className="pm-card">
-          <h2>Páginas</h2>
-          <ul className="pm-list">
-            {data.pages.map((p) => (
-              <li key={p.id}>
-                <button
-                  className="pm-item-button"
-                  onClick={() => setId(p.id)}
-                  aria-pressed={page?.id === p.id}
-                >
-                  <strong>{p.title}</strong>
-                  <small>
-                    /ajuda/{p.slug} · {p.status === "review" ? "Revisão solicitada" : "Rascunho"}
-                  </small>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-        <section className="pm-card">
+      <ContentWorkflow />
+      <section className="pm-card pm-content-picker">
+        <h2>
+          Páginas de ajuda <span className="pm-count">{data.pages.length}</span>
+        </h2>
+        <ul className="pm-list pm-content-picker-list">
+          {data.pages.map((p) => (
+            <li key={p.id}>
+              <button
+                className="pm-item-button pm-content-choice"
+                onClick={() => setId(p.id)}
+                aria-current={page?.id === p.id ? "true" : undefined}
+              >
+                <strong>{p.title}</strong>
+                <small>
+                  /ajuda/{p.slug} · {p.status === "review" ? "Em revisão" : "Rascunho"}
+                </small>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+      {editorPreviewTabs}
+      <div className="pm-content-layout pm-content-layout--help" data-mobile-pane={mobilePane}>
+        <section className="pm-card pm-content-editor">
           {page && (
             <>
+              <h2>Editar página</h2>
               <label className="pm-field">
                 Título
                 <input
@@ -391,6 +796,7 @@ export function ContentPanel({
                     <option value="draft">Rascunho</option>
                     <option value="review">Em revisão</option>
                   </select>
+                  <small>Em revisão sinaliza que a página aguarda conferência; não publica.</small>
                 </label>
                 <label className="pm-field">
                   Data de revisão comercial
@@ -407,7 +813,9 @@ export function ContentPanel({
                   />
                 </label>
               </div>
-              <h3>Perguntas frequentes</h3>
+              <h3>
+                Perguntas frequentes <span className="pm-count">{page.faqs.length}</span>
+              </h3>
               {page.faqs.map((f, i) => (
                 <div className="pm-inset" key={i}>
                   <label className="pm-field">
@@ -460,7 +868,9 @@ export function ContentPanel({
               >
                 Adicionar pergunta
               </button>
-              <h3>Links</h3>
+              <h3>
+                Links úteis <span className="pm-count">{page.links.length}</span>
+              </h3>
               {page.links.map((l, i) => (
                 <div className="pm-grid" key={i}>
                   <label className="pm-field">
@@ -511,13 +921,50 @@ export function ContentPanel({
             </>
           )}
         </section>
-      </div>
-      {page && (
-        <section className="pm-card pm-preview">
-          <StructuredPage page={page} />
+        <section className="pm-card pm-content-live-preview">
+          <h2>Como ficará a página</h2>
+          {page ? (
+            <StructuredPage page={page} />
+          ) : (
+            <p className="pm-muted">Selecione uma página para ver a prévia.</p>
+          )}
         </section>
-      )}
+      </div>
     </>
+  );
+}
+
+function ContentWorkflow() {
+  const [previewHint, setPreviewHint] = useState("");
+  return (
+    <div className="pm-content-flow" aria-label="Como editar e revisar conteúdo">
+      <span>Editar página ou artigo</span>
+      <span aria-hidden="true">›</span>
+      <span>Salvar rascunho no topo</span>
+      <span aria-hidden="true">›</span>
+      <span>Conferir na prévia local</span>
+      <button
+        type="button"
+        className="pm-button pm-content-preview-link"
+        onClick={() => {
+          const panel = document.getElementById("pm-local-home-preview");
+          if (!(panel instanceof HTMLDetailsElement)) {
+            setPreviewHint("A prévia local não está disponível nesta sessão.");
+            return;
+          }
+          setPreviewHint("");
+          panel.open = true;
+          panel.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
+      >
+        Abrir prévia
+      </button>
+      {previewHint && (
+        <span className="pm-content-workflow-hint" role="status">
+          {previewHint}
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -534,7 +981,8 @@ export function ServicePanel({
     [quantity, setQuantity] = useState(1),
     [variant, setVariant] = useState(""),
     [confirmed, setConfirmed] = useState(false);
-  const p = products.find((p) => p.id === id);
+  const activeId = products.some((product) => product.id === id) ? id : (products[0]?.id ?? "");
+  const p = products.find((product) => product.id === activeId);
   let href = "";
   try {
     if (p)
@@ -589,19 +1037,27 @@ export function ServicePanel({
           </p>
         </section>
         <section className="pm-card pm-preview">
-          <h2>Prévia do atendimento</h2>
-          <p>{data.regionMessage}</p>
-          <p>{data.deliveryMessage}</p>
-          <p>{data.assemblyMessage}</p>
+          <h2>Mensagem pronta para WhatsApp</h2>
+          <details className="pm-service-copy">
+            <summary>Orientações mostradas ao cliente</summary>
+            <p>{data.regionMessage}</p>
+            <p>{data.deliveryMessage}</p>
+            <p>{data.assemblyMessage}</p>
+          </details>
           <label className="pm-field">
             Produto
             <select
-              value={id}
+              value={activeId}
               onChange={(e) => {
                 setId(e.target.value);
                 setConfirmed(false);
               }}
             >
+              {!products.length && (
+                <option value="" disabled>
+                  Nenhum produto disponível no catálogo
+                </option>
+              )}
               {products.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.nome}
@@ -635,7 +1091,11 @@ export function ServicePanel({
               />
             </label>
           </div>
-          {href && <pre className="pm-message">{decodeURIComponent(href.split("?text=")[1])}</pre>}
+          {href ? (
+            <pre className="pm-message">{decodeURIComponent(href.split("?text=")[1])}</pre>
+          ) : (
+            <p className="pm-muted">Selecione um produto válido para montar a mensagem.</p>
+          )}
           <label className="pm-check">
             <input
               type="checkbox"
@@ -676,6 +1136,7 @@ export function ProductDraftPanel({
   initialFilter?: "all" | ProductStatus;
 }) {
   const [search, setSearch] = useState(query),
+    [bundleSearch, setBundleSearch] = useState(""),
     [statusFilter, setStatusFilter] = useState(initialFilter),
     [id, setId] = useState<string | null>(null),
     [section, setSection] = useState("identificacao");
@@ -763,6 +1224,8 @@ export function ProductDraftPanel({
                   "fotos",
                   "variantes",
                   "medidas",
+                  "atributos",
+                  "compre",
                   "comercial",
                   "visibilidade",
                 ].map((k) => (
@@ -779,6 +1242,8 @@ export function ProductDraftPanel({
                           fotos: "Fotos",
                           variantes: "Variantes",
                           medidas: "Medidas",
+                          atributos: "Atributos",
+                          compre: "Compre junto",
                           comercial: "Comercial",
                           visibilidade: "Visibilidade",
                         } as Record<string, string>
@@ -851,15 +1316,197 @@ export function ProductDraftPanel({
                 </>
               )}
               {section === "medidas" && (
-                <label className="pm-field">
-                  Medidas em centímetros
-                  <textarea
-                    placeholder="Largura 200 cm · Altura 90 cm · Profundidade 100 cm"
-                    value={p.medidas ?? ""}
-                    onChange={(e) => patch({ medidas: e.target.value })}
-                  />
-                </label>
+                <div className="space-y-3">
+                  <p className="pm-note">
+                    Informe apenas os valores confirmados pelo fornecedor. Campos estruturados
+                    alimentam os filtros; medida ausente continua sem valor.
+                  </p>
+                  <div className="pm-grid">
+                    {(
+                      [
+                        ["width_cm", "Largura (cm)"],
+                        ["height_cm", "Altura (cm)"],
+                        ["depth_closed_cm", "Profundidade fechada (cm)"],
+                        ["depth_open_cm", "Profundidade aberta (cm)"],
+                      ] as const
+                    ).map(([key, label]) => (
+                      <label className="pm-field" key={key}>
+                        {label}
+                        <input
+                          type="number"
+                          min="0.1"
+                          max="10000"
+                          step="0.1"
+                          inputMode="decimal"
+                          value={p[key] ?? ""}
+                          onChange={(event) => {
+                            const value = event.target.value ? Number(event.target.value) : null;
+                            if (key === "width_cm") patch({ width_cm: value });
+                            else if (key === "height_cm") patch({ height_cm: value });
+                            else if (key === "depth_closed_cm") patch({ depth_closed_cm: value });
+                            else patch({ depth_open_cm: value });
+                          }}
+                        />
+                      </label>
+                    ))}
+                  </div>
+                  <label className="pm-field">
+                    Medidas legadas do cadastro
+                    <textarea
+                      placeholder="Largura: 200 cm; Altura: 90 cm"
+                      value={p.medidas ?? ""}
+                      onChange={(e) => patch({ medidas: e.target.value })}
+                    />
+                    <small className="pm-muted">
+                      Mantido para compatibilidade. Os campos estruturados acima têm precedência.
+                    </small>
+                  </label>
+                </div>
               )}
+              {section === "atributos" && (
+                <div className="space-y-3">
+                  <p className="pm-note">
+                    Atributos são informados no cadastro, nunca deduzidos da descrição. São
+                    rascunhos locais até a integração do esquema de catálogo.
+                  </p>
+                  <label className="pm-field">
+                    Materiais / tecidos · um por linha
+                    <textarea
+                      rows={3}
+                      value={(p.materiais ?? []).join("\n")}
+                      onChange={(event) =>
+                        patch({
+                          materiais: event.target.value
+                            .split(/\r?\n/)
+                            .map((value) => value.trim())
+                            .filter(Boolean),
+                        })
+                      }
+                      placeholder="Linho\nMadeira maciça"
+                    />
+                  </label>
+                  <label className="pm-field">
+                    Características · uma por linha
+                    <textarea
+                      rows={3}
+                      value={(p.caracteristicas ?? []).join("\n")}
+                      onChange={(event) =>
+                        patch({
+                          caracteristicas: event.target.value
+                            .split(/\r?\n/)
+                            .map((value) => value.trim())
+                            .filter(Boolean),
+                        })
+                      }
+                      placeholder="Retrátil\nReclinável"
+                    />
+                  </label>
+                </div>
+              )}
+              {section === "compre" &&
+                (() => {
+                  const selectedIds = p.compre_junto_ids ?? [];
+                  const eligibleCandidates = products
+                    .map((candidate) => data.changes[candidate.id]?.product ?? candidate)
+                    .filter(
+                      (candidate) => candidate.id !== p.id && isEligibleBundleProduct(candidate),
+                    );
+                  const candidates = eligibleCandidates.filter((candidate) =>
+                    `${candidate.nome} ${candidate.categoria ?? ""}`
+                      .toLowerCase()
+                      .includes(bundleSearch.toLowerCase()),
+                  );
+                  const invalidIds = selectedIds.filter(
+                    (relatedId) =>
+                      !eligibleCandidates.some((candidate) => candidate.id === relatedId),
+                  );
+                  return (
+                    <div>
+                      <p className="pm-note">
+                        Escolha manualmente até 3 móveis que combinem com este produto. A associação
+                        salva no rascunho local aparece na prévia da amostra de produto pelo mesmo
+                        componente da loja; isso não altera dados publicados.
+                      </p>
+                      <label className="pm-field">
+                        Buscar complemento
+                        <input
+                          value={bundleSearch}
+                          onChange={(event) => setBundleSearch(event.target.value)}
+                          placeholder="Nome ou categoria"
+                        />
+                      </label>
+                      {invalidIds.map((relatedId) => (
+                        <div
+                          key={relatedId}
+                          className="flex items-center justify-between gap-3 border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-cacau"
+                        >
+                          <span>
+                            {products.find((item) => item.id === relatedId)?.nome ?? relatedId}:
+                            complemento indisponível para exibição.
+                          </span>
+                          <button
+                            type="button"
+                            className="min-h-11 font-semibold underline"
+                            onClick={() =>
+                              patch({
+                                compre_junto_ids: selectedIds.filter((item) => item !== relatedId),
+                              })
+                            }
+                          >
+                            Remover vínculo
+                          </button>
+                        </div>
+                      ))}
+                      <div className="max-h-[420px] divide-y divide-cacau/10 overflow-y-auto border border-cacau/10 bg-white">
+                        {candidates.slice(0, 40).map((candidate) => {
+                          const checked = selectedIds.includes(candidate.id);
+                          return (
+                            <label
+                              key={candidate.id}
+                              className="flex min-h-14 items-center gap-3 px-3 py-2 text-sm text-cacau"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                disabled={!checked && selectedIds.length >= 3}
+                                onChange={(event) =>
+                                  patch({
+                                    compre_junto_ids: event.target.checked
+                                      ? [...selectedIds, candidate.id]
+                                      : selectedIds.filter(
+                                          (relatedId) => relatedId !== candidate.id,
+                                        ),
+                                  })
+                                }
+                                className="h-4 w-4 shrink-0 accent-[#304a32]"
+                              />
+                              <ImageWithFallback
+                                src={candidate.url_imagem}
+                                alt=""
+                                className="h-10 w-10 shrink-0 object-contain"
+                              />
+                              <span className="min-w-0 flex-1">
+                                <strong className="block truncate">{candidate.nome}</strong>
+                                <small className="text-text-light">
+                                  {candidate.categoria} · {formatBRL(Number(candidate.preco_atual))}
+                                </small>
+                              </span>
+                            </label>
+                          );
+                        })}
+                        {candidates.length === 0 && (
+                          <p className="p-3 text-xs text-text-light">
+                            Nenhum complemento elegível corresponde à busca.
+                          </p>
+                        )}
+                      </div>
+                      <p className="pm-muted mt-2">
+                        {selectedIds.length}/3 selecionados. Custo, preço, foto HTTPS e
+                        disponibilidade informada seguem os critérios do catálogo público.
+                      </p>
+                    </div>
+                  );
+                })()}
               {section === "comercial" && (
                 <>
                   <div className="pm-grid">

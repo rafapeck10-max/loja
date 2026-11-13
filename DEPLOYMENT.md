@@ -12,7 +12,7 @@ Antes de editar, resolver o deployment que atende `mobimb.com.br` e comparar seu
 
 Executar `pwsh -File scripts/deploy-preflight.ps1 -ExpectedDeploymentId <deployment-em-uso>` antes de publicar. Para uma alteração intencional, passar somente os caminhos revisados em `-AllowedChangedPath`. Qualquer outra diferença bloqueia a publicação. O script verifica autenticação, projeto/equipe, mudança concorrente do deployment e diferenças de conteúdo da aplicação.
 
-O `vercel.json` mantém o mesmo comando de compilação da produção recuperada, incluindo o aviso de montagem e a remoção dos textos já aprovados. A taxa efetivamente usada no total de até 10x fica em `src/lib/payment-config.ts`, na entrada de 10 parcelas. A fórmula desconta a taxa sobre o total do cartão e arredonda esse total para cima ao real seguinte. Preço à vista e cotações já salvas no carrinho mantêm suas regras.
+Na branch revisada em 11/11/2026, `vercel.json` executa `scripts/mobi-product-check.mjs` e o build. Aviso de montagem e cópia comercial aprovada vivem no código-fonte; a checagem valida esses textos, identidade e cálculo sem reescrever arquivos. Substitui a transformação que dependia do template antigo da rota. A taxa efetiva de até 10x continua em `src/lib/payment-config.ts`; a fórmula desconta a taxa sobre o total do cartão e arredonda para cima ao real seguinte. Preço à vista e cotações salvas mantêm suas regras. Ver [revisão e pendências](docs/REVISAO_HOME_PRODUTO_2026-11-11.md); essa alteração ainda não está publicada.
 
 1. Conferir o pedido e o estado atual da loja. Usar a `main` mais recente e uma branch própria.
 2. Alterar somente o que foi pedido. Mudanças visuais não devem editar preços, parcelas ou registros do catálogo no Supabase.

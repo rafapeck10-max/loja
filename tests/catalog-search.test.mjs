@@ -19,7 +19,9 @@ const sofa = {
   categoria: "Sofás",
   descricao: "Revestimento: linho. Largura 2,10 m. Cor cinza claro.",
   medidas: null,
-  cores: [],
+  cores: ["Cinza claro"],
+  materiais: ["Linho"],
+  width_cm: 210,
 };
 
 test("natural language search ignores connector words without hiding explicit fabric matches", () => {
@@ -54,10 +56,13 @@ test("search includes explicit product variation names", () => {
 test("relevance ranks explicit title matches ahead of description-only matches", () => {
   const titleMatch = { ...sofa, nome: "Sofá de Linho 2,10 m", descricao: "Cor bege." };
   const descriptionMatch = { ...sofa, nome: "Estofado Living", descricao: "Sofá em linho 2,10 m." };
-  assert.ok(catalogSearchScore(titleMatch, "sofá em linho") > catalogSearchScore(descriptionMatch, "sofá em linho"));
+  assert.ok(
+    catalogSearchScore(titleMatch, "sofá em linho") >
+      catalogSearchScore(descriptionMatch, "sofá em linho"),
+  );
 });
 
-test("materials, colors, features, and dimensions are derived only from explicit text", () => {
+test("filters use confirmed structured fields, not descriptions", () => {
   assert.deepEqual(getCatalogMaterials(sofa), ["Linho"]);
   assert.deepEqual(getCatalogColors(sofa), ["Cinza claro"]);
   assert.deepEqual(getCatalogColorFilterValues(sofa), ["Cinza claro", "Cinza"]);
@@ -67,19 +72,44 @@ test("materials, colors, features, and dimensions are derived only from explicit
       categoria: "Sofás",
       descricao: "Revestimento em linho.",
       medidas: null,
-      cores: ["Estofado Atlas - Linho Gelo", "Sofá Zeus"],
+      cores: ["Gelo"],
     }),
     ["Gelo"],
   );
-  assert.deepEqual(getCatalogFeatures({ ...sofa, descricao: "Sofá retrátil e reclinável com baú." }), [
-    "Retrátil",
-    "Reclinável",
-    "Com baú",
-  ]);
-  const featureProduct = { ...sofa, descricao: "Sofá retrátil e reclinável com baú." };
+  assert.deepEqual(
+    getCatalogFeatures({
+      ...sofa,
+      descricao: "Sofá retrátil e reclinável com baú.",
+      caracteristicas: ["Retrátil", "Reclinável", "Com baú"],
+    }),
+    ["Retrátil", "Reclinável", "Com baú"],
+  );
+  const featureProduct = {
+    ...sofa,
+    descricao: "Sofá retrátil e reclinável com baú.",
+    caracteristicas: ["Retrátil", "Reclinável", "Com baú"],
+  };
   assert.equal(matchesCatalogMaterials(sofa, "Linho"), true);
   assert.equal(matchesCatalogColors(sofa, "Cinza"), true);
   assert.equal(matchesCatalogFeatures(featureProduct, "Com baú"), true);
-  assert.equal(getCatalogDimensionLabel(sofa), "Largura: 2,10 m");
-  assert.equal(getCatalogDimensionLabel({ ...sofa, descricao: "Sem dimensões informadas." }), "");
+  assert.equal(getCatalogDimensionLabel(sofa), "Largura: 210 cm");
+  assert.equal(
+    getCatalogDimensionLabel({ ...sofa, width_cm: null, descricao: "Sem dimensões informadas." }),
+    "",
+  );
+});
+
+test("unstructured marketing text does not become a confirmed filter attribute", () => {
+  const product = {
+    nome: "Sofá Linho Azul 2m",
+    categoria: "Sofás",
+    descricao: "Linho, azul, retrátil. Largura 200 cm.",
+    cores: [],
+    medidas: null,
+  };
+  assert.deepEqual(getCatalogMaterials(product), []);
+  assert.deepEqual(getCatalogColors(product), []);
+  assert.deepEqual(getCatalogFeatures(product), []);
+  assert.equal(matchesCatalogDimensions(product, "200 cm"), false);
+  assert.equal(matchesCatalogSearch(product, "tecido linho"), false);
 });

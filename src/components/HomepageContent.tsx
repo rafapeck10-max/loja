@@ -160,12 +160,14 @@ export function HomepageContent({
         if (section.id === "catalog")
           return (
             <section className="mobi-catalog-invite mobi-wrap">
-              <h2>Móveis para Nova Iguaçu e Baixada Fluminense.</h2>
-              <p>
-                Compare modelos, medidas e cores.{" "}
-                {config?.service.deliveryMessage ??
-                  "Frete e data de entrega combinados pelo WhatsApp."}
-              </p>
+              <div>
+                <h2>Móveis para Nova Iguaçu e Baixada Fluminense.</h2>
+                <p>
+                  Compare modelos, medidas e cores.{" "}
+                  {config?.service.deliveryMessage ??
+                    "Frete e data de entrega combinados pelo WhatsApp."}
+                </p>
+              </div>
               <Link to="/" search={{ all: true, page: 1 }} hash="catalogo" className="mobi-primary">
                 Explorar todo o catálogo
               </Link>

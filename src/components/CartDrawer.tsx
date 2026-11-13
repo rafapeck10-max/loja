@@ -4,6 +4,7 @@ import { Minus, Plus, Trash2, X, Truck, Sofa, ArrowLeft } from "lucide-react";
 import { useCart, cartItemKey } from "@/lib/cart-context";
 import { formatBRL, WHATSAPP_NUMBER } from "@/lib/constants";
 import { MAX_INSTALLMENTS } from "@/lib/constants";
+import { ImageWithFallback } from "@/components/ImageWithFallback";
 import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import { cartPaymentLine, orderPaymentSummary, orderWhatsAppMessage } from "@/lib/cart-payment";
 
@@ -14,7 +15,7 @@ const PAYMENT_OPTIONS = [
   {
     value: "Cartão na entrega",
     label: "Cartão",
-    desc: `Até ${MAX_INSTALLMENTS}x sem juros`,
+    desc: `Até ${MAX_INSTALLMENTS}x `,
   },
   { value: "Dinheiro na entrega", label: "Dinheiro", desc: "Pague ao receber e montar" },
 ];
@@ -49,6 +50,8 @@ export function CartDrawer() {
     else if (form.bairro.trim().length > 100) errs.bairro = "Bairro muito longo";
     if (!form.cidade.trim()) errs.cidade = "Informe a cidade";
     setErrors(errs);
+    const firstInvalid = Object.keys(errs)[0];
+    if (firstInvalid) document.getElementById(`checkout-${firstInvalid}`)?.focus();
     return Object.keys(errs).length === 0;
   };
 
@@ -132,13 +135,13 @@ export function CartDrawer() {
                     const payment = cartPaymentLine(item);
                     return (
                       <div key={key} className="flex gap-4 border-b border-cacau/10 py-4">
-                        <img
+                        <ImageWithFallback
                           src={item.img}
                           alt={item.name}
-                          className="h-20 w-20 shrink-0 object-cover"
+                          className="h-20 w-20 shrink-0 bg-white object-contain"
                         />
-                        <div className="flex flex-1 flex-col gap-1">
-                          <h4 className="font-sans text-sm font-semibold leading-snug text-cacau">
+                        <div className="flex min-w-0 flex-1 flex-col gap-1">
+                          <h4 className="break-words font-sans text-sm font-semibold leading-snug text-cacau">
                             {item.name}
                           </h4>
                           {(item.color || item.finish || item.variant) && (
@@ -156,7 +159,7 @@ export function CartDrawer() {
                             {formatBRL(item.price)} à vista no Pix ou dinheiro
                           </div>
                           <div className="text-[11px] text-text-light">
-                            Cartão: até {MAX_INSTALLMENTS}x sem juros
+                            Cartão: até {MAX_INSTALLMENTS}x
                             <br />
                             {payment.installments}x de{" "}
                             {formatBRL(payment.unitApproximateInstallment)}
@@ -168,11 +171,11 @@ export function CartDrawer() {
                             )}
                           </div>
                           <div className="mt-1 flex items-center justify-between">
-                            <div className="flex items-center gap-3 border border-cacau/15 px-2 py-1">
+                            <div className="flex items-center rounded border border-cacau/15">
                               <button
                                 aria-label="Diminuir quantidade"
                                 onClick={() => updateQuantity(key, -1)}
-                                className="text-cacau transition-colors hover:text-gold"
+                                className="flex h-11 w-11 items-center justify-center text-cacau transition-colors hover:text-gold"
                               >
                                 <Minus className="h-3.5 w-3.5" />
                               </button>
@@ -182,7 +185,7 @@ export function CartDrawer() {
                               <button
                                 aria-label="Aumentar quantidade"
                                 onClick={() => updateQuantity(key, 1)}
-                                className="text-cacau transition-colors hover:text-gold"
+                                className="flex h-11 w-11 items-center justify-center text-cacau transition-colors hover:text-gold"
                               >
                                 <Plus className="h-3.5 w-3.5" />
                               </button>
@@ -190,7 +193,7 @@ export function CartDrawer() {
                             <button
                               aria-label="Remover item"
                               onClick={() => removeItem(key)}
-                              className="text-text-light transition-colors hover:text-destructive"
+                              className="flex h-11 w-11 shrink-0 items-center justify-center text-text-light transition-colors hover:text-destructive"
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -242,13 +245,22 @@ export function CartDrawer() {
                       id="checkout-nome"
                       autoComplete="name"
                       aria-invalid={Boolean(errors.nome)}
+                      aria-describedby={errors.nome ? "checkout-nome-error" : undefined}
                       value={form.nome}
                       onChange={(e) => setForm({ ...form, nome: e.target.value })}
                       placeholder="Seu nome"
                       maxLength={100}
                       className={inputClass("nome")}
                     />
-                    {errors.nome && <p className="mt-1 text-xs text-destructive">{errors.nome}</p>}
+                    {errors.nome && (
+                      <p
+                        id="checkout-nome-error"
+                        role="alert"
+                        className="mt-1 text-xs text-destructive"
+                      >
+                        {errors.nome}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label
@@ -261,13 +273,22 @@ export function CartDrawer() {
                       id="checkout-rua"
                       autoComplete="street-address"
                       aria-invalid={Boolean(errors.rua)}
+                      aria-describedby={errors.rua ? "checkout-rua-error" : undefined}
                       value={form.rua}
                       onChange={(e) => setForm({ ...form, rua: e.target.value })}
                       placeholder="Ex: Rua das Palmeiras, 123"
                       maxLength={200}
                       className={inputClass("rua")}
                     />
-                    {errors.rua && <p className="mt-1 text-xs text-destructive">{errors.rua}</p>}
+                    {errors.rua && (
+                      <p
+                        id="checkout-rua-error"
+                        role="alert"
+                        className="mt-1 text-xs text-destructive"
+                      >
+                        {errors.rua}
+                      </p>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -281,6 +302,7 @@ export function CartDrawer() {
                         id="checkout-bairro"
                         autoComplete="address-level3"
                         aria-invalid={Boolean(errors.bairro)}
+                        aria-describedby={errors.bairro ? "checkout-bairro-error" : undefined}
                         value={form.bairro}
                         onChange={(e) => setForm({ ...form, bairro: e.target.value })}
                         placeholder="Seu bairro"
@@ -288,7 +310,13 @@ export function CartDrawer() {
                         className={inputClass("bairro")}
                       />
                       {errors.bairro && (
-                        <p className="mt-1 text-xs text-destructive">{errors.bairro}</p>
+                        <p
+                          id="checkout-bairro-error"
+                          role="alert"
+                          className="mt-1 text-xs text-destructive"
+                        >
+                          {errors.bairro}
+                        </p>
                       )}
                     </div>
                     <div>
@@ -300,6 +328,8 @@ export function CartDrawer() {
                       </label>
                       <input
                         id="checkout-cidade"
+                        aria-invalid={Boolean(errors.cidade)}
+                        aria-describedby={errors.cidade ? "checkout-cidade-error" : undefined}
                         value={form.cidade}
                         onChange={(e) => setForm({ ...form, cidade: e.target.value })}
                         autoComplete="address-level2"
@@ -310,7 +340,7 @@ export function CartDrawer() {
                   </div>
 
                   {errors.cidade && (
-                    <p role="alert" className="text-xs text-destructive">
+                    <p id="checkout-cidade-error" role="alert" className="text-xs text-destructive">
                       {errors.cidade}
                     </p>
                   )}

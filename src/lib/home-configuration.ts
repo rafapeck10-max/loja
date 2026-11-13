@@ -12,8 +12,10 @@ import { validateBannerData, type BannerData, type BannerDraft } from "./banner-
 import {
   validateNavigation,
   validateService,
+  validateContent,
   type NavigationData,
   type ServiceData,
+  type ContentData,
 } from "./operational-config.ts";
 import { isCurationProduct, type EditorProduct, type CurationDraft } from "./homepage-curation.ts";
 import {
@@ -30,6 +32,7 @@ export interface HomeDraftInput {
   banners: BannerData;
   navigation: NavigationData;
   service: ServiceData;
+  content?: ContentData;
   campaigns?: CampaignData;
 }
 export type HomeBanner = Pick<
@@ -56,7 +59,14 @@ export interface HomeConfiguration {
   blackFridayCampaigns?: HomeCampaignPreview[];
   curation?: CurationDraft;
   banners: HomeBanner[];
-  navigation: { id: string; label: string; href: string; visible: boolean }[];
+  navigation: {
+    id: string;
+    label: string;
+    href: string;
+    visible: boolean;
+    filters?: NavigationData["items"][number]["filters"];
+  }[];
+  content?: ContentData;
   service: Pick<ServiceData, "regionMessage" | "deliveryMessage" | "assemblyMessage">;
 }
 export interface HomeCampaignPreview {
@@ -213,7 +223,22 @@ export function homeConfigurationFromDraft(
     ...validateBannerData(d.banners),
     ...validateNavigation(d.navigation),
     ...validateService(d.service),
+    ...(d.content ? validateContent(d.content) : []),
   ];
+  if (d.content) {
+    const publicIds = new Set(
+      toStorefrontProducts(products, d.pages.curation).map((product) => product.id),
+    );
+    for (const article of d.content.articles ?? []) {
+      if (
+        article.status === "review" &&
+        article.relatedProductIds.some((productId) => !publicIds.has(productId))
+      )
+        errors.push(
+          `Revise os produtos relacionados do artigo “${article.title}”: há itens fora do catálogo disponível.`,
+        );
+    }
+  }
   if (errors.length) throw new Error(errors.join(" "));
   const publicProducts = toStorefrontProducts(products, d.pages.curation);
   const publicIds = new Set(publicProducts.map((p) => p.id));
@@ -263,12 +288,26 @@ export function homeConfigurationFromDraft(
       starts_at: b.starts_at,
       ends_at: b.ends_at,
     })),
-    navigation: d.navigation.items.map(({ id, label, href, visible }) => ({
+    navigation: d.navigation.items.map(({ id, label, href, visible, filters }) => ({
       id,
       label,
       href,
       visible,
+      filters: [...filters],
     })),
+    ...((d.content?.pages.filter((page) => page.status === "review").length ?? 0) > 0 ||
+    (d.content?.articles?.filter((article) => article.status === "review").length ?? 0) > 0
+      ? {
+          content: {
+            pages: d
+              .content!.pages.filter((page) => page.status === "review")
+              .map((page) => clone(page)),
+            articles: (d.content!.articles ?? [])
+              .filter((article) => article.status === "review")
+              .map((article) => clone(article)),
+          },
+        }
+      : {}),
     service: {
       regionMessage: d.service.regionMessage,
       deliveryMessage: d.service.deliveryMessage,
@@ -283,6 +322,15 @@ export function reopenHomeDraft(
   current: HomeDraftInput,
 ): HomeDraftInput {
   const base = initialPageDraft(products);
+  const currentContent = clone(current.content ?? { pages: [], articles: [] });
+  const currentContentIds = new Set(currentContent.pages.map((page) => page.id));
+  const currentArticleIds = new Set((currentContent.articles ?? []).map((article) => article.id));
+  const appliedOnlyPages = (config.content?.pages ?? []).filter(
+    (page) => !currentContentIds.has(page.id),
+  );
+  const appliedOnlyArticles = (config.content?.articles ?? []).filter(
+    (article) => !currentArticleIds.has(article.id),
+  );
   const next: HomeDraftInput = {
     pages: {
       ...base,
@@ -301,13 +349,25 @@ export function reopenHomeDraft(
       items: config.navigation.map((n) => ({
         ...clone(current.navigation.items.find((i) => i.id === n.id)!),
         ...clone(n),
+        filters: n.filters
+          ? [...n.filters]
+          : [...(current.navigation.items.find((i) => i.id === n.id)?.filters ?? [])],
       })),
+    },
+    // The applied snapshot is the storefront source, while the editor's current state can hold
+    // newer unsaved PM-07 work. Preserve that work and only restore applied pages missing by ID.
+    content: {
+      pages: [...currentContent.pages, ...clone(appliedOnlyPages)],
+      articles: [...(currentContent.articles ?? []), ...clone(appliedOnlyArticles)],
     },
     service: { ...clone(current.service), ...clone(config.service) },
     ...(current.campaigns ? { campaigns: clone(current.campaigns) } : {}),
   };
   next.pages = normalizePageDraft(next.pages, products);
-  homeConfigurationFromDraft(next, products);
+  // Reopening must remain possible even when PM-07 contains a conflict that needs editing.
+  // Validate every other configuration section here; the content editor blocks save/review
+  // until its own validation issues are resolved.
+  homeConfigurationFromDraft({ ...next, content: undefined }, products);
   return next;
 }
 export function applyHomeCuration(products: Produto[], curation?: CurationDraft): Produto[] {

@@ -1,4 +1,5 @@
 import { categoryMatches } from "./constants.ts";
+import { productMeasurements } from "./product-measurements.ts";
 
 interface SearchProduct {
   nome: string;
@@ -6,7 +7,20 @@ interface SearchProduct {
   descricao?: string | null;
   medidas?: string | null;
   cores?: string[] | null;
+  materiais?: string[] | null;
+  caracteristicas?: string[] | null;
+  width_cm?: number | null;
+  height_cm?: number | null;
+  depth_closed_cm?: number | null;
+  depth_open_cm?: number | null;
   variacoes_preco?: Array<{ name?: string | null }> | null;
+}
+
+export interface CatalogDimensions {
+  widthCm?: number;
+  heightCm?: number;
+  depthClosedCm?: number;
+  depthOpenCm?: number;
 }
 
 const normalize = (value: string) =>
@@ -19,17 +33,53 @@ const normalize = (value: string) =>
 
 const dimensionPattern = /(\d{1,4}(?:[.,]\d{1,2})?)\s*(mm|cm|m)\b/gi;
 const stopWords = new Set([
-  "a", "as", "ao", "aos", "com", "da", "das", "de", "do", "dos", "e", "em", "na", "nas",
-  "no", "nos", "o", "os", "para", "por", "um", "uma", "uns", "umas", "tecido", "tecidos",
-  "material", "materiais", "cor", "cores", "medida", "medidas", "tamanho", "largura", "altura",
-  "profundidade", "comprimento",
+  "a",
+  "as",
+  "ao",
+  "aos",
+  "com",
+  "da",
+  "das",
+  "de",
+  "do",
+  "dos",
+  "e",
+  "em",
+  "na",
+  "nas",
+  "no",
+  "nos",
+  "o",
+  "os",
+  "para",
+  "por",
+  "um",
+  "uma",
+  "uns",
+  "umas",
+  "tecido",
+  "tecidos",
+  "material",
+  "materiais",
+  "cor",
+  "cores",
+  "medida",
+  "medidas",
+  "tamanho",
+  "largura",
+  "altura",
+  "profundidade",
+  "comprimento",
 ]);
 
 const materialOptions = [
   { label: "Linho", terms: ["linho", "linhos"] },
   { label: "Veludo", terms: ["veludo", "velvet"] },
   { label: "Suede", terms: ["suede"] },
-  { label: "Couro sintético", terms: ["corino", "courino", "couro sintetico", "couro ecologico", "eco couro"] },
+  {
+    label: "Couro sintético",
+    terms: ["corino", "courino", "couro sintetico", "couro ecologico", "eco couro"],
+  },
   { label: "Couro natural", terms: ["couro natural", "couro legitimo", "couro genuino"] },
   { label: "Madeira", terms: ["madeira", "madeira macica"] },
   { label: "MDF", terms: ["mdf"] },
@@ -114,6 +164,9 @@ function sourceText(product: SearchProduct) {
     product.descricao,
     product.medidas,
     ...(product.cores ?? []),
+    ...(product.materiais ?? []),
+    ...(product.caracteristicas ?? []),
+    ...structuredDimensionLabels(product),
     ...(product.variacoes_preco ?? []).map((variation) => variation.name),
   ]
     .filter(Boolean)
@@ -146,8 +199,31 @@ function getDimensionSources(product: SearchProduct) {
     product.nome,
     product.descricao,
     product.medidas,
+    ...structuredDimensionLabels(product),
     ...(product.variacoes_preco ?? []).map((variation) => variation.name),
   ].filter((value): value is string => Boolean(value));
+}
+
+function structuredDimensionLabels(product: SearchProduct) {
+  return [
+    product.width_cm != null ? `Largura: ${product.width_cm} cm` : "",
+    product.height_cm != null ? `Altura: ${product.height_cm} cm` : "",
+    product.depth_closed_cm != null ? `Profundidade fechada: ${product.depth_closed_cm} cm` : "",
+    product.depth_open_cm != null ? `Profundidade aberta: ${product.depth_open_cm} cm` : "",
+  ].filter(Boolean);
+}
+
+function explicitValues(values: string[] | null | undefined) {
+  return [...new Set((values ?? []).map((value) => value.trim()).filter(Boolean))];
+}
+
+function knownLabels(
+  text: string,
+  options: ReadonlyArray<{ label: string; terms: readonly string[] }>,
+) {
+  return options
+    .filter((option) => option.terms.some((term) => hasPhrase(text, term)))
+    .map((option) => option.label);
 }
 
 function formatDimension(value: string, unit: string) {
@@ -181,7 +257,9 @@ function extractQuery(query: string) {
 
 function hasIntentProductMatch(product: SearchProduct, intentWords: Set<string>) {
   if (
-    [...intentWords].some((word) => ["tecido", "tecidos", "material", "materiais"].includes(word)) &&
+    [...intentWords].some((word) =>
+      ["tecido", "tecidos", "material", "materiais"].includes(word),
+    ) &&
     getCatalogMaterials(product).length === 0
   )
     return false;
@@ -192,33 +270,37 @@ function hasIntentProductMatch(product: SearchProduct, intentWords: Set<string>)
     return false;
   if (
     [...intentWords].some((word) =>
-      ["medida", "medidas", "tamanho", "largura", "altura", "profundidade", "comprimento"].includes(word),
+      ["medida", "medidas", "tamanho", "largura", "altura", "profundidade", "comprimento"].includes(
+        word,
+      ),
     ) &&
-    getDimensionSources(product).every((value) => getDimensionValues(value).length === 0)
+    Object.values(getCatalogDimensions(product)).every((value) => value === undefined)
   )
     return false;
   return true;
 }
 
 export function getCatalogMaterials(product: SearchProduct) {
-  const text = sourceText(product);
-  return materialOptions
-    .filter((option) => option.terms.some((term) => hasPhrase(text, term)))
-    .map((option) => option.label);
+  const values = explicitValues(product.materiais);
+  const text = values.join(" ");
+  const known = knownLabels(text, materialOptions);
+  const normalizedKnown = new Set(known.map(normalize));
+  return [...known, ...values.filter((value) => !normalizedKnown.has(normalize(value)))];
 }
 
 export function getCatalogColors(product: SearchProduct) {
-  const text = sourceText(product);
-  const inferred = knownColors
-    .filter((option) => option.terms.some((term) => hasPhrase(text, term)))
-    .map((option) => option.label);
-  const all = [...new Set(inferred)];
+  const values = explicitValues(product.cores);
+  const text = values.join(" ");
+  const known = knownLabels(text, knownColors);
+  const normalizedKnown = new Set(known.map(normalize));
+  const all = [
+    ...new Set([...known, ...values.filter((value) => !normalizedKnown.has(normalize(value)))]),
+  ];
   return all.filter((color) => {
     const normalized = normalize(color);
     return !all.some(
       (candidate) =>
-        normalize(candidate) !== normalized &&
-        normalize(candidate).startsWith(normalized + " "),
+        normalize(candidate) !== normalized && normalize(candidate).startsWith(normalized + " "),
     );
   });
 }
@@ -234,13 +316,16 @@ export function getCatalogColorFilterValues(product: SearchProduct) {
 }
 
 export function getCatalogFeatures(product: SearchProduct) {
-  const text = sourceText(product);
-  return featureOptions
-    .filter((option) => option.terms.some((term) => hasPhrase(text, term)))
-    .map((option) => option.label);
+  const values = explicitValues(product.caracteristicas);
+  const text = values.join(" ");
+  const known = knownLabels(text, featureOptions);
+  const normalizedKnown = new Set(known.map(normalize));
+  return [...known, ...values.filter((value) => !normalizedKnown.has(normalize(value)))];
 }
 
 export function getCatalogDimensionLabel(product: SearchProduct) {
+  const explicitDimensions = structuredDimensionLabels(product);
+  if (explicitDimensions.length) return explicitDimensions.join(" · ");
   if (product.medidas?.trim()) return product.medidas.trim();
   const sources = getDimensionSources(product).filter((value) => value !== product.medidas);
   const labeled = sources.flatMap(getLabeledDimensions);
@@ -250,7 +335,11 @@ export function getCatalogDimensionLabel(product: SearchProduct) {
         (candidate) => candidate.cm === item.cm && candidate.label === item.label,
       ) === index,
   );
-  if (uniqueLabeled.length) return uniqueLabeled.slice(0, 2).map((item) => item.text).join(" · ");
+  if (uniqueLabeled.length)
+    return uniqueLabeled
+      .slice(0, 2)
+      .map((item) => item.text)
+      .join(" · ");
 
   const seen = new Set<number>();
   const phrases: string[] = [];
@@ -264,6 +353,50 @@ export function getCatalogDimensionLabel(product: SearchProduct) {
     }
   }
   return phrases.join(" · ");
+}
+
+/** Only labeled values from the catalog's measurements field qualify for dimension filters. */
+export function getCatalogDimensions(product: SearchProduct): CatalogDimensions {
+  const values: CatalogDimensions = {
+    ...(Number.isFinite(product.width_cm) && Number(product.width_cm) > 0
+      ? { widthCm: Number(product.width_cm) }
+      : {}),
+    ...(Number.isFinite(product.height_cm) && Number(product.height_cm) > 0
+      ? { heightCm: Number(product.height_cm) }
+      : {}),
+    ...(Number.isFinite(product.depth_closed_cm) && Number(product.depth_closed_cm) > 0
+      ? { depthClosedCm: Number(product.depth_closed_cm) }
+      : {}),
+    ...(Number.isFinite(product.depth_open_cm) && Number(product.depth_open_cm) > 0
+      ? { depthOpenCm: Number(product.depth_open_cm) }
+      : {}),
+  };
+  for (const measure of productMeasurements(product.medidas ?? null)) {
+    const match = measure.value.match(/^(\d+(?:[.,]\d+)?)\s*(mm|cm|m)$/i);
+    if (!match) continue;
+    const amount = Number(match[1].replace(",", "."));
+    const unit = match[2].toLowerCase();
+    const cm = amount * (unit === "m" ? 100 : unit === "mm" ? 0.1 : 1);
+    if (!Number.isFinite(cm) || cm <= 0 || cm > 10000) continue;
+    if (measure.label === "Largura" && values.widthCm === undefined) values.widthCm = cm;
+    if (measure.label === "Altura" && values.heightCm === undefined) values.heightCm = cm;
+    if (measure.label === "Profundidade fechada" && values.depthClosedCm === undefined)
+      values.depthClosedCm = cm;
+    if (measure.label === "Profundidade aberta" && values.depthOpenCm === undefined)
+      values.depthOpenCm = cm;
+  }
+  return values;
+}
+
+export function matchesCatalogDimensionLimits(
+  product: SearchProduct,
+  limits: Pick<CatalogDimensions, "widthCm" | "heightCm" | "depthClosedCm" | "depthOpenCm">,
+) {
+  const dimensions = getCatalogDimensions(product);
+  return (Object.entries(limits) as [keyof CatalogDimensions, number | undefined][]).every(
+    ([key, maximum]) =>
+      maximum === undefined || (dimensions[key] !== undefined && dimensions[key]! <= maximum),
+  );
 }
 
 export function matchesCatalogMaterials(product: SearchProduct, material: string) {
@@ -282,7 +415,9 @@ export function matchesCatalogDimensions(product: SearchProduct, query: string) 
   if (!query.trim()) return true;
   const dimensions = getDimensionValues(query);
   if (!dimensions.length) return false;
-  const productDimensions = new Set(getDimensionSources(product).flatMap(getDimensionValues));
+  const productDimensions = new Set(
+    Object.values(getCatalogDimensions(product)).filter((value) => value !== undefined),
+  );
   return dimensions.every((dimension) => productDimensions.has(dimension));
 }
 
@@ -304,7 +439,17 @@ export function catalogSearchScore(product: SearchProduct, query: string) {
   const { terms, dimensions } = extractQuery(query);
   const title = normalize(product.nome);
   const description = normalize(product.descricao ?? "");
-  const details = normalize([product.medidas, ...(product.cores ?? [])].filter(Boolean).join(" "));
+  const details = normalize(
+    [
+      product.medidas,
+      ...(product.cores ?? []),
+      ...(product.materiais ?? []),
+      ...(product.caracteristicas ?? []),
+      ...structuredDimensionLabels(product),
+    ]
+      .filter(Boolean)
+      .join(" "),
+  );
   const variations = normalize((product.variacoes_preco ?? []).map((item) => item.name).join(" "));
   let score = 0;
   for (const term of terms) {

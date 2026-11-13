@@ -1,5 +1,15 @@
 # MM-P01 — execução local
 
+**Precedência em 11/11/2026:** consultar [a revisão consolidada da home/produto](REVISAO_HOME_PRODUTO_2026-11-11.md). Pedidos posteriores definem Quarto/Sala/Cozinha e removem Descubra; relatos abaixo com outras categorias/Descoberta são históricos. A revisão atual não está publicada e não homologa mobile.
+
+## Ajuste da galeria — MM-PROD-02 — 11/11/2026
+
+- Engenharia reversa v1.1 prevê miniaturas externas à foto no computador e, no celular, contador no topo com indicadores abaixo; a especificação do painel v0.2 permanece proposta e não comprova função publicada.
+- Na página de produto MadeiraMadeira aberta ao vivo, a coluna mostrou seis miniaturas e um último bloco “+4” para as demais imagens, sem barra vertical visível. A Mobi adapta esse padrão com sua moldura, cores e fotos.
+- Na branch `feature/mm-p07-product-page`, a galeria de computador mostra até seis miniaturas; “+N” abre o visualizador de fotos na primeira imagem oculta, e as setas percorrem o restante. Em telas estreitas, a coluna lateral some e os marcadores de 44 px ficam sob a foto; contador, setas e zoom continuam disponíveis.
+- Prévia local conferida: o Roma tem oito fotos; “+2” abriu a foto 7/8, a seta avançou para 8/8 e o marcador móvel selecionou a oitava. Capturas: `../../mobi-review-evidence/12-galeria-produto-desktop.jpg` e `13-galeria-produto-mobile.jpg`.
+- Essa alteração é visual e local. Não muda catálogo, sequência de imagens, preço ou publicação. O viewport móvel exato de 390 px ainda não foi homologado.
+
 ## Ajuste solicitado após a prévia — 10/11/2026
 
 A entrega anterior foi rejeitada visualmente. A descrição abaixo dela é histórica, não aprovação. Nova branch: `feature/mm-p01-redesign`, base `ec0aa5e`, sem publicação.
@@ -51,14 +61,14 @@ Preflight de interfaces: PM-02 fornece seções e curadoria; PM-03 fornece mídi
 
 ## Entrega local e consumidores
 
-| Origem | Consumidor efetivo nesta versão | Limite |
-|---|---|---|
-| PM-02: ordem, títulos, apoio e seleção | `HomepageContent`, `HomepageSectionOrder`, seleção central de produtos | Home; sem novos tipos/páginas. Seleção semanal preservada. |
-| PM-03: desktop/mobile, alt, texto, destino, vigência, ordem | `HeroCarouselView` e `BannerSlide` | Sem biblioteca/upload remoto. Sem arte mobile, foto é recomposta com texto separado; arte sem texto HTML usa contain. |
-| PM-06: nome, ordem, destino e visibilidade | `CategoryNavigation` e `MenuDrawer` | Filtros públicos ainda não são aplicados por esta revisão. |
-| PM-08: região, consulta de entrega e montagem | `Header`, `Footer` e convite final | Número e operação online protegidos; template do pedido permanece fora deste lote. |
-| Revisão e diferenças | `HomeConnectionPanel`, `home-configuration`, `home-local-store.server` | Aplicação restrita ao servidor local; sem autoria individual/produção compartilhada. |
-| PM-09 | Capacidades CMS-05/06/08 atualizadas com limites locais | Nenhum requisito foi marcado automaticamente como validado ou ativo na loja. |
+| Origem                                                      | Consumidor efetivo nesta versão                                        | Limite                                                                                                                |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| PM-02: ordem, títulos, apoio e seleção                      | `HomepageContent`, `HomepageSectionOrder`, seleção central de produtos | Home; sem novos tipos/páginas. Seleção semanal preservada.                                                            |
+| PM-03: desktop/mobile, alt, texto, destino, vigência, ordem | `HeroCarouselView` e `BannerSlide`                                     | Sem biblioteca/upload remoto. Sem arte mobile, foto é recomposta com texto separado; arte sem texto HTML usa contain. |
+| PM-06: nome, ordem, destino e visibilidade                  | `CategoryNavigation` e `MenuDrawer`                                    | Filtros públicos ainda não são aplicados por esta revisão.                                                            |
+| PM-08: região, consulta de entrega e montagem               | `Header`, `Footer` e convite final                                     | Número e operação online protegidos; template do pedido permanece fora deste lote.                                    |
+| Revisão e diferenças                                        | `HomeConnectionPanel`, `home-configuration`, `home-local-store.server` | Aplicação restrita ao servidor local; sem autoria individual/produção compartilhada.                                  |
+| PM-09                                                       | Capacidades CMS-05/06/08 atualizadas com limites locais                | Nenhum requisito foi marcado automaticamente como validado ou ativo na loja.                                          |
 
 O editor PM-02 anterior continua oferecendo seu esquema resumido. A homologação desta versão usa **Home em revisão → Salvar versão da home → Ver home e diferenças**, que exibe a página completa pelo renderer compartilhado. A visualização da revisão é inerte; a home local aplicada permite testar menu e carrinho.
 
@@ -66,17 +76,17 @@ Rascunhos antigos do navegador foram preservados. A demonstração utiliza 16 re
 
 ## Matriz resumida de aceite
 
-| IDs | Situação verificável |
-|---|---|
-| GLOBAL-02/03/04/07/08/09/10/11/12/14 | Componentes locais integrados, identidade/contatos preservados, carrinho vazio acessível e diálogos com Escape/foco. Busca/destinos completos, ancoragem e sobreposição de ações exigem homologação no aplicativo com dados atuais. |
-| MENU-01/02/03/04 | Gaveta pública reutiliza taxonomia, nomes/destinos/ordem/visibilidade da revisão; clique/fechamento/retorno de foco conferidos. Cobertura de categorias com catálogo atual pendente. |
-| HOME-01/02 | Mídia por dispositivo consumida, setas/indicadores/pausa/movimento reduzido, vigência e ausência de controles para um slide implementados. Conferência visual usou artes existentes; upload/arte final mobile não foi homologado nesta sessão. |
-| HOME-05/06 | Categorias e quatro vitrines usam o renderer público; vazio é omitido. Descoberta usa dia de Brasília, tanto na revisão quanto no runtime. |
-| CARD-01/04/06/07/08 | Reutilizados cartões e cálculo central. Fotos/10x conferidos na amostra; navegação e variantes reais continuam dependentes da homologação com catálogo atual. |
-| GLOBAL-01, HOME-03/04/07 | Condicionais, omitidos. Nenhuma contagem, cupom ou oferta fictícios. |
-| GLOBAL-13 | Investigação de cookies/serviços permanece pendente; não foi copiado aviso jurídico. |
-| GLOBAL-05/06, CARD-02/03/05 | Adiados conforme seleção: conta, favoritos, troca de variante no card e avaliações sem backend/dados reais. |
-| MENU-05 | Breadcrumb das páginas internas preservado; não acrescentado à home. |
+| IDs                                  | Situação verificável                                                                                                                                                                                                                           |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GLOBAL-02/03/04/07/08/09/10/11/12/14 | Componentes locais integrados, identidade/contatos preservados, carrinho vazio acessível e diálogos com Escape/foco. Busca/destinos completos, ancoragem e sobreposição de ações exigem homologação no aplicativo com dados atuais.            |
+| MENU-01/02/03/04                     | Gaveta pública reutiliza taxonomia, nomes/destinos/ordem/visibilidade da revisão; clique/fechamento/retorno de foco conferidos. Cobertura de categorias com catálogo atual pendente.                                                           |
+| HOME-01/02                           | Mídia por dispositivo consumida, setas/indicadores/pausa/movimento reduzido, vigência e ausência de controles para um slide implementados. Conferência visual usou artes existentes; upload/arte final mobile não foi homologado nesta sessão. |
+| HOME-05/06                           | Categorias e quatro vitrines usam o renderer público; vazio é omitido. Descoberta usa dia de Brasília, tanto na revisão quanto no runtime.                                                                                                     |
+| CARD-01/04/06/07/08                  | Reutilizados cartões e cálculo central. Fotos/10x conferidos na amostra; navegação e variantes reais continuam dependentes da homologação com catálogo atual.                                                                                  |
+| GLOBAL-01, HOME-03/04/07             | Condicionais, omitidos. Nenhuma contagem, cupom ou oferta fictícios.                                                                                                                                                                           |
+| GLOBAL-13                            | Investigação de cookies/serviços permanece pendente; não foi copiado aviso jurídico.                                                                                                                                                           |
+| GLOBAL-05/06, CARD-02/03/05          | Adiados conforme seleção: conta, favoritos, troca de variante no card e avaliações sem backend/dados reais.                                                                                                                                    |
+| MENU-05                              | Breadcrumb das páginas internas preservado; não acrescentado à home.                                                                                                                                                                           |
 
 ## Evidências desta execução
 

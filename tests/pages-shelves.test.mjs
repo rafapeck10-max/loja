@@ -38,20 +38,22 @@ test("initial draft preserves storefront section order and current weekly select
   const d = initialPageDraft(data);
   assert.deepEqual(
     d.sections.map((s) => s.id),
-    ["intro", "discovery", "weekly", "inspiration", "new", "room", "catalog"],
+    ["intro", "blackFriday", "discovery", "weekly", "inspiration", "new", "room", "catalog"],
   );
+  assert.equal(d.sections.find((section) => section.id === "blackFriday").enabled, false);
+  assert.equal(d.sections.find((section) => section.id === "discovery").enabled, false);
   assert.deepEqual(d.curation.weeklyIds, ["b", "a"]);
 });
 test("section moves do not move pinned intro/catalog or mutate source", () => {
   const d = initialPageDraft(data);
   const moved = movePageSection(d, "weekly", -1);
   assert.deepEqual(
-    moved.sections.slice(0, 3).map((s) => s.id),
-    ["intro", "weekly", "discovery"],
+    moved.sections.slice(0, 4).map((s) => s.id),
+    ["intro", "blackFriday", "weekly", "discovery"],
   );
-  assert.equal(d.sections[1].id, "discovery");
+  assert.equal(d.sections[1].id, "blackFriday");
   assert.deepEqual(movePageSection(d, "intro", 1), d);
-  assert.deepEqual(movePageSection(d, "discovery", -1), d);
+  assert.deepEqual(movePageSection(d, "blackFriday", -1), d);
 });
 test("weekly selection rejects duplicates, ineligible products and overflow", () => {
   const d = initialPageDraft(data);

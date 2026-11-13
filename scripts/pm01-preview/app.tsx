@@ -8,6 +8,7 @@ import { previewSearch, type PreviewSearch } from "./navigation-state";
 import type { HomeTransport } from "../../src/lib/home-transport";
 import previewToken from "virtual:mobi-preview-token";
 import { useState } from "react";
+import { Toaster } from "sonner";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   createRootRoute,
@@ -18,7 +19,13 @@ import {
   RouterProvider,
   useRouterState,
 } from "@tanstack/react-router";
+import { overlayPreviewProducts, readPreviewProductDrafts } from "./product-drafts";
+import {
+  SupplierPricingPanel,
+  type SupplierPricingSummary,
+} from "../../src/components/admin/SupplierPricingPanel";
 import { AdminStudio } from "../../src/components/admin-studio/AdminStudio";
+import { remoteStudioFixture } from "./remote-studio-fixture";
 
 import { pageProducts } from "./data";
 import { createRoot } from "react-dom/client";
@@ -30,6 +37,35 @@ import type { OverviewProduct } from "../../src/lib/admin-overview";
 import "../../src/styles.css";
 import "./preview.css";
 
+const supplierKey = (product: (typeof pageProducts)[number]) =>
+  product.fornecedor?.trim() || "__missing_supplier__";
+const summarizeSupplier = (
+  key: string,
+  label: string,
+  items: typeof pageProducts,
+): SupplierPricingSummary => ({
+  key,
+  label,
+  total: items.length,
+  missingCost: items.filter((item) => !(Number(item.preco_atacado) > 0)).length,
+  missingSitePrice: items.filter((item) => !(Number(item.preco_atual) > 0)).length,
+  belowCost: items.filter(
+    (item) =>
+      Number(item.preco_atacado) > 0 &&
+      Number(item.preco_atual) > 0 &&
+      Number(item.preco_atual) < Number(item.preco_atacado),
+  ).length,
+});
+const previewSupplierSummaries = (items: typeof pageProducts) => [
+  summarizeSupplier("all", "Todos os fornecedores", items),
+  ...[...new Set(items.map(supplierKey))].map((key) =>
+    summarizeSupplier(
+      key,
+      key === "__missing_supplier__" ? "Sem fornecedor cadastrado" : key,
+      items.filter((product) => supplierKey(product) === key),
+    ),
+  ),
+];
 const products: OverviewProduct[] = pageProducts;
 const imports = [{ id: "demo-import-1" }, { id: "demo-import-2" }, { id: "demo-import-3" }];
 const tabs = [
@@ -44,6 +80,18 @@ export function Preview() {
   const [tab, setTab] = useState(
     new URLSearchParams(window.location.search).get("area") ?? "overview",
   );
+  let supplierProducts = pageProducts;
+  let supplierError = "";
+  try {
+    supplierProducts = overlayPreviewProducts(
+      pageProducts,
+      readPreviewProductDrafts(localStorage.getItem("mobi:admin-studio:v1:demo"), pageProducts),
+    );
+  } catch (error) {
+    supplierError =
+      error instanceof Error ? error.message : "Não foi possível ler os rascunhos de produtos.";
+  }
+  const [supplier, setSupplier] = useState("all");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | ProductStatus>("all");
   const [editing, setEditing] = useState<OverviewProduct | null>(null);
@@ -78,7 +126,18 @@ export function Preview() {
           setSearch(query);
         }}
       >
+        {new URLSearchParams(window.location.search).get("view") === "remote-drafts" && (
+          <p role="status">
+            Teste isolado da interface assíncrona. Dados de demonstração em memória; sem conexão ao
+            Supabase.
+          </p>
+        )}
         <AdminStudio
+          workspaceTransport={
+            new URLSearchParams(window.location.search).get("view") === "remote-drafts"
+              ? remoteStudioFixture
+              : undefined
+          }
           area={tab}
           homeTransport={localHomeTransport}
           demonstration
@@ -87,6 +146,26 @@ export function Preview() {
           productQuery={search}
           productFilter={filter}
         />
+        {tab === "fornecedores" && supplierError && (
+          <p className="pm-note" role="alert">
+            {supplierError}
+          </p>
+        )}
+        {tab === "fornecedores" && !supplierError && (
+          <SupplierPricingPanel
+            summaries={previewSupplierSummaries(supplierProducts)}
+            products={supplierProducts.filter(
+              (product) => supplier === "all" || supplierKey(product) === supplier,
+            )}
+            selectedSupplier={supplier}
+            onSelectSupplier={setSupplier}
+            onEdit={(product) => {
+              setSearch(product.sku || product.nome);
+              setFilter("all");
+              setTab("produtos");
+            }}
+          />
+        )}
         {tab === "overview" ? (
           <AdminOverview
             demonstration
@@ -108,7 +187,7 @@ export function Preview() {
             <button className="aw-action" onClick={() => setTab("overview")}>
               <ArrowLeft size={16} /> Voltar à Visão geral
             </button>
-            <h2>{tabs.find(([value]) => value === tab)?.[1]}</h2>
+            <h1>{tabs.find(([value]) => value === tab)?.[1]}</h1>
             <p>
               Destino do atalho na demonstração. No painel integrado, abre a área existente. Esta
               prévia não salva dados.
@@ -259,6 +338,7 @@ function PreviewShell() {
       <UIProvider>
         <CartProvider>
           <Outlet />
+          <Toaster richColors position="top-center" />
         </CartProvider>
       </UIProvider>
     </QueryClientProvider>
@@ -297,6 +377,26 @@ const serviceRoute = createRoute({
   path: "/moveis-nova-iguacu",
   component: () => <LocalStorefront page="service" />,
 });
+const helpRoute = createRoute({
+  getParentRoute: () => previewRoot,
+  path: "/ajuda/$slug",
+  component: () => <LocalStorefront page="help" />,
+});
+const helpIndexRoute = createRoute({
+  getParentRoute: () => previewRoot,
+  path: "/ajuda",
+  component: () => <LocalStorefront page="help-index" />,
+});
+const inspirationRoute = createRoute({
+  getParentRoute: () => previewRoot,
+  path: "/inspiracao",
+  component: () => <LocalStorefront page="inspiration" />,
+});
+const articleRoute = createRoute({
+  getParentRoute: () => previewRoot,
+  path: "/inspiracao/$slug",
+  component: () => <LocalStorefront page="article" />,
+});
 const legacyRoute = createRoute({
   getParentRoute: () => previewRoot,
   path: "/scripts/pm01-preview/index.html",
@@ -308,9 +408,15 @@ const previewRouter = createRouter({
     categoryRoute,
     productRoute,
     serviceRoute,
+    helpRoute,
+    helpIndexRoute,
+    inspirationRoute,
+    articleRoute,
     legacyRoute,
   ]),
   history: createBrowserHistory(),
   scrollRestoration: true,
 });
-createRoot(document.getElementById("root")!).render(<RouterProvider router={previewRouter} />);
+const root = createRoot(document.getElementById("root")!);
+root.render(<RouterProvider router={previewRouter} />);
+if (import.meta.hot) import.meta.hot.dispose(() => root.unmount());

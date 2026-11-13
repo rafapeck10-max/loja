@@ -1,5 +1,11 @@
 # Painel Mobi — prévia local PM-01 a PM-10
 
+## Revisão em 11/11/2026
+
+Estado vigente e precedência: [relatório consolidado](../../docs/REVISAO_HOME_PRODUTO_2026-11-11.md). A amostra tem 17 registros: 16 históricos e uma cópia dos atributos públicos do Sofá Roma observados em 11/11, com oito fotos/ficha real. Custos administrativos são sintéticos para demonstração; nenhum registro remoto foi alterado. Os relatos abaixo são históricos quando divergirem desse relatório.
+
+Com a porta padrão ocupada: `npx vite --config scripts/pm01-preview/vite.config.ts --port 5193 --strictPort`. Home `http://127.0.0.1:5193/`; produto `/produto/sofa-roma-retratil-e-reclinavel-2-00-m-veludo-marrom`; PM-04 `/scripts/pm01-preview/index.html?area=produtos`. O endpoint aceita apenas loopback na porta realmente usada. Rascunhos PM-04 validados alimentam todos os atributos da prévia. Desktop/associação/carrinho conferidos; mobile desta rodada bloqueado pela ferramenta. Nada publicado.
+
 A versão atual reúne os dez módulos, com rascunhos, revisão e histórico locais. A área Evolução contém os 141 requisitos e 38 fichas originais, com estados Mobi separados e exportação de pedidos. Campanhas são simulações, páginas de ajuda têm renderer local e entrega usa consulta ao WhatsApp. Persistência compartilhada, papéis e aplicação das configurações no site permanecem pendentes.
 
 Comando e endereço permanecem: `npx vite --config scripts/pm01-preview/vite.config.ts` → http://127.0.0.1:5187/scripts/pm01-preview/index.html. A pasta conserva o nome técnico original. A amostra atual tem 16 móveis históricos, com quatro pendências inseridas para conferir estados, e usa a mesma fonte no resumo e nos editores. Não contém credenciais nem chama operações administrativas na demonstração.

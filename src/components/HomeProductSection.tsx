@@ -16,7 +16,7 @@ export function HomeProductSection({
 }) {
   if (!products.length) return null;
   return (
-    <section className="mobi-shelf mobi-wrap">
+    <section className="mobi-shelf mobi-wrap" aria-label={title}>
       <div className="mobi-section-title">
         <div>
           <h2>{title}</h2>
@@ -37,7 +37,9 @@ export function HomeProductSection({
           </Link>
         )}
       </div>
-      <div className="mobi-grid">
+      <div
+        className={`mobi-grid mobi-home-product-grid${products.length === 1 ? " is-single" : ""}`}
+      >
         {products.map((produto) => (
           <ProductCard key={produto.id} produto={produto} badge={badges[produto.id]} />
         ))}

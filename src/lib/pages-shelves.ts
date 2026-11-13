@@ -273,6 +273,7 @@ export function toStorefrontProducts(
     fornecedor: p.fornecedor ?? null,
     medidas: p.medidas ?? null,
     cores: p.cores ?? null,
+    compre_junto_ids: p.compre_junto_ids ?? [],
     parcelas_sem_juros: p.parcelas_sem_juros ?? 10,
     variacoes_preco: (Array.isArray(p.variacoes_preco)
       ? p.variacoes_preco.filter((v) => v && typeof v === "object" && !Array.isArray(v))

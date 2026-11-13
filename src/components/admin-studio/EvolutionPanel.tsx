@@ -19,11 +19,12 @@ import {
   type EvolutionFilters,
   type EvolutionTracking,
 } from "../../lib/evolution.ts";
+import type { AdminViewId } from "../../lib/admin-navigation";
 
 export interface EvolutionPanelProps {
   data: EvolutionData;
   onChange: (next: EvolutionData) => void;
-  onNavigate?: (area: string) => void;
+  onNavigate?: (area: AdminViewId) => void;
 }
 const controlStyle = { minHeight: 44, width: "100%", minWidth: 0 };
 const columns = {

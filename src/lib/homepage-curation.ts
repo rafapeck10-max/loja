@@ -3,7 +3,14 @@ export type EditorProduct = Pick<
   ProdutoAdmin,
   "id" | "nome" | "preco_atual" | "preco_atacado" | "url_imagem"
 > &
-  Partial<ProdutoAdmin>;
+  Partial<ProdutoAdmin> & {
+    materiais?: string[] | null;
+    caracteristicas?: string[] | null;
+    width_cm?: number | null;
+    height_cm?: number | null;
+    depth_closed_cm?: number | null;
+    depth_open_cm?: number | null;
+  };
 export interface ProductSettings {
   novidade: HomeCurationMode;
   sala: HomeCurationMode;

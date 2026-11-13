@@ -8,6 +8,11 @@ import {
 } from "@/lib/homepage-banners";
 import { hasRealReferencePrice } from "@/lib/price-reference";
 import { ADMIN_REVIEW_QUERY_LIMIT } from "@/lib/admin-overview";
+import {
+  isEligibleBundleProduct,
+  normalizeProductBundleIds,
+  prepareProductBundleWrite,
+} from "./product-bundles.ts";
 
 export interface ProdutoInput {
   id: string;
@@ -29,6 +34,7 @@ export interface ProdutoInput {
   descricao?: string;
   medidas?: string;
   cores?: string[];
+  compre_junto_ids?: string[];
   deduplicateExisting?: boolean;
 }
 
@@ -43,6 +49,61 @@ function checkPassword(input: string) {
     throw new Error("Senha administrativa incorreta.");
   }
 }
+
+export const readAdminStudioWorkspace = createServerFn({ method: "POST" })
+  .validator((input: { password: string }) => ({ password: String(input?.password ?? "") }))
+  .handler(async ({ data }) => {
+    checkPassword(data.password);
+    const { remoteStudioStore } = await import("./admin-studio-store.server");
+    return JSON.stringify(await remoteStudioStore().read());
+  });
+
+export const getAdminStudioStorageMode = createServerFn({ method: "POST" })
+  .validator((input: { password: string }) => ({ password: String(input?.password ?? "") }))
+  .handler(async ({ data }) => {
+    checkPassword(data.password);
+    return { remote: process.env.MOBI_REMOTE_STUDIO === "1" };
+  });
+
+export const changeAdminStudioWorkspace = createServerFn({ method: "POST" })
+  .validator((input: { password: string; command: unknown }) => ({
+    password: String(input?.password ?? ""),
+    command: input?.command,
+  }))
+  .handler(async ({ data }) => {
+    checkPassword(data.password);
+    const { normalizeStudioWorkspaceCommand } = await import("./admin-studio-transport");
+    const command = normalizeStudioWorkspaceCommand(data.command);
+    const { remoteStudioStore } = await import("./admin-studio-store.server");
+    const products = await listAdminProdutos({ data: { password: data.password } });
+    let sourceValues;
+    if (command.action === "recover") {
+      const { currentStudioSources } = await import("./admin-studio-sources.server");
+      const bannerSource = await listAdminHomepageBanners({ data: { password: data.password } });
+      sourceValues = currentStudioSources(products, bannerSource.banners);
+    }
+    const transport = remoteStudioStore(sourceValues);
+    const current = await transport.read();
+    const { applyStudioWorkspaceCommand } = await import("./admin-studio-transport");
+    const next = applyStudioWorkspaceCommand(current, command, {
+      date: new Date().toISOString(),
+      sourceValues,
+    });
+    const scope =
+      command.action === "restore"
+        ? current.workspace.history.find((revision) => revision.id === command.revisionId)?.scope
+        : command.action !== "recover"
+          ? command.scope
+          : undefined;
+    const { validateStudioResource } = await import("./studio-validation");
+    const scopes = command.action === "recover" ? command.scopes : scope ? [scope] : [];
+    if (!scopes.length) throw new Error("Área de revisão inválida.");
+    const errors = scopes.flatMap((key) =>
+      validateStudioResource(key, next.workspace.entries[key], products, next.workspace.entries),
+    );
+    if (errors.length) throw new Error(errors.join(" "));
+    return JSON.stringify(await transport.change(command));
+  });
 
 export type ProdutoAdmin = Database["public"]["Tables"]["produtos"]["Row"];
 export type ProdutoScrapImport = Database["public"]["Tables"]["scraped_products"]["Row"];
@@ -458,10 +519,7 @@ function normalize(input: ProdutoInput) {
     : [];
   const precoAntigoInput =
     input.preco_antigo == null || input.preco_antigo === 0 ? null : Number(input.preco_antigo);
-  if (
-    precoAntigoInput != null &&
-    (!Number.isFinite(precoAntigoInput) || precoAntigoInput < 0)
-  ) {
+  if (precoAntigoInput != null && (!Number.isFinite(precoAntigoInput) || precoAntigoInput < 0)) {
     throw new Error("Preço anterior inválido.");
   }
 
@@ -516,6 +574,10 @@ function normalize(input: ProdutoInput) {
           .map((cor) => cor.trim())
           .filter(Boolean)
       : [],
+    compre_junto_ids:
+      input.compre_junto_ids === undefined
+        ? undefined
+        : normalizeProductBundleIds(input.compre_junto_ids, { selfId: idRaw, requireUuid: true }),
   };
 }
 
@@ -624,6 +686,37 @@ export const upsertProduto = createServerFn({ method: "POST" })
           ? precoAntigoExistente
           : precoAtual;
 
+    const bundleInput = row.compre_junto_ids ?? existing?.compre_junto_ids;
+    const bundleIds =
+      bundleInput === undefined
+        ? undefined
+        : normalizeProductBundleIds(bundleInput, {
+            selfId: existing?.id ?? row.id,
+            requireUuid: true,
+          });
+    const bundleWrite = await prepareProductBundleWrite(bundleIds, async () => {
+      const { error: schemaError } = await supabaseAdmin
+        .from("produtos")
+        .select("compre_junto_ids")
+        .limit(0);
+      return schemaError;
+    });
+    if (bundleIds?.length) {
+      const { data: relatedProducts, error: relatedProductsError } = await supabaseAdmin
+        .from("produtos")
+        .select("id, preco_atual, preco_atacado, url_imagem, descricao, cores")
+        .in("id", bundleIds);
+      if (relatedProductsError) throw new Error(relatedProductsError.message);
+      const eligibleIds = new Set(
+        (relatedProducts ?? []).filter(isEligibleBundleProduct).map((product) => product.id),
+      );
+      if (bundleIds.some((id) => !eligibleIds.has(id))) {
+        throw new Error(
+          "Revise o Compre junto: cada complemento precisa ter preço, custo e foto HTTPS válidos, sem indicação de indisponibilidade.",
+        );
+      }
+    }
+
     const dbRow: Database["public"]["Tables"]["produtos"]["Insert"] = {
       nome: existing?.nome ?? row.nome,
       slug: existing?.slug ?? row.slug,
@@ -648,6 +741,7 @@ export const upsertProduto = createServerFn({ method: "POST" })
       descricao: existing?.descricao || row.descricao,
       medidas: existing?.medidas || row.medidas,
       cores: existing?.cores?.length ? existing.cores : row.cores,
+      ...bundleWrite,
     };
 
     if (existing?.id || row.id) {

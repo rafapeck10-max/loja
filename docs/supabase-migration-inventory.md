@@ -83,17 +83,37 @@ A leitura de `information_schema.role_table_grants` apontou privilégios amplos 
 - Há variáveis de ambiente com nomes `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`, `VITE_SUPABASE_PROJECT_ID`, `VITE_SUPABASE_URL` e chaves publicáveis nos ambientes Production e Preview. Os valores não foram abertos. Portanto, não foi possível confirmar que Vercel aponta para a mesma ref do dashboard.
 - Nenhum deploy foi disparado; produção não foi promovida.
 
+## Atualização de acesso — 12/11/2026
+
+- A organização Supabase é Free. Foi encontrado `mobi-crm-security-test` (`luiykjchhrpkrmtmppep`, região `ca-central-1`), que estava pausado. A retomada foi confirmada após o usuário pedir para continuar, e a restauração terminou com status online.
+- A leitura limitada ao schema mostrou tabelas de CRM (`products` e `deals`, com `workspace_id`), diferentes do catálogo da loja (`produtos` e `scraped_products`). Nenhum registro foi consultado; nenhuma migration foi aplicada. Esse projeto não serve como alvo de teste para esta migração.
+- O painel desse projeto informa `No branches` e `No backups`. A produção `mobi-loja` também continua sem backup verificável.
+- Supabase CLI não está instalado, Docker Engine não responde e não há `psql` ou PostgreSQL local disponível; ainda não existe stack Mobi local isolada.
+- A tela da Vercel confirmou os nomes das variáveis, mas seus valores estão ocultos; a associação de Production/Preview com `xzgafeqifikqrxrjaueb` continua sem confirmação. Nenhuma outra variável secreta foi aberta.
+- Os arquivos-fonte `MOBI_PAINEL_CONTROLE_ESPECIFICACAO.md` e `MOBI_ENGENHARIA_REVERSA_MADEIRAMADEIRA (1).md` não aparecem no espelho de arquivos acessível desta tarefa; permanecem disponíveis apenas os documentos locais listados no inventário do projeto.
+
 ## Preparação local e pendências
+
+**Continuação mais recente:** adaptador Supabase e endpoints autenticados ligados à interface assíncrona. Migration `20261112161958_add_mobi_studio_workspace.sql` gerada pela CLI oficial e validada com PostgreSQL isolado; teste de interface por fixture confirmou salvar/revisar/restaurar. Desativada no ambiente real por padrão via `MOBI_REMOTE_STUDIO`. Procedimento, reversão e limites em `docs/MIGRACAO_RASCUNHOS_PREPARO.md`. Nenhuma escrita remota ou publicação; os registros abaixo descrevem os passos anteriores e não substituem esse estado.
+
+### Continuação após a correção de escopo — 12/11/2026
+
+- Docker e projetos CRM estão fora do caminho de migração da loja. A ausência de Docker não é requisito para usar a Vercel.
+- Os dois originais foram localizados novamente na pasta OneDrive `.md` e consultados nesta continuação: painel v0.2, §§8–10, e engenharia reversa v1.1, especialmente MM-CMS-08. A afirmação anterior de indisponibilidade descreve a sessão anterior, não o acesso atual.
+- `src/lib/admin-studio-repository.ts` acrescenta transporte por repositório com comparação atômica de versão exigida no commit, conflito explícito e rejeição de estado remoto inválido. Testes exercitam duas primeiras gravações simultâneas, versão obsoleta e falha de armazenamento. Ainda não há implementação Supabase desse repositório nem ligação da interface; não representa persistência remota concluída.
+- `scripts/mobi-migration-preflight.sql` prepara inventário de metadados em transação somente leitura, sem exportar registros ou valores comerciais. Não foi executado no banco nesta continuação.
+- Conectores Vercel/Supabase retornaram indisponibilidade. A leitura autenticada via CLI Vercel também falhou. A sessão do navegador continua sendo a via autenticada previamente confirmada; login do navegador não foi tratado como credencial de CLI.
+- Build local concluído; 24 testes de persistência/fornecedor/complementos passaram e, após adicionar validação da leitura, os nove testes de persistência passaram novamente. O banco real e a prévia hospedada desta branch ainda não foram validados.
 
 O contrato de transporte administrativo e o resolvedor de fornecedores por nome exato foram preparados localmente e testados na branch `feature/mm-p07-product-page`, sem adaptador remoto ativo. As migrations de estado versionado do painel e de IDs de fornecedor não foram geradas/aplicadas.
 
 Antes de DDL ou backfill, ainda é necessário:
 
-1. Confirmar que o valor de Supabase usado pela Vercel corresponde à ref `xzgafeqifikqrxrjaueb`; os nomes das variáveis foram vistos, mas seus valores não foram abertos.
-2. Obter ambiente descartável de teste e backup verificável; o projeto aberto não mostrava branches nem backups.
+1. Disponibilizar um banco de teste Mobi local ou dedicado; `mobi-crm-security-test` está online, mas tem schema de CRM e não deve receber as migrations da loja. Obter também um backup verificável da produção antes de qualquer alteração nela.
+2. Confirmar que o valor de Supabase usado pela Vercel corresponde à ref `xzgafeqifikqrxrjaueb`; o painel mostrou os nomes das variáveis, mas os valores estão ocultos.
 3. Reconciliar o histórico remoto com as duas migrations locais e avaliar a migration de `compre_junto_ids` antes de qualquer execução.
 4. Revisar grants e policies, autenticação administrativa, projeção pública e funções/transações com base no schema confirmado.
 5. Gerar migration com a CLI oficial, testar reversão e conflitos no ambiente de teste; preservar os campos textuais de fornecedor e os valores de preço durante o backfill.
 6. Apresentar a versão e a prévia exatas para aprovação antes de qualquer mudança em produção ou promoção da Vercel.
 
-**Resultado:** a leitura do projeto documentado foi concluída e o vínculo local foi alinhado, mas o banco ainda não está pronto para migração. A falta de ambiente de teste/backup e a divergência de migrations são bloqueios explícitos. A preparação local permanece separada da integração remota implementada; nenhum dado publicado foi alterado.
+**Resultado:** o alvo documentado e a configuração local estão alinhados, e um projeto Free foi restaurado sem alteração em produção. A migração permanece bloqueada por ausência de banco de teste Mobi/local, backup verificável da produção, CLI/acesso para reconciliar o histórico e confirmação das variáveis da Vercel. Nenhum dado publicado foi alterado.

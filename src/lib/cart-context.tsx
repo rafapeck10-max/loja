@@ -4,10 +4,10 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
+import { readStoredCart } from "./cart-storage";
 import { toast } from "sonner";
 import { quotedCartKey, orderPaymentSummary } from "./cart-payment.ts";
 import type { RateVerification } from "./payment-config.ts";
@@ -49,28 +49,39 @@ const STORAGE_KEY = "mobili_cart";
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const hydrated = useRef(false);
+  const [hydrated, setHydrated] = useState(false);
 
-  // Load persisted cart (client only, after hydration)
+  // Hydrate before persisting, including when another tab changes the cart.
   useEffect(() => {
+    const load = (raw: string | null) => {
+      const stored = readStoredCart(raw);
+      setItems(stored.items);
+      if (stored.recovered)
+        toast.error("Alguns itens do carrinho não puderam ser recuperados. Confira sua seleção.");
+    };
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setItems(JSON.parse(saved) as CartItem[]);
+      load(localStorage.getItem(STORAGE_KEY));
     } catch {
-      // ignore corrupted storage
+      /* Storage can be unavailable. */
     }
-    hydrated.current = true;
+    setHydrated(true);
+    const sync = (event: StorageEvent) => {
+      if (event.storageArea === localStorage && (event.key === STORAGE_KEY || event.key === null))
+        load(event.newValue);
+    };
+    window.addEventListener("storage", sync);
+    return () => window.removeEventListener("storage", sync);
   }, []);
 
   // Persist on change
   useEffect(() => {
-    if (!hydrated.current) return;
+    if (!hydrated) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     } catch {
       // storage unavailable
     }
-  }, [items]);
+  }, [items, hydrated]);
 
   // Lock body scroll while drawer is open
   useEffect(() => {

@@ -4,9 +4,10 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import * as store from "../src/lib/home-local-store.server.ts";
+import { defaultHomeSections } from "../src/lib/home-configuration.ts";
 const config = {
   schemaVersion: 1,
-  sections: [],
+  sections: defaultHomeSections(),
   sectionIds: { weekly: [], discovery: [], new: [], room: [] },
   banners: [],
   navigation: [],
@@ -22,7 +23,11 @@ test("durable store prevents stale concurrent updates and keeps previous JSON on
       a.change({ action: "save", expected: 0, config, sourceVersion: "a" }),
       b.change({ action: "save", expected: 0, config, sourceVersion: "a" }),
     ]);
-    assert.equal(result.filter((r) => r.status === "fulfilled").length, 1);
+    assert.equal(
+      result.filter((r) => r.status === "fulfilled").length,
+      1,
+      result.filter((r) => r.status === "rejected").map((r) => r.reason?.message).join("\n"),
+    );
     assert.equal((await b.read()).revisions.length, 1);
     await assert.rejects(
       () => a.change({ action: "apply", expected: 1, id: 1, sourceVersion: "a" }),

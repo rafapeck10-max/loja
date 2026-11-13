@@ -6,15 +6,16 @@ export const ADMIN_REVIEW_QUERY_LIMIT = 500;
 export function overviewImpact(product: OverviewProduct): string {
   if (!(Number(product.preco_atual) > 0))
     return "Sem preço de venda válido, o produto não atende aos critérios de exibição do catálogo.";
-  if (!/^https?:\/\//i.test(product.url_imagem ?? ""))
-    return "Sem endereço de imagem válido, o cadastro precisa de revisão antes da exibição.";
-  return "O custo pendente impede a elegibilidade pelas regras atuais do catálogo.";
+  if (!(Number(product.preco_atacado) > 0))
+    return "Sem custo do fornecedor, a equipe não consegue comparar o preço de compra com o preço no site.";
+  return "Sem endereço de imagem válido, o cadastro precisa de revisão antes da exibição.";
 }
 
 export type OverviewProduct = Pick<
   ProdutoAdmin,
   "id" | "nome" | "preco_atual" | "preco_atacado" | "url_imagem"
->;
+> &
+  Partial<Pick<ProdutoAdmin, "fornecedor">>;
 
 export interface OverviewSource<T> {
   status: "pending" | "success" | "error";
@@ -37,7 +38,11 @@ export function summarizeOverview(
     incomplete: null,
     review: null,
   };
-  const issues: Array<{ product: OverviewProduct; reasons: string[] }> = [];
+  const issues: Array<{
+    product: OverviewProduct;
+    reasons: string[];
+    priority: number;
+  }> = [];
   // Do not turn failed requests (including failed refreshes with cached data) into zeros.
   if (catalog.status === "success" && catalog.data) {
     counts.total = catalog.data.length;
@@ -45,14 +50,19 @@ export function summarizeOverview(
     for (const product of catalog.data) {
       const status = productStatus(product);
       counts[status] = (counts[status] ?? 0) + 1;
+      const missingPrice = !(Number(product.preco_atual) > 0);
+      const missingImage = !/^https?:\/\//i.test(product.url_imagem ?? "");
+      const missingCost = !(Number(product.preco_atacado) > 0);
       const reasons: string[] = [];
-      if (!(Number(product.preco_atual) > 0)) reasons.push("Preço de venda ausente ou inválido");
-      if (!/^https?:\/\//i.test(product.url_imagem ?? ""))
-        reasons.push("Imagem principal ausente ou inválida");
-      if (!(Number(product.preco_atacado) > 0))
-        reasons.push("Custo do fornecedor ausente ou inválido");
-      if (reasons.length) issues.push({ product, reasons });
+      if (missingPrice) reasons.push("Preço de venda ausente ou inválido");
+      if (missingCost) reasons.push("Custo do fornecedor ausente ou inválido");
+      if (missingImage) reasons.push("Imagem principal ausente ou inválida");
+      if (reasons.length)
+        issues.push({ product, reasons, priority: missingPrice ? 0 : missingCost ? 1 : 2 });
     }
+    issues.sort(
+      (a, b) => a.priority - b.priority || a.product.nome.localeCompare(b.product.nome, "pt-BR"),
+    );
   }
   if (review.status === "success" && review.data) counts.review = review.data.length;
   const reviewLimitReached =

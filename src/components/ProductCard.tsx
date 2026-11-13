@@ -25,11 +25,13 @@ export function ProductCard({
   badge,
   returnPage,
   returnCategory,
+  returnSearch,
 }: {
   produto: Produto;
   badge?: ProductBadge;
   returnPage?: number;
   returnCategory?: string;
+  returnSearch?: string;
 }) {
   const price = productDisplayPrice(produto);
   const payment = cardQuote(price, MAX_INSTALLMENTS);
@@ -68,6 +70,7 @@ export function ProductCard({
         search={{
           ...(returnPage ? { returnPage } : {}),
           ...(returnCategory ? { returnCategory } : {}),
+          ...(returnSearch ? { returnSearch } : {}),
         }}
         onClick={saveCatalogReturnPosition}
         className="mobi-photo"
@@ -109,7 +112,7 @@ export function ProductCard({
           <div className="mobi-price">{formatBRL(price)}</div>
           <p className="mobi-installments">
             <strong>
-              ou {payment.count}x de {formatBRL(payment.approximateInstallment)} sem juros
+              ou {payment.count}x de {formatBRL(payment.approximateInstallment)}
             </strong>
             <span>Total no cartão: {formatBRL(payment.total)}</span>
           </p>
@@ -120,6 +123,7 @@ export function ProductCard({
           search={{
             ...(returnPage ? { returnPage } : {}),
             ...(returnCategory ? { returnCategory } : {}),
+            ...(returnSearch ? { returnSearch } : {}),
           }}
           onClick={saveCatalogReturnPosition}
           className="mobi-product-cta"

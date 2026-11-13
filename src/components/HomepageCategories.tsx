@@ -1,6 +1,7 @@
 import type { Produto } from "../lib/products.functions";
 import {
   HOMEPAGE_ROOMS,
+  homepageRoomImageCandidates,
   selectHomepageRoomImages,
   type HomepageRoomImage,
 } from "../lib/homepage-room-categories";
@@ -13,32 +14,52 @@ export function HomepageCategories({
 }: {
   products: Produto[];
   roomImages?: HomepageRoomImage[];
-  destinations?: readonly { id: string; href: string }[];
+  destinations?: readonly { id: string; href: string; visible?: boolean }[];
 }) {
-  const selectedImages = roomImages?.length ? roomImages : selectHomepageRoomImages(products);
+  const selectedImages = roomImages ?? [];
+  const defaultImages = selectHomepageRoomImages(products);
   const rooms = HOMEPAGE_ROOMS.flatMap((room) => {
-    const image = selectedImages.find((selected) => selected.slug === room.slug)?.imageUrl;
-    return image ? [{ ...room, image }] : [];
+    const destination = destinations?.find((item) => item.id === room.slug);
+    if (destination?.visible === false) return [];
+    const image =
+      selectedImages.find((selected) => selected.slug === room.slug)?.imageUrl ||
+      defaultImages.find((selected) => selected.slug === room.slug)?.imageUrl;
+    return image
+      ? [
+          {
+            ...room,
+            image,
+            href: destination?.href ?? `/categoria/${room.slug}`,
+            fallbackImages: homepageRoomImageCandidates(room.slug, products),
+          },
+        ]
+      : [];
   });
 
   if (!rooms.length) return null;
 
   return (
-    <section className="mobi-shop-categories mobi-wrap">
+    <section className="mobi-shop-categories mobi-wrap" aria-label="Quarto, sala e cozinha">
       <div className="mobi-shop-heading">
         <h2>Encontre por ambiente</h2>
       </div>
-      <nav className="mobi-photo-categories" aria-label="Comprar por ambiente">
+      <nav
+        className="mobi-photo-categories"
+        aria-label="Comprar por ambiente"
+        style={{
+          gridTemplateColumns: `repeat(${rooms.length}, minmax(0, 1fr))`,
+          maxWidth: `${(600 / HOMEPAGE_ROOMS.length) * rooms.length}px`,
+        }}
+      >
         {rooms.map((room) => (
-          <a
-            key={room.slug}
-            href={
-              destinations?.find((destination) => destination.id === room.slug)?.href ??
-              `/categoria/${room.slug}`
-            }
-          >
+          <a key={room.slug} href={room.href}>
             <span className="mobi-category-photo">
-              <ImageWithFallback src={room.image} alt="" loading="lazy" />
+              <ImageWithFallback
+                src={room.image}
+                fallbackSrcs={room.fallbackImages}
+                alt=""
+                loading="lazy"
+              />
             </span>
             <span>{room.label}</span>
           </a>

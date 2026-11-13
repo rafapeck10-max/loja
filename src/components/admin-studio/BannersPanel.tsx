@@ -212,9 +212,15 @@ export function BannersPanel({ data, onChange }: BannersPanelProps) {
         </button>
       </header>
       <p className="pm-note">
-        Envio lê o arquivo somente neste navegador. Limite total de 2 MB para a biblioteca;
-        publicação e armazenamento remoto dependem da operação autorizada.
+        Rascunhos e imagens ficam neste navegador; a loja publicada continua igual.
       </p>
+      <details className="pm-media-limits">
+        <summary>Limite e armazenamento de imagens</summary>
+        <p className="pm-muted">
+          A biblioteca aceita até 2 MB no total. O envio lê o arquivo somente neste navegador;
+          armazenar ou publicar imagens exige a integração autorizada.
+        </p>
+      </details>
       <div className="pm-actions" role="group" aria-label="Selecionar banner">
         {data.banners.map((item) => (
           <button
