@@ -53,6 +53,7 @@ export function PagesAndShelvesPanel({
   ready = true,
   demonstration = false,
   managed,
+  weeklyPublication,
 }: {
   products: EditorProduct[];
   campaigns?: CampaignData;
@@ -63,6 +64,15 @@ export function PagesAndShelvesPanel({
     saved?: PageDraft;
     onChange: (draft: PageDraft) => void;
     onSave: (draft: PageDraft) => void | Promise<void>;
+  };
+  weeklyPublication?: {
+    available: boolean;
+    canApply: boolean;
+    weeklyIds: string[];
+    sourceRevision: number | null;
+    applying: boolean;
+    message: string;
+    onApply: () => void;
   };
 }) {
   const storageKey = DRAFT_KEY + (demonstration ? ":demo" : ":admin");
@@ -333,7 +343,14 @@ export function PagesAndShelvesPanel({
           </button>
         </div>
       </div>
-      <p className="ps-source">{sourceLabel}. Alterações são salvas somente neste navegador.</p>
+      <p className="ps-source">
+        {sourceLabel}.{" "}
+        {demonstration
+          ? "A seleção não altera a loja."
+          : managed
+            ? "Trocas ficam no rascunho até serem revisadas e aplicadas à loja."
+            : "Alterações são salvas somente neste navegador; a loja publicada permanece igual."}
+      </p>
       {stored && stored !== lastSaved && (
         <div className="ps-notice">
           <span>Há um rascunho local salvo para esta página.</span>
@@ -529,6 +546,40 @@ export function PagesAndShelvesPanel({
                           );
                         })}
                       </ol>
+                      <div className="ps-publication" aria-label="Estado das escolhas da semana">
+                        <div>
+                          <strong>
+                            {demonstration
+                              ? "Seleção demonstrativa"
+                              : weeklyPublication?.available
+                                ? "Na loja agora"
+                                : "Seleção atual da loja"}
+                          </strong>
+                          {weeklyPublication?.weeklyIds.length ? (
+                            <p>
+                              {weeklyPublication.weeklyIds
+                                .map((id) => byId.get(id)?.nome ?? "Produto fora do catálogo")
+                                .join(" · ")}
+                              {weeklyPublication.available &&
+                                weeklyPublication.sourceRevision != null &&
+                                ` · revisão ${weeklyPublication.sourceRevision}`}
+                            </p>
+                          ) : weeklyPublication?.available ? (
+                            <p>Nenhum produto selecionado.</p>
+                          ) : (
+                            <p>As escolhas atuais vêm da curadoria do catálogo.</p>
+                          )}
+                          <small>{weeklyPublication?.message ?? "Revise antes de aplicar."}</small>
+                        </div>
+                        <button
+                          type="button"
+                          className="aw-action"
+                          disabled={!weeklyPublication?.canApply || weeklyPublication.applying}
+                          onClick={weeklyPublication?.onApply}
+                        >
+                          {weeklyPublication?.applying ? "Aplicando…" : "Aplicar escolhas na loja"}
+                        </button>
+                      </div>
                       <button
                         className="aw-action ps-add"
                         disabled={current.curation.weeklyIds.length >= 4}

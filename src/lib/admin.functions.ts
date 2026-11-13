@@ -8,6 +8,8 @@ import {
 } from "@/lib/homepage-banners";
 import { hasRealReferencePrice } from "@/lib/price-reference";
 import { ADMIN_REVIEW_QUERY_LIMIT } from "@/lib/admin-overview";
+import { isCurationProduct } from "@/lib/homepage-curation";
+import { normalizePageDraft } from "@/lib/pages-shelves";
 import {
   isEligibleBundleProduct,
   normalizeProductBundleIds,
@@ -103,6 +105,105 @@ export const changeAdminStudioWorkspace = createServerFn({ method: "POST" })
     );
     if (errors.length) throw new Error(errors.join(" "));
     return JSON.stringify(await transport.change(command));
+  });
+
+function isMissingWeeklyCurationSchema(error: { code?: string; message: string }) {
+  return (
+    error.code === "42P01" ||
+    error.code === "PGRST205" ||
+    error.code === "PGRST204" ||
+    (/mobi_homepage_weekly_curation/i.test(error.message) &&
+      /schema cache|does not exist|could not find|relation/i.test(error.message))
+  );
+}
+
+export const getAdminWeeklyCurationPublication = createServerFn({ method: "POST" })
+  .validator((input: { password: string }) => ({ password: String(input?.password ?? "") }))
+  .handler(async ({ data }) => {
+    checkPassword(data.password);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: publication, error } = await supabaseAdmin
+      .from("mobi_homepage_weekly_curation")
+      .select("weekly_ids,source_revision")
+      .eq("id", true)
+      .maybeSingle();
+    if (error) {
+      if (isMissingWeeklyCurationSchema(error))
+        return {
+          available: false as const,
+          canApplyInEnvironment: process.env.VERCEL_ENV === "production",
+          weeklyIds: [] as string[],
+          sourceRevision: null,
+        };
+      throw new Error("Não foi possível consultar as escolhas publicadas na home.");
+    }
+    return {
+      available: !!publication,
+      canApplyInEnvironment: process.env.VERCEL_ENV === "production",
+      weeklyIds: Array.isArray(publication?.weekly_ids) ? [...publication.weekly_ids] : [],
+      sourceRevision:
+        publication?.source_revision == null ? null : Number(publication.source_revision),
+    };
+  });
+
+export const applyReviewedHomeWeeklyCuration = createServerFn({ method: "POST" })
+  .validator((input: { password: string; expectedWorkspaceVersion: number }) => {
+    const expectedWorkspaceVersion = Number(input?.expectedWorkspaceVersion);
+    if (!Number.isSafeInteger(expectedWorkspaceVersion) || expectedWorkspaceVersion < 0)
+      throw new Error("Atualize o painel antes de aplicar esta seleção.");
+    return {
+      password: String(input?.password ?? ""),
+      expectedWorkspaceVersion,
+    };
+  })
+  .handler(async ({ data }) => {
+    checkPassword(data.password);
+    if (process.env.VERCEL_ENV !== "production")
+      throw new Error("Use a loja publicada para aplicar mudanças. A prévia continua protegida.");
+    const { remoteStudioStore } = await import("./admin-studio-store.server");
+    const snapshot = await remoteStudioStore().read();
+    if (snapshot.serverVersion !== data.expectedWorkspaceVersion)
+      throw new Error("O painel mudou em outra aba. Reabra a revisão antes de aplicar.");
+
+    const latestPages = [...snapshot.workspace.history]
+      .reverse()
+      .find((revision) => revision.scope === "pages");
+    if (!latestPages || latestPages.status !== "reviewed")
+      throw new Error("Salve e revise as escolhas da semana antes de aplicá-las à loja.");
+
+    const products = await listAdminProdutos({ data: { password: data.password } });
+    const pages = normalizePageDraft(latestPages.after, products);
+    const { validateStudioResource } = await import("./studio-validation");
+    const errors = validateStudioResource("pages", pages, products, snapshot.workspace.entries);
+    if (errors.length) throw new Error(errors.join(" "));
+
+    const weeklyIds = pages.curation.weeklyIds;
+    if (
+      weeklyIds.some(
+        (id) => !products.some((product) => product.id === id && isCurationProduct(product)),
+      )
+    )
+      throw new Error("Há um móvel sem preço, foto ou disponibilidade válida. Revise a seleção.");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: applied, error } = await supabaseAdmin.rpc("mobi_homepage_weekly_apply", {
+      p_expected_workspace_version: snapshot.serverVersion,
+      p_revision_id: latestPages.id,
+      p_weekly_ids: weeklyIds,
+    });
+    if (error) {
+      if (
+        error.code === "PGRST202" ||
+        error.code === "42883" ||
+        isMissingWeeklyCurationSchema(error)
+      )
+        throw new Error("A publicação das escolhas ainda não foi instalada no banco da loja.");
+      throw new Error("Não foi possível aplicar as escolhas. O rascunho revisado foi preservado.");
+    }
+    if (applied !== true)
+      throw new Error("A publicação não foi confirmada. O rascunho revisado foi preservado.");
+
+    return { revisionId: latestPages.id, weeklyIds };
   });
 
 export type ProdutoAdmin = Database["public"]["Tables"]["produtos"]["Row"];

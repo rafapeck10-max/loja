@@ -1,5 +1,6 @@
 import { reopenHomeDraft } from "../../lib/home-configuration";
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { validateStudioResource, shouldLoadWorkspace } from "../../lib/studio-validation";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Save, FileCheck2, History, Download, X } from "lucide-react";
@@ -51,6 +52,10 @@ import { EvolutionPanel } from "./EvolutionPanel";
 import { NavigationPanel, ContentPanel, ServicePanel, ProductDraftPanel } from "./OperationsPanels";
 import "../../admin-studio.css";
 import { HomeConnectionPanel } from "./HomeConnectionPanel";
+import {
+  applyReviewedHomeWeeklyCuration,
+  getAdminWeeklyCurationPublication,
+} from "../../lib/admin.functions";
 import type { HomeTransport } from "../../lib/home-transport";
 import type { AdminViewId } from "../../lib/admin-navigation";
 import {
@@ -116,6 +121,7 @@ const time = (value: string) =>
   }).format(new Date(value));
 export function AdminStudio({
   area,
+  password,
   products,
   ready = true,
   demonstration = false,
@@ -127,6 +133,7 @@ export function AdminStudio({
   workspaceTransport,
 }: {
   area: AdminViewId;
+  password: string;
   products: EditorProduct[];
   ready?: boolean;
   demonstration?: boolean;
@@ -141,13 +148,21 @@ export function AdminStudio({
     available?: boolean;
   };
 }) {
+  const queryClient = useQueryClient();
   const storageKey = `mobi:admin-studio:v1:${demonstration ? "demo" : "admin"}`;
   const loadedKey = useRef<string | null>(null);
   const serverVersion = useRef(0);
   const busyRef = useRef(false);
   const [busy, setBusy] = useState(false);
+  const [publishingWeekly, setPublishingWeekly] = useState(false);
   const remote = Boolean(workspaceTransport);
   const sourceKey = `${storageKey}:${remote ? "remote" : "local"}`;
+  const weeklyPublication = useQuery({
+    queryKey: ["admin-home-weekly-publication", password],
+    queryFn: () => getAdminWeeklyCurationPublication({ data: { password } }),
+    enabled: remote && !demonstration && area === "vitrine",
+    retry: false,
+  });
   const defaults = useMemo<StudioData>(
     () => ({
       pages: initialPageDraft(products),
@@ -179,6 +194,19 @@ export function AdminStudio({
     // Keep invalid saved data visible to the existing recovery flow without rewriting it.
   }
   const data = { ...rawData, pages: editorPages } as StudioData;
+  const catalogWeeklyIds = useMemo(
+    () =>
+      [...products]
+        .filter((product) => product.vitrine_semana_ordem != null)
+        .sort(
+          (a, b) =>
+            (a.vitrine_semana_ordem ?? Number.MAX_SAFE_INTEGER) -
+            (b.vitrine_semana_ordem ?? Number.MAX_SAFE_INTEGER),
+        )
+        .slice(0, 4)
+        .map((product) => product.id),
+    [products],
+  );
   const productNames = Object.fromEntries(products.map((p) => [p.id, p.nome]));
   const humanDiff = (path: string) => describeDifferencePath(path, productNames);
   const scope = areaScopes[area];
@@ -187,6 +215,44 @@ export function AdminStudio({
     (k) => JSON.stringify(data[k]) !== JSON.stringify(workspace.entries[k] ?? defaults[k]),
   );
   const dirty = dirtyScopes.length > 0;
+  const latestPagesRevision = [...workspace.history]
+    .reverse()
+    .find((revision) => revision.scope === "pages");
+  const pageSelectionIsPublished =
+    weeklyPublication.data?.available === true &&
+    JSON.stringify(weeklyPublication.data.weeklyIds) ===
+      JSON.stringify(data.pages.curation.weeklyIds);
+  const canApplyWeekly =
+    remote &&
+    !demonstration &&
+    area === "vitrine" &&
+    loaded &&
+    !conflict &&
+    !dirtyScopes.includes("pages") &&
+    latestPagesRevision?.status === "reviewed" &&
+    weeklyPublication.data?.available === true &&
+    weeklyPublication.data.canApplyInEnvironment &&
+    !pageSelectionIsPublished &&
+    !publishingWeekly;
+  const weeklyPublicationMessage = demonstration
+    ? "Amostra de apresentação: esta seleção não altera a loja."
+    : !remote
+      ? "Salve o rascunho remoto para revisar e aplicar a seleção na loja."
+      : weeklyPublication.isPending
+        ? "Consultando a seleção que está na loja…"
+        : weeklyPublication.isError
+          ? "Não foi possível consultar a seleção publicada. Tente atualizar o painel."
+          : !weeklyPublication.data?.available
+            ? "A instalação da publicação das escolhas está pendente. Você pode preparar e revisar a seleção; a loja continua igual."
+            : !weeklyPublication.data.canApplyInEnvironment
+              ? "Prévia protegida: confira aqui; a aplicação fica disponível somente na loja publicada."
+              : pageSelectionIsPublished
+                ? "Esta seleção já está aplicada na loja."
+                : dirtyScopes.includes("pages")
+                  ? "Salve e revise as escolhas para habilitar a aplicação na loja."
+                  : latestPagesRevision?.status !== "reviewed"
+                    ? "Salve e revise as escolhas para habilitar a aplicação na loja."
+                    : "Esta revisão ainda não está na loja. Confira os produtos e aplique quando estiver pronta.";
   const validate = (key: StudioScope, value: unknown): string[] => {
     return validateStudioResource(key, value, products, data);
   };
@@ -335,6 +401,23 @@ export function AdminStudio({
       );
     }
   };
+  const applyWeeklySelection = () =>
+    attempt(async () => {
+      if (!canApplyWeekly) throw new Error(weeklyPublicationMessage);
+      setPublishingWeekly(true);
+      try {
+        const result = await applyReviewedHomeWeeklyCuration({
+          data: { password, expectedWorkspaceVersion: serverVersion.current },
+        });
+        setMessage(
+          `Escolhas da semana aplicadas na loja · revisão ${result.revisionId}. Preços e cadastros dos móveis foram preservados.`,
+        );
+        await weeklyPublication.refetch();
+        await queryClient.invalidateQueries({ queryKey: ["produtos", "homepage"] });
+      } finally {
+        setPublishingWeekly(false);
+      }
+    });
   const change = <K extends StudioScope>(key: K, value: StudioData[K]) => {
     if (!loaded || busyRef.current) return;
     setEdits((current) => ({ ...current, [key]: value }));
@@ -618,6 +701,17 @@ export function AdminStudio({
           products={workingProducts}
           campaigns={data.campaigns}
           demonstration={demonstration}
+          weeklyPublication={{
+            available: weeklyPublication.data?.available ?? false,
+            canApply: canApplyWeekly,
+            weeklyIds: weeklyPublication.data?.available
+              ? weeklyPublication.data.weeklyIds
+              : catalogWeeklyIds,
+            sourceRevision: weeklyPublication.data?.sourceRevision ?? null,
+            applying: publishingWeekly,
+            message: weeklyPublicationMessage,
+            onApply: applyWeeklySelection,
+          }}
           managed={{
             value: data.pages,
             saved: workspace.entries.pages as PageDraft | undefined,

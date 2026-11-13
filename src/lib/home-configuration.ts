@@ -18,6 +18,7 @@ import {
   type ContentData,
 } from "./operational-config.ts";
 import { isCurationProduct, type EditorProduct, type CurationDraft } from "./homepage-curation.ts";
+import { weeklyHomepageProductsByIds } from "./home-curation.ts";
 import {
   campaignConflicts,
   campaignState,
@@ -387,10 +388,14 @@ export function homeProductSelections(
   products: Produto[],
   config?: Pick<HomeConfiguration, "curation"> | null,
   date = new Date(),
+  publishedWeeklyIds?: string[],
 ) {
   const current = applyHomeCuration(products, config?.curation);
   return {
-    weekly: sectionProducts("weekly", current, date),
+    weekly:
+      publishedWeeklyIds === undefined
+        ? sectionProducts("weekly", current, date)
+        : weeklyHomepageProductsByIds(current, publishedWeeklyIds),
     discovery: sectionProducts("discovery", current, date),
     new: sectionProducts("new", current, date),
     room: sectionProducts("room", current, date),

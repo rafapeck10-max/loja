@@ -28,6 +28,17 @@ export function weeklyHomepageProducts(products: Produto[]): Produto[] {
   return featuredProducts(available).slice(0, SHELF_SIZE);
 }
 
+/** Applies an explicitly published editorial selection without changing product records. */
+export function weeklyHomepageProductsByIds(products: Produto[], ids: string[]): Produto[] {
+  const available = new Map(
+    products.filter(isHomepageProduct).map((product) => [product.id, product]),
+  );
+  return [...new Set(ids)].slice(0, SHELF_SIZE).flatMap((id) => {
+    const product = available.get(id);
+    return product ? [product] : [];
+  });
+}
+
 export function newHomepageProducts(products: Produto[], today = new Date()): Produto[] {
   const dayStart = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
   const cutoff = dayStart - 30 * 24 * 60 * 60 * 1000;

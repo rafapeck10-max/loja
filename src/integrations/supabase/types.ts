@@ -8,6 +8,27 @@ export type Database = {
   };
   public: {
     Tables: {
+      mobi_homepage_weekly_curation: {
+        Row: {
+          id: boolean;
+          weekly_ids: string[];
+          source_revision: number | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: boolean;
+          weekly_ids?: string[];
+          source_revision?: number | null;
+          updated_at?: string;
+        };
+        Update: {
+          id?: boolean;
+          weekly_ids?: string[];
+          source_revision?: number | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       homepage_banners: {
         Row: {
           position: number;
@@ -205,6 +226,14 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      mobi_homepage_weekly_apply: {
+        Args: {
+          p_expected_workspace_version: number;
+          p_revision_id: number;
+          p_weekly_ids: string[];
+        };
+        Returns: boolean;
+      };
       save_homepage_curation: {
         Args: { p_weekly_ids: string[]; p_home_settings: Json };
         Returns: undefined;

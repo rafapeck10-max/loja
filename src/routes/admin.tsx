@@ -742,6 +742,7 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
         </div>
       )}
       <AdminStudio
+        password={password}
         workspaceTransport={workspaceTransport}
         homeTransport={homeTransport}
         area={workspaceTab}

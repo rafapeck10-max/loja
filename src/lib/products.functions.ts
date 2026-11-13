@@ -249,6 +249,34 @@ async function readHomepageProductRows(
   return (data ?? []) as unknown as BasicPublicProductRow[];
 }
 
+function isMissingWeeklyCurationSchema(error: { code?: string; message: string }) {
+  return (
+    error.code === "42P01" ||
+    error.code === "PGRST205" ||
+    error.code === "PGRST204" ||
+    (/mobi_homepage_weekly_curation/i.test(error.message) &&
+      /schema cache|does not exist|could not find|relation/i.test(error.message))
+  );
+}
+
+async function readPublishedWeeklyIds(): Promise<string[] | null> {
+  const supabase = createClient<Database>(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_PUBLISHABLE_KEY!,
+    { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
+  );
+  const { data, error } = await supabase
+    .from("mobi_homepage_weekly_curation")
+    .select("weekly_ids")
+    .eq("id", true)
+    .maybeSingle();
+  if (error) {
+    if (isMissingWeeklyCurationSchema(error)) return null;
+    throw Object.assign(new Error(error.message), { code: error.code });
+  }
+  return data ? [...data.weekly_ids] : null;
+}
+
 async function readPublicHomepageProducts(): Promise<HomepageProducts> {
   let candidateRows: HomepageCandidateRow[];
   let curadoriaDisponivel = true;
@@ -264,10 +292,18 @@ async function readPublicHomepageProducts(): Promise<HomepageProducts> {
   const { applyHomeCuration, blackFridayProductIdsToLoad, homeProductSelections } =
     await import("./home-configuration");
   const local = await readLocalHomeConfiguration();
+  const publishedWeeklyIds = local
+    ? local.config.sectionIds.weekly
+    : await readPublishedWeeklyIds();
   const candidates = candidateRows.map((row) => mapHomepageCandidate(row, curadoriaDisponivel));
   const roomImages = selectHomepageRoomImages(candidates);
   const now = new Date();
-  const selections = homeProductSelections(candidates, local?.config, now);
+  const selections = homeProductSelections(
+    candidates,
+    local?.config,
+    now,
+    publishedWeeklyIds ?? undefined,
+  );
   const blackFridayIds = local?.config.sections.some(
     (section) => section.id === "blackFriday" && section.enabled,
   )
