@@ -1,8 +1,24 @@
 import { adminLocalHome } from "../lib/home-local.functions";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, FileUp, Lock, LogOut, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
+import {
+  AlertCircle,
+  CircleDollarSign,
+  FileUp,
+  Images,
+  Layers3,
+  Lock,
+  LogOut,
+  Package,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Ruler,
+  Trash2,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { PRODUCT_CATEGORY_OPTIONS } from "@/lib/constants";
 import {
@@ -1331,12 +1347,29 @@ function ProductForm({
   saving: boolean;
 }) {
   const field =
-    "w-full border border-cacau/15 bg-white px-3 py-2.5 text-sm text-cacau outline-none transition-colors focus:border-gold";
-  const label = "mb-1 block text-xs font-semibold uppercase tracking-wide text-cacau";
+    "min-h-11 w-full rounded-lg border border-cacau/15 bg-white px-3 py-2.5 text-base text-cacau outline-none transition-colors placeholder:text-cacau/40 focus:border-deep-green focus:ring-2 focus:ring-deep-green/10 sm:text-sm";
+  const label = "mb-1.5 block text-sm font-semibold text-cacau";
   const [uploading, setUploading] = useState(false);
+  const originalValue = useRef(JSON.stringify(value));
+  const hasUnsavedChanges = JSON.stringify(value) !== originalValue.current;
   const supplierPrice = Number(value.preco_fornecedor ?? 0);
   const sitePrice = Number(value.preco_novo ?? 0);
   const pricingDifference = supplierPrice > 0 && sitePrice > 0 ? sitePrice - supplierPrice : null;
+  const pricingStatus =
+    sitePrice > 0
+      ? "Preço do site informado"
+      : supplierPrice > 0
+        ? "Falta preço no site"
+        : "Sem preços cadastrados";
+  const requestClose = () => {
+    if (
+      hasUnsavedChanges &&
+      typeof window !== "undefined" &&
+      !window.confirm("Descartar as alterações deste produto?")
+    )
+      return;
+    onCancel();
+  };
   const supplierOptions = Array.from(
     new Set([
       ...(value.fornecedor ? [value.fornecedor] : []),
@@ -1426,489 +1459,597 @@ function ProductForm({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/50 p-4"
-      onClick={onCancel}
-    >
-      <div
-        className="max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto border border-cacau/10 bg-sand p-5 shadow-drawer sm:p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="mb-4 text-2xl text-deep-green">
-          {value.id ? "Editar produto" : "Novo produto"}
-        </h2>
-        <div className="mb-4 border border-gold/30 bg-gold/10 p-3 text-sm text-cacau">
-          <div className="flex items-center justify-between gap-3">
-            <span className="font-semibold">Fluxo de publicação</span>
-            <span className="text-xs font-bold uppercase tracking-wide">
-              {supplierPrice > 0 && sitePrice <= 0
-                ? "Aguardando precificação"
-                : sitePrice > 0
-                  ? "Pronto para publicar"
-                  : "Preencha os preços"}
-            </span>
-          </div>
-          <p className="mt-1 text-xs text-text-light">
-            Produtos sem preço no site permanecem fora da vitrine.
-          </p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <label className={label}>Nome *</label>
-            <input
-              value={value.nome}
-              onChange={(e) => onChange({ ...value, nome: e.target.value })}
-              className={field}
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <label className={label}>
-              Slug (URL amigável) — deixe em branco para gerar do nome
-            </label>
-            <input
-              value={value.slug ?? ""}
-              onChange={(e) => onChange({ ...value, slug: e.target.value })}
-              placeholder="ex: poltrona-velvet"
-              className={field}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3 sm:col-span-2 sm:gap-4">
+    <Dialog.Root open onOpenChange={(open) => !open && requestClose()}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-[1100] bg-[#17271d]/65 backdrop-blur-[2px]" />
+        <Dialog.Content
+          aria-describedby="admin-product-editor-description"
+          onPointerDownOutside={(event) => event.preventDefault()}
+          className="fixed inset-0 z-[1110] mx-auto flex h-[100dvh] w-full max-w-[1100px] flex-col overflow-hidden border border-[#ded3bf] bg-[#f8f6f0] shadow-2xl outline-none sm:inset-y-4 sm:h-[calc(100dvh-2rem)] sm:rounded-2xl"
+        >
+          <header className="z-10 flex shrink-0 items-start justify-between gap-4 border-b border-cacau/10 bg-[#fbfaf6] px-4 py-4 sm:items-center sm:px-6">
             <div className="min-w-0">
-              <label className={label}>Custo informado pelo fornecedor (R$)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={value.preco_fornecedor ?? ""}
-                onChange={(e) =>
-                  onChange({
-                    ...value,
-                    preco_fornecedor: e.target.value === "" ? null : Number(e.target.value),
-                  })
-                }
-                className={field}
-              />
-            </div>
-            <div className="min-w-0">
-              <label className={label}>Preço no site (R$) *</label>
-              <input
-                type="number"
-                step="0.01"
-                value={value.preco_novo}
-                onChange={(e) => {
-                  const price = Number(e.target.value);
-                  const variations = value.variacoes_preco ?? [];
-                  onChange({
-                    ...value,
-                    preco_novo: price,
-                    variacoes_preco: variations.map((variation, index) =>
-                      index === 0 ? { ...variation, sale_price: price || null } : variation,
-                    ),
-                  });
-                }}
-                className={field}
-              />
-              <p className="mt-1 text-[11px] text-text-light">
-                Preço à vista ou dinheiro, antes de qualquer promoção.
+              <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#9a743c]">
+                Catálogo Mobi · produto
               </p>
-            </div>
-          </div>
-          <div className="sm:col-span-2">
-            <label className={label}>Preço anterior (opcional)</label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={value.preco_antigo ?? ""}
-              onChange={(e) =>
-                onChange({
-                  ...value,
-                  preco_antigo: e.target.value === "" ? null : Number(e.target.value),
-                })
-              }
-              placeholder="Informe somente um preço anterior real"
-              className={field}
-            />
-            <p className="mt-1 text-[11px] text-text-light">
-              Deixe vazio para não mostrar preço riscado nem selo de desconto. Preencha apenas se
-              esse preço anterior foi realmente praticado.
-            </p>
-          </div>
-          <div>
-            <label className={label}>Fornecedor (uso interno)</label>
-            <input
-              type="text"
-              value={value.fornecedor ?? ""}
-              onChange={(e) => onChange({ ...value, fornecedor: e.target.value })}
-              list="admin-product-supplier-options"
-              maxLength={120}
-              placeholder="Digite ou selecione um fornecedor"
-              className={field}
-            />
-            <datalist id="admin-product-supplier-options">
-              {supplierOptions.map((supplier) => (
-                <option key={supplier} value={supplier} />
-              ))}
-            </datalist>
-            <p className="mt-1 text-[11px] text-text-light">
-              O nome fica no painel para organizar o catálogo; não aparece como vendedor no site.
-            </p>
-          </div>
-          <div>
-            <label className={label}>Referência / SKU</label>
-            <input
-              value={value.referencia ?? ""}
-              onChange={(e) => onChange({ ...value, referencia: e.target.value })}
-              className={field}
-            />
-          </div>
-          <div className="sm:col-span-2 border border-cacau/10 bg-white p-3">
-            <div className="mb-2 text-xs font-bold uppercase tracking-wide text-cacau">
-              Conferência de preço
-            </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              <div>
-                <div className="text-xs text-text-light">Custo informado</div>
-                <div className="mt-1 font-bold text-cacau">
-                  {moneyOrDash(value.preco_fornecedor)}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-text-light">Preço no site</div>
-                <div className="mt-1 font-bold text-price-green">
-                  {moneyOrDash(value.preco_novo)}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-text-light">Diferença bruta</div>
-                <div
-                  className={`mt-1 font-bold ${pricingDifference == null ? "text-text-light" : pricingDifference >= 0 ? "text-price-green" : "text-destructive"}`}
-                >
-                  {pricingDifferenceLabel}
-                </div>
-              </div>
-            </div>
-            {pricingDifference != null && pricingDifference < 0 && (
-              <p className="mt-2 text-xs font-semibold text-destructive">
-                Atenção: o preço do site está abaixo do custo do fornecedor.
-              </p>
-            )}
-            <p className="mt-2 text-xs text-text-light">
-              Diferença bruta: não considera taxas, frete, impostos ou outros custos.
-            </p>
-            {pricingDifference == null && (
-              <p className="mt-2 text-xs text-text-light">
-                Informe custo e preço no site para comparar os valores.
-              </p>
-            )}
-          </div>
-          <div className="sm:col-span-2">
-            <label className={label}>Link do fornecedor / fonte do preço</label>
-            <input
-              type="url"
-              value={value.link_fornecedor ?? value.fonte_preco ?? ""}
-              onChange={(e) =>
-                onChange({ ...value, link_fornecedor: e.target.value, fonte_preco: e.target.value })
-              }
-              placeholder="https://..."
-              className={field}
-            />
-            <p className="mt-1 text-xs text-text-light">
-              Este link fica disponível somente no painel para conferir a origem do produto.
-            </p>
-          </div>
-          <div>
-            <label className={label}>Vendas nos últimos 30 dias</label>
-            <input
-              type="number"
-              min="0"
-              value={value.vendas_ultimos_30_dias ?? 0}
-              onChange={(e) =>
-                onChange({ ...value, vendas_ultimos_30_dias: Number(e.target.value) })
-              }
-              className={field}
-            />
-          </div>
-          <div>
-            <label className={label} htmlFor="admin-product-measurements">
-              Medidas
-            </label>
-            <input
-              id="admin-product-measurements"
-              value={value.medidas ?? ""}
-              onChange={(e) => onChange({ ...value, medidas: e.target.value })}
-              placeholder="Largura: 200 cm; Altura: 90 cm; Profundidade fechada: 100 cm"
-              className={field}
-            />
-            <small className="mt-1 block text-xs text-muted-foreground">
-              Para filtros por medida, informe cada valor identificado. Sofás podem ter profundidade
-              fechada e aberta separadas.
-            </small>
-          </div>
-          <div className="sm:col-span-2">
-            <label className={label}>Cores (separadas por vírgula)</label>
-            <input
-              value={(value.cores ?? []).join(", ")}
-              onChange={(e) => onChange({ ...value, cores: e.target.value.split(",") })}
-              className={field}
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <label className={label}>Descrição</label>
-            <textarea
-              value={value.descricao ?? ""}
-              onChange={(e) => onChange({ ...value, descricao: e.target.value })}
-              rows={3}
-              className={field}
-            />
-          </div>
-          <div className="sm:col-span-2 border border-cacau/10 bg-white p-3">
-            <div className="mb-1 text-xs font-bold uppercase tracking-wide text-cacau">
-              Compre junto · seleção da Mobi
-            </div>
-            <p className="mb-3 text-xs text-text-light">
-              Escolha até 3 móveis que realmente combinam com este produto. A vitrine não escolhe
-              complementos automaticamente.
-            </p>
-            {invalidBundleIds.map((id) => (
-              <div
-                key={id}
-                className="flex items-center justify-between gap-3 border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-cacau"
+              <Dialog.Title className="text-xl font-bold leading-tight text-deep-green sm:text-2xl">
+                {value.id ? "Editar produto" : "Novo produto"}
+              </Dialog.Title>
+              <Dialog.Description
+                id="admin-product-editor-description"
+                className="mt-1 max-w-2xl text-xs leading-relaxed text-text-light sm:text-sm"
               >
-                <span>
-                  {products.find((product) => product.id === id)?.nome ?? id}: complemento
-                  indisponível para exibição.
-                </span>
-                <button
-                  type="button"
-                  className="min-h-11 font-semibold underline"
-                  onClick={() =>
-                    onChange({
-                      ...value,
-                      compre_junto_ids: selectedBundleIds.filter((item) => item !== id),
-                    })
-                  }
-                >
-                  Remover vínculo
-                </button>
-              </div>
-            ))}
-            <div className="max-h-56 divide-y divide-cacau/10 overflow-y-auto border border-cacau/10">
-              {bundleCandidates.map((candidate) => {
-                const checked = selectedBundleIds.includes(candidate.id);
-                return (
-                  <label
-                    key={candidate.id}
-                    className="flex min-h-14 items-center gap-3 px-3 py-2 text-sm text-cacau"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      disabled={!checked && selectedBundleIds.length >= 3}
-                      onChange={(event) =>
-                        onChange({
-                          ...value,
-                          compre_junto_ids: event.target.checked
-                            ? [...selectedBundleIds, candidate.id]
-                            : selectedBundleIds.filter((id) => id !== candidate.id),
-                        })
-                      }
-                      className="h-4 w-4 shrink-0 accent-[#304a32]"
-                    />
-                    <ImageWithFallback
-                      src={candidate.url_imagem}
-                      alt=""
-                      className="h-10 w-10 shrink-0 object-contain"
-                    />
-                    <span className="min-w-0 flex-1 truncate">{candidate.nome}</span>
-                    <strong className="shrink-0 text-xs">
-                      {formatBRL(Number(candidate.preco_atual))}
-                    </strong>
-                  </label>
-                );
-              })}
-              {bundleCandidates.length === 0 && (
-                <p className="p-3 text-xs text-text-light">
-                  Nenhum complemento com custo, preço, foto HTTPS e disponibilidade informada
-                  elegíveis no catálogo.
-                </p>
-              )}
+                Edite os dados do catálogo e confira o preço antes de salvar.
+              </Dialog.Description>
+              <span
+                className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold sm:hidden ${sitePrice > 0 ? "bg-[#e6efe4] text-deep-green" : "bg-[#f3ead6] text-[#765a2f]"}`}
+              >
+                {pricingStatus}
+              </span>
             </div>
-            <p className="mb-0 mt-2 text-[11px] text-text-light">
-              {selectedBundleIds.length}/3 selecionados. A lista aparece no produto somente enquanto
-              cada complemento continuar disponível no catálogo.
-            </p>
-          </div>
-          <div className="sm:col-span-2">
-            <label className={label}>Imagem do produto *</label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={value.imagem_url}
-                onChange={(e) => onChange({ ...value, imagem_url: e.target.value })}
-                placeholder="Insira a URL ou faça upload de um arquivo"
-                className={field}
-              />
-              <label className="flex shrink-0 cursor-pointer items-center justify-center bg-deep-green px-4 text-xs font-bold uppercase tracking-wider text-sand hover:bg-gold hover:text-deep-green">
-                {uploading ? "Carregando..." : "Upload"}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  disabled={uploading}
-                  className="hidden"
-                />
-              </label>
+            <div className="flex shrink-0 items-start gap-2 sm:items-center">
+              <span
+                className={`hidden rounded-full px-3 py-1.5 text-xs font-semibold sm:inline-flex ${sitePrice > 0 ? "bg-[#e6efe4] text-deep-green" : "bg-[#f3ead6] text-[#765a2f]"}`}
+              >
+                {pricingStatus}
+              </span>
+              <button
+                type="button"
+                aria-label="Fechar editor"
+                onClick={requestClose}
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-cacau/15 bg-white text-cacau transition-colors hover:border-gold hover:text-deep-green focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-deep-green"
+              >
+                <X size={18} />
+              </button>
             </div>
-            {value.imagem_url && (
-              <ImageWithFallback
-                src={value.imagem_url}
-                alt="Prévia"
-                className="mt-2 h-32 w-32 border border-cacau/10 object-cover"
-              />
-            )}
-          </div>
-          {!!value.variacoes_preco?.length && (
-            <div className="sm:col-span-2 border border-gold/30 bg-white p-3">
-              <div className="mb-1 text-xs font-bold uppercase tracking-wide text-cacau">
-                Preços por referência / peça
-              </div>
-              <p className="mb-3 text-[11px] text-text-light">
-                Cada código TROP da referência tem seu próprio custo. Preencha o preço de venda de
-                cada opção; o primeiro também define o preço principal do produto.
-              </p>
-              <div className="space-y-2">
-                {value.variacoes_preco.map((variation, index) => (
-                  <div
-                    key={`${variation.sku}-${index}`}
-                    className="grid items-center gap-2 border-t border-cacau/10 pt-2 sm:grid-cols-[minmax(0,1fr)_100px_130px]"
-                  >
-                    <div className="min-w-0">
-                      <div className="truncate text-xs font-semibold text-cacau">
-                        {variation.name || "Peça"}
-                      </div>
-                      <div className="text-[11px] text-text-light">{variation.sku}</div>
-                    </div>
-                    <div className="text-xs text-text-light">
-                      Custo: {moneyOrDash(variation.supplier_price)}
-                    </div>
+          </header>
+
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            <div className="grid items-start gap-4 p-4 sm:p-6 lg:grid-cols-2">
+              <section className="rounded-xl border border-cacau/10 bg-white p-4 lg:col-span-2 sm:p-5">
+                <div className="mb-4 flex items-center gap-3 border-b border-cacau/10 pb-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#edf1e9] text-deep-green">
+                    <Package size={19} />
+                  </span>
+                  <div>
+                    <h3 className="text-base font-bold text-deep-green">Identificação</h3>
+                    <p className="mt-0.5 text-xs text-text-light">
+                      Nome e endereço do produto na loja.
+                    </p>
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <label className={label}>Nome *</label>
                     <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={variation.sale_price ?? ""}
-                      onChange={(event) => {
-                        const raw = event.target.value;
-                        const salePrice = raw === "" ? null : Number(raw);
-                        const variations = (value.variacoes_preco ?? []).map((entry, entryIndex) =>
-                          entryIndex === index ? { ...entry, sale_price: salePrice } : entry,
-                        );
-                        const primaryPrice =
-                          variations[0]?.sale_price ??
-                          variations.find((entry) => (entry.sale_price ?? 0) > 0)?.sale_price ??
-                          0;
-                        onChange({
-                          ...value,
-                          preco_novo: primaryPrice,
-                          variacoes_preco: variations,
-                        });
-                      }}
-                      placeholder="Venda (R$)"
-                      aria-label={`Preço de venda de ${variation.name}`}
+                      value={value.nome}
+                      onChange={(e) => onChange({ ...value, nome: e.target.value })}
                       className={field}
                     />
                   </div>
-                ))}
-              </div>
+                  <div className="sm:col-span-2">
+                    <label className={label}>
+                      Slug (URL amigável) — deixe em branco para gerar do nome
+                    </label>
+                    <input
+                      value={value.slug ?? ""}
+                      onChange={(e) => onChange({ ...value, slug: e.target.value })}
+                      placeholder="ex: poltrona-velvet"
+                      className={field}
+                    />
+                  </div>
+                  <div>
+                    <label className={label}>Referência / SKU</label>
+                    <input
+                      value={value.referencia ?? ""}
+                      onChange={(e) => onChange({ ...value, referencia: e.target.value })}
+                      className={field}
+                    />
+                  </div>
+                  <div>
+                    <label className={label}>Categoria *</label>
+                    <select
+                      value={value.categoria ?? ""}
+                      onChange={(e) => onChange({ ...value, categoria: e.target.value })}
+                      className={field}
+                    >
+                      <option value="">Selecione uma categoria</option>
+                      {PRODUCT_CATEGORY_OPTIONS.map((category) => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={label}>Ordem na categoria</label>
+                    <input
+                      type="number"
+                      value={value.ordem ?? 0}
+                      onChange={(e) => onChange({ ...value, ordem: Number(e.target.value) })}
+                      className={field}
+                    />
+                  </div>
+                </div>
+              </section>
+              <section className="rounded-xl border border-cacau/10 bg-white p-4 lg:col-span-2 sm:p-5">
+                <div className="mb-4 flex items-center gap-3 border-b border-cacau/10 pb-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f3ead6] text-[#8a682f]">
+                    <CircleDollarSign size={19} />
+                  </span>
+                  <div>
+                    <h3 className="text-base font-bold text-deep-green">Preço e fornecedor</h3>
+                    <p className="mt-0.5 text-xs text-text-light">
+                      Dados internos separados do preço à vista mostrado ao cliente.
+                    </p>
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-3 sm:col-span-2 sm:grid-cols-2 sm:gap-4">
+                    <div className="min-w-0">
+                      <label className={label}>Custo informado pelo fornecedor (R$)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={value.preco_fornecedor ?? ""}
+                        onChange={(e) =>
+                          onChange({
+                            ...value,
+                            preco_fornecedor: e.target.value === "" ? null : Number(e.target.value),
+                          })
+                        }
+                        className={field}
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <label className={label}>Preço no site (R$) *</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={value.preco_novo}
+                        onChange={(e) => {
+                          const price = Number(e.target.value);
+                          const variations = value.variacoes_preco ?? [];
+                          onChange({
+                            ...value,
+                            preco_novo: price,
+                            variacoes_preco: variations.map((variation, index) =>
+                              index === 0 ? { ...variation, sale_price: price || null } : variation,
+                            ),
+                          });
+                        }}
+                        className={field}
+                      />
+                      <p className="mt-1 text-[11px] text-text-light">
+                        Preço à vista ou dinheiro, antes de qualquer promoção.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className={label}>Preço anterior (opcional)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={value.preco_antigo ?? ""}
+                      onChange={(e) =>
+                        onChange({
+                          ...value,
+                          preco_antigo: e.target.value === "" ? null : Number(e.target.value),
+                        })
+                      }
+                      placeholder="Informe somente um preço anterior real"
+                      className={field}
+                    />
+                    <p className="mt-1 text-[11px] text-text-light">
+                      Deixe vazio para não mostrar preço riscado nem selo de desconto. Preencha
+                      apenas se esse preço anterior foi realmente praticado.
+                    </p>
+                  </div>
+                  <div>
+                    <label className={label}>Fornecedor (uso interno)</label>
+                    <input
+                      type="text"
+                      value={value.fornecedor ?? ""}
+                      onChange={(e) => onChange({ ...value, fornecedor: e.target.value })}
+                      list="admin-product-supplier-options"
+                      maxLength={120}
+                      placeholder="Digite ou selecione um fornecedor"
+                      className={field}
+                    />
+                    <datalist id="admin-product-supplier-options">
+                      {supplierOptions.map((supplier) => (
+                        <option key={supplier} value={supplier} />
+                      ))}
+                    </datalist>
+                    <p className="mt-1 text-[11px] text-text-light">
+                      O nome fica no painel para organizar o catálogo; não aparece como vendedor no
+                      site.
+                    </p>
+                  </div>
+                  <div className="sm:col-span-2 border border-cacau/10 bg-white p-3">
+                    <div className="mb-2 text-xs font-bold uppercase tracking-wide text-cacau">
+                      Conferência de preço
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      <div>
+                        <div className="text-xs text-text-light">Custo informado</div>
+                        <div className="mt-1 font-bold text-cacau">
+                          {moneyOrDash(value.preco_fornecedor)}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-text-light">Preço no site</div>
+                        <div className="mt-1 font-bold text-price-green">
+                          {moneyOrDash(value.preco_novo)}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-text-light">Diferença bruta</div>
+                        <div
+                          className={`mt-1 font-bold ${pricingDifference == null ? "text-text-light" : pricingDifference >= 0 ? "text-price-green" : "text-destructive"}`}
+                        >
+                          {pricingDifferenceLabel}
+                        </div>
+                      </div>
+                    </div>
+                    {pricingDifference != null && pricingDifference < 0 && (
+                      <p className="mt-2 text-xs font-semibold text-destructive">
+                        Atenção: o preço do site está abaixo do custo do fornecedor.
+                      </p>
+                    )}
+                    <p className="mt-2 text-xs text-text-light">
+                      Diferença bruta: não considera taxas, frete, impostos ou outros custos.
+                    </p>
+                    {pricingDifference == null && (
+                      <p className="mt-2 text-xs text-text-light">
+                        Informe custo e preço no site para comparar os valores.
+                      </p>
+                    )}
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className={label}>Link do fornecedor / fonte do preço</label>
+                    <input
+                      type="url"
+                      value={value.link_fornecedor ?? value.fonte_preco ?? ""}
+                      onChange={(e) =>
+                        onChange({
+                          ...value,
+                          link_fornecedor: e.target.value,
+                          fonte_preco: e.target.value,
+                        })
+                      }
+                      placeholder="https://..."
+                      className={field}
+                    />
+                    <p className="mt-1 text-xs text-text-light">
+                      Este link fica disponível somente no painel para conferir a origem do produto.
+                    </p>
+                  </div>
+                  {!!value.variacoes_preco?.length && (
+                    <div className="sm:col-span-2 border border-gold/30 bg-white p-3">
+                      <div className="mb-1 text-xs font-bold uppercase tracking-wide text-cacau">
+                        Preços por referência / peça
+                      </div>
+                      <p className="mb-3 text-[11px] text-text-light">
+                        Cada código TROP da referência tem seu próprio custo. Preencha o preço de
+                        venda de cada opção; o primeiro também define o preço principal do produto.
+                      </p>
+                      <div className="space-y-2">
+                        {value.variacoes_preco.map((variation, index) => (
+                          <div
+                            key={`${variation.sku}-${index}`}
+                            className="grid items-center gap-2 border-t border-cacau/10 pt-2 sm:grid-cols-[minmax(0,1fr)_100px_130px]"
+                          >
+                            <div className="min-w-0">
+                              <div className="truncate text-xs font-semibold text-cacau">
+                                {variation.name || "Peça"}
+                              </div>
+                              <div className="text-[11px] text-text-light">{variation.sku}</div>
+                            </div>
+                            <div className="text-xs text-text-light">
+                              Custo: {moneyOrDash(variation.supplier_price)}
+                            </div>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={variation.sale_price ?? ""}
+                              onChange={(event) => {
+                                const raw = event.target.value;
+                                const salePrice = raw === "" ? null : Number(raw);
+                                const variations = (value.variacoes_preco ?? []).map(
+                                  (entry, entryIndex) =>
+                                    entryIndex === index
+                                      ? { ...entry, sale_price: salePrice }
+                                      : entry,
+                                );
+                                const primaryPrice =
+                                  variations[0]?.sale_price ??
+                                  variations.find((entry) => (entry.sale_price ?? 0) > 0)
+                                    ?.sale_price ??
+                                  0;
+                                onChange({
+                                  ...value,
+                                  preco_novo: primaryPrice,
+                                  variacoes_preco: variations,
+                                });
+                              }}
+                              placeholder="Venda (R$)"
+                              aria-label={`Preço de venda de ${variation.name}`}
+                              className={field}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </section>
+              <section className="rounded-xl border border-cacau/10 bg-white p-4 lg:col-span-2 sm:p-5">
+                <div className="mb-4 flex items-center gap-3 border-b border-cacau/10 pb-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#edf1e9] text-deep-green">
+                    <Ruler size={19} />
+                  </span>
+                  <div>
+                    <h3 className="text-base font-bold text-deep-green">Detalhes do produto</h3>
+                    <p className="mt-0.5 text-xs text-text-light">
+                      Informações úteis para apresentar e filtrar o móvel.
+                    </p>
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className={label}>Vendas nos últimos 30 dias</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={value.vendas_ultimos_30_dias ?? 0}
+                      onChange={(e) =>
+                        onChange({ ...value, vendas_ultimos_30_dias: Number(e.target.value) })
+                      }
+                      className={field}
+                    />
+                  </div>
+                  <div>
+                    <label className={label} htmlFor="admin-product-measurements">
+                      Medidas
+                    </label>
+                    <input
+                      id="admin-product-measurements"
+                      value={value.medidas ?? ""}
+                      onChange={(e) => onChange({ ...value, medidas: e.target.value })}
+                      placeholder="Largura: 200 cm; Altura: 90 cm; Profundidade fechada: 100 cm"
+                      className={field}
+                    />
+                    <small className="mt-1 block text-xs text-muted-foreground">
+                      Para filtros por medida, informe cada valor identificado. Sofás podem ter
+                      profundidade fechada e aberta separadas.
+                    </small>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className={label}>Cores (separadas por vírgula)</label>
+                    <input
+                      value={(value.cores ?? []).join(", ")}
+                      onChange={(e) => onChange({ ...value, cores: e.target.value.split(",") })}
+                      className={field}
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className={label}>Descrição</label>
+                    <textarea
+                      value={value.descricao ?? ""}
+                      onChange={(e) => onChange({ ...value, descricao: e.target.value })}
+                      rows={3}
+                      className={field}
+                    />
+                  </div>
+                </div>
+              </section>
+              <section className="rounded-xl border border-cacau/10 bg-white p-4 lg:col-span-2 sm:p-5">
+                <div className="mb-4 flex items-center gap-3 border-b border-cacau/10 pb-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f3ead6] text-[#8a682f]">
+                    <Layers3 size={19} />
+                  </span>
+                  <div>
+                    <h3 className="text-base font-bold text-deep-green">Compre junto</h3>
+                    <p className="mt-0.5 text-xs text-text-light">
+                      Selecione até três complementos que combinem com este produto.
+                    </p>
+                  </div>
+                </div>
+                <div className="sm:col-span-2">
+                  <p className="mb-3 text-xs text-text-light">
+                    Escolha até 3 móveis que realmente combinam com este produto. A vitrine não
+                    escolhe complementos automaticamente.
+                  </p>
+                  {invalidBundleIds.map((id) => (
+                    <div
+                      key={id}
+                      className="flex items-center justify-between gap-3 border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-cacau"
+                    >
+                      <span>
+                        {products.find((product) => product.id === id)?.nome ?? id}: complemento
+                        indisponível para exibição.
+                      </span>
+                      <button
+                        type="button"
+                        className="min-h-11 font-semibold underline"
+                        onClick={() =>
+                          onChange({
+                            ...value,
+                            compre_junto_ids: selectedBundleIds.filter((item) => item !== id),
+                          })
+                        }
+                      >
+                        Remover vínculo
+                      </button>
+                    </div>
+                  ))}
+                  <div className="max-h-56 divide-y divide-cacau/10 overflow-y-auto border border-cacau/10">
+                    {bundleCandidates.map((candidate) => {
+                      const checked = selectedBundleIds.includes(candidate.id);
+                      return (
+                        <label
+                          key={candidate.id}
+                          className="flex min-h-14 items-center gap-3 px-3 py-2 text-sm text-cacau"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            disabled={!checked && selectedBundleIds.length >= 3}
+                            onChange={(event) =>
+                              onChange({
+                                ...value,
+                                compre_junto_ids: event.target.checked
+                                  ? [...selectedBundleIds, candidate.id]
+                                  : selectedBundleIds.filter((id) => id !== candidate.id),
+                              })
+                            }
+                            className="h-4 w-4 shrink-0 accent-[#304a32]"
+                          />
+                          <ImageWithFallback
+                            src={candidate.url_imagem}
+                            alt=""
+                            className="h-10 w-10 shrink-0 object-contain"
+                          />
+                          <span className="min-w-0 flex-1 truncate">{candidate.nome}</span>
+                          <strong className="shrink-0 text-xs">
+                            {formatBRL(Number(candidate.preco_atual))}
+                          </strong>
+                        </label>
+                      );
+                    })}
+                    {bundleCandidates.length === 0 && (
+                      <p className="p-3 text-xs text-text-light">
+                        Nenhum complemento com custo, preço, foto HTTPS e disponibilidade informada
+                        elegíveis no catálogo.
+                      </p>
+                    )}
+                  </div>
+                  <p className="mb-0 mt-2 text-[11px] text-text-light">
+                    {selectedBundleIds.length}/3 selecionados. A lista aparece no produto somente
+                    enquanto cada complemento continuar disponível no catálogo.
+                  </p>
+                </div>
+              </section>
+              <section className="rounded-xl border border-cacau/10 bg-white p-4 lg:col-span-2 sm:p-5">
+                <div className="mb-4 flex items-center gap-3 border-b border-cacau/10 pb-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#edf1e9] text-deep-green">
+                    <Images size={19} />
+                  </span>
+                  <div>
+                    <h3 className="text-base font-bold text-deep-green">Fotos do produto</h3>
+                    <p className="mt-0.5 text-xs text-text-light">
+                      Defina a imagem principal e organize as fotos da galeria.
+                    </p>
+                  </div>
+                </div>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <label className={label}>Imagem do produto *</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={value.imagem_url}
+                        onChange={(e) => onChange({ ...value, imagem_url: e.target.value })}
+                        placeholder="Insira a URL ou faça upload de um arquivo"
+                        className={field}
+                      />
+                      <label className="flex min-h-11 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-deep-green px-4 text-sm font-semibold text-white transition-colors hover:bg-[#243a28]">
+                        {uploading ? "Carregando..." : "Upload"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          disabled={uploading}
+                          className="sr-only"
+                        />
+                      </label>
+                    </div>
+                    {value.imagem_url && (
+                      <ImageWithFallback
+                        src={value.imagem_url}
+                        alt="Prévia"
+                        className="mt-2 h-32 w-32 border border-cacau/10 object-cover"
+                      />
+                    )}
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className={label}>Fotos adicionais</label>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-lg border border-cacau/20 px-4 py-2 text-sm font-semibold text-cacau transition-colors hover:border-gold hover:text-deep-green">
+                        {uploading ? "Enviando…" : "Adicionar fotos"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleGalleryUpload}
+                          disabled={uploading}
+                          className="sr-only"
+                        />
+                      </label>
+                      <span className="text-xs text-text-light">
+                        A primeira foto é a principal; as demais aparecem na galeria do produto.
+                      </span>
+                    </div>
+                    <textarea
+                      value={(value.imagens ?? []).join("\n")}
+                      onChange={(e) =>
+                        onChange({
+                          ...value,
+                          imagens: e.target.value
+                            .split(/\r?\n/)
+                            .map((url) => url.trim())
+                            .filter(Boolean),
+                        })
+                      }
+                      rows={3}
+                      placeholder="Uma URL de foto por linha"
+                      className={`${field} mt-2`}
+                    />
+                    {!!value.imagens?.length && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {value.imagens.map((src, index) => (
+                          <ImageWithFallback
+                            key={`${src}-${index}`}
+                            src={src}
+                            alt={`Foto adicional ${index + 1}`}
+                            className="h-16 w-16 border border-cacau/10 object-contain"
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </section>
             </div>
-          )}
-          <div className="sm:col-span-2">
-            <label className={label}>Fotos adicionais</label>
-            <div className="flex flex-wrap items-center gap-2">
-              <label className="inline-flex cursor-pointer items-center justify-center border border-cacau/20 px-3 py-2 text-xs font-bold uppercase tracking-wide text-cacau hover:border-gold hover:text-gold">
-                {uploading ? "Enviando…" : "Adicionar fotos"}
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleGalleryUpload}
-                  disabled={uploading}
-                  className="hidden"
-                />
-              </label>
-              <span className="text-xs text-text-light">
-                A primeira foto é a principal; as demais aparecem na galeria do produto.
-              </span>
+          </div>
+          <footer className="z-10 flex shrink-0 flex-col-reverse gap-2 border-t border-cacau/10 bg-[#fbfaf6] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <p className="text-xs text-text-light">
+              As alterações só entram na loja depois de salvar.
+            </p>
+            <div className="flex gap-2 sm:justify-end">
+              <button
+                type="button"
+                onClick={requestClose}
+                className="min-h-11 flex-1 rounded-lg border border-cacau/20 px-5 py-2.5 text-sm font-semibold text-cacau transition-colors hover:border-gold hover:text-deep-green sm:flex-none"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={onSave}
+                disabled={saving || uploading}
+                className="min-h-11 flex-1 rounded-lg bg-deep-green px-6 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#243a28] disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none"
+              >
+                {saving ? "Salvando…" : "Salvar produto"}
+              </button>
             </div>
-            <textarea
-              value={(value.imagens ?? []).join("\n")}
-              onChange={(e) =>
-                onChange({
-                  ...value,
-                  imagens: e.target.value
-                    .split(/\r?\n/)
-                    .map((url) => url.trim())
-                    .filter(Boolean),
-                })
-              }
-              rows={3}
-              placeholder="Uma URL de foto por linha"
-              className={`${field} mt-2`}
-            />
-            {!!value.imagens?.length && (
-              <div className="mt-2 flex flex-wrap gap-2">
-                {value.imagens.map((src, index) => (
-                  <ImageWithFallback
-                    key={`${src}-${index}`}
-                    src={src}
-                    alt={`Foto adicional ${index + 1}`}
-                    className="h-16 w-16 border border-cacau/10 object-contain"
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-          <div>
-            <label className={label}>Categoria *</label>
-            <select
-              value={value.categoria ?? ""}
-              onChange={(e) => onChange({ ...value, categoria: e.target.value })}
-              className={field}
-            >
-              <option value="">Selecione uma categoria</option>
-              {PRODUCT_CATEGORY_OPTIONS.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className={label}>Ordem</label>
-            <input
-              type="number"
-              value={value.ordem ?? 0}
-              onChange={(e) => onChange({ ...value, ordem: Number(e.target.value) })}
-              className={field}
-            />
-          </div>
-        </div>
-        <div className="mt-6 flex justify-end gap-3">
-          <button
-            onClick={onCancel}
-            className="border border-cacau/20 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-cacau transition-colors hover:border-gold hover:text-gold"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={onSave}
-            disabled={saving || uploading}
-            className="bg-deep-green px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-sand transition-colors hover:bg-gold hover:text-deep-green disabled:opacity-60"
-          >
-            {saving ? "Salvando…" : "Salvar"}
-          </button>
-        </div>
-      </div>
-    </div>
+          </footer>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
