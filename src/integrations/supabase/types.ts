@@ -48,6 +48,7 @@ export type Database = {
         Row: {
           categoria: string;
           cores: string[] | null;
+          compre_junto_ids: string[];
           created_at: string;
           descricao: string;
           fonte_preco: string | null;
@@ -76,6 +77,7 @@ export type Database = {
         Insert: {
           categoria?: string;
           cores?: string[] | null;
+          compre_junto_ids?: string[];
           created_at?: string;
           descricao?: string;
           fonte_preco?: string | null;
@@ -104,6 +106,7 @@ export type Database = {
         Update: {
           categoria?: string;
           cores?: string[] | null;
+          compre_junto_ids?: string[];
           created_at?: string;
           descricao?: string;
           fonte_preco?: string | null;

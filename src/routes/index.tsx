@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   homepageProductsQueryOptions,
@@ -7,27 +7,86 @@ import {
   type HomepageProducts,
 } from "@/lib/products.functions";
 import type { ProductBadge } from "@/components/ProductCard";
-import { HeroCarousel, MOBI_HERO } from "@/components/HeroCarousel";
-import { CategoryNavigation } from "@/components/CategoryNavigation";
+import { HomepageContent } from "../components/HomepageContent";
+import { useHomeConfiguration } from "../components/HomeConfigurationContext";
+import { getHomepageBanners } from "../lib/homepage-banners.functions";
+import { initialBannerData } from "../lib/banner-drafts";
 import { parsePage } from "@/components/CatalogPagination";
-import { CATEGORIES, MAX_INSTALLMENTS } from "@/lib/constants";
-import { HomeProductSection } from "@/components/HomeProductSection";
 import { StoreCatalog } from "@/components/StoreCatalog";
 import { newHomepageProducts, weeklyHomepageProducts } from "@/lib/home-curation";
 import { seoHead } from "@/lib/seo";
 import { SITE_TITLE, SITE_DESCRIPTION, SITE_URL } from "@/lib/site-metadata";
+import {
+  catalogUrlSearch,
+  parseCatalogUrlState,
+  DEFAULT_CATALOG_FILTERS,
+  type CatalogFilterState,
+  type CatalogUrlState,
+} from "@/lib/catalog-url-state";
+
+type IndexSearch = Partial<CatalogUrlState> & {
+  q?: string;
+  ofertas?: boolean;
+  all?: boolean;
+};
 
 export const Route = createFileRoute("/")({
-  validateSearch: (
-    search: Record<string, unknown>,
-  ): { q?: string; ofertas?: boolean; all?: boolean; page?: number } => ({
-    page: search.page === undefined ? undefined : parsePage(search.page),
-    q: typeof search.q === "string" && search.q ? search.q : undefined,
-    ofertas: search.ofertas === true || search.ofertas === "true" ? true : undefined,
-    all: search.all === true || search.all === "true" ? true : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): IndexSearch => {
+    const state = parseCatalogUrlState(search);
+    const hasListingParams = [
+      "sort",
+      "minPrice",
+      "maxPrice",
+      "material",
+      "color",
+      "feature",
+      "dimension",
+      "widthMaxCm",
+      "heightMaxCm",
+      "depthClosedMaxCm",
+      "depthOpenMaxCm",
+    ].some((key) => search[key] !== undefined);
+    return {
+      page: search.page === undefined ? undefined : parsePage(search.page),
+      q: typeof search.q === "string" && search.q ? search.q : undefined,
+      ofertas: search.ofertas === true || search.ofertas === "true" ? true : undefined,
+      all:
+        search.all === true ||
+        search.all === "true" ||
+        (hasListingParams && !search.q && !search.ofertas)
+          ? true
+          : undefined,
+      sort: search.sort === undefined ? undefined : state.sort,
+      minPrice: search.minPrice === undefined ? undefined : state.minPrice,
+      maxPrice: search.maxPrice === undefined ? undefined : state.maxPrice,
+      material: search.material === undefined ? undefined : state.material,
+      color: search.color === undefined ? undefined : state.color,
+      feature: search.feature === undefined ? undefined : state.feature,
+      dimension: search.dimension === undefined ? undefined : state.dimension,
+      widthMaxCm: search.widthMaxCm === undefined ? undefined : state.widthMaxCm,
+      heightMaxCm: search.heightMaxCm === undefined ? undefined : state.heightMaxCm,
+      depthClosedMaxCm: search.depthClosedMaxCm === undefined ? undefined : state.depthClosedMaxCm,
+      depthOpenMaxCm: search.depthOpenMaxCm === undefined ? undefined : state.depthOpenMaxCm,
+    };
+  },
   loaderDeps: ({ search }) => ({
-    catalog: Boolean(search.all || search.ofertas || search.q || search.page),
+    catalog: Boolean(
+      search.all ||
+      search.ofertas ||
+      search.q ||
+      search.page ||
+      search.sort ||
+      search.minPrice ||
+      search.maxPrice ||
+      search.material ||
+      search.color ||
+      search.feature ||
+      search.dimension ||
+      search.widthMaxCm ||
+      search.heightMaxCm ||
+      search.depthClosedMaxCm ||
+      search.depthOpenMaxCm,
+    ),
     q: search.q,
     ofertas: search.ofertas,
     all: search.all,
@@ -37,8 +96,40 @@ export const Route = createFileRoute("/")({
     if (deps.catalog) return context.queryClient.ensureQueryData(produtosQueryOptions());
   },
   head: ({ match }) => {
-    const { q, ofertas, all, page } = match.search;
-    const catalog = Boolean(all || ofertas || q || page);
+    const {
+      q,
+      ofertas,
+      all,
+      page,
+      sort,
+      minPrice,
+      maxPrice,
+      material,
+      color,
+      feature,
+      dimension,
+      widthMaxCm,
+      heightMaxCm,
+      depthClosedMaxCm,
+      depthOpenMaxCm,
+    } = match.search;
+    const catalog = Boolean(
+      all ||
+      ofertas ||
+      q ||
+      page ||
+      sort ||
+      minPrice ||
+      maxPrice ||
+      material ||
+      color ||
+      feature ||
+      dimension ||
+      widthMaxCm ||
+      heightMaxCm ||
+      depthClosedMaxCm ||
+      depthOpenMaxCm,
+    );
     const catalogPage = page ?? 1;
     const url = catalog
       ? `${SITE_URL}/?all=true${catalogPage > 1 ? `&page=${catalogPage}` : ""}`
@@ -54,7 +145,21 @@ export const Route = createFileRoute("/")({
       ...head,
       meta: [
         ...head.meta,
-        ...(q || ofertas ? [{ name: "robots", content: "noindex,follow" }] : []),
+        ...(q ||
+        ofertas ||
+        sort ||
+        minPrice ||
+        maxPrice ||
+        material ||
+        color ||
+        feature ||
+        dimension ||
+        widthMaxCm ||
+        heightMaxCm ||
+        depthClosedMaxCm ||
+        depthOpenMaxCm
+          ? [{ name: "robots", content: "noindex,follow" }]
+          : []),
       ],
     };
   },
@@ -82,19 +187,72 @@ function IndexError({ reset }: { error: unknown; reset: () => void }) {
 }
 
 function Index() {
-  const { q, ofertas, all, page } = Route.useSearch();
-  const catalog = Boolean(all || ofertas || q || page);
-  return catalog ? <CatalogIndex query={q} offers={ofertas} page={page} /> : <HomepageIndex />;
+  const search = Route.useSearch();
+  const {
+    q,
+    ofertas,
+    all,
+    page,
+    sort,
+    minPrice,
+    maxPrice,
+    material,
+    color,
+    feature,
+    dimension,
+    widthMaxCm,
+    heightMaxCm,
+    depthClosedMaxCm,
+    depthOpenMaxCm,
+  } = search;
+  const catalog = Boolean(
+    all ||
+    ofertas ||
+    q ||
+    page ||
+    sort ||
+    minPrice ||
+    maxPrice ||
+    material ||
+    color ||
+    feature ||
+    dimension ||
+    widthMaxCm ||
+    heightMaxCm ||
+    depthClosedMaxCm ||
+    depthOpenMaxCm,
+  );
+  const filters: CatalogFilterState = {
+    ...DEFAULT_CATALOG_FILTERS,
+    sort: sort ?? (q?.trim() ? "relevant" : "recommended"),
+    minPrice: minPrice ?? "",
+    maxPrice: maxPrice ?? "",
+    material: material ?? "all",
+    color: color ?? "all",
+    feature: feature ?? "all",
+    dimension: dimension ?? "",
+    widthMaxCm: widthMaxCm ?? "",
+    heightMaxCm: heightMaxCm ?? "",
+    depthClosedMaxCm: depthClosedMaxCm ?? "",
+    depthOpenMaxCm: depthOpenMaxCm ?? "",
+  };
+  return catalog ? (
+    <CatalogIndex query={q} offers={ofertas} page={page} filters={filters} />
+  ) : (
+    <HomepageIndex />
+  );
 }
 
 function CatalogIndex({
   query,
   offers,
   page,
+  filters,
 }: {
   query?: string;
   offers?: boolean;
   page?: number;
+  filters: CatalogFilterState;
 }) {
   const navigate = useNavigate({ from: "/" });
   const [rotationDate, setRotationDate] = useState(() => new Date("2000-01-01T12:00:00.000Z"));
@@ -117,6 +275,11 @@ function CatalogIndex({
   weeklyProducts.forEach((product) => {
     badges[product.id] = "week";
   });
+  const shareParams = new URLSearchParams();
+  if (query) shareParams.set("q", query);
+  if (offers) shareParams.set("ofertas", "true");
+  if (!query && !offers) shareParams.set("all", "true");
+  const shareBaseUrl = `${SITE_URL}/${shareParams.toString() ? `?${shareParams.toString()}` : ""}`;
 
   return (
     <StoreCatalog
@@ -125,10 +288,22 @@ function CatalogIndex({
       query={query}
       offers={offers}
       requestedPage={page}
+      initialFilters={filters}
       badges={badges}
-      onPageChange={(nextPage) => {
+      shareCategory={{
+        label: query
+          ? `resultados para “${query}”`
+          : offers
+            ? "ofertas para sua casa"
+            : "todos os móveis",
+        url: shareBaseUrl,
+      }}
+      onCatalogStateChange={(nextState, nextPage) => {
         void navigate({
-          search: (previous) => ({ ...previous, page: nextPage }),
+          search: (previous) => ({
+            ...previous,
+            ...catalogUrlSearch(nextState, nextPage, query ? "relevant" : "recommended"),
+          }),
           replace: true,
           resetScroll: false,
         });
@@ -137,127 +312,27 @@ function CatalogIndex({
   );
 }
 
-function HomepageIntro() {
-  const mobileCategories = ["sala-de-estar", "cozinha", "dormitorios"].flatMap((slug) =>
-    CATEGORIES.filter((category) => category.slug === slug),
-  );
-  return (
-    <div>
-      <HeroCarousel />
-      <section className="mobi-wrap py-5" aria-label="Mobi em Nova Iguaçu">
-        <h2 className="text-xl text-deep-green">Móveis para sua casa em Nova Iguaçu</h2>
-        <p className="mt-2 text-sm leading-relaxed text-text-light">
-          Encontre sofás, guarda-roupas, colchões e móveis para sala e cozinha. Compare medidas,
-          materiais e cores no catálogo da Mobi.
-        </p>
-        <Link
-          to="/moveis-nova-iguacu"
-          className="mt-2 inline-flex min-h-11 items-center text-sm text-deep-green underline underline-offset-4"
-        >
-          Conheça o atendimento para Nova Iguaçu
-        </Link>
-      </section>
-      <div className="mobi-trust">
-        <span>Pague somente na entrega</span>
-        <span>PIX com desconto</span>
-        <span>Cartão em até {MAX_INSTALLMENTS}x sem juros</span>
-      </div>
-      <div className="mobi-category-wrap mobi-wrap">
-        <CategoryNavigation categories={CATEGORIES} mobileCategories={mobileCategories} />
-      </div>
-    </div>
-  );
-}
-
 function HomepageIndex() {
+  const configuration = useHomeConfiguration();
   const result = useQuery(homepageProductsQueryOptions());
+  const banners = useQuery({ queryKey: ["homepage-banners"], queryFn: getHomepageBanners });
   const data: HomepageProducts | undefined = result.data;
-  const productById = new Map((data?.products ?? []).map((product) => [product.id, product]));
-  const getProducts = (ids: string[] | undefined) =>
-    (ids ?? []).flatMap((id) => {
-      const product = productById.get(id);
-      return product ? [product] : [];
-    });
-  const discoveryProducts = getProducts(data?.sectionIds.discovery);
-  const weeklyProducts = getProducts(data?.sectionIds.weekly);
-  const newProducts = getProducts(data?.sectionIds.new);
-  const roomProducts = getProducts(data?.sectionIds.room);
-  const badges: Record<string, ProductBadge> = {};
-  newProducts.forEach((product) => {
-    badges[product.id] = "new";
-  });
-  weeklyProducts.forEach((product) => {
-    badges[product.id] = "week";
-  });
-
+  const products = data?.products;
+  const failed = result.isError;
   return (
-    <>
-      <HomepageIntro />
-      {!data && result.isError ? (
+    <HomepageContent
+      products={products ?? []}
+      sectionIds={data?.sectionIds ?? { weekly: [], discovery: [], new: [], room: [] }}
+      roomImages={data?.roomImages}
+      configuration={configuration}
+      banners={initialBannerData(banners.data).banners}
+    >
+      {!products && failed ? (
         <IndexError error={result.error} reset={() => void result.refetch()} />
-      ) : !data ? (
+      ) : !products ? (
         <HomepageLoadingState />
-      ) : (
-        <>
-          <HomeProductSection
-            title="Descubra algo novo"
-            subtitle="Uma seleção diferente a cada visita. Encontre o que combina com você."
-            products={discoveryProducts}
-            badges={badges}
-          />
-          <HomeProductSection
-            title="Escolhas da semana"
-            subtitle="Uma seleção especial da Mobi para sua casa."
-            products={weeklyProducts}
-            badges={badges}
-          />
-          <section className="mobi-inspiration mobi-wrap">
-            <img src={MOBI_HERO} alt="Inspiração de sala de estar" loading="lazy" />
-            <div>
-              <span className="mobi-eyebrow">CONFORTO EM CADA DETALHE</span>
-              <h2>
-                Para sua sala,
-                <br />
-                mais personalidade.
-              </h2>
-              <p>Um lugar para descansar, receber e viver bons momentos.</p>
-              <Link
-                to="/categoria/$slug"
-                params={{ slug: "sala-de-estar" }}
-                search={{ page: 1 }}
-                className="mobi-primary"
-              >
-                Explorar móveis para sala
-              </Link>
-            </div>
-          </section>
-          <HomeProductSection
-            title="Novidades"
-            subtitle="Novas possibilidades para renovar seus ambientes."
-            products={newProducts}
-            badges={badges}
-          />
-          <HomeProductSection
-            title="Para sua sala"
-            subtitle="Conforto e detalhes que fazem a diferença."
-            products={roomProducts}
-            badges={badges}
-            category="sala-de-estar"
-          />
-          <section className="mobi-catalog-invite mobi-wrap">
-            <h2>Móveis para Nova Iguaçu e Baixada Fluminense.</h2>
-            <p>
-              Sofás, poltronas, painéis, guarda-roupas, colchões e móveis para cozinha. Compare
-              modelos, medidas, materiais e cores e consulte as condições de entrega com a Mobi pelo
-              WhatsApp.
-            </p>
-            <Link to="/" search={{ all: true, page: 1 }} hash="catalogo" className="mobi-primary">
-              Explorar todo o catálogo
-            </Link>
-          </section>
-        </>
-      )}
-    </>
+      ) : null}
+    </HomepageContent>
   );
 }
 

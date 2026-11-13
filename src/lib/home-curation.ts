@@ -1,6 +1,6 @@
 import type { Produto } from "@/lib/products.functions";
-import { categoryMatches } from "@/lib/constants";
-import { featuredProducts } from "@/lib/featured-products";
+import { categoryMatches } from "./constants.ts";
+import { featuredProducts } from "./featured-products.ts";
 
 const UNAVAILABLE = /indispon[ií]vel|esgotad[oa]|sem estoque|n[aã]o temos dispon[ií]vel/i;
 const SHELF_SIZE = 4;
@@ -67,7 +67,12 @@ export function discoverHomepageProducts(
   excludedIds: Set<string>,
   today = new Date(),
 ): Produto[] {
-  const seed = today.toISOString();
+  const seed = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(today);
   return products
     .filter(
       (product) =>

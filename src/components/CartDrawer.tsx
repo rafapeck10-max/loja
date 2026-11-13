@@ -1,8 +1,10 @@
-import { useState } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
+import { useState, useRef } from "react";
 import { Minus, Plus, Trash2, X, Truck, Sofa, ArrowLeft } from "lucide-react";
 import { useCart, cartItemKey } from "@/lib/cart-context";
 import { formatBRL, WHATSAPP_NUMBER } from "@/lib/constants";
 import { MAX_INSTALLMENTS } from "@/lib/constants";
+import { ImageWithFallback } from "@/components/ImageWithFallback";
 import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import { cartPaymentLine, orderPaymentSummary, orderWhatsAppMessage } from "@/lib/cart-payment";
 
@@ -13,12 +15,13 @@ const PAYMENT_OPTIONS = [
   {
     value: "Cartão na entrega",
     label: "Cartão",
-    desc: `Até ${MAX_INSTALLMENTS}x sem juros`,
+    desc: `Até ${MAX_INSTALLMENTS}x `,
   },
   { value: "Dinheiro na entrega", label: "Dinheiro", desc: "Pague ao receber e montar" },
 ];
 
 export function CartDrawer() {
+  const opener = useRef<HTMLElement | null>(null);
   const { items, total, isOpen, closeCart, updateQuantity, removeItem } = useCart();
   const [step, setStep] = useState<Step>("cart");
   const [form, setForm] = useState({
@@ -47,6 +50,8 @@ export function CartDrawer() {
     else if (form.bairro.trim().length > 100) errs.bairro = "Bairro muito longo";
     if (!form.cidade.trim()) errs.cidade = "Informe a cidade";
     setErrors(errs);
+    const firstInvalid = Object.keys(errs)[0];
+    if (firstInvalid) document.getElementById(`checkout-${firstInvalid}`)?.focus();
     return Object.keys(errs).length === 0;
   };
 
@@ -68,315 +73,351 @@ export function CartDrawer() {
     }`;
 
   return (
-    <>
-      {/* Overlay */}
-      <div
-        onClick={close}
-        className={`fixed inset-0 z-[1001] bg-black/50 transition-opacity duration-400 ${
-          isOpen ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
-      />
-
-      {/* Drawer */}
-      <aside
-        aria-hidden={!isOpen}
-        inert={!isOpen}
-        className={`fixed right-0 top-0 z-[1002] flex h-full w-full max-w-[420px] flex-col bg-sand shadow-drawer transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-gold/30 bg-deep-green px-6 py-5">
-          <div className="flex items-center gap-3">
-            {step === "checkout" && (
-              <button
-                onClick={() => setStep("cart")}
-                aria-label="Voltar ao carrinho"
-                className="text-gold transition-colors hover:text-sand"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-            )}
-            <h3 className="text-2xl text-gold">
-              {step === "cart" ? "Seu Carrinho" : "Finalizar Pedido"}
-            </h3>
+    <Dialog.Root
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) close();
+      }}
+    >
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-[1001] bg-black/50" />
+        <Dialog.Content
+          aria-describedby="mobi-cart-description"
+          onOpenAutoFocus={() => {
+            opener.current = document.activeElement as HTMLElement;
+          }}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            opener.current?.focus();
+          }}
+          className="fixed right-0 top-0 z-[1002] flex h-full w-full max-w-[420px] flex-col bg-sand shadow-drawer"
+        >
+          <Dialog.Description id="mobi-cart-description" className="sr-only">
+            Revise os móveis e as condições antes de consultar o pedido com a Mobi.
+          </Dialog.Description>
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-gold/30 bg-deep-green px-6 py-5">
+            <div className="flex items-center gap-3">
+              {step === "checkout" && (
+                <button
+                  onClick={() => setStep("cart")}
+                  aria-label="Voltar ao carrinho"
+                  className="flex min-h-11 min-w-11 items-center justify-center text-gold transition-colors hover:text-sand"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+              )}
+              <Dialog.Title className="text-2xl text-gold">
+                {step === "cart" ? "Seu Carrinho" : "Finalizar Pedido"}
+              </Dialog.Title>
+            </div>
+            <button
+              onClick={close}
+              aria-label="Fechar Carrinho"
+              className="flex min-h-11 min-w-11 items-center justify-center text-gold transition-colors hover:text-sand"
+            >
+              <X className="h-6 w-6" />
+            </button>
           </div>
-          <button
-            onClick={close}
-            aria-label="Fechar Carrinho"
-            className="text-gold transition-colors hover:text-sand"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
 
-        {step === "cart" ? (
-          <>
-            {/* Items */}
-            <div className="flex-1 overflow-y-auto px-6 py-4">
-              {items.length === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-4 text-text-light">
-                  <Sofa className="h-14 w-14 text-gold/50" />
-                  <p className="text-sm font-medium">Seu carrinho está vazio.</p>
-                </div>
-              ) : (
-                items.map((item) => {
-                  const key = cartItemKey(item);
-                  const payment = cartPaymentLine(item);
-                  return (
-                    <div key={key} className="flex gap-4 border-b border-cacau/10 py-4">
-                      <img
-                        src={item.img}
-                        alt={item.name}
-                        className="h-20 w-20 shrink-0 object-cover"
-                      />
-                      <div className="flex flex-1 flex-col gap-1">
-                        <h4 className="font-sans text-sm font-semibold leading-snug text-cacau">
-                          {item.name}
-                        </h4>
-                        {(item.color || item.finish || item.variant) && (
-                          <span className="text-[11px] text-text-light">
-                            {[
-                              item.color && `Cor: ${item.color}`,
-                              item.finish && `Pés: ${item.finish}`,
-                              item.variant && `Opção: ${item.variant}`,
-                            ]
-                              .filter(Boolean)
-                              .join(" | ")}
-                          </span>
-                        )}
-                        <div className="text-sm font-bold text-price-green">
-                          {formatBRL(item.price)} à vista no Pix ou dinheiro
-                        </div>
-                        <div className="text-[11px] text-text-light">
-                          Cartão: até {MAX_INSTALLMENTS}x sem juros
-                          <br />
-                          {payment.installments}x de {formatBRL(payment.unitApproximateInstallment)}
-                          {" por unidade"}
-                          <br />
-                          Total no cartão por unidade: {formatBRL(payment.unitCardTotal)}
-                          {payment.rateVerification === "inferred" && (
-                            <p>Crédito à vista: simulação provisória; confirmar taxa na conta.</p>
-                          )}
-                        </div>
-                        <div className="mt-1 flex items-center justify-between">
-                          <div className="flex items-center gap-3 border border-cacau/15 px-2 py-1">
-                            <button
-                              aria-label="Diminuir quantidade"
-                              onClick={() => updateQuantity(key, -1)}
-                              className="text-cacau transition-colors hover:text-gold"
-                            >
-                              <Minus className="h-3.5 w-3.5" />
-                            </button>
-                            <span className="min-w-4 text-center font-sans text-sm font-semibold">
-                              {item.quantity}
+          {step === "cart" ? (
+            <>
+              {/* Items */}
+              <div className="flex-1 overflow-y-auto px-6 py-4">
+                {items.length === 0 ? (
+                  <div className="flex h-full flex-col items-center justify-center gap-4 text-text-light">
+                    <Sofa className="h-14 w-14 text-gold/50" />
+                    <p className="text-sm font-medium">Seu carrinho está vazio.</p>
+                  </div>
+                ) : (
+                  items.map((item) => {
+                    const key = cartItemKey(item);
+                    const payment = cartPaymentLine(item);
+                    return (
+                      <div key={key} className="flex gap-4 border-b border-cacau/10 py-4">
+                        <ImageWithFallback
+                          src={item.img}
+                          alt={item.name}
+                          className="h-20 w-20 shrink-0 bg-white object-contain"
+                        />
+                        <div className="flex min-w-0 flex-1 flex-col gap-1">
+                          <h4 className="break-words font-sans text-sm font-semibold leading-snug text-cacau">
+                            {item.name}
+                          </h4>
+                          {(item.color || item.finish || item.variant) && (
+                            <span className="text-[11px] text-text-light">
+                              {[
+                                item.color && `Cor: ${item.color}`,
+                                item.finish && `Pés: ${item.finish}`,
+                                item.variant && `Opção: ${item.variant}`,
+                              ]
+                                .filter(Boolean)
+                                .join(" | ")}
                             </span>
+                          )}
+                          <div className="text-sm font-bold text-price-green">
+                            {formatBRL(item.price)} à vista no Pix ou dinheiro
+                          </div>
+                          <div className="text-[11px] text-text-light">
+                            Cartão: até {MAX_INSTALLMENTS}x
+                            <br />
+                            {payment.installments}x de{" "}
+                            {formatBRL(payment.unitApproximateInstallment)}
+                            {" por unidade"}
+                            <br />
+                            Total no cartão por unidade: {formatBRL(payment.unitCardTotal)}
+                            {payment.rateVerification === "inferred" && (
+                              <p>Crédito à vista: simulação provisória; confirmar taxa na conta.</p>
+                            )}
+                          </div>
+                          <div className="mt-1 flex items-center justify-between">
+                            <div className="flex items-center rounded border border-cacau/15">
+                              <button
+                                aria-label="Diminuir quantidade"
+                                onClick={() => updateQuantity(key, -1)}
+                                className="flex h-11 w-11 items-center justify-center text-cacau transition-colors hover:text-gold"
+                              >
+                                <Minus className="h-3.5 w-3.5" />
+                              </button>
+                              <span className="min-w-4 text-center font-sans text-sm font-semibold">
+                                {item.quantity}
+                              </span>
+                              <button
+                                aria-label="Aumentar quantidade"
+                                onClick={() => updateQuantity(key, 1)}
+                                className="flex h-11 w-11 items-center justify-center text-cacau transition-colors hover:text-gold"
+                              >
+                                <Plus className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                             <button
-                              aria-label="Aumentar quantidade"
-                              onClick={() => updateQuantity(key, 1)}
-                              className="text-cacau transition-colors hover:text-gold"
+                              aria-label="Remover item"
+                              onClick={() => removeItem(key)}
+                              className="flex h-11 w-11 shrink-0 items-center justify-center text-text-light transition-colors hover:text-destructive"
                             >
-                              <Plus className="h-3.5 w-3.5" />
+                              <Trash2 className="h-4 w-4" />
                             </button>
                           </div>
-                          <button
-                            aria-label="Remover item"
-                            onClick={() => removeItem(key)}
-                            className="text-text-light transition-colors hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
                         </div>
                       </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="border-t border-cacau/10 bg-white px-6 py-5">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-sm font-semibold uppercase tracking-wide text-cacau">
-                  Subtotal no Pix:
-                </span>
-                <span className="text-xl font-bold text-price-green">{formatBRL(total)}</span>
+                    );
+                  })
+                )}
               </div>
-              <p className="mb-4 flex items-center justify-center gap-2 text-center text-[11px] font-medium text-text-light">
-                <Truck className="h-3.5 w-3.5 text-gold" /> Pague e receba em casa na Baixada
-                Fluminense.
-              </p>
-              <button
-                disabled={items.length === 0}
-                onClick={() => setStep("checkout")}
-                className="w-full bg-deep-green py-4 text-sm font-bold uppercase tracking-[1.5px] text-sand transition-all duration-300 hover:bg-gold hover:text-deep-green disabled:pointer-events-none disabled:opacity-50"
-              >
-                Concluir Pedido
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            {/* Checkout form */}
-            <div className="flex-1 overflow-y-auto px-6 py-5">
-              <p className="mb-5 text-xs uppercase tracking-[1.5px] text-text-light">
-                Endereço de Entrega
-              </p>
-              <div className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="checkout-nome"
-                    className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-cacau"
-                  >
-                    Nome completo
-                  </label>
-                  <input
-                    id="checkout-nome"
-                    autoComplete="name"
-                    aria-invalid={Boolean(errors.nome)}
-                    value={form.nome}
-                    onChange={(e) => setForm({ ...form, nome: e.target.value })}
-                    placeholder="Seu nome"
-                    maxLength={100}
-                    className={inputClass("nome")}
-                  />
-                  {errors.nome && <p className="mt-1 text-xs text-destructive">{errors.nome}</p>}
+
+              {/* Footer */}
+              <div className="border-t border-cacau/10 bg-white px-6 py-5">
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="text-sm font-semibold uppercase tracking-wide text-cacau">
+                    Subtotal no Pix:
+                  </span>
+                  <span className="text-xl font-bold text-price-green">{formatBRL(total)}</span>
                 </div>
-                <div>
-                  <label
-                    htmlFor="checkout-rua"
-                    className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-cacau"
-                  >
-                    Rua e número
-                  </label>
-                  <input
-                    id="checkout-rua"
-                    autoComplete="street-address"
-                    aria-invalid={Boolean(errors.rua)}
-                    value={form.rua}
-                    onChange={(e) => setForm({ ...form, rua: e.target.value })}
-                    placeholder="Ex: Rua das Palmeiras, 123"
-                    maxLength={200}
-                    className={inputClass("rua")}
-                  />
-                  {errors.rua && <p className="mt-1 text-xs text-destructive">{errors.rua}</p>}
-                </div>
-                <div className="grid grid-cols-2 gap-3">
+                <p className="mb-4 flex items-center justify-center gap-2 text-center text-[11px] font-medium text-text-light">
+                  <Truck className="h-3.5 w-3.5 text-gold" /> Pague e receba em casa na Baixada
+                  Fluminense.
+                </p>
+                <button
+                  disabled={items.length === 0}
+                  onClick={() => setStep("checkout")}
+                  className="w-full bg-deep-green py-4 text-sm font-bold uppercase tracking-[1.5px] text-sand transition-all duration-300 hover:bg-gold hover:text-deep-green disabled:pointer-events-none disabled:opacity-50"
+                >
+                  Concluir Pedido
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Checkout form */}
+              <div className="flex-1 overflow-y-auto px-6 py-5">
+                <p className="mb-5 text-xs uppercase tracking-[1.5px] text-text-light">
+                  Endereço de Entrega
+                </p>
+                <div className="space-y-4">
                   <div>
                     <label
-                      htmlFor="checkout-bairro"
+                      htmlFor="checkout-nome"
                       className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-cacau"
                     >
-                      Bairro
+                      Nome completo
                     </label>
                     <input
-                      id="checkout-bairro"
-                      autoComplete="address-level3"
-                      aria-invalid={Boolean(errors.bairro)}
-                      value={form.bairro}
-                      onChange={(e) => setForm({ ...form, bairro: e.target.value })}
-                      placeholder="Seu bairro"
+                      id="checkout-nome"
+                      autoComplete="name"
+                      aria-invalid={Boolean(errors.nome)}
+                      aria-describedby={errors.nome ? "checkout-nome-error" : undefined}
+                      value={form.nome}
+                      onChange={(e) => setForm({ ...form, nome: e.target.value })}
+                      placeholder="Seu nome"
                       maxLength={100}
-                      className={inputClass("bairro")}
+                      className={inputClass("nome")}
                     />
-                    {errors.bairro && (
-                      <p className="mt-1 text-xs text-destructive">{errors.bairro}</p>
+                    {errors.nome && (
+                      <p
+                        id="checkout-nome-error"
+                        role="alert"
+                        className="mt-1 text-xs text-destructive"
+                      >
+                        {errors.nome}
+                      </p>
                     )}
                   </div>
                   <div>
                     <label
-                      htmlFor="checkout-cidade"
+                      htmlFor="checkout-rua"
                       className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-cacau"
                     >
-                      Cidade
+                      Rua e número
                     </label>
                     <input
-                      id="checkout-cidade"
-                      value={form.cidade}
-                      onChange={(e) => setForm({ ...form, cidade: e.target.value })}
-                      autoComplete="address-level2"
-                      maxLength={100}
-                      className={inputClass("cidade")}
+                      id="checkout-rua"
+                      autoComplete="street-address"
+                      aria-invalid={Boolean(errors.rua)}
+                      aria-describedby={errors.rua ? "checkout-rua-error" : undefined}
+                      value={form.rua}
+                      onChange={(e) => setForm({ ...form, rua: e.target.value })}
+                      placeholder="Ex: Rua das Palmeiras, 123"
+                      maxLength={200}
+                      className={inputClass("rua")}
                     />
-                  </div>
-                </div>
-
-                {errors.cidade && (
-                  <p role="alert" className="text-xs text-destructive">
-                    {errors.cidade}
-                  </p>
-                )}
-                <div className="pt-2">
-                  <p className="mb-3 text-xs uppercase tracking-[1.5px] text-text-light">
-                    Forma de Pagamento
-                  </p>
-                  <div className="space-y-2">
-                    {PAYMENT_OPTIONS.map((opt) => (
-                      <label
-                        key={opt.value}
-                        className={`flex cursor-pointer items-center gap-3 border px-4 py-3 transition-colors ${
-                          form.pagamento === opt.value
-                            ? "border-gold bg-gold/10"
-                            : "border-cacau/15 bg-white hover:border-gold/50"
-                        }`}
+                    {errors.rua && (
+                      <p
+                        id="checkout-rua-error"
+                        role="alert"
+                        className="mt-1 text-xs text-destructive"
                       >
-                        <input
-                          type="radio"
-                          name="pagamento"
-                          value={opt.value}
-                          checked={form.pagamento === opt.value}
-                          onChange={() => setForm({ ...form, pagamento: opt.value })}
-                          className="accent-[#C5A059]"
-                        />
-                        <span>
-                          <span className="block text-sm font-bold text-cacau">{opt.label}</span>
-                          <span className="block text-xs text-text-light">{opt.desc}</span>
-                        </span>
+                        {errors.rua}
+                      </p>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label
+                        htmlFor="checkout-bairro"
+                        className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-cacau"
+                      >
+                        Bairro
                       </label>
-                    ))}
+                      <input
+                        id="checkout-bairro"
+                        autoComplete="address-level3"
+                        aria-invalid={Boolean(errors.bairro)}
+                        aria-describedby={errors.bairro ? "checkout-bairro-error" : undefined}
+                        value={form.bairro}
+                        onChange={(e) => setForm({ ...form, bairro: e.target.value })}
+                        placeholder="Seu bairro"
+                        maxLength={100}
+                        className={inputClass("bairro")}
+                      />
+                      {errors.bairro && (
+                        <p
+                          id="checkout-bairro-error"
+                          role="alert"
+                          className="mt-1 text-xs text-destructive"
+                        >
+                          {errors.bairro}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="checkout-cidade"
+                        className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-cacau"
+                      >
+                        Cidade
+                      </label>
+                      <input
+                        id="checkout-cidade"
+                        aria-invalid={Boolean(errors.cidade)}
+                        aria-describedby={errors.cidade ? "checkout-cidade-error" : undefined}
+                        value={form.cidade}
+                        onChange={(e) => setForm({ ...form, cidade: e.target.value })}
+                        autoComplete="address-level2"
+                        maxLength={100}
+                        className={inputClass("cidade")}
+                      />
+                    </div>
+                  </div>
+
+                  {errors.cidade && (
+                    <p id="checkout-cidade-error" role="alert" className="text-xs text-destructive">
+                      {errors.cidade}
+                    </p>
+                  )}
+                  <div className="pt-2">
+                    <p className="mb-3 text-xs uppercase tracking-[1.5px] text-text-light">
+                      Forma de Pagamento
+                    </p>
+                    <div className="space-y-2">
+                      {PAYMENT_OPTIONS.map((opt) => (
+                        <label
+                          key={opt.value}
+                          className={`flex cursor-pointer items-center gap-3 border px-4 py-3 transition-colors ${
+                            form.pagamento === opt.value
+                              ? "border-gold bg-gold/10"
+                              : "border-cacau/15 bg-white hover:border-gold/50"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="pagamento"
+                            value={opt.value}
+                            checked={form.pagamento === opt.value}
+                            onChange={() => setForm({ ...form, pagamento: opt.value })}
+                            className="accent-[#C5A059]"
+                          />
+                          <span>
+                            <span className="block text-sm font-bold text-cacau">{opt.label}</span>
+                            <span className="block text-xs text-text-light">{opt.desc}</span>
+                          </span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 </div>
+                {isCardPayment && (
+                  <div className="mb-3 space-y-2 text-xs text-text-light">
+                    {items.map((item, index) => {
+                      const line = summary.lines[index];
+                      return (
+                        <p key={cartItemKey(item)}>
+                          {item.name} · {item.quantity} unidade(s): até {MAX_INSTALLMENTS}x sem
+                          juros; {line.installments}x de {formatBRL(line.approximateInstallment)}.{" "}
+                          Total no cartão: {formatBRL(line.cardTotal)}.
+                          {line.rateVerification === "inferred" &&
+                            " Crédito à vista provisório: confirmar taxa na conta."}
+                        </p>
+                      );
+                    })}
+                    <p>
+                      A parcela exibida foi arredondada para cima; centavos residuais seguem a
+                      operadora e o total informado permanece válido.
+                    </p>
+                  </div>
+                )}
               </div>
-              {isCardPayment && (
-                <div className="mb-3 space-y-2 text-xs text-text-light">
-                  {items.map((item, index) => {
-                    const line = summary.lines[index];
-                    return (
-                      <p key={cartItemKey(item)}>
-                        {item.name} · {item.quantity} unidade(s): até {MAX_INSTALLMENTS}x sem juros;
-                        {" "}{line.installments}x de {formatBRL(line.approximateInstallment)}.
-                        {" "}Total no cartão: {formatBRL(line.cardTotal)}.
-                        {line.rateVerification === "inferred" &&
-                          " Crédito à vista provisório: confirmar taxa na conta."}
-                      </p>
-                    );
-                  })}
-                  <p>
-                    A parcela exibida foi arredondada para cima; centavos residuais seguem a
-                    operadora e o total informado permanece válido.
-                  </p>
-                </div>
-              )}
-            </div>
 
-            {/* Footer */}
-            <div className="border-t border-cacau/10 bg-white px-6 py-5">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                <span className="text-sm font-semibold uppercase tracking-wide text-cacau">
-                  {isCardPayment ? "Total no cartão:" : "Total do Pedido:"}
-                </span>
-                <span className="text-xl font-bold text-price-green">{formatBRL(orderTotal)}</span>
+              {/* Footer */}
+              <div className="border-t border-cacau/10 bg-white px-6 py-5">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-sm font-semibold uppercase tracking-wide text-cacau">
+                    {isCardPayment ? "Total no cartão:" : "Total do Pedido:"}
+                  </span>
+                  <span className="text-xl font-bold text-price-green">
+                    {formatBRL(orderTotal)}
+                  </span>
+                </div>
+                <button
+                  onClick={sendToWhatsApp}
+                  className="flex w-full items-center justify-center gap-2 bg-whatsapp py-4 text-sm font-bold uppercase tracking-[1.5px] text-white transition-all duration-300 hover:brightness-110"
+                >
+                  <WhatsAppIcon className="h-5 w-5" /> Enviar Pedido no WhatsApp
+                </button>
               </div>
-              <button
-                onClick={sendToWhatsApp}
-                className="flex w-full items-center justify-center gap-2 bg-whatsapp py-4 text-sm font-bold uppercase tracking-[1.5px] text-white transition-all duration-300 hover:brightness-110"
-              >
-                <WhatsAppIcon className="h-5 w-5" /> Enviar Pedido no WhatsApp
-              </button>
-            </div>
-          </>
-        )}
-      </aside>
-    </>
+            </>
+          )}
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }

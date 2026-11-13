@@ -20,3 +20,29 @@ For clear, small requests, work directly: do not create a planning document, sta
 Keep visual changes separate from Supabase product data. For any requested price or installment change, record and compare the exact 10x value. Respect explicit approval gates, and never ask again after approval for the same reviewed version.
 
 For the fast agent-side catalog lookup and data-edit route, follow [docs/supabase-catalog-access.md](docs/supabase-catalog-access.md). Use the connected Supabase integration; never commit credentials or service-role keys.
+
+## Mobi — conferência documental antes de entregar
+
+Decisão de Rafael em 09/11/2026: sempre retomar os documentos e conferir os detalhes antes de entregar uma etapa. A primeira prévia PM-01 foi rejeitada; não tratá-la como design homologado.
+
+- Antes de implementar e novamente antes de entregar, reabrir `MOBI_PAINEL_CONTROLE_ESPECIFICACAO.md` e `MOBI_ENGENHARIA_REVERSA_MADEIRAMADEIRA (1).md` (nome canônico no texto: `MOBI_ENGENHARIA_REVERSA_MADEIRAMADEIRA.md`). Na máquina de origem estão em `C:/Users/rafap/OneDrive/Área de Trabalho/LOJA MOBI/.md/`. Em outro ambiente, localizar os anexos equivalentes. Se indisponíveis, declarar a lacuna; não alegar leitura.
+- Conferir versão, módulo, IDs relacionados, dependências e aceite; manter uma matriz requisito → fonte → arquivo → evidência → pendência. Para PM-01, retomar [a conferência detalhada](docs/PM01_CONFERENCIA_DOCUMENTAL.md).
+- Os originais prevalecem sobre resumos. A cópia do manifesto em `docs/referencias/` é referência versionada, não fonte de status real ou seleção de trabalho.
+- Conferir separadamente aderência documental, aparência desktop/mobile e funcionamento. Compilação, testes e ausência de overflow não provam qualidade visual ou conformidade total.
+- Rafael apontou excesso de vazios na prévia em 09/11/2026. Manter composição compacta: não reservar altura para linhas de texto ausentes, reduzir margens acumuladas entre título/subtítulo e ajustar cartões ao conteúdo. Preservar legibilidade e controles com toque de pelo menos 44 px; não interpretar compactação como fonte minúscula.
+- Na mesma data Rafael reforçou: evitar aparência genérica, preservar a identidade da loja e pesquisar técnicas de UX/design. Priorizar a tarefa da Mobi (móveis, preço, imagem, fornecedor, curadoria) e os ativos oficiais. Não dar a módulos indisponíveis o mesmo peso de ações utilizáveis; mostrar limitações sem grandes cartões vazios e revelar explicações secundárias por expansão.
+- Não confundir proposta com implementação, amostra com integração real, evidência da concorrente com status Mobi, nem URL de imagem com foto carregada.
+- Adaptar à identidade e à operação Mobi. Desenvolver localmente ou em branch isolada; usar rascunhos/dados de teste; apresentar versão, prévia, validação, limites e reversão.
+- Não publicar, promover deployment ou integrar em branch que publica produção sem Rafael aprovar explicitamente a versão apresentada. Aprovação anterior para a mesma versão não precisa ser repetida.
+
+Para PM-02, retomar também [a conferência do editor de páginas e vitrines](docs/PM02_CONFERENCIA_DOCUMENTAL.md). A edição atual gera somente rascunhos locais da home; não confundir com configuração publicada, CMS completo ou criação automática das páginas da referência.
+
+A ampliação PM-01 a PM-10 está registrada em [PM01_PM10_CONFERENCIA_DOCUMENTAL.md](docs/PM01_PM10_CONFERENCIA_DOCUMENTAL.md). Os dez módulos têm comportamento local e limites explícitos. O catálogo de 141 requisitos não equivale a 141 funções públicas implementadas; estado da referência, implementação e ativação continuam separados. Persistência remota, aplicação de configurações, papéis e auditoria individual seguem pendentes. Preservar rascunhos por ID, versões, detecção de base obsoleta e recuperação de consultas sem apagar edições.
+
+## Realidade operacional Mobi — MM-P01
+
+Decisão adicional de Rafael: antes de cada aplicação, abrir a MadeiraMadeira ao vivo e conferir o comportamento correspondente, cruzando a observação com a engenharia reversa. Registrar o que foi observado e eventuais barreiras; não alegar interação não testada. Essa conferência não autoriza copiar conteúdo nem alterar a operação da Mobi.
+
+Rafael confirmou em 09/11/2026: **a Mobi não tem loja física**. Adaptar a página inicial ao atendimento online e à operação real; não criar visitação, mapa de unidade, showroom, retirada, aplicativo ou canais inexistentes. Região atendida não é endereço aberto ao público. O código de `moveis-nova-iguacu.tsx` já informa atendimento online sem endereço físico para visitação.
+
+Toda aplicação nova precisa de ligação efetiva ao painel: campo suportado, rascunho, renderer de prévia, revisão, consumidor público e histórico. A prévia administrativa local não comprova integração com a home publicada. Seguir o [plano MM-P01](docs/MM-P01_PLANO_APLICACAO_MOBI.md), mantendo funções futuras e dados não confirmados como pendências. Trechos históricos sobre parcelamento, quantidade de botões móveis e rotação diária precisam ser confrontados com fonte/versão atuais, sem alterar regras comerciais por suposição.

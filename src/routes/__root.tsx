@@ -24,6 +24,7 @@ import { MobileBottomBar } from "@/components/MobileBottomBar";
 import { SITE_TITLE, SITE_DESCRIPTION, SITE_URL } from "@/lib/site-metadata";
 import { jsonLd, seoHead } from "@/lib/seo";
 import { WHATSAPP_DISPLAY } from "@/lib/constants";
+import { LocalHomeConfigurationProvider } from "../components/LocalHomeConfigurationProvider";
 
 function NotFoundComponent() {
   return (
@@ -171,50 +172,62 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const isAdminRoute = useRouterState({ select: (state) => state.location.pathname === "/admin" });
+  const isAdminRoute = useRouterState({
+    select: (state) => state.location.pathname.replace(/\/$/, "") === "/admin",
+  });
   const isLinksRoute = useRouterState({
     select: (state) => state.location.pathname.replace(/\/$/, "") === "/links",
+  });
+  const isHelpRoute = useRouterState({
+    select: (state) => {
+      const pathname = state.location.pathname.replace(/\/$/, "");
+      return pathname === "/ajuda" || pathname.startsWith("/ajuda/");
+    },
   });
 
   return (
     <QueryClientProvider client={queryClient}>
-      <UIProvider>
-        <CartProvider>
-          <div
-            className={
-              isLinksRoute
-                ? "flex min-h-screen flex-col bg-[#073f3b]"
-                : "store-shell flex min-h-screen flex-col"
-            }
-          >
-            {!isLinksRoute && <Header />}
-            <main
-              id="conteudo"
-              className={isAdminRoute || isLinksRoute ? "flex-1" : "flex-1 pb-20 md:pb-0"}
+      <LocalHomeConfigurationProvider>
+        <UIProvider>
+          <CartProvider>
+            <div
+              className={
+                isLinksRoute
+                  ? "flex min-h-screen flex-col bg-[#073f3b]"
+                  : isAdminRoute
+                    ? "admin-shell flex min-h-screen flex-col"
+                    : "store-shell flex min-h-screen flex-col"
+              }
             >
-              {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-              <Outlet />
-            </main>
-            {!isLinksRoute && <Footer />}
-          </div>
-          {!isAdminRoute && !isLinksRoute && <WhatsAppFloat />}
-          <CartDrawer />
-          <MenuDrawer />
-          {!isAdminRoute && !isLinksRoute && <MobileBottomBar />}
-          <Toaster
-            position="bottom-left"
-            toastOptions={{
-              style: {
-                background: "#2E3F32",
-                color: "#F4EFE6",
-                border: "1px solid rgba(197, 160, 89, 0.4)",
-                fontFamily: "Manrope, sans-serif",
-                fontSize: "13px",
-              },
-            }}
-          />
-        </CartProvider>
-      </UIProvider>
+              {!isLinksRoute && !isAdminRoute && !isHelpRoute && <Header />}
+              <main
+                id="conteudo"
+                className={isAdminRoute || isLinksRoute ? "flex-1" : "flex-1 pb-20 md:pb-0"}
+              >
+                {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+                <Outlet />
+              </main>
+              {!isLinksRoute && !isAdminRoute && !isHelpRoute && <Footer />}
+            </div>
+            {!isAdminRoute && !isLinksRoute && !isHelpRoute && <WhatsAppFloat />}
+            {!isHelpRoute && <CartDrawer />}
+            {!isHelpRoute && <MenuDrawer />}
+            {!isAdminRoute && !isLinksRoute && !isHelpRoute && <MobileBottomBar />}
+            <Toaster
+              position="bottom-left"
+              toastOptions={{
+                style: {
+                  background: "#2E3F32",
+                  color: "#F4EFE6",
+                  border: "1px solid rgba(197, 160, 89, 0.4)",
+                  fontFamily: "Manrope, sans-serif",
+                  fontSize: "13px",
+                },
+              }}
+            />
+          </CartProvider>
+        </UIProvider>
+      </LocalHomeConfigurationProvider>
     </QueryClientProvider>
   );
 }

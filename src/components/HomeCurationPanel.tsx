@@ -18,18 +18,15 @@ interface Props {
   password: string;
   products: ProdutoAdmin[];
 }
-interface ProductSettings {
-  novidade: HomeCurationMode;
-  sala: HomeCurationMode;
-  descoberta: boolean;
-}
-interface Draft {
-  weeklyIds: string[];
-  settings: Record<string, ProductSettings>;
-}
+import {
+  isCurationProduct as isPublished,
+  settingsFor,
+  CURATION_DEFAULTS as DEFAULTS,
+  CURATION_MODES as MODES,
+  type ProductSettings,
+  type CurationDraft as Draft,
+} from "@/lib/homepage-curation";
 type Section = "semana" | "novidade" | "descoberta" | "sala";
-const DEFAULTS: ProductSettings = { novidade: "automatico", sala: "automatico", descoberta: true };
-const MODES: HomeCurationMode[] = ["automatico", "incluir", "ocultar"];
 const SECTIONS: { id: Section; title: string; explanation: string }[] = [
   {
     id: "semana",
@@ -65,30 +62,6 @@ function normalize(value: string) {
     .replace(/[\u0300-\u036f]/g, "")
     .toLocaleLowerCase("pt-BR")
     .trim();
-}
-function isPublished(product: ProdutoAdmin) {
-  return (
-    Number(product.preco_atual) > 0 &&
-    Number(product.preco_atacado) > 0 &&
-    /^https?:\/\//i.test(product.url_imagem ?? "") &&
-    !/indispon[ií]vel|esgotad[oa]|sem estoque|n[aã]o temos dispon[ií]vel/i.test(
-      String(product.descricao ?? "") + " " + (product.cores ?? []).join(" "),
-    )
-  );
-}
-function settingsFor(product: ProdutoAdmin): ProductSettings {
-  return {
-    novidade: MODES.includes(product.vitrine_novidade as HomeCurationMode)
-      ? (product.vitrine_novidade as HomeCurationMode)
-      : DEFAULTS.novidade,
-    sala: MODES.includes(product.vitrine_sala as HomeCurationMode)
-      ? (product.vitrine_sala as HomeCurationMode)
-      : DEFAULTS.sala,
-    descoberta:
-      typeof product.vitrine_descoberta === "boolean"
-        ? product.vitrine_descoberta
-        : DEFAULTS.descoberta,
-  };
 }
 function matchesSearch(product: ProdutoAdmin, search: string) {
   return normalize(

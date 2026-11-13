@@ -5,21 +5,41 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { produtosQueryOptions } from "@/lib/products.functions";
 import { StoreCatalog } from "@/components/StoreCatalog";
 
-import { parsePage } from "@/components/CatalogPagination";
 import { categoryMatches, getCategory } from "@/lib/constants";
 import { breadcrumbs, categoryDescription, categoryUrl, jsonLd, seoHead } from "@/lib/seo";
 import { SITE_URL } from "@/lib/site-metadata";
 import { CATALOG_BATCH_SIZE } from "@/lib/catalog-page-state";
+import {
+  catalogUrlSearch,
+  parseCatalogUrlState,
+  type CatalogUrlState,
+} from "@/lib/catalog-url-state";
 
 export const Route = createFileRoute("/categoria/$slug")({
-  validateSearch: (search: Record<string, unknown>) => ({ page: parsePage(search.page) }),
+  validateSearch: (search: Record<string, unknown>): Partial<CatalogUrlState> => {
+    const state = parseCatalogUrlState(search);
+    return catalogUrlSearch(state, state.page);
+  },
   loader: ({ context, params }) => {
     if (!getCategory(params.slug)) throw notFound();
     return context.queryClient.ensureQueryData(produtosQueryOptions());
   },
   head: ({ params, match, loaderData }) => {
     const cat = getCategory(params.slug);
-    const page = match.search.page;
+    const {
+      page,
+      sort,
+      minPrice,
+      maxPrice,
+      material,
+      color,
+      feature,
+      dimension,
+      widthMaxCm,
+      heightMaxCm,
+      depthClosedMaxCm,
+      depthOpenMaxCm,
+    } = parseCatalogUrlState(match.search);
     const title = `${cat?.label ?? "Categoria"} em Nova Iguaçu${page > 1 ? ` – Página ${page}` : ""} | Mobi`;
     const url = categoryUrl(params.slug, page);
     const head = seoHead(title, categoryDescription(params.slug), url);
@@ -30,7 +50,20 @@ export const Route = createFileRoute("/categoria/$slug")({
       ...head,
       meta: [
         ...head.meta,
-        ...(!cat || count === 0 || outOfRange
+        ...(!cat ||
+        count === 0 ||
+        outOfRange ||
+        sort !== "recommended" ||
+        minPrice ||
+        maxPrice ||
+        material !== "all" ||
+        color !== "all" ||
+        feature !== "all" ||
+        dimension ||
+        widthMaxCm ||
+        heightMaxCm ||
+        depthClosedMaxCm ||
+        depthOpenMaxCm
           ? [{ name: "robots", content: "noindex,follow" }]
           : []),
       ],
@@ -70,7 +103,20 @@ function CategoriaPage() {
   const { slug } = Route.useParams();
   const navigate = useNavigate({ from: "/categoria/$slug" });
   const { data: produtos } = useSuspenseQuery(produtosQueryOptions());
-  const { page } = Route.useSearch();
+  const {
+    page,
+    sort,
+    minPrice,
+    maxPrice,
+    material,
+    color,
+    feature,
+    dimension,
+    widthMaxCm,
+    heightMaxCm,
+    depthClosedMaxCm,
+    depthOpenMaxCm,
+  } = parseCatalogUrlState(Route.useSearch());
   useLayoutEffect(() => {
     try {
       const saved = sessionStorage.getItem("mobi:catalog-return-position");
@@ -100,9 +146,26 @@ function CategoriaPage() {
         products={produtos}
         initialCategory={slug}
         requestedPage={page}
-        onPageChange={(nextPage) => {
+        initialFilters={{
+          sort,
+          minPrice,
+          maxPrice,
+          material,
+          color,
+          feature,
+          dimension,
+          widthMaxCm,
+          heightMaxCm,
+          depthClosedMaxCm,
+          depthOpenMaxCm,
+        }}
+        shareCategory={{
+          label: getCategory(slug)?.label ?? "móveis",
+          url: categoryUrl(slug),
+        }}
+        onCatalogStateChange={(nextState, nextPage) => {
           void navigate({
-            search: (previous) => ({ ...previous, page: nextPage }),
+            search: catalogUrlSearch(nextState, nextPage),
             replace: true,
             resetScroll: false,
           });

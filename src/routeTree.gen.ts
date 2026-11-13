@@ -11,10 +11,14 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AjudaRouteImport } from './routes/ajuda'
+import { Route as InspiracaoRouteImport } from './routes/inspiracao'
 import { Route as LinksRouteImport } from './routes/links'
 import { Route as MoveisNovaIguacuRouteImport } from './routes/moveis-nova-iguacu'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as AjudaSlugRouteImport } from './routes/ajuda.$slug'
 import { Route as CategoriaSlugRouteImport } from './routes/categoria.$slug'
+import { Route as InspiracaoSlugRouteImport } from './routes/inspiracao.$slug'
 import { Route as ProdutoIdRouteImport } from './routes/produto.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -25,6 +29,16 @@ const IndexRoute = IndexRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AjudaRoute = AjudaRouteImport.update({
+  id: '/ajuda',
+  path: '/ajuda',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InspiracaoRoute = InspiracaoRouteImport.update({
+  id: '/inspiracao',
+  path: '/inspiracao',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LinksRoute = LinksRouteImport.update({
@@ -42,10 +56,20 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AjudaSlugRoute = AjudaSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => AjudaRoute,
+} as any)
 const CategoriaSlugRoute = CategoriaSlugRouteImport.update({
   id: '/categoria/$slug',
   path: '/categoria/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const InspiracaoSlugRoute = InspiracaoSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => InspiracaoRoute,
 } as any)
 const ProdutoIdRoute = ProdutoIdRouteImport.update({
   id: '/produto/$id',
@@ -56,29 +80,41 @@ const ProdutoIdRoute = ProdutoIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/ajuda': typeof AjudaRouteWithChildren
+  '/inspiracao': typeof InspiracaoRouteWithChildren
   '/links': typeof LinksRoute
   '/moveis-nova-iguacu': typeof MoveisNovaIguacuRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/ajuda/$slug': typeof AjudaSlugRoute
   '/categoria/$slug': typeof CategoriaSlugRoute
+  '/inspiracao/$slug': typeof InspiracaoSlugRoute
   '/produto/$id': typeof ProdutoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/ajuda': typeof AjudaRouteWithChildren
+  '/inspiracao': typeof InspiracaoRouteWithChildren
   '/links': typeof LinksRoute
   '/moveis-nova-iguacu': typeof MoveisNovaIguacuRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/ajuda/$slug': typeof AjudaSlugRoute
   '/categoria/$slug': typeof CategoriaSlugRoute
+  '/inspiracao/$slug': typeof InspiracaoSlugRoute
   '/produto/$id': typeof ProdutoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/ajuda': typeof AjudaRouteWithChildren
+  '/inspiracao': typeof InspiracaoRouteWithChildren
   '/links': typeof LinksRoute
   '/moveis-nova-iguacu': typeof MoveisNovaIguacuRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/ajuda/$slug': typeof AjudaSlugRoute
   '/categoria/$slug': typeof CategoriaSlugRoute
+  '/inspiracao/$slug': typeof InspiracaoSlugRoute
   '/produto/$id': typeof ProdutoIdRoute
 }
 export interface FileRouteTypes {
@@ -86,34 +122,48 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/ajuda'
+    | '/inspiracao'
     | '/links'
     | '/moveis-nova-iguacu'
     | '/sitemap.xml'
+    | '/ajuda/$slug'
     | '/categoria/$slug'
+    | '/inspiracao/$slug'
     | '/produto/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
+    | '/ajuda'
+    | '/inspiracao'
     | '/links'
     | '/moveis-nova-iguacu'
     | '/sitemap.xml'
+    | '/ajuda/$slug'
     | '/categoria/$slug'
+    | '/inspiracao/$slug'
     | '/produto/$id'
   id:
     | '__root__'
     | '/'
     | '/admin'
+    | '/ajuda'
+    | '/inspiracao'
     | '/links'
     | '/moveis-nova-iguacu'
     | '/sitemap.xml'
+    | '/ajuda/$slug'
     | '/categoria/$slug'
+    | '/inspiracao/$slug'
     | '/produto/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  AjudaRoute: typeof AjudaRouteWithChildren
+  InspiracaoRoute: typeof InspiracaoRouteWithChildren
   LinksRoute: typeof LinksRoute
   MoveisNovaIguacuRoute: typeof MoveisNovaIguacuRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -137,6 +187,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ajuda': {
+      id: '/ajuda'
+      path: '/ajuda'
+      fullPath: '/ajuda'
+      preLoaderRoute: typeof AjudaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inspiracao': {
+      id: '/inspiracao'
+      path: '/inspiracao'
+      fullPath: '/inspiracao'
+      preLoaderRoute: typeof InspiracaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/links': {
       id: '/links'
       path: '/links'
@@ -158,12 +222,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ajuda/$slug': {
+      id: '/ajuda/$slug'
+      path: '/$slug'
+      fullPath: '/ajuda/$slug'
+      preLoaderRoute: typeof AjudaSlugRouteImport
+      parentRoute: typeof AjudaRoute
+    }
     '/categoria/$slug': {
       id: '/categoria/$slug'
       path: '/categoria/$slug'
       fullPath: '/categoria/$slug'
       preLoaderRoute: typeof CategoriaSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/inspiracao/$slug': {
+      id: '/inspiracao/$slug'
+      path: '/$slug'
+      fullPath: '/inspiracao/$slug'
+      preLoaderRoute: typeof InspiracaoSlugRouteImport
+      parentRoute: typeof InspiracaoRoute
     }
     '/produto/$id': {
       id: '/produto/$id'
@@ -175,9 +253,33 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AjudaRouteChildren {
+  AjudaSlugRoute: typeof AjudaSlugRoute
+}
+
+const AjudaRouteChildren: AjudaRouteChildren = {
+  AjudaSlugRoute: AjudaSlugRoute,
+}
+
+const AjudaRouteWithChildren = AjudaRoute._addFileChildren(AjudaRouteChildren)
+
+interface InspiracaoRouteChildren {
+  InspiracaoSlugRoute: typeof InspiracaoSlugRoute
+}
+
+const InspiracaoRouteChildren: InspiracaoRouteChildren = {
+  InspiracaoSlugRoute: InspiracaoSlugRoute,
+}
+
+const InspiracaoRouteWithChildren = InspiracaoRoute._addFileChildren(
+  InspiracaoRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  AjudaRoute: AjudaRouteWithChildren,
+  InspiracaoRoute: InspiracaoRouteWithChildren,
   LinksRoute: LinksRoute,
   MoveisNovaIguacuRoute: MoveisNovaIguacuRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,

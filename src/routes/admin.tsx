@@ -1,3 +1,4 @@
+import { adminLocalHome } from "../lib/home-local.functions";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
@@ -10,7 +11,9 @@ import {
   deleteProduto,
   importScrapedProducts,
   listAdminProdutos,
+  getAdminStudioStorageMode,
   listPendingScrapedProducts,
+  listAdminHomepageBanners,
   upsertProduto,
   type ProdutoInput,
   type ProdutoAdmin,
@@ -20,10 +23,15 @@ import {
 } from "@/lib/admin.functions";
 import { formatBRL } from "@/lib/constants";
 import { hasRealReferencePrice } from "@/lib/price-reference";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { HomeCurationPanel } from "@/components/HomeCurationPanel";
-import { HomeBannersPanel } from "@/components/HomeBannersPanel";
+import { AdminWorkspace } from "@/components/AdminWorkspace";
+import { AdminStudio } from "@/components/admin-studio/AdminStudio";
+import { AdminOverview } from "@/components/AdminOverview";
+import { ADMIN_REVIEW_QUERY_LIMIT } from "@/lib/admin-overview";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
+import { SupplierPricingPanel } from "@/components/admin/SupplierPricingPanel";
+import { createRemoteStudioTransport } from "@/lib/admin-studio-remote";
+import { isEligibleBundleProduct } from "@/lib/product-bundles";
+import type { AdminViewId } from "@/lib/admin-navigation";
 import {
   matchesPriceFilter,
   parsePriceFilter,
@@ -41,14 +49,15 @@ function normalizeFilterText(value: unknown): string {
     .trim();
 }
 
-// These are the names stored in the catalog. Keep the current value in the
-// select as well so older/custom supplier names are never cleared on edit.
-const SUPPLIER_OPTIONS = [
-  "Alpoim Distribuidora",
-  "Tropical Móveis",
-  "SR Móveis Atacadão",
-  "Outro",
-] as const;
+// Suggestions only. The catalog field remains text until supplier IDs are
+// introduced through a reviewed database migration.
+const SUPPLIER_OPTIONS = ["Alpoim Distribuidora", "Tropical Móveis", "SR Móveis Atacadão"] as const;
+
+const MISSING_SUPPLIER_FILTER = "__missing_supplier__";
+
+function supplierFilterValue(name: string): string {
+  return `supplier:${name}`;
+}
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -172,6 +181,7 @@ const EMPTY: ProdutoInput = {
   descricao: "",
   medidas: "",
   cores: [],
+  compre_junto_ids: [],
 };
 
 const STATUS_LABELS: Record<ProductStatus, string> = {
@@ -193,6 +203,10 @@ function sourceName(product: ProdutoAdmin): string {
   } catch {
     return "Fonte cadastrada";
   }
+}
+
+function supplierGroupName(product: ProdutoAdmin): string {
+  return product.fornecedor?.trim() || "Sem fornecedor cadastrado";
 }
 
 function moneyOrDash(value: number | null | undefined): string {
@@ -235,11 +249,17 @@ async function readScrapeFile(file: File): Promise<ProdutoScrapImportInput[]> {
   return parsed as ProdutoScrapImportInput[];
 }
 
-function marginLabel(product: ProdutoAdmin): string {
+function grossPriceDifference(product: ProdutoAdmin): number | null {
   const cost = Number(product.preco_atacado ?? 0);
   const price = Number(product.preco_atual ?? 0);
-  if (cost <= 0 || price <= 0) return "—";
-  return formatBRL(price - cost);
+  if (cost <= 0 || price <= 0) return null;
+  return price - cost;
+}
+
+function grossPriceDifferenceLabel(product: ProdutoAdmin): string {
+  const difference = grossPriceDifference(product);
+  if (difference == null) return "—";
+  return `${difference < 0 ? "−" : "+"}${formatBRL(Math.abs(difference))}`;
 }
 
 function StatusBadge({ status }: { status: ProductStatus }) {
@@ -267,6 +287,8 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
     error,
     refetch,
     isFetching,
+    dataUpdatedAt: catalogUpdatedAt,
+    isPending: isCatalogPending,
   } = useQuery({
     queryKey: ["admin-produtos"],
     queryFn: () => listAdminProdutos({ data: { password } }),
@@ -277,6 +299,8 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
     isFetching: isFetchingScraped,
     isError: isScrapedError,
     error: scrapedError,
+    isPending: isScrapedPending,
+    dataUpdatedAt: reviewUpdatedAt,
   } = useQuery({
     queryKey: ["admin-scraped-products"],
     queryFn: () => listPendingScrapedProducts({ data: { password } }),
@@ -288,20 +312,124 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
   const [search, setSearch] = useState("");
   const [supplierFilter, setSupplierFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [workspaceTab, setWorkspaceTab] = useState("vitrine");
+  const [workspaceTab, setWorkspaceTab] = useState<AdminViewId>("overview");
   const [statusFilter, setStatusFilter] = useState<"all" | ProductStatus>("all");
   const [priceField, setPriceField] = useState<"site" | "supplier">("site");
+  const [priceFiltersOpen, setPriceFiltersOpen] = useState(false);
   const [minimumPrice, setMinimumPrice] = useState("");
   const [maximumPrice, setMaximumPrice] = useState("");
   const [page, setPage] = useState(1);
   const perPage = 32;
+  const storageMode = useQuery({
+    queryKey: ["admin-studio-storage-mode"],
+    queryFn: () => getAdminStudioStorageMode({ data: { password } }),
+    retry: false,
+  });
+  const workspaceTransport = useMemo(
+    () => (storageMode.data?.remote ? createRemoteStudioTransport(password) : undefined),
+    [storageMode.data?.remote, password],
+  );
+  const homeTransport = useMemo(
+    () => ({
+      read: () => adminLocalHome({ data: { password } }),
+      change: (
+        command: import("../lib/home-transport").HomeTransportCommand,
+        draft?: import("../lib/home-configuration").HomeDraftInput,
+      ) => adminLocalHome({ data: { password, command, draft } }),
+    }),
+    [password],
+  );
+  const studioBanners = useQuery({
+    queryKey: ["admin-homepage-banners", password],
+    queryFn: () => listAdminHomepageBanners({ data: { password } }),
+  });
 
-  const suppliers = useMemo(
+  const supplierPricingGroups = useMemo(() => {
+    const groups = new Map<
+      string,
+      {
+        key: string;
+        label: string;
+        total: number;
+        missingCost: number;
+        missingSitePrice: number;
+        belowCost: number;
+      }
+    >();
+
+    for (const product of produtos) {
+      const supplier = product.fornecedor?.trim() ?? "";
+      const key = supplier ? supplierFilterValue(supplier) : MISSING_SUPPLIER_FILTER;
+      const label = supplier || "Sem fornecedor cadastrado";
+      const summary = groups.get(key) ?? {
+        key,
+        label,
+        total: 0,
+        missingCost: 0,
+        missingSitePrice: 0,
+        belowCost: 0,
+      };
+      const cost = Number(product.preco_atacado ?? 0);
+      const sitePrice = Number(product.preco_atual ?? 0);
+
+      summary.total += 1;
+      if (cost <= 0) summary.missingCost += 1;
+      if (sitePrice <= 0) summary.missingSitePrice += 1;
+      if (cost > 0 && sitePrice > 0 && sitePrice < cost) summary.belowCost += 1;
+      groups.set(key, summary);
+    }
+
+    return Array.from(groups.values()).sort((a, b) => {
+      if (a.key === MISSING_SUPPLIER_FILTER) return 1;
+      if (b.key === MISSING_SUPPLIER_FILTER) return -1;
+      return a.label.localeCompare(b.label, "pt-BR");
+    });
+  }, [produtos]);
+  const allSupplierPricing = useMemo(
     () =>
-      Array.from(
-        new Set(produtos.map((product) => product.fornecedor).filter(Boolean) as string[]),
-      ).sort((a, b) => a.localeCompare(b, "pt-BR")),
+      produtos.reduce(
+        (summary, product) => {
+          const cost = Number(product.preco_atacado ?? 0);
+          const sitePrice = Number(product.preco_atual ?? 0);
+          summary.total += 1;
+          if (cost <= 0) summary.missingCost += 1;
+          if (sitePrice <= 0) summary.missingSitePrice += 1;
+          if (cost > 0 && sitePrice > 0 && sitePrice < cost) summary.belowCost += 1;
+          return summary;
+        },
+        { total: 0, missingCost: 0, missingSitePrice: 0, belowCost: 0 },
+      ),
     [produtos],
+  );
+  const supplierPricingChoices = useMemo(
+    () => [
+      { key: "all", label: "Todos os fornecedores", ...allSupplierPricing },
+      ...supplierPricingGroups,
+    ],
+    [allSupplierPricing, supplierPricingGroups],
+  );
+  const supplierFilteredProducts = useMemo(
+    () =>
+      produtos
+        .filter((product) => {
+          const supplier = product.fornecedor?.trim() ?? "";
+          return (
+            supplierFilter === "all" ||
+            (supplierFilter === MISSING_SUPPLIER_FILTER
+              ? !supplier
+              : supplierFilter === supplierFilterValue(supplier))
+          );
+        })
+        .sort((a, b) => {
+          const supplierA = a.fornecedor?.trim() ?? "";
+          const supplierB = b.fornecedor?.trim() ?? "";
+          return (
+            supplierA.localeCompare(supplierB, "pt-BR") ||
+            Number(a.ordem ?? 0) - Number(b.ordem ?? 0) ||
+            a.nome.localeCompare(b.nome, "pt-BR")
+          );
+        }),
+    [produtos, supplierFilter],
   );
   const categories = useMemo(
     () =>
@@ -312,38 +440,54 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
   );
   const filteredProdutos = useMemo(() => {
     const normalizedSearch = normalizeFilterText(search);
-    const normalizedSupplier = normalizeFilterText(supplierFilter);
     const normalizedCategory = normalizeFilterText(categoryFilter);
-    return produtos.filter((product) => {
-      const searchableText = normalizeFilterText(
-        [
-          product.nome,
-          product.slug,
-          product.sku,
-          product.fornecedor,
-          product.categoria,
-          product.fonte_preco,
-          product.url_fornecedor,
-          product.descricao,
-          product.medidas,
-          ...(product.cores ?? []),
-        ]
-          .filter(Boolean)
-          .join(" "),
-      );
-      const matchesSearch = !normalizedSearch || searchableText.includes(normalizedSearch);
-      const matchesSupplier =
-        supplierFilter === "all" || normalizeFilterText(product.fornecedor) === normalizedSupplier;
-      const matchesCategory =
-        categoryFilter === "all" || normalizeFilterText(product.categoria) === normalizedCategory;
-      const matchesStatus = statusFilter === "all" || productStatus(product) === statusFilter;
-      const matchesPrice = matchesPriceFilter(
-        priceField === "site" ? product.preco_atual : product.preco_atacado,
-        minimumPrice,
-        maximumPrice,
-      );
-      return matchesSearch && matchesSupplier && matchesCategory && matchesStatus && matchesPrice;
-    });
+    return produtos
+      .filter((product) => {
+        const searchableText = normalizeFilterText(
+          [
+            product.nome,
+            product.slug,
+            product.sku,
+            product.fornecedor,
+            product.categoria,
+            product.fonte_preco,
+            product.url_fornecedor,
+            product.descricao,
+            product.medidas,
+            ...(product.cores ?? []),
+          ]
+            .filter(Boolean)
+            .join(" "),
+        );
+        const matchesSearch = !normalizedSearch || searchableText.includes(normalizedSearch);
+        const supplier = product.fornecedor?.trim() ?? "";
+        const matchesSupplier =
+          supplierFilter === "all" ||
+          (supplierFilter === MISSING_SUPPLIER_FILTER
+            ? !supplier
+            : supplierFilter === supplierFilterValue(supplier));
+        const matchesCategory =
+          categoryFilter === "all" || normalizeFilterText(product.categoria) === normalizedCategory;
+        const matchesStatus = statusFilter === "all" || productStatus(product) === statusFilter;
+        const matchesPrice = matchesPriceFilter(
+          priceField === "site" ? product.preco_atual : product.preco_atacado,
+          minimumPrice,
+          maximumPrice,
+        );
+        return matchesSearch && matchesSupplier && matchesCategory && matchesStatus && matchesPrice;
+      })
+      .sort((a, b) => {
+        const supplierA = a.fornecedor?.trim() ?? "";
+        const supplierB = b.fornecedor?.trim() ?? "";
+        if (!supplierA && supplierB) return 1;
+        if (supplierA && !supplierB) return -1;
+        const supplierOrder = supplierA.localeCompare(supplierB, "pt-BR");
+        return (
+          supplierOrder ||
+          Number(a.ordem ?? 0) - Number(b.ordem ?? 0) ||
+          a.nome.localeCompare(b.nome, "pt-BR")
+        );
+      });
   }, [
     produtos,
     search,
@@ -367,6 +511,20 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
   );
   const totalPages = Math.max(1, Math.ceil(filteredProdutos.length / perPage));
   const visibleProdutos = filteredProdutos.slice((page - 1) * perPage, page * perPage);
+  const visibleProductGroups = useMemo(() => {
+    const groups = new Map<string, { label: string; products: ProdutoAdmin[] }>();
+    for (const product of visibleProdutos) {
+      const supplier = product.fornecedor?.trim() ?? "";
+      const key = supplier ? supplierFilterValue(supplier) : MISSING_SUPPLIER_FILTER;
+      const group = groups.get(key) ?? {
+        label: supplier || "Sem fornecedor cadastrado",
+        products: [],
+      };
+      group.products.push(product);
+      groups.set(key, group);
+    }
+    return Array.from(groups.entries()).map(([key, group]) => ({ key, ...group }));
+  }, [visibleProdutos]);
 
   useEffect(() => {
     setPage(1);
@@ -383,6 +541,12 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
+
+  useEffect(() => {
+    if (!supplierPricingChoices.some((choice) => choice.key === supplierFilter)) {
+      setSupplierFilter("all");
+    }
+  }, [supplierFilter, supplierPricingChoices]);
 
   const refresh = async () => {
     await qc.invalidateQueries({ queryKey: ["admin-produtos"] });
@@ -418,6 +582,7 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
       descricao: p.descricao ?? "",
       medidas: p.medidas ?? "",
       cores: p.cores ?? [],
+      compre_junto_ids: p.compre_junto_ids ?? [],
     });
   };
 
@@ -440,6 +605,7 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
       fonte_preco: product.source_url ?? "",
       descricao: product.description ?? "",
       medidas: product.measurements ?? "",
+      compre_junto_ids: undefined,
       cores:
         Array.isArray(product.availability) && product.availability.length
           ? product.availability
@@ -530,7 +696,9 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
     setPage(1);
     setWorkspaceTab("produtos");
     requestAnimationFrame(() => {
-      document.getElementById("admin-product-filters")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document
+        .getElementById("admin-product-filters")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   };
   const minPrice = parsePriceFilter(minimumPrice);
@@ -539,38 +707,61 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
     Number.isNaN(minPrice) ||
     Number.isNaN(maxPrice) ||
     (minPrice != null && maxPrice != null && minPrice > maxPrice);
+  const priceFiltersActive =
+    priceField !== "site" || minimumPrice.trim() !== "" || maximumPrice.trim() !== "";
+
+  useEffect(() => {
+    setPriceFiltersOpen(priceFiltersActive || invalidPrices);
+  }, [priceFiltersActive, invalidPrices]);
 
   return (
-    <div className="mx-auto max-w-[1280px] px-4 py-6 sm:px-[5%] sm:py-10">
-      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-[2px] text-gold">
-            Catálogo interno
-          </p>
-          <h1 className="text-3xl text-deep-green sm:text-4xl">Painel de Produtos</h1>
-          <p className="mt-2 max-w-2xl text-sm text-text-light">
-            Controle a origem, o custo e a publicação de cada produto. Um item só aparece na vitrine
-            quando tem preço de venda e imagem válidos.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={startNew}
-            className="flex flex-1 items-center justify-center gap-2 bg-deep-green px-4 py-3 text-xs font-bold uppercase tracking-wider text-sand transition-colors hover:bg-gold hover:text-deep-green sm:flex-none"
-          >
-            <Plus className="h-4 w-4" /> Novo
-          </button>
-          <button
-            onClick={onLogout}
-            aria-label="Sair"
-            className="flex flex-1 items-center justify-center gap-2 border border-cacau/20 px-4 py-3 text-xs font-bold uppercase tracking-wider text-cacau transition-colors hover:border-gold hover:text-gold sm:flex-none"
-          >
-            <LogOut className="h-4 w-4" /> Sair
+    <AdminWorkspace
+      area={workspaceTab}
+      onNavigate={setWorkspaceTab}
+      onLogout={onLogout}
+      onSearch={(query) => {
+        clearFilters();
+        setSearch(query);
+        setWorkspaceTab("produtos");
+      }}
+    >
+      {workspaceTab === "produtos" && (
+        <div className="aw-editor-toolbar">
+          <h1>Produtos</h1>
+          <button className="aw-action" onClick={startNew}>
+            <Plus size={16} /> Novo produto
           </button>
         </div>
-      </div>
-
-      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      )}
+      {storageMode.isError && (
+        <div role="alert" className="pm-note">
+          Não foi possível confirmar onde salvar os rascunhos.{" "}
+          <button className="pm-button" onClick={() => storageMode.refetch()}>
+            Tentar novamente
+          </button>
+        </div>
+      )}
+      <AdminStudio
+        workspaceTransport={workspaceTransport}
+        homeTransport={homeTransport}
+        area={workspaceTab}
+        products={produtos}
+        ready={!isCatalogPending && !isError && storageMode.isSuccess}
+        onNavigate={setWorkspaceTab}
+        bannerSource={{
+          status: studioBanners.isPending ? "pending" : studioBanners.isError ? "error" : "success",
+          data: studioBanners.data?.banners,
+          available: studioBanners.data?.available,
+        }}
+      />
+      <div
+        hidden={workspaceTab !== "produtos"}
+        className={
+          workspaceTab !== "produtos" && workspaceTab !== "revisao"
+            ? "hidden"
+            : "mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4"
+        }
+      >
         <button
           type="button"
           onClick={() => selectSummary("all")}
@@ -617,412 +808,500 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
         </button>
       </div>
 
-      <Tabs value={workspaceTab} onValueChange={setWorkspaceTab} className="admin-workspace">
-        <TabsList aria-label="Áreas do painel admin" className="admin-workspace-tabs">
-          <TabsTrigger value="vitrine" className="admin-workspace-tab">Vitrine da página inicial</TabsTrigger>
-          <TabsTrigger value="banners" className="admin-workspace-tab">Banner da página inicial</TabsTrigger>
-          <TabsTrigger value="revisao" className="admin-workspace-tab">Produtos coletados para revisão</TabsTrigger>
-          <TabsTrigger value="produtos" className="admin-workspace-tab">Encontrar produtos</TabsTrigger>
-        </TabsList>
-        <TabsContent value="vitrine" forceMount className="admin-workspace-panel">
-          <HomeCurationPanel password={password} products={produtos} />
-        </TabsContent>
-        <TabsContent value="banners" forceMount className="admin-workspace-panel">
-          <HomeBannersPanel password={password} />
-        </TabsContent>
-        <TabsContent value="revisao" forceMount className="admin-workspace-panel">
+      <div className="admin-workspace">
+        <section
+          hidden={workspaceTab !== "overview"}
+          data-state={workspaceTab === "overview" ? "active" : "inactive"}
+          className="admin-workspace-panel"
+          aria-label="overview"
+        >
+          <AdminOverview
+            catalog={{
+              status: isError ? "error" : isCatalogPending ? "pending" : "success",
+              data: produtos,
+              updatedAt: catalogUpdatedAt,
+            }}
+            review={{
+              status: isScrapedError ? "error" : isScrapedPending ? "pending" : "success",
+              data: pendingScrapedProducts,
+              updatedAt: reviewUpdatedAt,
+              limit: ADMIN_REVIEW_QUERY_LIMIT,
+            }}
+            refreshing={isFetching || isFetchingScraped}
+            onRefresh={() => {
+              void refetch();
+              void refreshScrapedProducts();
+            }}
+            onProducts={selectSummary}
+            onEdit={startEdit}
+            onNavigate={setWorkspaceTab}
+          />
+        </section>
+        <section
+          hidden={workspaceTab !== "revisao"}
+          data-state={workspaceTab === "revisao" ? "active" : "inactive"}
+          className="admin-workspace-panel"
+          aria-label="revisao"
+        >
+          <section className="mb-6 border border-gold/30 bg-gold/5 p-4 sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="font-semibold text-deep-green">Produtos coletados para revisão</h2>
+                <p className="mt-1 text-xs text-text-light">
+                  Importe um JSONL do worker. O custo fica registrado como preço do fornecedor; o
+                  preço de venda só é definido por você ao completar o cadastro.
+                </p>
+              </div>
+              <label className="inline-flex cursor-pointer items-center justify-center gap-2 bg-deep-green px-4 py-3 text-xs font-bold uppercase tracking-wider text-sand transition-colors hover:bg-gold hover:text-deep-green">
+                <FileUp className="h-4 w-4" />
+                {importing ? "Importando…" : "Importar JSONL"}
+                <input
+                  type="file"
+                  accept=".jsonl,.ndjson,.json,application/json,text/plain"
+                  onChange={handleScrapeImport}
+                  disabled={importing}
+                  className="hidden"
+                />
+              </label>
+            </div>
 
-      <section className="mb-6 border border-gold/30 bg-gold/5 p-4 sm:p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="font-semibold text-deep-green">Produtos coletados para revisão</h2>
-            <p className="mt-1 text-xs text-text-light">
-              Importe um JSONL do worker. O custo fica registrado como preço do fornecedor; o preço
-              de venda só é definido por você ao completar o cadastro.
-            </p>
-          </div>
-          <label className="inline-flex cursor-pointer items-center justify-center gap-2 bg-deep-green px-4 py-3 text-xs font-bold uppercase tracking-wider text-sand transition-colors hover:bg-gold hover:text-deep-green">
-            <FileUp className="h-4 w-4" />
-            {importing ? "Importando…" : "Importar JSONL"}
-            <input
-              type="file"
-              accept=".jsonl,.ndjson,.json,application/json,text/plain"
-              onChange={handleScrapeImport}
-              disabled={importing}
-              className="hidden"
-            />
-          </label>
-        </div>
-
-        {pendingScrapedProducts.length === 0 ? (
-          <p className="mt-4 border-t border-gold/20 pt-3 text-sm text-text-light">
-            {isScrapedError
-              ? `A fila de importação ainda não está disponível: ${scrapedError instanceof Error ? scrapedError.message : "verifique a migração do banco."}`
-              : isFetchingScraped
-                ? "Carregando importações…"
-                : "Nenhum produto aguardando revisão."}
-          </p>
-        ) : (
-          <>
-            <div className="mt-4 flex items-center justify-between border-t border-gold/20 pt-3 text-xs text-text-light">
-              <span>{pendingScrapedProducts.length} produto(s) aguardando revisão</span>
+            {pendingScrapedProducts.length === 0 ? (
+              <p className="mt-4 border-t border-gold/20 pt-3 text-sm text-text-light">
+                {isScrapedError
+                  ? `A fila de importação ainda não está disponível: ${scrapedError instanceof Error ? scrapedError.message : "verifique a migração do banco."}`
+                  : isFetchingScraped
+                    ? "Carregando importações…"
+                    : "Nenhum produto aguardando revisão."}
+              </p>
+            ) : (
+              <>
+                <div className="mt-4 flex items-center justify-between border-t border-gold/20 pt-3 text-xs text-text-light">
+                  <span>{pendingScrapedProducts.length} produto(s) aguardando revisão</span>
+                  <button
+                    type="button"
+                    onClick={() => refreshScrapedProducts()}
+                    disabled={isFetchingScraped}
+                    className="inline-flex items-center gap-1 font-semibold text-cacau"
+                  >
+                    <RefreshCw
+                      className={`h-3.5 w-3.5 ${isFetchingScraped ? "animate-spin" : ""}`}
+                    />
+                    Atualizar
+                  </button>
+                </div>
+                <div className="mt-3 grid max-h-[640px] gap-3 overflow-y-auto pr-1 xl:grid-cols-2">
+                  {pendingScrapedProducts.map((product) => (
+                    <article
+                      key={product.id}
+                      className="border border-cacau/10 bg-white p-3 sm:p-4"
+                    >
+                      <div className="flex gap-3">
+                        {product.image_urls[0] ? (
+                          <ImageWithFallback
+                            src={product.image_urls[0]}
+                            alt={`Imagem de ${product.name}`}
+                            className="h-16 w-16 shrink-0 border border-cacau/10 object-contain sm:h-20 sm:w-20"
+                          />
+                        ) : (
+                          <div className="flex h-16 w-16 shrink-0 items-center justify-center border border-cacau/10 bg-sand text-[10px] text-text-light sm:h-20 sm:w-20">
+                            Sem foto
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-start justify-between gap-2">
+                            <h3 className="font-semibold text-cacau">{product.name}</h3>
+                            <span className="shrink-0 text-xs font-bold text-deep-green">
+                              {moneyOrDash(product.supplier_price)} custo
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs text-text-light">
+                            {[product.supplier, product.category, product.sku]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </p>
+                          {parsePriceVariations(product.price_variations).length > 1 && (
+                            <p className="mt-2 text-xs text-cacau">
+                              {parsePriceVariations(product.price_variations)
+                                .map(
+                                  (variation) =>
+                                    `${variation.name}: ${moneyOrDash(variation.supplier_price)}`,
+                                )
+                                .join(" · ")}
+                            </p>
+                          )}
+                          {product.measurements && (
+                            <p className="mt-2 line-clamp-2 text-xs text-cacau">
+                              {product.measurements}
+                            </p>
+                          )}
+                          {product.description && (
+                            <p className="mt-1 line-clamp-2 text-xs text-text-light">
+                              {product.description}
+                            </p>
+                          )}
+                          {Array.isArray(product.availability) &&
+                            product.availability.length > 0 && (
+                              <p className="mt-1 line-clamp-2 text-[11px] text-text-light">
+                                Disponibilidade: {product.availability.map(String).join(" · ")}
+                              </p>
+                            )}
+                          <button
+                            type="button"
+                            onClick={() => startScrapedEdit(product)}
+                            className="mt-3 border border-gold px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-cacau hover:bg-gold hover:text-deep-green"
+                          >
+                            Completar preço e fotos
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </>
+            )}
+          </section>
+        </section>
+        <section
+          hidden={workspaceTab !== "produtos"}
+          data-state={workspaceTab === "produtos" ? "active" : "inactive"}
+          className="admin-workspace-panel"
+          aria-label="produtos"
+        >
+          <section
+            id="admin-product-filters"
+            className="mb-6 scroll-mt-4 border border-cacau/10 bg-sand/50 p-4 sm:p-5"
+          >
+            <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="font-semibold text-deep-green">Encontrar produtos</h2>
+                <p className="text-xs text-text-light">
+                  Pesquise por nome, SKU, fornecedor ou fonte do preço.
+                </p>
+              </div>
               <button
                 type="button"
-                onClick={() => refreshScrapedProducts()}
-                disabled={isFetchingScraped}
-                className="inline-flex items-center gap-1 font-semibold text-cacau"
+                onClick={clearFilters}
+                className="self-start text-xs font-bold uppercase tracking-wider text-cacau underline decoration-gold underline-offset-4"
               >
-                <RefreshCw className={`h-3.5 w-3.5 ${isFetchingScraped ? "animate-spin" : ""}`} />
-                Atualizar
+                Limpar filtros
               </button>
             </div>
-            <div className="mt-3 grid max-h-[640px] gap-3 overflow-y-auto pr-1 xl:grid-cols-2">
-              {pendingScrapedProducts.map((product) => (
-                <article key={product.id} className="border border-cacau/10 bg-white p-3 sm:p-4">
-                  <div className="flex gap-3">
-                    {product.image_urls[0] ? (
-                      <ImageWithFallback
-                        src={product.image_urls[0]}
-                        alt={`Imagem de ${product.name}`}
-                        className="h-16 w-16 shrink-0 border border-cacau/10 object-contain sm:h-20 sm:w-20"
-                      />
-                    ) : (
-                      <div className="flex h-16 w-16 shrink-0 items-center justify-center border border-cacau/10 bg-sand text-[10px] text-text-light sm:h-20 sm:w-20">
-                        Sem foto
-                      </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-start justify-between gap-2">
-                        <h3 className="font-semibold text-cacau">{product.name}</h3>
-                        <span className="shrink-0 text-xs font-bold text-deep-green">
-                          {moneyOrDash(product.supplier_price)} custo
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
+              <input
+                aria-label="Buscar produto no painel"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Nome, SKU, slug..."
+                className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold lg:col-span-2"
+              />
+              <select
+                aria-label="Filtrar fornecedor"
+                value={supplierFilter}
+                onChange={(event) => setSupplierFilter(event.target.value)}
+                className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold"
+              >
+                <option value="all">Todos os fornecedores</option>
+                {supplierPricingGroups.map((group) => (
+                  <option key={group.key} value={group.key}>
+                    {group.label}
+                  </option>
+                ))}
+              </select>
+              <select
+                aria-label="Filtrar categoria"
+                value={categoryFilter}
+                onChange={(event) => setCategoryFilter(event.target.value)}
+                className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold"
+              >
+                <option value="all">Todas as categorias</option>
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+              <select
+                aria-label="Filtrar estado de publicação"
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value as "all" | ProductStatus)}
+                className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold md:col-span-2 lg:col-span-1"
+              >
+                <option value="all">Todos os estados</option>
+                <option value="published">Publicados</option>
+                <option value="awaiting">Aguardando precificação</option>
+                <option value="incomplete">Dados incompletos</option>
+              </select>
+            </div>
+            <details
+              className="admin-advanced-price-filters"
+              open={priceFiltersOpen}
+              onToggle={(event) => setPriceFiltersOpen(event.currentTarget.open)}
+            >
+              <summary>Faixa de preço{priceFiltersActive ? " · aplicada" : ""}</summary>
+              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                <label className="text-xs text-cacau">
+                  Aplicar faixa a
+                  <select
+                    value={priceField}
+                    onChange={(event) => setPriceField(event.target.value as "site" | "supplier")}
+                    className="mt-1 min-h-11 w-full border border-cacau/15 bg-white px-3 text-sm"
+                  >
+                    <option value="site">Preço no site</option>
+                    <option value="supplier">Custo informado pelo fornecedor</option>
+                  </select>
+                </label>
+                <label className="text-xs text-cacau">
+                  Preço mínimo (R$)
+                  <input
+                    inputMode="decimal"
+                    value={minimumPrice}
+                    onChange={(event) => setMinimumPrice(event.target.value)}
+                    placeholder="Sem mínimo"
+                    aria-invalid={invalidPrices}
+                    className="mt-1 min-h-11 w-full border border-cacau/15 bg-white px-3 text-sm"
+                  />
+                </label>
+                <label className="text-xs text-cacau">
+                  Preço máximo (R$)
+                  <input
+                    inputMode="decimal"
+                    value={maximumPrice}
+                    onChange={(event) => setMaximumPrice(event.target.value)}
+                    placeholder="Sem máximo"
+                    aria-invalid={invalidPrices}
+                    className="mt-1 min-h-11 w-full border border-cacau/15 bg-white px-3 text-sm"
+                  />
+                </label>
+              </div>
+              {invalidPrices && (
+                <p role="alert" className="mt-2 text-xs text-destructive">
+                  Informe valores válidos; o mínimo não pode ser maior que o máximo.
+                </p>
+              )}
+            </details>
+            {statusFilter === "awaiting" && (
+              <p className="mt-3 text-xs text-cacau">
+                Produtos sem preço de venda, inclusive os que ainda não têm custo cadastrado. Edite
+                o produto para definir o preço; ele continua fora da vitrine até estar pronto.
+              </p>
+            )}
+          </section>
+
+          {isLoading ? (
+            <p className="text-text-light">Carregando produtos…</p>
+          ) : isError ? (
+            <div className="border border-destructive/25 bg-destructive/5 p-6 text-cacau">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+                <div>
+                  <h2 className="font-semibold">Não foi possível carregar os produtos</h2>
+                  <p className="mt-1 text-sm text-text-light">
+                    {error instanceof Error ? error.message : "Tente novamente em instantes."}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => refetch()}
+                    disabled={isFetching}
+                    className="mt-4 inline-flex items-center gap-2 bg-deep-green px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-sand disabled:opacity-60"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+                    {isFetching ? "Tentando…" : "Tentar novamente"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div className="mb-3 flex items-center justify-between gap-3 text-xs text-text-light">
+                <span>{filteredProdutos.length} produto(s) encontrado(s)</span>
+                <span>
+                  Página {page} de {totalPages}
+                </span>
+              </div>
+              {visibleProdutos.length === 0 ? (
+                <div className="border border-cacau/10 bg-white p-10 text-center text-sm text-text-light">
+                  Nenhum produto corresponde aos filtros atuais.
+                </div>
+              ) : (
+                <div className="space-y-5">
+                  {visibleProductGroups.map((group) => (
+                    <section key={group.key} aria-label={`Produtos de ${group.label}`}>
+                      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2 border-b border-cacau/10 pb-2">
+                        <h3 className="font-semibold text-deep-green">{group.label}</h3>
+                        <span className="text-xs text-text-light">
+                          {group.products.length} produto(s) nesta página
                         </span>
                       </div>
-                      <p className="mt-1 text-xs text-text-light">
-                        {[product.supplier, product.category, product.sku]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </p>
-                      {parsePriceVariations(product.price_variations).length > 1 && (
-                        <p className="mt-2 text-xs text-cacau">
-                          {parsePriceVariations(product.price_variations)
-                            .map(
-                              (variation) =>
-                                `${variation.name}: ${moneyOrDash(variation.supplier_price)}`,
-                            )
-                            .join(" · ")}
-                        </p>
-                      )}
-                      {product.measurements && (
-                        <p className="mt-2 line-clamp-2 text-xs text-cacau">
-                          {product.measurements}
-                        </p>
-                      )}
-                      {product.description && (
-                        <p className="mt-1 line-clamp-2 text-xs text-text-light">
-                          {product.description}
-                        </p>
-                      )}
-                      {Array.isArray(product.availability) && product.availability.length > 0 && (
-                        <p className="mt-1 line-clamp-2 text-[11px] text-text-light">
-                          Disponibilidade: {product.availability.map(String).join(" · ")}
-                        </p>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => startScrapedEdit(product)}
-                        className="mt-3 border border-gold px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-cacau hover:bg-gold hover:text-deep-green"
-                      >
-                        Completar preço e fotos
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              ))}
+                      <div className="grid gap-3 xl:grid-cols-2">
+                        {group.products.map((p) => {
+                          const status = productStatus(p);
+                          const source = sourceUrl(p);
+                          const difference = grossPriceDifference(p);
+                          return (
+                            <article
+                              key={p.id}
+                              className="border border-cacau/10 bg-white p-4 transition-shadow hover:shadow-premium sm:p-5"
+                            >
+                              <div className="flex gap-3">
+                                <ImageWithFallback
+                                  src={p.url_imagem}
+                                  alt={`Imagem de ${p.nome}`}
+                                  className="h-20 w-20 shrink-0 border border-cacau/10 object-cover sm:h-24 sm:w-24"
+                                />
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex flex-wrap items-start justify-between gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => startEdit(p)}
+                                      className="text-left font-semibold text-cacau hover:text-gold"
+                                    >
+                                      {p.nome}
+                                    </button>
+                                    <StatusBadge status={status} />
+                                  </div>
+                                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-text-light">
+                                    <span>{p.sku || "Sem SKU"}</span>
+                                    <span>{p.categoria || "Sem categoria"}</span>
+                                  </div>
+                                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                                    <span className="font-semibold text-deep-green">
+                                      {sourceName(p)}
+                                    </span>
+                                    {source ? (
+                                      <a
+                                        href={source}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-gold underline underline-offset-2"
+                                      >
+                                        Abrir fonte
+                                      </a>
+                                    ) : (
+                                      <span className="text-text-light">Fonte não cadastrada</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="mt-4 grid grid-cols-3 gap-2 border-y border-cacau/10 py-3 text-xs">
+                                <div>
+                                  <div className="text-text-light">Custo informado</div>
+                                  <div className="mt-1 font-bold text-cacau">
+                                    {moneyOrDash(p.preco_atacado)}
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="text-text-light">Preço no site</div>
+                                  <div className="mt-1 font-bold text-price-green">
+                                    {moneyOrDash(p.preco_atual)}
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="text-text-light">Diferença bruta</div>
+                                  <div
+                                    className={`mt-1 font-bold ${difference == null ? "text-text-light" : difference >= 0 ? "text-price-green" : "text-destructive"}`}
+                                  >
+                                    {grossPriceDifferenceLabel(p)}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-between gap-3 pt-1">
+                                <span className="text-xs text-text-light">
+                                  {p.vendas_ultimos_30_dias ?? 0} venda(s) em 30 dias
+                                </span>
+                                <div className="flex gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => startEdit(p)}
+                                    className="inline-flex min-h-11 items-center gap-1.5 border border-cacau/20 px-3 py-2 text-xs font-bold uppercase tracking-wider text-cacau hover:border-gold hover:text-gold"
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" /> Editar
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => remove(p.id, p.nome)}
+                                    aria-label={`Remover ${p.nome}`}
+                                    className="min-h-11 min-w-11 border border-cacau/20 p-2 text-cacau hover:border-destructive hover:text-destructive"
+                                  >
+                                    <Trash2 className="mx-auto h-4 w-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            </article>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  ))}
+                </div>
+              )}
+              {totalPages > 1 && (
+                <div className="mt-5 flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPage((current) => Math.max(1, current - 1))}
+                    disabled={page === 1}
+                    className="border border-cacau/20 px-4 py-2 text-xs font-bold uppercase tracking-wider text-cacau disabled:opacity-40"
+                  >
+                    Anterior
+                  </button>
+                  <span className="text-xs text-text-light">
+                    {page} / {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+                    disabled={page === totalPages}
+                    className="border border-cacau/20 px-4 py-2 text-xs font-bold uppercase tracking-wider text-cacau disabled:opacity-40"
+                  >
+                    Próxima
+                  </button>
+                </div>
+              )}
             </div>
-          </>
-        )}
-      </section>
-
-        </TabsContent>
-        <TabsContent value="produtos" forceMount className="admin-workspace-panel">
-      <section
-        id="admin-product-filters"
-        className="mb-6 scroll-mt-4 border border-cacau/10 bg-sand/50 p-4 sm:p-5"
-      >
-        <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="font-semibold text-deep-green">Encontrar produtos</h2>
-            <p className="text-xs text-text-light">
-              Pesquise por nome, SKU, fornecedor ou fonte do preço.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="self-start text-xs font-bold uppercase tracking-wider text-cacau underline decoration-gold underline-offset-4"
-          >
-            Limpar filtros
-          </button>
-        </div>
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-          <input
-            aria-label="Buscar produto no painel"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Nome, SKU, slug..."
-            className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold lg:col-span-2"
-          />
-          <select
-            aria-label="Filtrar fornecedor"
-            value={supplierFilter}
-            onChange={(event) => setSupplierFilter(event.target.value)}
-            className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold"
-          >
-            <option value="all">Todos os fornecedores</option>
-            {suppliers.map((supplier) => (
-              <option key={supplier} value={supplier}>
-                {supplier}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Filtrar categoria"
-            value={categoryFilter}
-            onChange={(event) => setCategoryFilter(event.target.value)}
-            className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold"
-          >
-            <option value="all">Todas as categorias</option>
-            {categories.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Filtrar estado de publicação"
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value as "all" | ProductStatus)}
-            className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold md:col-span-2 lg:col-span-1"
-          >
-            <option value="all">Todos os estados</option>
-            <option value="published">Publicados</option>
-            <option value="awaiting">Aguardando precificação</option>
-            <option value="incomplete">Dados incompletos</option>
-          </select>
-        </div>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          <label className="text-xs text-cacau">
-            Filtrar preço de
-            <select
-              value={priceField}
-              onChange={(event) => setPriceField(event.target.value as "site" | "supplier")}
-              className="mt-1 min-h-11 w-full border border-cacau/15 bg-white px-3 text-sm"
+          )}
+        </section>
+        <section
+          hidden={workspaceTab !== "fornecedores"}
+          data-state={workspaceTab === "fornecedores" ? "active" : "inactive"}
+          className="admin-workspace-panel"
+          aria-label="Fornecedores e preços"
+        >
+          {isCatalogPending ? (
+            <p className="text-text-light">Carregando catálogo…</p>
+          ) : isError ? (
+            <div
+              className="border border-destructive/25 bg-destructive/5 p-5 text-cacau"
+              role="alert"
             >
-              <option value="site">Preço no site</option>
-              <option value="supplier">Preço do fornecedor</option>
-            </select>
-          </label>
-          <label className="text-xs text-cacau">
-            Preço mínimo (R$)
-            <input
-              inputMode="decimal"
-              value={minimumPrice}
-              onChange={(event) => setMinimumPrice(event.target.value)}
-              placeholder="Sem mínimo"
-              aria-invalid={invalidPrices}
-              className="mt-1 min-h-11 w-full border border-cacau/15 bg-white px-3 text-sm"
-            />
-          </label>
-          <label className="text-xs text-cacau">
-            Preço máximo (R$)
-            <input
-              inputMode="decimal"
-              value={maximumPrice}
-              onChange={(event) => setMaximumPrice(event.target.value)}
-              placeholder="Sem máximo"
-              aria-invalid={invalidPrices}
-              className="mt-1 min-h-11 w-full border border-cacau/15 bg-white px-3 text-sm"
-            />
-          </label>
-        </div>
-        {invalidPrices && (
-          <p role="alert" className="mt-2 text-xs text-destructive">
-            Informe valores válidos; o mínimo não pode ser maior que o máximo.
-          </p>
-        )}
-        {statusFilter === "awaiting" && (
-          <p className="mt-3 text-xs text-cacau">
-            Produtos sem preço de venda, inclusive os que ainda não têm custo cadastrado. Edite o
-            produto para definir o preço; ele continua fora da vitrine até estar pronto.
-          </p>
-        )}
-      </section>
-
-      {isLoading ? (
-        <p className="text-text-light">Carregando produtos…</p>
-      ) : isError ? (
-        <div className="border border-destructive/25 bg-destructive/5 p-6 text-cacau">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
-            <div>
-              <h2 className="font-semibold">Não foi possível carregar os produtos</h2>
+              <h2 className="font-semibold">Não foi possível carregar a precificação</h2>
               <p className="mt-1 text-sm text-text-light">
-                {error instanceof Error ? error.message : "Tente novamente em instantes."}
+                {error instanceof Error ? error.message : "Tente atualizar os dados."}
               </p>
               <button
                 type="button"
                 onClick={() => refetch()}
                 disabled={isFetching}
-                className="mt-4 inline-flex items-center gap-2 bg-deep-green px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-sand disabled:opacity-60"
+                className="mt-3 min-h-11 border border-cacau/20 px-3 text-xs font-semibold"
               >
-                <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
-                {isFetching ? "Tentando…" : "Tentar novamente"}
+                {isFetching ? "Atualizando…" : "Tentar novamente"}
               </button>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div>
-          <div className="mb-3 flex items-center justify-between gap-3 text-xs text-text-light">
-            <span>{filteredProdutos.length} produto(s) encontrado(s)</span>
-            <span>
-              Página {page} de {totalPages}
-            </span>
-          </div>
-          {visibleProdutos.length === 0 ? (
-            <div className="border border-cacau/10 bg-white p-10 text-center text-sm text-text-light">
-              Nenhum produto corresponde aos filtros atuais.
             </div>
           ) : (
-            <div className="grid gap-3 xl:grid-cols-2">
-              {visibleProdutos.map((p) => {
-                const status = productStatus(p);
-                const source = sourceUrl(p);
-                return (
-                  <article
-                    key={p.id}
-                    className="border border-cacau/10 bg-white p-4 transition-shadow hover:shadow-premium sm:p-5"
-                  >
-                    <div className="flex gap-3">
-                      <ImageWithFallback
-                        src={p.url_imagem}
-                        alt={`Imagem de ${p.nome}`}
-                        className="h-20 w-20 shrink-0 border border-cacau/10 object-cover sm:h-24 sm:w-24"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-start justify-between gap-2">
-                          <button
-                            type="button"
-                            onClick={() => startEdit(p)}
-                            className="text-left font-semibold text-cacau hover:text-gold"
-                          >
-                            {p.nome}
-                          </button>
-                          <StatusBadge status={status} />
-                        </div>
-                        <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-text-light">
-                          <span>{p.sku || "Sem SKU"}</span>
-                          <span>{p.categoria || "Sem categoria"}</span>
-                        </div>
-                        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                          <span className="font-semibold text-deep-green">{sourceName(p)}</span>
-                          {source ? (
-                            <a
-                              href={source}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-gold underline underline-offset-2"
-                            >
-                              Abrir fonte
-                            </a>
-                          ) : (
-                            <span className="text-text-light">Fonte não cadastrada</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-4 grid grid-cols-3 gap-2 border-y border-cacau/10 py-3 text-xs">
-                      <div>
-                        <div className="text-text-light">Custo fornecedor</div>
-                        <div className="mt-1 font-bold text-cacau">
-                          {moneyOrDash(p.preco_atacado)}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-text-light">Preço no site</div>
-                        <div className="mt-1 font-bold text-price-green">
-                          {moneyOrDash(p.preco_atual)}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-text-light">Diferença</div>
-                        <div
-                          className={`mt-1 font-bold ${Number(p.preco_atual ?? 0) >= Number(p.preco_atacado ?? 0) ? "text-price-green" : "text-destructive"}`}
-                        >
-                          {marginLabel(p)}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between gap-3 pt-1">
-                      <span className="text-xs text-text-light">
-                        {p.vendas_ultimos_30_dias ?? 0} venda(s) em 30 dias
-                      </span>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => startEdit(p)}
-                          className="inline-flex items-center gap-1.5 border border-cacau/20 px-3 py-2 text-xs font-bold uppercase tracking-wider text-cacau hover:border-gold hover:text-gold"
-                        >
-                          <Pencil className="h-3.5 w-3.5" /> Editar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => remove(p.id, p.nome)}
-                          aria-label={`Remover ${p.nome}`}
-                          className="border border-cacau/20 p-2 text-cacau hover:border-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
+            <SupplierPricingPanel
+              summaries={supplierPricingChoices}
+              products={supplierFilteredProducts}
+              selectedSupplier={supplierFilter}
+              onSelectSupplier={setSupplierFilter}
+              onEdit={startEdit}
+            />
           )}
-          {totalPages > 1 && (
-            <div className="mt-5 flex items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={() => setPage((current) => Math.max(1, current - 1))}
-                disabled={page === 1}
-                className="border border-cacau/20 px-4 py-2 text-xs font-bold uppercase tracking-wider text-cacau disabled:opacity-40"
-              >
-                Anterior
-              </button>
-              <span className="text-xs text-text-light">
-                {page} / {totalPages}
-              </span>
-              <button
-                type="button"
-                onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-                disabled={page === totalPages}
-                className="border border-cacau/20 px-4 py-2 text-xs font-bold uppercase tracking-wider text-cacau disabled:opacity-40"
-              >
-                Próxima
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-        </TabsContent>
-      </Tabs>
+        </section>
+      </div>
 
       {editing && (
         <ProductForm
           value={editing}
+          products={produtos}
           onChange={setEditing}
           onCancel={() => {
             setEditing(null);
@@ -1032,18 +1311,20 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
           saving={saving}
         />
       )}
-    </div>
+    </AdminWorkspace>
   );
 }
 
 function ProductForm({
   value,
+  products,
   onChange,
   onCancel,
   onSave,
   saving,
 }: {
   value: ProdutoInput;
+  products: ProdutoAdmin[];
   onChange: (v: ProdutoInput) => void;
   onCancel: () => void;
   onSave: () => void;
@@ -1057,7 +1338,24 @@ function ProductForm({
   const sitePrice = Number(value.preco_novo ?? 0);
   const pricingDifference = supplierPrice > 0 && sitePrice > 0 ? sitePrice - supplierPrice : null;
   const supplierOptions = Array.from(
-    new Set([...(value.fornecedor ? [value.fornecedor] : []), ...SUPPLIER_OPTIONS]),
+    new Set([
+      ...(value.fornecedor ? [value.fornecedor] : []),
+      ...products
+        .map((product) => product.fornecedor?.trim())
+        .filter((supplier): supplier is string => Boolean(supplier)),
+      ...SUPPLIER_OPTIONS,
+    ]),
+  ).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  const pricingDifferenceLabel =
+    pricingDifference == null
+      ? "—"
+      : `${pricingDifference < 0 ? "−" : "+"}${formatBRL(Math.abs(pricingDifference))}`;
+  const bundleCandidates = products.filter(
+    (product) => product.id !== value.id && isEligibleBundleProduct(product),
+  );
+  const selectedBundleIds = value.compre_junto_ids ?? [];
+  const invalidBundleIds = selectedBundleIds.filter(
+    (id) => !bundleCandidates.some((product) => product.id === id),
   );
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1176,7 +1474,7 @@ function ProductForm({
           </div>
           <div className="grid grid-cols-2 gap-3 sm:col-span-2 sm:gap-4">
             <div className="min-w-0">
-              <label className={label}>Preço do fornecedor (R$)</label>
+              <label className={label}>Custo informado pelo fornecedor (R$)</label>
               <input
                 type="number"
                 step="0.01"
@@ -1237,21 +1535,23 @@ function ProductForm({
             </p>
           </div>
           <div>
-            <label className={label}>Fornecedor do catálogo</label>
-            <select
+            <label className={label}>Fornecedor (uso interno)</label>
+            <input
+              type="text"
               value={value.fornecedor ?? ""}
               onChange={(e) => onChange({ ...value, fornecedor: e.target.value })}
+              list="admin-product-supplier-options"
+              maxLength={120}
+              placeholder="Digite ou selecione um fornecedor"
               className={field}
-            >
-              <option value="">Selecione</option>
+            />
+            <datalist id="admin-product-supplier-options">
               {supplierOptions.map((supplier) => (
-                <option key={supplier} value={supplier}>
-                  {supplier}
-                </option>
+                <option key={supplier} value={supplier} />
               ))}
-            </select>
+            </datalist>
             <p className="mt-1 text-[11px] text-text-light">
-              O fornecedor já cadastrado é carregado automaticamente ao editar.
+              O nome fica no painel para organizar o catálogo; não aparece como vendedor no site.
             </p>
           </div>
           <div>
@@ -1266,9 +1566,9 @@ function ProductForm({
             <div className="mb-2 text-xs font-bold uppercase tracking-wide text-cacau">
               Conferência de preço
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               <div>
-                <div className="text-xs text-text-light">Custo do fornecedor</div>
+                <div className="text-xs text-text-light">Custo informado</div>
                 <div className="mt-1 font-bold text-cacau">
                   {moneyOrDash(value.preco_fornecedor)}
                 </div>
@@ -1279,10 +1579,26 @@ function ProductForm({
                   {moneyOrDash(value.preco_novo)}
                 </div>
               </div>
+              <div>
+                <div className="text-xs text-text-light">Diferença bruta</div>
+                <div
+                  className={`mt-1 font-bold ${pricingDifference == null ? "text-text-light" : pricingDifference >= 0 ? "text-price-green" : "text-destructive"}`}
+                >
+                  {pricingDifferenceLabel}
+                </div>
+              </div>
             </div>
             {pricingDifference != null && pricingDifference < 0 && (
               <p className="mt-2 text-xs font-semibold text-destructive">
                 Atenção: o preço do site está abaixo do custo do fornecedor.
+              </p>
+            )}
+            <p className="mt-2 text-xs text-text-light">
+              Diferença bruta: não considera taxas, frete, impostos ou outros custos.
+            </p>
+            {pricingDifference == null && (
+              <p className="mt-2 text-xs text-text-light">
+                Informe custo e preço no site para comparar os valores.
               </p>
             )}
           </div>
@@ -1314,13 +1630,20 @@ function ProductForm({
             />
           </div>
           <div>
-            <label className={label}>Medidas</label>
+            <label className={label} htmlFor="admin-product-measurements">
+              Medidas
+            </label>
             <input
+              id="admin-product-measurements"
               value={value.medidas ?? ""}
               onChange={(e) => onChange({ ...value, medidas: e.target.value })}
-              placeholder="ex.: 1,80 × 0,80 m"
+              placeholder="Largura: 200 cm; Altura: 90 cm; Profundidade fechada: 100 cm"
               className={field}
             />
+            <small className="mt-1 block text-xs text-muted-foreground">
+              Para filtros por medida, informe cada valor identificado. Sofás podem ter profundidade
+              fechada e aberta separadas.
+            </small>
           </div>
           <div className="sm:col-span-2">
             <label className={label}>Cores (separadas por vírgula)</label>
@@ -1338,6 +1661,83 @@ function ProductForm({
               rows={3}
               className={field}
             />
+          </div>
+          <div className="sm:col-span-2 border border-cacau/10 bg-white p-3">
+            <div className="mb-1 text-xs font-bold uppercase tracking-wide text-cacau">
+              Compre junto · seleção da Mobi
+            </div>
+            <p className="mb-3 text-xs text-text-light">
+              Escolha até 3 móveis que realmente combinam com este produto. A vitrine não escolhe
+              complementos automaticamente.
+            </p>
+            {invalidBundleIds.map((id) => (
+              <div
+                key={id}
+                className="flex items-center justify-between gap-3 border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-cacau"
+              >
+                <span>
+                  {products.find((product) => product.id === id)?.nome ?? id}: complemento
+                  indisponível para exibição.
+                </span>
+                <button
+                  type="button"
+                  className="min-h-11 font-semibold underline"
+                  onClick={() =>
+                    onChange({
+                      ...value,
+                      compre_junto_ids: selectedBundleIds.filter((item) => item !== id),
+                    })
+                  }
+                >
+                  Remover vínculo
+                </button>
+              </div>
+            ))}
+            <div className="max-h-56 divide-y divide-cacau/10 overflow-y-auto border border-cacau/10">
+              {bundleCandidates.map((candidate) => {
+                const checked = selectedBundleIds.includes(candidate.id);
+                return (
+                  <label
+                    key={candidate.id}
+                    className="flex min-h-14 items-center gap-3 px-3 py-2 text-sm text-cacau"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      disabled={!checked && selectedBundleIds.length >= 3}
+                      onChange={(event) =>
+                        onChange({
+                          ...value,
+                          compre_junto_ids: event.target.checked
+                            ? [...selectedBundleIds, candidate.id]
+                            : selectedBundleIds.filter((id) => id !== candidate.id),
+                        })
+                      }
+                      className="h-4 w-4 shrink-0 accent-[#304a32]"
+                    />
+                    <ImageWithFallback
+                      src={candidate.url_imagem}
+                      alt=""
+                      className="h-10 w-10 shrink-0 object-contain"
+                    />
+                    <span className="min-w-0 flex-1 truncate">{candidate.nome}</span>
+                    <strong className="shrink-0 text-xs">
+                      {formatBRL(Number(candidate.preco_atual))}
+                    </strong>
+                  </label>
+                );
+              })}
+              {bundleCandidates.length === 0 && (
+                <p className="p-3 text-xs text-text-light">
+                  Nenhum complemento com custo, preço, foto HTTPS e disponibilidade informada
+                  elegíveis no catálogo.
+                </p>
+              )}
+            </div>
+            <p className="mb-0 mt-2 text-[11px] text-text-light">
+              {selectedBundleIds.length}/3 selecionados. A lista aparece no produto somente enquanto
+              cada complemento continuar disponível no catálogo.
+            </p>
           </div>
           <div className="sm:col-span-2">
             <label className={label}>Imagem do produto *</label>
@@ -1512,5 +1912,3 @@ function ProductForm({
     </div>
   );
 }
-
-
