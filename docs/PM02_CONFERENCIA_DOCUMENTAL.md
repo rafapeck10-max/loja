@@ -41,3 +41,29 @@ No admin integrado, o editor recebe os produtos já consultados. Não há opera�
 Validação: suíte Node (42 testes, incluindo oito de PM-02), TypeScript, ESLint direcionado e build. Conferência manual no navegador: ordem, visibilidade, troca, limite, imagens da seleção carregadas, navegação interna, salvar/recarregar/reabrir e restauração. Capturas e relatório ficam na pasta irmã `mobi-pm02-evidence/`, fora dos artefatos de build.
 
 O teste visual usa a amostra local; não comprova o fluxo autenticado com banco real. Não houve push, merge ou publicação. Para desfazer esta entrega, reverter somente seu commit; nenhuma restauração de dados é necessária. Publicação depende da aprovação explícita de Rafael para a versão apresentada e do preflight de `DEPLOYMENT.md`.
+
+## Adendo — seleção dinâmica da home (14/11/2026)
+
+Este adendo atualiza o estado descrito acima, que era local e sem aplicação pública. A implementação abaixo fica na branch `codex/homepage-dynamic-curation`, baseada na produção atual (`d4381e5`). A prévia da branch foi revisada antes de qualquer integração em `main`.
+
+### Requisito → aplicação → evidência → limite
+
+| Fonte e requisito | Aplicação nesta versão | Evidência | Limite mantido |
+| --- | --- | --- | --- |
+| PM-02: escolher, buscar, trocar, retirar e ordenar produtos por vitrine | `PagesAndShelvesPanel` edita IDs de Escolhas da semana, Novidades e Para sua sala; as duas últimas mantêm modo automático ou manual. O seletor usa o catálogo existente e a prévia compartilha o renderer e os cards da loja. | 46 testes focados; lint direcionado; build Vite/Nitro. | Até quatro IDs por vitrine; produtos inelegíveis ou ausentes não viram substitutos automáticos no modo manual. |
+| PM-02: revisar e aplicar somente a versão conferida | Comando autenticado aplica a revisão PM-02 mais recente via compare-and-swap do workspace existente; mantém histórico e snapshot anterior se houver conflito. `MOBI_REMOTE_HOME` é separado de `MOBI_REMOTE_STUDIO`. | `home-publication.test.mjs`, `admin-studio-persistence.test.mjs` e `admin-studio-repository.test.mjs`; sem operação remota nesta tarefa. | Esta entrega não habilitou nem validou aplicação remota; ativar a configuração da prévia requer preflight próprio. Não houve escrita no Supabase ou aplicação de migration. |
+| HOME-06: lista editorial por IDs, título, limite e ordem; sem sequência universal da concorrente | A home lê somente o snapshot público allowlist e hidrata os IDs com os produtos atuais do catálogo. Nome, foto, categoria, preço e condições comerciais não são copiados para a seleção. | `home-runtime.test.mjs` cobre ordem, dados atuais, IDs ausentes e ausência de preenchimento arbitrário; o snapshot não expõe custo, fornecedor, histórico ou `baseVersion`. | A ordem permanece decisão da Mobi; a referência MadeiraMadeira não determina uma sequência obrigatória para a home. |
+| Decisões Mobi posteriores: Quarto, Sala e Cozinha; esconder “Descubra algo novo”; Black Friday ligada ao PM-05 | O renderer continua ocultando discovery. As imagens de ambiente vêm do catálogo elegível. A seção Black Friday segue condicionada à campanha do PM-05. | Revisão de código e regras de seleção nos testes focados. | PM-02 não cria ofertas, campanha ou lista concorrente para Black Friday. |
+| Segurança e preview | Leitura da configuração aplicada permanece server-side; em Vercel Preview sem chave privilegiada, a rota cai no comportamento sem snapshot, enquanto produção exige configuração. | Teste `Vercel Preview without the privileged key is not treated as production`; docs oficiais de [variáveis de ambiente Vercel](https://vercel.com/docs/environment-variables/system-environment-variables). | Preview não habilita publicação nem altera a loja. |
+
+### Conferência desta entrega
+
+- Branch: `codex/homepage-dynamic-curation`; commit de aplicação e leitura: `54e4238`; correção de ambiente Preview: `396f58c`.
+- Verificação: suíte focada PM-02/publicação/cache/persistência/repositório — 46/46; ESLint direcionado — limpo; `npm run build` — concluído. O build ainda lista avisos de depreciação preexistentes de `createServerFn().inputValidator()` e o aviso do plugin `vite-tsconfig-paths`.
+- Dados e operação: nenhum produto, preço, parcela, banner ou registro Supabase foi alterado; nenhuma migration foi aplicada. O snapshot público contém IDs e configuração de seção; os cards sempre usam os campos atuais do catálogo.
+- Prévia Vercel da versão de código `396f58c`: READY em [loja-2imqq8lr9-rafapeck10-9742s-projects.vercel.app](https://loja-2imqq8lr9-rafapeck10-9742s-projects.vercel.app/). A página carregou com cabeçalho, ambientes, Escolhas da semana, Novidades e Para sua sala. “Descubra algo novo” permaneceu oculto; Black Friday não apareceu porque não havia campanha ativa configurada no PM-05.
+- Limite da conferência visual: a página foi aberta na prévia e seu conteúdo foi inspecionado; não foi feita validação de screenshot responsivo em larguras desktop e celular. A confirmação final de aparência em celular continua pendente.
+- A prévia é isolada: a produção continua no commit `d4381e5`; não houve merge, migration, escrita no Supabase ou publicação em produção. O gate `MOBI_REMOTE_HOME` não foi habilitado.
+- Os documentos originais foram reabertos; hashes mantidos: painel `4CE0516F7C3F3EE31865599CB817D742B601579CE3D211F964F6CBC19748F306`; engenharia reversa `E1A02C0FF7526537A76A17B42640E7D1BCE64FF0F77FC2A1458D35F930253373`.
+
+Este adendo substitui os trechos históricos que dizem que a aba Vitrine não tinha revisão/aplicação. As disposições do levantamento MadeiraMadeira continuam classificadas pelos próprios níveis de evidência; propostas de adaptação não são tratadas como funcionalidades observadas.
