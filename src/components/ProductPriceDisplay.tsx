@@ -1,4 +1,5 @@
 import { formatBRL } from "@/lib/constants";
+import { roundMoney } from "@/lib/payment";
 import { ProductDiscountLine } from "./ProductDiscountLine";
 import type { cardQuote } from "@/lib/payment";
 import "./product-price-display.css";
@@ -12,8 +13,8 @@ export function ProductPriceDisplay({
   oldPrice: number;
   payment: ReturnType<typeof cardQuote>;
 }) {
-  const pixSaving =
-    payment.total > price ? Math.floor(((payment.total - price) / payment.total) * 100) : 0;
+  const pixSaving = payment.total > price ? roundMoney(payment.total - price) : 0;
+  const pixSavingLabel = `${formatBRL(pixSaving)} a menos no Pix em relação ao total no cartão em até ${payment.count}x`;
   return (
     <div className="mobi-price-display">
       <ProductDiscountLine oldPrice={oldPrice} currentPrice={price} />
@@ -23,10 +24,10 @@ export function ProductPriceDisplay({
         {pixSaving > 0 && (
           <span
             className="mobi-price-display-saving"
-            title={`${pixSaving}% de economia no Pix em relação ao total no cartão`}
-            aria-label={`${pixSaving}% de economia no Pix em relação ao total no cartão`}
+            title={pixSavingLabel}
+            aria-label={pixSavingLabel}
           >
-            -{pixSaving}%
+            −{formatBRL(pixSaving)}
           </span>
         )}
       </div>
