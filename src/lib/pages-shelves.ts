@@ -515,3 +515,97 @@ export function publishedHomePageFromDraft(
     },
   };
 }
+
+/** Validates the stored public projection and rebuilds it from allowlisted fields. */
+export function parsePublishedHomePage(value: unknown): PublishedHomePage {
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    throw new Error("Configuração pública da página inicial inválida.");
+  const input = value as Record<string, unknown>;
+  if (
+    input.version !== 1 ||
+    !Number.isSafeInteger(input.revisionId) ||
+    (input.revisionId as number) < 1 ||
+    typeof input.appliedAt !== "string" ||
+    !Number.isFinite(Date.parse(input.appliedAt)) ||
+    !Array.isArray(input.sections) ||
+    input.sections.length !== PAGE_SECTIONS.length - 1 ||
+    !input.shelves ||
+    typeof input.shelves !== "object" ||
+    Array.isArray(input.shelves)
+  )
+    throw new Error("Configuração pública da página inicial inválida.");
+
+  const sections = input.sections.map((value) => {
+    if (!value || typeof value !== "object" || Array.isArray(value))
+      throw new Error("Configuração pública da página inicial inválida.");
+    const section = value as Record<string, unknown>;
+    const definition = PAGE_SECTIONS.find((candidate) => candidate.id === section.id);
+    if (
+      !definition ||
+      definition.id === "discovery" ||
+      section.type !== definition.type ||
+      typeof section.title !== "string" ||
+      !section.title.trim() ||
+      section.title.length > 100 ||
+      typeof section.subtitle !== "string" ||
+      section.subtitle.length > 240 ||
+      typeof section.enabled !== "boolean"
+    )
+      throw new Error("Configuração pública da página inicial inválida.");
+    return {
+      id: definition.id,
+      title: section.title,
+      subtitle: section.subtitle,
+      type: definition.type,
+      enabled: section.enabled,
+    };
+  });
+  const sectionIds = sections.map((section) => section.id);
+  if (
+    new Set(sectionIds).size !== sectionIds.length ||
+    sectionIds[0] !== "intro" ||
+    sectionIds.at(-1) !== "catalog" ||
+    sections.some((section) => {
+      const definition = PAGE_SECTIONS.find((candidate) => candidate.id === section.id);
+      return definition?.locked && !section.enabled;
+    }) ||
+    PAGE_SECTIONS.some((section) => section.id !== "discovery" && !sectionIds.includes(section.id))
+  )
+    throw new Error("Configuração pública da página inicial inválida.");
+
+  const shelves = input.shelves as Record<string, unknown>;
+  const selection = (value: unknown, weekly = false): ProductShelfSelection => {
+    if (!value || typeof value !== "object" || Array.isArray(value))
+      throw new Error("Configuração pública da página inicial inválida.");
+    const item = value as Record<string, unknown>;
+    if (
+      !Array.isArray(item.productIds) ||
+      item.productIds.length > 4 ||
+      item.productIds.some((id) => typeof id !== "string" || !id.trim()) ||
+      new Set(item.productIds).size !== item.productIds.length ||
+      (weekly ? item.mode !== "manual" : !["manual", "automatico"].includes(item.mode as string))
+    )
+      throw new Error("Configuração pública da página inicial inválida.");
+    return {
+      mode: weekly ? "manual" : (item.mode as ProductShelfMode),
+      productIds: [...(item.productIds as string[])],
+    };
+  };
+  if (
+    !Object.hasOwn(shelves, "weekly") ||
+    !Object.hasOwn(shelves, "new") ||
+    !Object.hasOwn(shelves, "room")
+  )
+    throw new Error("Configuração pública da página inicial inválida.");
+  return {
+    version: 1,
+    revisionId: input.revisionId as number,
+    appliedAt: input.appliedAt,
+    sections,
+    shelves: {
+      weekly: selection(shelves.weekly, true) as PublishedHomePage["shelves"]["weekly"],
+      new: selection(shelves.new),
+      room: selection(shelves.room),
+    },
+  };
+}

@@ -8,6 +8,8 @@ import {
   type StudioScope,
   type StudioWorkspace,
 } from "./admin-studio.ts";
+import { applyReviewedHomePage } from "./home-publication.ts";
+import type { EditorProduct } from "./homepage-curation.ts";
 
 export interface StudioWorkspaceSnapshot {
   serverVersion: number;
@@ -35,6 +37,11 @@ export type StudioWorkspaceCommand =
       action: "recover";
       expectedServerVersion: number;
       scopes: StudioScope[];
+    }
+  | {
+      action: "publishHomePage";
+      expectedServerVersion: number;
+      reviewedRevisionId: number;
     };
 
 export interface StudioWorkspaceTransport {
@@ -155,6 +162,19 @@ export function normalizeStudioWorkspaceCommand(value: unknown): StudioWorkspace
         scopes,
       };
     }
+    case "publishHomePage": {
+      assertOnlyKeys(value, ["action", "expectedServerVersion", "reviewedRevisionId"]);
+      if (
+        !Number.isSafeInteger(value.reviewedRevisionId) ||
+        (value.reviewedRevisionId as number) < 1
+      )
+        throw new Error("Número de revisão inválido.");
+      return {
+        action: "publishHomePage",
+        expectedServerVersion: value.expectedServerVersion,
+        reviewedRevisionId: value.reviewedRevisionId as number,
+      };
+    }
     default:
       throw new Error("Ação de revisão inválida.");
   }
@@ -166,6 +186,8 @@ export function applyStudioWorkspaceCommand(
   options: {
     date: string;
     sourceValues?: Partial<Record<StudioScope, unknown>>;
+    products?: EditorProduct[];
+    homePublicationEnabled?: boolean;
   },
 ): StudioWorkspaceSnapshot {
   const snapshot = validatedSnapshot(rawSnapshot);
@@ -205,6 +227,18 @@ export function applyStudioWorkspaceCommand(
           options.date,
         );
       }
+      break;
+    case "publishHomePage":
+      if (!options.homePublicationEnabled)
+        throw new Error("A aplicação pública está desligada neste ambiente.");
+      if (!options.products)
+        throw new Error("O catálogo atual não está disponível para aplicar a página inicial.");
+      workspace = applyReviewedHomePage(
+        workspace,
+        command.reviewedRevisionId,
+        options.products,
+        options.date,
+      );
       break;
   }
   return { serverVersion: snapshot.serverVersion + 1, workspace };

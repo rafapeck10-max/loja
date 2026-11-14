@@ -1,8 +1,9 @@
 import { reopenHomeDraft } from "../../lib/home-configuration";
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { validateStudioResource, shouldLoadWorkspace } from "../../lib/studio-validation";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Save, FileCheck2, History, Download, X } from "lucide-react";
+import { Save, FileCheck2, History, Download, X, Send } from "lucide-react";
 import {
   emptyWorkspace,
   parseWorkspace,
@@ -51,6 +52,7 @@ import { EvolutionPanel } from "./EvolutionPanel";
 import { NavigationPanel, ContentPanel, ServicePanel, ProductDraftPanel } from "./OperationsPanels";
 import "../../admin-studio.css";
 import { HomeConnectionPanel } from "./HomeConnectionPanel";
+import { invalidateHomeRevision } from "../../lib/home-revision-cache";
 import type { HomeTransport } from "../../lib/home-transport";
 import type { AdminViewId } from "../../lib/admin-navigation";
 import {
@@ -125,6 +127,7 @@ export function AdminStudio({
   bannerSource,
   homeTransport,
   workspaceTransport,
+  homePublicationEnabled = false,
 }: {
   area: AdminViewId;
   products: EditorProduct[];
@@ -132,6 +135,7 @@ export function AdminStudio({
   demonstration?: boolean;
   homeTransport?: HomeTransport;
   workspaceTransport?: StudioWorkspaceTransport;
+  homePublicationEnabled?: boolean;
   onNavigate: (area: AdminViewId) => void;
   productQuery?: string;
   productFilter?: "all" | "published" | "awaiting" | "incomplete";
@@ -141,6 +145,7 @@ export function AdminStudio({
     available?: boolean;
   };
 }) {
+  const queryClient = useQueryClient();
   const storageKey = `mobi:admin-studio:v1:${demonstration ? "demo" : "admin"}`;
   const loadedKey = useRef<string | null>(null);
   const serverVersion = useRef(0);
@@ -359,6 +364,32 @@ export function AdminStudio({
         `Revisão ${next.revision} registrada ${remote ? "no servidor" : "neste navegador"}. Nada foi publicado.`,
       );
     });
+  const applyHomePage = () =>
+    attempt(async () => {
+      if (!canApplyHomePage || !latestPageRevision)
+        throw new Error("Aplique somente uma revisão atual e conferida no servidor.");
+      const pageDraft = latestPageRevision.after as PageDraft;
+      const names = (ids: string[]) =>
+        ids.map((id) => products.find((product) => product.id === id)?.nome ?? id).join(" → ") ||
+        "sem produtos";
+      const confirmation = [
+        `Aplicar a revisão ${latestPageRevision.id} à página inicial da loja?`,
+        `Escolhas da semana: ${names(pageDraft.curation.weeklyIds)}`,
+        `Novidades: ${pageDraft.shelves.new.mode === "manual" ? names(pageDraft.shelves.new.productIds) : "automático"}`,
+        `Para sua sala: ${pageDraft.shelves.room.mode === "manual" ? names(pageDraft.shelves.room.productIds) : "automático"}`,
+        "Os dados comerciais continuarão vindo do catálogo atual.",
+      ].join("\n");
+      if (!window.confirm(confirmation)) return;
+      const next = await commitRemote({
+        action: "publishHomePage",
+        expectedServerVersion: serverVersion.current,
+        reviewedRevisionId: latestPageRevision.id,
+      });
+      await invalidateHomeRevision(queryClient);
+      setMessage(
+        `Revisão ${next.publishedHomePage?.revisionId} aplicada à loja. A home continuará usando os dados atuais do catálogo.`,
+      );
+    });
   const restore = (id: number) =>
     attempt(async () => {
       if (dirty)
@@ -448,6 +479,20 @@ export function AdminStudio({
   const selectedLast = scope
     ? [...workspace.history].reverse().find((x) => x.scope === scope)
     : undefined;
+  const latestPageRevision = [...workspace.history]
+    .reverse()
+    .find((revision) => revision.scope === "pages");
+  const canApplyHomePage = Boolean(
+    area === "vitrine" &&
+    remote &&
+    homePublicationEnabled &&
+    latestPageRevision?.status === "reviewed" &&
+    workspace.publishedHomePage?.revisionId !== latestPageRevision.id &&
+    !dirty &&
+    !conflict &&
+    loaded &&
+    !busy,
+  );
   const differences = scope ? diffValues(selectedLast?.before ?? defaults[scope], data[scope]) : [];
   if (!managedArea && area !== "history") return null;
   if (!ready)
@@ -548,6 +593,26 @@ export function AdminStudio({
       {message && (
         <div className="pm-note" role="status">
           {message}
+        </div>
+      )}
+      {area === "vitrine" && remote && (
+        <div className="pm-note" role="status">
+          {workspace.publishedHomePage ? (
+            <>
+              A loja está usando a revisão PM-02 {workspace.publishedHomePage.revisionId} · aplicada
+              em {time(workspace.publishedHomePage.appliedAt)}.
+            </>
+          ) : (
+            <>Ainda não há seleção PM-02 aplicada à loja. A versão atual permanece intacta.</>
+          )}
+          {!homePublicationEnabled && (
+            <span> A aplicação pública está desativada neste ambiente de prévia.</span>
+          )}
+          {canApplyHomePage && (
+            <button className="pm-button pm-primary" disabled={busy} onClick={applyHomePage}>
+              <Send size={15} /> Aplicar à loja
+            </button>
+          )}
         </div>
       )}
       {conflict && (
@@ -750,7 +815,12 @@ export function AdminStudio({
                 <details key={r.id}>
                   <summary>
                     Versão {r.id} · {titles[r.scope]} ·{" "}
-                    {r.status === "reviewed" ? "Revisada" : "Rascunho"} · {time(r.date)}
+                    {r.status === "applied"
+                      ? "Aplicada"
+                      : r.status === "reviewed"
+                        ? "Revisada"
+                        : "Rascunho"}{" "}
+                    · {time(r.date)}
                   </summary>
                   <p>
                     Armazenamento: {remote ? "servidor" : "navegador"} · horário de Brasília
@@ -797,8 +867,8 @@ export function AdminStudio({
               <div>
                 <Dialog.Title>Revisar {scope ? titles[scope] : ""}</Dialog.Title>
                 <Dialog.Description>
-                  Compare a revisão anterior com o rascunho salvo. Revisar registra o aceite local;
-                  a loja permanece preservada.
+                  Compare a revisão anterior com o rascunho salvo. Revisar registra a conferência;
+                  nenhuma alteração chega à loja nesta etapa.
                 </Dialog.Description>
               </div>
               <Dialog.Close className="pm-button" aria-label="Fechar revisão">

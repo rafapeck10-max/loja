@@ -1,3 +1,5 @@
+import { parsePublishedHomePage, type PublishedHomePage } from "./pages-shelves.ts";
+
 export const STUDIO_SCOPES = [
   "pages",
   "banners",
@@ -13,16 +15,18 @@ export interface StudioRevision {
   id: number;
   scope: StudioScope;
   date: string;
-  status: "draft" | "reviewed";
+  status: "draft" | "reviewed" | "applied";
   before: unknown;
   after: unknown;
   restoredFrom?: number;
+  appliedRevisionId?: number;
 }
 export interface StudioWorkspace {
   schema: 1;
   revision: number;
   entries: Partial<Record<StudioScope, unknown>>;
   history: StudioRevision[];
+  publishedHomePage?: PublishedHomePage;
 }
 export const MAX_WORKSPACE_BYTES = 3_500_000;
 const byteLength = (value: string): number => new TextEncoder().encode(value).byteLength;
@@ -56,10 +60,50 @@ export function parseWorkspace(raw: string): StudioWorkspace {
         (r, i) =>
           r?.id !== i + 1 ||
           !known(r.scope) ||
-          !["draft", "reviewed"].includes(r.status) ||
+          !["draft", "reviewed", "applied"].includes(r.status) ||
           !Number.isFinite(Date.parse(r.date)) ||
           !Object.hasOwn(r, "after") ||
-          !Object.hasOwn(r, "before"),
+          !Object.hasOwn(r, "before") ||
+          (r.status === "applied" &&
+            (!Number.isSafeInteger(r.appliedRevisionId) || (r.appliedRevisionId ?? 0) < 1)) ||
+          (r.status !== "applied" && r.appliedRevisionId !== undefined),
+      )
+    )
+      throw new Error();
+    const publishedHomePage = Object.hasOwn(w, "publishedHomePage")
+      ? parsePublishedHomePage(w.publishedHomePage)
+      : undefined;
+    if (
+      publishedHomePage &&
+      !w.history.some(
+        (revision) =>
+          revision.id === publishedHomePage.revisionId &&
+          revision.scope === "pages" &&
+          revision.status === "reviewed",
+      )
+    )
+      throw new Error();
+    for (const [index, revision] of w.history.entries()) {
+      if (
+        revision.status === "applied" &&
+        !w.history
+          .slice(0, index)
+          .some(
+            (prior) =>
+              prior.id === revision.appliedRevisionId &&
+              prior.scope === "pages" &&
+              prior.status === "reviewed" &&
+              JSON.stringify(prior.after) === JSON.stringify(revision.after),
+          )
+      )
+        throw new Error();
+    }
+    if (
+      publishedHomePage &&
+      !w.history.some(
+        (revision) =>
+          revision.status === "applied" &&
+          revision.appliedRevisionId === publishedHomePage.revisionId,
       )
     )
       throw new Error();
@@ -68,7 +112,7 @@ export function parseWorkspace(raw: string): StudioWorkspace {
       if (!last || JSON.stringify(last.after) !== JSON.stringify(w.entries[scope]))
         throw new Error();
     }
-    return w;
+    return { ...w, ...(publishedHomePage ? { publishedHomePage } : {}) };
   } catch {
     throw new Error("Arquivo local inválido. A versão aberta foi preservada.");
   }
@@ -88,6 +132,7 @@ export function reviseWorkspace(
   if (!known(scope)) throw new Error("Escopo inválido.");
   if (!Number.isFinite(Date.parse(date))) throw new Error("Data inválida.");
   const next: StudioWorkspace = {
+    ...w,
     schema: 1,
     revision: w.revision + 1,
     entries: { ...w.entries, [scope]: clone(data) },

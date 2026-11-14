@@ -62,7 +62,10 @@ export const getAdminStudioStorageMode = createServerFn({ method: "POST" })
   .validator((input: { password: string }) => ({ password: String(input?.password ?? "") }))
   .handler(async ({ data }) => {
     checkPassword(data.password);
-    return { remote: process.env.MOBI_REMOTE_STUDIO === "1" };
+    return {
+      remote: process.env.MOBI_REMOTE_STUDIO === "1",
+      homePublicationEnabled: process.env.MOBI_REMOTE_HOME === "1",
+    };
   });
 
 export const changeAdminStudioWorkspace = createServerFn({ method: "POST" })
@@ -82,7 +85,11 @@ export const changeAdminStudioWorkspace = createServerFn({ method: "POST" })
       const bannerSource = await listAdminHomepageBanners({ data: { password: data.password } });
       sourceValues = currentStudioSources(products, bannerSource.banners);
     }
-    const transport = remoteStudioStore(sourceValues);
+    const transport = remoteStudioStore({
+      sourceValues,
+      products,
+      homePublicationEnabled: process.env.MOBI_REMOTE_HOME === "1",
+    });
     const current = await transport.read();
     const { applyStudioWorkspaceCommand } = await import("./admin-studio-transport");
     const next = applyStudioWorkspaceCommand(current, command, {
@@ -90,16 +97,20 @@ export const changeAdminStudioWorkspace = createServerFn({ method: "POST" })
       sourceValues,
     });
     const scope =
-      command.action === "restore"
-        ? current.workspace.history.find((revision) => revision.id === command.revisionId)?.scope
-        : command.action !== "recover"
-          ? command.scope
-          : undefined;
+      command.action === "publishHomePage"
+        ? "pages"
+        : command.action === "restore"
+          ? current.workspace.history.find((revision) => revision.id === command.revisionId)?.scope
+          : command.action !== "recover"
+            ? command.scope
+            : undefined;
     const { validateStudioResource } = await import("./studio-validation");
     const scopes = command.action === "recover" ? command.scopes : scope ? [scope] : [];
     if (!scopes.length) throw new Error("Área de revisão inválida.");
+    const resources = { ...next.workspace.entries };
+    if (command.action === "publishHomePage") delete resources.products;
     const errors = scopes.flatMap((key) =>
-      validateStudioResource(key, next.workspace.entries[key], products, next.workspace.entries),
+      validateStudioResource(key, next.workspace.entries[key], products, resources),
     );
     if (errors.length) throw new Error(errors.join(" "));
     return JSON.stringify(await transport.change(command));
