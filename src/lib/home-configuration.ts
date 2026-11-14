@@ -7,6 +7,7 @@ import {
   toStorefrontProducts,
   type PageDraft,
   type PageSection,
+  type PublishedHomePage,
 } from "./pages-shelves.ts";
 import { validateBannerData, type BannerData, type BannerDraft } from "./banner-drafts.ts";
 import {
@@ -18,6 +19,7 @@ import {
   type ContentData,
 } from "./operational-config.ts";
 import { isCurationProduct, type EditorProduct, type CurationDraft } from "./homepage-curation.ts";
+import { isHomepageProduct } from "./home-curation.ts";
 import type { ProductShelfSelection } from "./pages-shelves.ts";
 import {
   campaignConflicts,
@@ -426,6 +428,31 @@ export function homeProductSelections(
     discovery: sectionProducts("discovery", current, date),
     new: sectionProducts("new", current, date, config?.shelves?.new),
     room: sectionProducts("room", current, date, config?.shelves?.room),
+  };
+}
+
+/** Resolve only an applied PM-02 selection against the current public catalog rows. */
+export function publishedHomeProductSelections(
+  products: Produto[],
+  published: PublishedHomePage,
+  date = new Date(),
+) {
+  const eligible = products.filter(isHomepageProduct);
+  const byId = new Map(eligible.map((product) => [product.id, product]));
+  const orderedIds = (ids: string[]) => {
+    const seen = new Set<string>();
+    return ids.slice(0, 4).flatMap((id) => {
+      const product = byId.get(id);
+      if (!product || seen.has(id)) return [];
+      seen.add(id);
+      return [product];
+    });
+  };
+  return {
+    weekly: orderedIds(published.shelves.weekly.productIds),
+    discovery: [],
+    new: sectionProducts("new", eligible, date, published.shelves.new),
+    room: sectionProducts("room", eligible, date, published.shelves.room),
   };
 }
 /** Exact comparison stored privately, never included in the public DTO. */

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { discoverHomepageProducts, weeklyHomepageProducts } from "../src/lib/home-curation.ts";
 import { visibleHomeBanners } from "../src/lib/home-banner-state.ts";
 import * as config from "../src/lib/home-configuration.ts";
+import { initialPageDraft, publishedHomePageFromDraft } from "../src/lib/pages-shelves.ts";
 const products = Array.from({ length: 40 }, (_, i) => ({
   id: String(i),
   preco_novo: 100,
@@ -94,5 +95,115 @@ test("manual shelf IDs flow through the same home selection resolver in saved pr
   assert.deepEqual(
     config.homeProductSelections(current, saved).new.map((p) => p.id),
     ["5", "2"],
+  );
+});
+
+test("applied homepage selection keeps editorial order, uses current catalog rows, and never fills missing IDs", () => {
+  const current = [
+    {
+      id: "a",
+      preco_novo: 100,
+      imagem_url: "https://example.com/a.jpg",
+      descricao: "",
+      cores: [],
+      categoria: "Sofás",
+      created_at: "2026-11-10",
+    },
+    {
+      id: "b",
+      preco_novo: 200,
+      imagem_url: "https://example.com/b.jpg",
+      descricao: "",
+      cores: [],
+      categoria: "Poltronas",
+      created_at: "2026-11-11",
+    },
+    {
+      id: "c",
+      preco_novo: 300,
+      imagem_url: "https://example.com/c.jpg",
+      descricao: "",
+      cores: [],
+      categoria: "Painéis para TVs",
+      created_at: "2026-11-12",
+    },
+    {
+      id: "invalid",
+      preco_novo: 0,
+      imagem_url: "https://example.com/x.jpg",
+      descricao: "",
+      cores: [],
+      categoria: "sofa",
+      created_at: "2026-11-13",
+    },
+  ];
+  const applied = {
+    version: 1,
+    revisionId: 8,
+    appliedAt: "2026-11-14T12:00:00Z",
+    sections: [],
+    shelves: {
+      weekly: { mode: "manual", productIds: ["c", "missing", "a"] },
+      new: { mode: "manual", productIds: ["b", "missing", "invalid"] },
+      room: { mode: "automatico", productIds: [] },
+    },
+  };
+  const selections = config.publishedHomeProductSelections(
+    current,
+    applied,
+    new Date("2026-11-14T12:00:00Z"),
+  );
+
+  assert.deepEqual(
+    selections.weekly.map((product) => product.id),
+    ["c", "a"],
+  );
+  assert.deepEqual(
+    selections.new.map((product) => product.id),
+    ["b"],
+  );
+  assert.deepEqual(selections.discovery, []);
+  assert.deepEqual(
+    selections.room.map((product) => product.id),
+    ["a", "b", "c"],
+  );
+});
+
+test("public workspace projection returns only a validated applied home page", async () => {
+  const publication = await import("../src/lib/home-publication.ts");
+  assert.equal(typeof publication.publishedHomePageFromWorkspace, "function");
+  const editorProducts = ["public"].map((id) => ({
+    id,
+    nome: "Produto público",
+    categoria: "Sofás",
+    preco_atual: 100,
+    preco_atacado: 60,
+    url_imagem: "https://example.com/public.jpg",
+  }));
+  const draft = initialPageDraft(editorProducts);
+  draft.curation.weeklyIds = ["public"];
+  const safe = publishedHomePageFromDraft(draft, editorProducts, 8, "2026-11-14T12:00:00Z");
+  const contaminated = {
+    ...safe,
+    fornecedor: "Fornecedor privado",
+    preco_atacado: 99,
+    baseVersion: "private",
+  };
+  const privateWorkspace = {
+    revision: 9,
+    entries: { pages: { baseVersion: "private", shelves: { new: [] } } },
+    history: [{ fornecedor: "Fornecedor privado", preco_atacado: 99 }],
+    publishedHomePage: contaminated,
+  };
+  const output = publication.publishedHomePageFromWorkspace({ workspace: privateWorkspace });
+  assert.deepEqual(output, safe);
+  assert.equal(JSON.stringify(output).includes("Fornecedor privado"), false);
+  assert.equal(JSON.stringify(output).includes("preco_atacado"), false);
+  assert.equal(JSON.stringify(output).includes("baseVersion"), false);
+  assert.equal(
+    publication.publishedHomePageFromWorkspace({
+      workspace: { history: privateWorkspace.history },
+    }),
+    null,
   );
 });
