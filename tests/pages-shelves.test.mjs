@@ -10,6 +10,10 @@ import {
   sectionProducts,
   normalizePageDraft,
   publishedHomePageFromDraft,
+  chooseShelfProduct,
+  removeShelfProduct,
+  moveShelfProduct,
+  setShelfMode,
 } from "../src/lib/pages-shelves.ts";
 const product = (id, extra = {}) => ({
   id,
@@ -187,4 +191,31 @@ test("manual selection validation rejects duplicate, over-limit, and ineligible 
 
   draft.shelves.new = { mode: "manual", productIds: ["bad"] };
   assert.ok(validatePageDraft(draft, data).some((error) => /condições válidas/i.test(error)));
+});
+
+test("manual shelf editor adds, swaps, removes, reorders, and preserves IDs across mode changes", () => {
+  let draft = initialPageDraft(data);
+  draft = chooseShelfProduct(draft, data, "new", "c");
+  draft = chooseShelfProduct(draft, data, "new", "d");
+  draft = chooseShelfProduct(draft, data, "new", "e", 0);
+  assert.deepEqual(draft.shelves.new.productIds, ["e", "d"]);
+
+  draft = moveShelfProduct(draft, "new", 1, -1);
+  assert.deepEqual(draft.shelves.new.productIds, ["d", "e"]);
+  draft = setShelfMode(draft, "new", "automatico");
+  assert.deepEqual(draft.shelves.new.productIds, ["d", "e"]);
+  draft = setShelfMode(draft, "new", "manual");
+  draft = removeShelfProduct(draft, "new", "d");
+  assert.deepEqual(draft.shelves.new.productIds, ["e"]);
+});
+
+test("manual shelf editor rejects duplicate, ineligible and over-limit additions", () => {
+  let draft = initialPageDraft(data);
+  draft = chooseShelfProduct(draft, data, "room", "c");
+  assert.throws(() => chooseShelfProduct(draft, data, "room", "c"), /já/);
+  assert.throws(() => chooseShelfProduct(draft, data, "room", "bad"), /vitrine/);
+  draft = chooseShelfProduct(draft, data, "room", "d");
+  draft = chooseShelfProduct(draft, data, "room", "e");
+  draft = chooseShelfProduct(draft, data, "room", "a");
+  assert.throws(() => chooseShelfProduct(draft, data, "room", "b"), /quatro/);
 });

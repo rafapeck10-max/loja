@@ -460,7 +460,7 @@ export function AdminStudio({
   return (
     <section className="pm-panel" aria-label="Estúdio da Mobi" aria-busy={busy}>
       {homeTransport &&
-        ["vitrine", "banners", "navigation", "content", "service", "history"].includes(area) && (
+        ["banners", "navigation", "content", "service", "history"].includes(area) && (
           <HomeConnectionPanel
             transport={homeTransport}
             draft={data}

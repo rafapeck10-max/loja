@@ -347,6 +347,52 @@
   font-weight: 600;
   color: #49563b;
 }
+.ps-shelf-mode {
+  display: flex;
+  gap: 5px;
+  margin: 12px 13px 0;
+  padding: 4px;
+  background: #f1ede4;
+  border: 1px solid #e5dccb;
+  border-radius: 5px;
+}
+.ps-shelf-mode button {
+  flex: 1;
+  min-height: 38px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: #6f624c;
+  font-size: 11px;
+  font-weight: 600;
+}
+.ps-shelf-mode button[aria-pressed="true"] {
+  border-color: #c8b487;
+  background: #fffdfa;
+  color: #2e3f32;
+  box-shadow: 0 1px 3px #2e3f3214;
+}
+.ps-shelf-mode-note {
+  margin: 8px 13px 0 !important;
+  color: #85775f;
+  font-size: 10px;
+  line-height: 1.6;
+}
+.ps-auto-exceptions {
+  margin: 12px 13px;
+  border-top: 1px solid #eee5d5;
+  color: #6f624c;
+}
+.ps-auto-exceptions > summary {
+  min-height: 40px;
+  align-content: center;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+}
+.ps-auto-exceptions .ps-field {
+  margin: 8px 0 12px;
+}
 .ps-products {
   list-style: none;
   margin: 0;
@@ -822,6 +868,14 @@
   .ps-product-actions button {
     min-height: 44px;
     min-width: 44px;
+    font-size: 11px;
+  }
+  .ps-shelf-mode button {
+    min-height: 44px;
+    font-size: 12px;
+  }
+  .ps-auto-exceptions > summary {
+    min-height: 44px;
     font-size: 11px;
   }
   .ps-switch {
