@@ -8,6 +8,8 @@ import {
   restorePageDraft,
   toStorefrontProducts,
   sectionProducts,
+  normalizePageDraft,
+  publishedHomePageFromDraft,
 } from "../src/lib/pages-shelves.ts";
 const product = (id, extra = {}) => ({
   id,
@@ -110,4 +112,79 @@ test("malformed legacy variation JSON cannot break the preview or turn an unknow
   const output = toStorefrontProducts(input, initialPageDraft(input).curation);
   assert.deepEqual(output[0].variacoes_preco, []);
   assert.equal(output[0].preco_novo, 500);
+});
+
+test("legacy drafts retain weekly order and default new shelves to automatic without restoring discovery", () => {
+  const current = initialPageDraft(data);
+  const legacy = { ...current };
+  delete legacy.shelves;
+  const restored = normalizePageDraft(legacy, data);
+
+  assert.deepEqual(restored.curation.weeklyIds, ["b", "a"]);
+  assert.deepEqual(restored.shelves, {
+    new: { mode: "automatico", productIds: [] },
+    room: { mode: "automatico", productIds: [] },
+  });
+  assert.equal(restored.sections.find((section) => section.id === "discovery").enabled, false);
+});
+
+test("manual shelves preserve ID order and omit duplicate, missing, or ineligible products", () => {
+  const draft = initialPageDraft(data);
+  const storefront = toStorefrontProducts(data, draft.curation);
+  const selection = { mode: "manual", productIds: ["d", "missing", "c", "d", "bad"] };
+
+  assert.deepEqual(
+    sectionProducts("new", storefront, new Date("2026-11-09T12:00:00Z"), selection).map(
+      (p) => p.id,
+    ),
+    ["d", "c"],
+  );
+});
+
+test("automatic shelves retain their current rules and empty weekly selection has no hard-coded fallback", () => {
+  const draft = initialPageDraft(data);
+  draft.curation.weeklyIds = [];
+  const storefront = toStorefrontProducts(data, draft.curation);
+
+  assert.deepEqual(sectionProducts("weekly", storefront, new Date("2026-11-09T12:00:00Z")), []);
+  assert.deepEqual(
+    sectionProducts("new", storefront, new Date("2026-11-09T12:00:00Z"), {
+      mode: "automatico",
+      productIds: ["missing"],
+    }).map((p) => p.id),
+    ["a", "b", "c", "d"],
+  );
+});
+
+test("published home projection exposes only sections, shelf modes, and ordered eligible IDs", () => {
+  const draft = initialPageDraft(data);
+  draft.shelves.new = { mode: "manual", productIds: ["d", "c"] };
+  const published = publishedHomePageFromDraft(draft, data, 7, "2026-11-14T12:00:00.000Z");
+  const raw = JSON.stringify(published);
+
+  assert.equal(published.version, 1);
+  assert.equal(published.revisionId, 7);
+  assert.deepEqual(published.shelves.weekly, { mode: "manual", productIds: ["b", "a"] });
+  assert.deepEqual(published.shelves.new, { mode: "manual", productIds: ["d", "c"] });
+  assert.ok(!published.sections.some((section) => section.id === "discovery"));
+  for (const privateField of [
+    "baseVersion",
+    "preco_atacado",
+    "fornecedor",
+    "curation",
+    "discovery",
+  ])
+    assert.ok(!raw.includes(privateField), privateField);
+});
+
+test("manual selection validation rejects duplicate, over-limit, and ineligible IDs", () => {
+  const draft = initialPageDraft(data);
+  draft.shelves.new = { mode: "manual", productIds: ["a", "a"] };
+  assert.ok(validatePageDraft(draft, data).some((error) => /vitrine|produtos/i.test(error)));
+
+  draft.shelves.new = { mode: "manual", productIds: ["a", "b", "c", "d", "e"] };
+  assert.ok(validatePageDraft(draft, data).some((error) => /vitrine|quatro/i.test(error)));
+
+  draft.shelves.new = { mode: "manual", productIds: ["bad"] };
+  assert.ok(validatePageDraft(draft, data).some((error) => /condições válidas/i.test(error)));
 });

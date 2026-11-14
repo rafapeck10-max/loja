@@ -4,6 +4,7 @@ import * as home from "../src/lib/home-configuration.ts";
 import { initialPageDraft } from "../src/lib/pages-shelves.ts";
 import { initialBannerData } from "../src/lib/banner-drafts.ts";
 import { initialNavigation, initialService } from "../src/lib/operational-config.ts";
+import { homeConfigurationSchema } from "../src/lib/home-configuration-schema.ts";
 const products = [
   {
     id: "a",
@@ -82,6 +83,17 @@ test("changed catalog and invalid destination cannot become a home configuration
   const b = source();
   b.banners.banners[0].cta_href = "https://evil.example";
   assert.throws(() => home.homeConfigurationFromDraft(b, products), /banner|destino/i);
+});
+test("home configuration preserves shelf modes and ordered manual IDs while legacy snapshots remain valid", () => {
+  const draft = source();
+  draft.pages.shelves.new = { mode: "manual", productIds: ["a"] };
+  const config = home.homeConfigurationFromDraft(draft, products);
+  assert.deepEqual(config.shelves.new, { mode: "manual", productIds: ["a"] });
+  assert.deepEqual(config.sectionIds.new, ["a"]);
+  assert.deepEqual(homeConfigurationSchema.parse(config).shelves, config.shelves);
+
+  const { shelves: _shelves, ...legacyConfig } = config;
+  assert.doesNotThrow(() => homeConfigurationSchema.parse(legacyConfig));
 });
 test("draft, review, local application and restore keep public state isolated and append history", () => {
   assert.equal(typeof home.newHomeDocument, "function");

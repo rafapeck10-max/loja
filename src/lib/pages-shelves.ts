@@ -11,6 +11,7 @@ import {
   newHomepageProducts,
   roomHomepageProducts,
   discoverHomepageProducts,
+  isHomepageProduct,
 } from "./home-curation.ts";
 export const PAGE_SECTIONS = [
   {
@@ -84,6 +85,27 @@ export interface PageDraft {
   baseVersion: string;
   sections: PageSection[];
   curation: CurationDraft;
+  shelves: {
+    new: ProductShelfSelection;
+    room: ProductShelfSelection;
+  };
+}
+export type ProductShelfId = "weekly" | "new" | "room";
+export type ProductShelfMode = "automatico" | "manual";
+export interface ProductShelfSelection {
+  mode: ProductShelfMode;
+  productIds: string[];
+}
+export interface PublishedHomePage {
+  version: 1;
+  revisionId: number;
+  appliedAt: string;
+  sections: PageSection[];
+  shelves: {
+    weekly: { mode: "manual"; productIds: string[] };
+    new: ProductShelfSelection;
+    room: ProductShelfSelection;
+  };
 }
 export function sourceVersion(products: EditorProduct[]) {
   return JSON.stringify(
@@ -126,6 +148,10 @@ export function initialPageDraft(products: EditorProduct[]): PageDraft {
         .map((p) => p.id),
       settings: Object.fromEntries(products.map((p) => [p.id, settingsFor(p)])),
     },
+    shelves: {
+      new: { mode: "automatico", productIds: [] },
+      room: { mode: "automatico", productIds: [] },
+    },
   };
 }
 export function movePageSection(draft: PageDraft, id: PageSectionId, delta: number): PageDraft {
@@ -167,7 +193,9 @@ export function validatePageDraft(draft: PageDraft, products: EditorProduct[]): 
     !draft.curation ||
     !Array.isArray(draft.curation.weeklyIds) ||
     !draft.curation.settings ||
-    typeof draft.curation.settings !== "object"
+    typeof draft.curation.settings !== "object" ||
+    !draft.shelves ||
+    typeof draft.shelves !== "object"
   )
     return ["Rascunho inválido."];
   if (
@@ -201,6 +229,27 @@ export function validatePageDraft(draft: PageDraft, products: EditorProduct[]): 
     const p = products.find((p) => p.id === id);
     if (!p || !isCurationProduct(p))
       errors.push("Há produto sem condições válidas para a vitrine.");
+  }
+  for (const shelf of ["new", "room"] as const) {
+    const selection = draft.shelves[shelf];
+    if (
+      !selection ||
+      !["automatico", "manual"].includes(selection.mode) ||
+      !Array.isArray(selection.productIds) ||
+      selection.productIds.length > 4 ||
+      selection.productIds.some((id) => typeof id !== "string" || !id.trim()) ||
+      new Set(selection.productIds).size !== selection.productIds.length
+    ) {
+      errors.push("Revise a seleção das vitrines: escolha até quatro produtos diferentes.");
+      continue;
+    }
+    if (selection.mode === "manual") {
+      for (const id of selection.productIds) {
+        const product = products.find((item) => item.id === id);
+        if (!product || !isCurationProduct(product))
+          errors.push("Há produto sem condições válidas para a vitrine.");
+      }
+    }
   }
   for (const [id, value] of Object.entries(draft.curation.settings)) {
     if (
@@ -242,10 +291,32 @@ export function normalizePageDraft(value: unknown, products: EditorProduct[]): P
       enabled: false,
     });
   }
-  const normalized = { ...draft, sections };
+  const normalized: PageDraft = {
+    ...draft,
+    sections: sections.map((section) =>
+      section.id === "discovery" ? { ...section, enabled: false } : section,
+    ),
+    shelves: {
+      new: normalizeShelfSelection(draft.shelves?.new),
+      room: normalizeShelfSelection(draft.shelves?.room),
+    },
+  };
   const errors = validatePageDraft(normalized, products);
   if (errors.length) throw new Error(errors.join(" "));
   return normalized;
+}
+
+function normalizeShelfSelection(value: unknown): ProductShelfSelection {
+  if (value == null) return { mode: "automatico", productIds: [] };
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    throw new Error("Revise a seleção das vitrines.");
+  const selection = value as Partial<ProductShelfSelection>;
+  if (
+    !["automatico", "manual"].includes(selection.mode as string) ||
+    !Array.isArray(selection.productIds)
+  )
+    throw new Error("Revise a seleção das vitrines.");
+  return { mode: selection.mode as ProductShelfMode, productIds: [...selection.productIds] };
 }
 export function restorePageDraft(raw: string, products: EditorProduct[]): PageDraft {
   const parsed = normalizePageDraft(JSON.parse(raw), products);
@@ -288,13 +359,18 @@ export function toStorefrontProducts(
     curadoriaDisponivel: true,
   }));
 }
-export function sectionProducts(id: PageSectionId, products: Produto[], date: Date): Produto[] {
+export function sectionProducts(
+  id: PageSectionId,
+  products: Produto[],
+  date: Date,
+  selection?: ProductShelfSelection,
+): Produto[] {
   const weekly = weeklyHomepageProducts(products),
     fresh = newHomepageProducts(products, date),
     room = roomHomepageProducts(products);
   if (id === "weekly") return weekly;
-  if (id === "new") return fresh;
-  if (id === "room") return room;
+  if (id === "new") return selectedShelfProducts(fresh, products, selection);
+  if (id === "room") return selectedShelfProducts(room, products, selection);
   if (id === "discovery")
     return discoverHomepageProducts(
       products,
@@ -302,4 +378,58 @@ export function sectionProducts(id: PageSectionId, products: Produto[], date: Da
       date,
     );
   return [];
+}
+
+function selectedShelfProducts(
+  automatic: Produto[],
+  products: Produto[],
+  selection?: ProductShelfSelection,
+): Produto[] {
+  if (selection?.mode !== "manual") return automatic;
+  const byId = new Map(products.map((product) => [product.id, product]));
+  const seen = new Set<string>();
+  return selection.productIds
+    .flatMap((id) => {
+      const product = byId.get(id);
+      if (!product || seen.has(id) || !isHomepageProduct(product)) return [];
+      seen.add(id);
+      return [product];
+    })
+    .slice(0, 4);
+}
+
+/** Allowlist projection for the storefront. Product details remain hydrated from the live catalog. */
+export function publishedHomePageFromDraft(
+  draft: PageDraft,
+  products: EditorProduct[],
+  revisionId: number,
+  appliedAt: string,
+): PublishedHomePage {
+  if (
+    !Number.isSafeInteger(revisionId) ||
+    revisionId < 1 ||
+    !Number.isFinite(Date.parse(appliedAt))
+  )
+    throw new Error("Revisão aplicada inválida.");
+  const errors = validatePageDraft(draft, products);
+  if (errors.length) throw new Error(errors.join(" "));
+  return {
+    version: 1,
+    revisionId,
+    appliedAt,
+    sections: draft.sections
+      .filter((section) => section.id !== "discovery")
+      .map(({ id, title, subtitle, type, enabled }) => ({ id, title, subtitle, type, enabled })),
+    shelves: {
+      weekly: { mode: "manual", productIds: [...draft.curation.weeklyIds] },
+      new: {
+        mode: draft.shelves.new.mode,
+        productIds: [...draft.shelves.new.productIds],
+      },
+      room: {
+        mode: draft.shelves.room.mode,
+        productIds: [...draft.shelves.room.productIds],
+      },
+    },
+  };
 }

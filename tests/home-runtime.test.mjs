@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { discoverHomepageProducts } from "../src/lib/home-curation.ts";
+import { discoverHomepageProducts, weeklyHomepageProducts } from "../src/lib/home-curation.ts";
 import { visibleHomeBanners } from "../src/lib/home-banner-state.ts";
 import * as config from "../src/lib/home-configuration.ts";
 const products = Array.from({ length: 40 }, (_, i) => ({
@@ -38,6 +38,18 @@ test("banner scheduling uses Brasilia and excludes inactive/expired pieces", () 
     ["ok"],
   );
 });
+test("weekly shelf never falls back to hard-coded featured slugs", () => {
+  const staticSlugProduct = {
+    id: "jamile",
+    slug: "sr-poltrona-jamile-veludo-suede-azul-marinho",
+    preco_novo: 399,
+    imagem_url: "https://example.com/jamile.jpg",
+    descricao: "",
+    cores: [],
+    vitrine_semana_ordem: null,
+  };
+  assert.deepEqual(weeklyHomepageProducts([staticSlugProduct]), []);
+});
 test("revision preview and applied home resolve the same current-day selection and saved curation", () => {
   assert.equal(typeof config.homeProductSelections, "function");
   const current = products.map((p, i) => ({
@@ -67,4 +79,20 @@ test("revision preview and applied home resolve the same current-day selection a
     ["2", "1"],
   );
   assert.ok(!preview.discovery.some((p) => ["1", "2", "yesterday"].includes(p.id)));
+});
+
+test("manual shelf IDs flow through the same home selection resolver in saved previews", () => {
+  const current = products
+    .slice(0, 6)
+    .map((p) => ({ ...p, categoria: "Sofás", created_at: "2020-01-01" }));
+  const saved = {
+    shelves: {
+      new: { mode: "manual", productIds: ["5", "2"] },
+      room: { mode: "automatico", productIds: [] },
+    },
+  };
+  assert.deepEqual(
+    config.homeProductSelections(current, saved).new.map((p) => p.id),
+    ["5", "2"],
+  );
 });
