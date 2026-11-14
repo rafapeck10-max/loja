@@ -1,8 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { Sparkles, Star } from "lucide-react";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
-import { ProductDiscountLine } from "@/components/ProductDiscountLine";
-import { CATEGORIES, categoryMatches, formatBRL, MAX_INSTALLMENTS } from "@/lib/constants";
+import { ProductPriceDisplay } from "@/components/ProductPriceDisplay";
+import { CATEGORIES, categoryMatches, MAX_INSTALLMENTS } from "@/lib/constants";
 import {
   getCatalogColors,
   getCatalogDimensionLabel,
@@ -104,18 +104,11 @@ export function ProductCard({
           {detail}
         </p>
         <div className="mobi-price-panel">
-          <ProductDiscountLine
+          <ProductPriceDisplay
             oldPrice={hasPricedVariations ? 0 : produto.preco_antigo}
-            currentPrice={price}
+            price={price}
+            payment={payment}
           />
-          <div className="mobi-price-label">À vista no Pix ou dinheiro</div>
-          <div className="mobi-price">{formatBRL(price)}</div>
-          <p className="mobi-installments">
-            <strong>
-              ou {payment.count}x de {formatBRL(payment.approximateInstallment)}
-            </strong>
-            <span>Total no cartão: {formatBRL(payment.total)}</span>
-          </p>
         </div>
         <Link
           to="/produto/$id"
