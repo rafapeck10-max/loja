@@ -24,11 +24,8 @@ export function ProductDiscountLine({
       role="group"
       aria-label={`De ${formatBRL(oldPrice)}, desconto de ${discountPercent}%`}
     >
-      <s>{formatBRL(oldPrice)}</s>
-      <span className="mobi-discount-badge">
-        <span aria-hidden="true">↓</span>
-        {discountPercent}% OFF
-      </span>
+      <s>De: {formatBRL(oldPrice)}</s>
+      <span className="mobi-discount-badge">-{discountPercent}% OFF</span>
     </div>
   );
 }

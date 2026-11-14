@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
-import { ProductDiscountLine } from "@/components/ProductDiscountLine";
+import { ProductPriceDisplay } from "@/components/ProductPriceDisplay";
 import {
   categoryMatches,
   formatBRL,
@@ -513,26 +513,11 @@ export function ProductDetailView({
           )}
 
           <div className="mobi-product-price-panel mt-4 rounded-xl border border-cacau/10 border-l-4 border-l-gold bg-white p-4 sm:p-5">
-            <ProductDiscountLine
+            <ProductPriceDisplay
               oldPrice={selectedOption ? 0 : product.preco_antigo}
-              currentPrice={currentPrice}
+              price={currentPrice}
+              payment={payment}
             />
-            <span className="text-sm font-medium text-text-light">À vista no Pix ou dinheiro</span>
-            <p className="m-0 text-3xl font-bold tracking-tight text-price-green sm:text-4xl">
-              {formatBRL(currentPrice)}
-            </p>
-            <div className="mobi-product-card-terms">
-              <div>
-                <span>No cartão</span>
-                <strong>
-                  {MAX_INSTALLMENTS}x de {formatBRL(payment.approximateInstallment)}
-                </strong>
-              </div>
-              <div>
-                <span>Total no cartão</span>
-                <b>{formatBRL(payment.total)}</b>
-              </div>
-            </div>
             <button
               type="button"
               onClick={() => setPaymentOpen(true)}
