@@ -95,6 +95,8 @@ export const changeAdminStudioWorkspace = createServerFn({ method: "POST" })
     const next = applyStudioWorkspaceCommand(current, command, {
       date: new Date().toISOString(),
       sourceValues,
+      products,
+      homePublicationEnabled: process.env.MOBI_REMOTE_HOME === "1",
     });
     const scope =
       command.action === "publishHomePage"
