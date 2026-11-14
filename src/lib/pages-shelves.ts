@@ -107,8 +107,17 @@ export interface PublishedHomePage {
     room: ProductShelfSelection;
   };
 }
+function sourceVersionHash(value: string) {
+  let hash = 0xcbf29ce484222325n;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= BigInt(value.charCodeAt(index));
+    hash = (hash * 0x100000001b3n) & 0xffffffffffffffffn;
+  }
+  return hash.toString(16).padStart(16, "0");
+}
+
 export function sourceVersion(products: EditorProduct[]) {
-  return JSON.stringify(
+  const fingerprint = JSON.stringify(
     [...products]
       .sort((a, b) => a.id.localeCompare(b.id))
       .map((p) => [
@@ -128,6 +137,7 @@ export function sourceVersion(products: EditorProduct[]) {
         p.vitrine_descoberta ?? true,
       ]),
   );
+  return sourceVersionHash(fingerprint);
 }
 export function initialPageDraft(products: EditorProduct[]): PageDraft {
   return {
