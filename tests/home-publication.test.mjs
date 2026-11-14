@@ -5,7 +5,10 @@ import {
   normalizeStudioWorkspaceCommand,
 } from "../src/lib/admin-studio-transport.ts";
 import { emptyWorkspace, parseWorkspace } from "../src/lib/admin-studio.ts";
-import { shouldReadPublishedHomePage } from "../src/lib/home-publication.ts";
+import {
+  isProductionDeployment,
+  shouldReadPublishedHomePage,
+} from "../src/lib/home-publication.ts";
 import {
   initialPageDraft,
   parsePublishedHomePage,
@@ -14,10 +17,17 @@ import {
 
 const date = "2026-11-14T15:00:00.000Z";
 
-test("home pública sem chave privilegiada usa fallback só em desenvolvimento", () => {
+test("home pública sem chave privilegiada exige configuração apenas em produção", () => {
   assert.equal(shouldReadPublishedHomePage(true, true), true);
   assert.equal(shouldReadPublishedHomePage(false, false), false);
   assert.throws(() => shouldReadPublishedHomePage(false, true), /não está configurada/i);
+});
+
+test("Vercel Preview without the privileged key is not treated as production", () => {
+  assert.equal(isProductionDeployment("preview", "production"), false);
+  assert.equal(isProductionDeployment("production", "production"), true);
+  assert.equal(isProductionDeployment(undefined, "production"), true);
+  assert.equal(isProductionDeployment(undefined, "development"), false);
 });
 const products = ["sofa-a", "sofa-b", "sala-c", "cozinha-d"].map((id) => ({
   id,

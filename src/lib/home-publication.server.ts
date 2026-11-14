@@ -1,5 +1,9 @@
 import { supabaseAdmin } from "../integrations/supabase/client.server";
-import { publishedHomePageFromWorkspace, shouldReadPublishedHomePage } from "./home-publication.ts";
+import {
+  isProductionDeployment,
+  publishedHomePageFromWorkspace,
+  shouldReadPublishedHomePage,
+} from "./home-publication.ts";
 
 type ReadRpc = (name: "mobi_studio_read") => PromiseLike<{
   data: unknown;
@@ -15,7 +19,8 @@ function isMissingWorkspaceSchema(error: { code?: string; message: string }) {
 
 export async function readPublishedHomePage() {
   const configured = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
-  if (!shouldReadPublishedHomePage(configured, process.env.NODE_ENV === "production")) return null;
+  const production = isProductionDeployment(process.env.VERCEL_ENV, process.env.NODE_ENV);
+  if (!shouldReadPublishedHomePage(configured, production)) return null;
   const rpc = supabaseAdmin.rpc.bind(supabaseAdmin) as unknown as ReadRpc;
   const { data, error } = await rpc("mobi_studio_read");
   if (error) {

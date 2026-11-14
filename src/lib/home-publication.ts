@@ -16,6 +16,10 @@ export function shouldReadPublishedHomePage(configured: boolean, production: boo
   return false;
 }
 
+export function isProductionDeployment(vercelEnv?: string, nodeEnv?: string) {
+  return vercelEnv ? vercelEnv === "production" : nodeEnv === "production";
+}
+
 /** Reduce the private RPC response to the allowlisted storefront configuration. */
 export function publishedHomePageFromWorkspace(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
