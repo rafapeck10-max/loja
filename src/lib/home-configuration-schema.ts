@@ -11,6 +11,15 @@ const settings = z
     descoberta: z.boolean(),
   })
   .strict();
+const shelfSelection = z
+  .object({
+    mode: z.enum(["automatico", "manual"]),
+    productIds: z
+      .array(id)
+      .max(4)
+      .refine((values) => new Set(values).size === values.length),
+  })
+  .strict();
 const section = z
   .object({
     id: z.string(),
@@ -171,6 +180,7 @@ export const homeConfigurationSchema = z
       .object({ weeklyIds: z.array(id).max(4), settings: z.record(id, settings) })
       .strict()
       .optional(),
+    shelves: z.object({ new: shelfSelection, room: shelfSelection }).strict().optional(),
     banners: z.array(banner).max(12),
     navigation: z
       .array(

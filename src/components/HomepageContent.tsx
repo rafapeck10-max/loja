@@ -16,6 +16,7 @@ import {
   type HomeBanner,
 } from "../lib/home-configuration";
 import type { Produto } from "../lib/products.functions";
+import type { PublishedHomePage } from "../lib/pages-shelves";
 import type { ProductBadge } from "./ProductCard";
 import { useHomeConfiguration } from "./HomeConfigurationContext";
 
@@ -27,6 +28,7 @@ export function HomepageContent({
   banners,
   children,
   roomImages,
+  publishedHomePage,
 }: {
   products: Produto[];
   sectionIds: HomeConfiguration["sectionIds"];
@@ -34,6 +36,7 @@ export function HomepageContent({
   banners?: HomeBanner[];
   children?: React.ReactNode;
   roomImages?: import("../lib/homepage-room-categories").HomepageRoomImage[];
+  publishedHomePage?: PublishedHomePage | null;
 }) {
   const context = useHomeConfiguration(),
     config = configuration ?? context;
@@ -68,12 +71,13 @@ export function HomepageContent({
     };
   }, [campaigns]);
   const blackFridayIds = activeBlackFridayProductIds(config, campaignClock);
+  const sections = publishedHomePage?.sections ?? config?.sections ?? defaultHomeSections();
   const badges: Record<string, ProductBadge> = {};
   ids.new.forEach((id) => (badges[id] = "new"));
   ids.weekly.forEach((id) => (badges[id] = "week"));
   return (
     <HomepageSectionOrder
-      sections={config?.sections ?? defaultHomeSections()}
+      sections={sections}
       renderSection={(section) => {
         if (section.id === "intro")
           return (

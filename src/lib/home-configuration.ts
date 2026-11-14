@@ -7,6 +7,7 @@ import {
   toStorefrontProducts,
   type PageDraft,
   type PageSection,
+  type PublishedHomePage,
 } from "./pages-shelves.ts";
 import { validateBannerData, type BannerData, type BannerDraft } from "./banner-drafts.ts";
 import {
@@ -18,6 +19,8 @@ import {
   type ContentData,
 } from "./operational-config.ts";
 import { isCurationProduct, type EditorProduct, type CurationDraft } from "./homepage-curation.ts";
+import { isHomepageProduct } from "./home-curation.ts";
+import type { ProductShelfSelection } from "./pages-shelves.ts";
 import {
   campaignConflicts,
   campaignState,
@@ -58,6 +61,10 @@ export interface HomeConfiguration {
   sectionIds: Record<"weekly" | "discovery" | "new" | "room", string[]>;
   blackFridayCampaigns?: HomeCampaignPreview[];
   curation?: CurationDraft;
+  shelves?: {
+    new: ProductShelfSelection;
+    room: ProductShelfSelection;
+  };
   banners: HomeBanner[];
   navigation: {
     id: string;
@@ -258,6 +265,16 @@ export function homeConfigurationFromDraft(
           .map(([id, s]) => [id, { novidade: s.novidade, sala: s.sala, descoberta: s.descoberta }]),
       ),
     },
+    shelves: {
+      new: {
+        mode: d.pages.shelves.new.mode,
+        productIds: [...d.pages.shelves.new.productIds],
+      },
+      room: {
+        mode: d.pages.shelves.room.mode,
+        productIds: [...d.pages.shelves.room.productIds],
+      },
+    },
     sections: d.pages.sections.map(({ id, title, subtitle, type, enabled }) => ({
       id,
       title,
@@ -268,7 +285,12 @@ export function homeConfigurationFromDraft(
     sectionIds: Object.fromEntries(
       ["weekly", "discovery", "new", "room"].map((id) => [
         id,
-        sectionProducts(id as PageSection["id"], publicProducts, now).map((p) => p.id),
+        sectionProducts(
+          id as PageSection["id"],
+          publicProducts,
+          now,
+          id === "new" ? d.pages.shelves.new : id === "room" ? d.pages.shelves.room : undefined,
+        ).map((p) => p.id),
       ]),
     ) as HomeConfiguration["sectionIds"],
     ...(blackFridayCampaigns.length ? { blackFridayCampaigns } : {}),
@@ -341,6 +363,18 @@ export function reopenHomeDraft(
             settings: { ...base.curation.settings, ...clone(config.curation.settings) },
           }
         : base.curation,
+      shelves: config.shelves
+        ? {
+            new: {
+              mode: config.shelves.new.mode,
+              productIds: [...config.shelves.new.productIds],
+            },
+            room: {
+              mode: config.shelves.room.mode,
+              productIds: [...config.shelves.room.productIds],
+            },
+          }
+        : base.shelves,
     },
     banners: {
       banners: config.banners.map((b) => ({ ...clone(b), name: b.title || b.id, updated_at: "" })),
@@ -385,15 +419,40 @@ export function applyHomeCuration(products: Produto[], curation?: CurationDraft)
 }
 export function homeProductSelections(
   products: Produto[],
-  config?: Pick<HomeConfiguration, "curation"> | null,
+  config?: Pick<HomeConfiguration, "curation" | "shelves"> | null,
   date = new Date(),
 ) {
   const current = applyHomeCuration(products, config?.curation);
   return {
     weekly: sectionProducts("weekly", current, date),
     discovery: sectionProducts("discovery", current, date),
-    new: sectionProducts("new", current, date),
-    room: sectionProducts("room", current, date),
+    new: sectionProducts("new", current, date, config?.shelves?.new),
+    room: sectionProducts("room", current, date, config?.shelves?.room),
+  };
+}
+
+/** Resolve only an applied PM-02 selection against the current public catalog rows. */
+export function publishedHomeProductSelections(
+  products: Produto[],
+  published: PublishedHomePage,
+  date = new Date(),
+) {
+  const eligible = products.filter(isHomepageProduct);
+  const byId = new Map(eligible.map((product) => [product.id, product]));
+  const orderedIds = (ids: string[]) => {
+    const seen = new Set<string>();
+    return ids.slice(0, 4).flatMap((id) => {
+      const product = byId.get(id);
+      if (!product || seen.has(id)) return [];
+      seen.add(id);
+      return [product];
+    });
+  };
+  return {
+    weekly: orderedIds(published.shelves.weekly.productIds),
+    discovery: [],
+    new: sectionProducts("new", eligible, date, published.shelves.new),
+    room: sectionProducts("room", eligible, date, published.shelves.room),
   };
 }
 /** Exact comparison stored privately, never included in the public DTO. */

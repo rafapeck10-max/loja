@@ -1,6 +1,5 @@
 import type { Produto } from "@/lib/products.functions";
 import { categoryMatches } from "./constants.ts";
-import { featuredProducts } from "./featured-products.ts";
 
 const UNAVAILABLE = /indispon[ií]vel|esgotad[oa]|sem estoque|n[aã]o temos dispon[ií]vel/i;
 const SHELF_SIZE = 4;
@@ -24,8 +23,7 @@ export function weeklyHomepageProducts(products: Produto[]): Produto[] {
     )
     .slice(0, SHELF_SIZE);
 
-  if (selected.length || products.some((product) => product.curadoriaDisponivel)) return selected;
-  return featuredProducts(available).slice(0, SHELF_SIZE);
+  return selected;
 }
 
 export function newHomepageProducts(products: Produto[], today = new Date()): Produto[] {

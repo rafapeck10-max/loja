@@ -323,6 +323,7 @@ function HomepageIndex() {
     <HomepageContent
       products={products ?? []}
       sectionIds={data?.sectionIds ?? { weekly: [], discovery: [], new: [], room: [] }}
+      publishedHomePage={data?.publishedHomePage}
       roomImages={data?.roomImages}
       configuration={configuration}
       banners={initialBannerData(banners.data).banners}

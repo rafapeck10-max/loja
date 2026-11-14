@@ -6,6 +6,7 @@ import {
   type StudioWorkspaceSnapshot,
   type StudioWorkspaceTransport,
 } from "./admin-studio-transport.ts";
+import type { EditorProduct } from "./homepage-curation.ts";
 
 /** Private storage only. Implement compareAndSwap as one database transaction. */
 export interface StudioWorkspaceRepository {
@@ -16,7 +17,12 @@ export interface StudioWorkspaceRepository {
 /** A successful read followed by an unconditional update is not concurrency protection. */
 export function createStudioRepositoryTransport(
   repository: StudioWorkspaceRepository,
-  options: { now?: () => string; sourceValues?: Partial<Record<StudioScope, unknown>> } = {},
+  options: {
+    now?: () => string;
+    sourceValues?: Partial<Record<StudioScope, unknown>>;
+    products?: EditorProduct[];
+    homePublicationEnabled?: boolean;
+  } = {},
 ): StudioWorkspaceTransport {
   const read = async (): Promise<StudioWorkspaceSnapshot> =>
     validatedSnapshot(
@@ -36,6 +42,8 @@ export function createStudioRepositoryTransport(
       const next = applyStudioWorkspaceCommand(current, command, {
         date: options.now?.() ?? new Date().toISOString(),
         sourceValues: options.sourceValues,
+        products: options.products,
+        homePublicationEnabled: options.homePublicationEnabled,
       });
       if (!(await repository.compareAndSwap(current.serverVersion, next)))
         throw new Error("Conflito: uma versão remota mais recente existe. Reabra antes de salvar.");

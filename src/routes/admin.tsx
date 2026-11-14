@@ -759,6 +759,7 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
       )}
       <AdminStudio
         workspaceTransport={workspaceTransport}
+        homePublicationEnabled={storageMode.data?.homePublicationEnabled ?? false}
         homeTransport={homeTransport}
         area={workspaceTab}
         products={produtos}

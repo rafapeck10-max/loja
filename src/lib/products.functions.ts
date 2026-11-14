@@ -115,6 +115,7 @@ export interface HomepageProducts {
   roomImages: HomepageRoomImage[];
   configuration?: import("./home-configuration").HomeConfiguration | null;
   revisionId?: number | null;
+  publishedHomePage?: import("./pages-shelves").PublishedHomePage | null;
   sectionIds: {
     discovery: string[];
     weekly: string[];
@@ -261,13 +262,23 @@ async function readPublicHomepageProducts(): Promise<HomepageProducts> {
   }
 
   const { readLocalHomeConfiguration } = await import("./home-local-store.server");
-  const { applyHomeCuration, blackFridayProductIdsToLoad, homeProductSelections } =
-    await import("./home-configuration");
-  const local = await readLocalHomeConfiguration();
+  const { readPublishedHomePage } = await import("./home-publication.server");
+  const {
+    applyHomeCuration,
+    blackFridayProductIdsToLoad,
+    homeProductSelections,
+    publishedHomeProductSelections,
+  } = await import("./home-configuration");
+  const [local, publishedHomePage] = await Promise.all([
+    readLocalHomeConfiguration(),
+    readPublishedHomePage(),
+  ]);
   const candidates = candidateRows.map((row) => mapHomepageCandidate(row, curadoriaDisponivel));
   const roomImages = selectHomepageRoomImages(candidates);
   const now = new Date();
-  const selections = homeProductSelections(candidates, local?.config, now);
+  const selections = publishedHomePage
+    ? publishedHomeProductSelections(candidates, publishedHomePage, now)
+    : homeProductSelections(candidates, local?.config, now);
   const blackFridayIds = local?.config.sections.some(
     (section) => section.id === "blackFriday" && section.enabled,
   )
@@ -277,10 +288,10 @@ async function readPublicHomepageProducts(): Promise<HomepageProducts> {
     ...new Set([...rehydrateHomepageSections(selections, []).productIds, ...blackFridayIds]),
   ];
   const detailedRows = await readHomepageProductRows(selectedIds, curadoriaDisponivel);
-  const detailedProducts = applyHomeCuration(
-    detailedRows.map((row) => mapProduto(row, curadoriaDisponivel)),
-    local?.config.curation,
-  );
+  const currentProducts = detailedRows.map((row) => mapProduto(row, curadoriaDisponivel));
+  const detailedProducts = publishedHomePage
+    ? currentProducts
+    : applyHomeCuration(currentProducts, local?.config.curation);
   const hydrated = rehydrateHomepageSections(selections, detailedProducts);
 
   return {
@@ -289,6 +300,7 @@ async function readPublicHomepageProducts(): Promise<HomepageProducts> {
     sectionIds: hydrated.sectionIds,
     configuration: local?.config ?? null,
     revisionId: local?.revisionId ?? null,
+    publishedHomePage,
   };
 }
 
