@@ -108,6 +108,7 @@ export function ProductCard({
             oldPrice={hasPricedVariations ? 0 : produto.preco_antigo}
             price={price}
             payment={payment}
+            layout="card"
           />
         </div>
         <Link

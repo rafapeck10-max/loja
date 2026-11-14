@@ -63,6 +63,53 @@
   white-space: nowrap;
   font-weight: 750;
 }
+.mobi-price-display--card .mobi-discount-line {
+  margin-bottom: 5px;
+}
+.mobi-product .mobi-price-display--card .mobi-price-display-main {
+  gap: 5px;
+}
+.mobi-product .mobi-price-display--card .mobi-price-display-value {
+  font-size: clamp(21px, 2vw, 27px);
+  letter-spacing: -0.7px;
+}
+.mobi-product .mobi-price-display--card .mobi-price-display-method {
+  color: #526250;
+  font-size: 11px;
+  font-weight: 600;
+}
+.mobi-price-display-saving-note {
+  width: fit-content;
+  margin: 4px 0 0;
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: #eaf4ed;
+  color: #087045;
+  font-size: 10px;
+  font-weight: 650;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.mobi-price-display--card .mobi-price-display-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  column-gap: 8px;
+  row-gap: 2px;
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.35;
+}
+.mobi-price-display--card .mobi-price-display-card > span {
+  white-space: nowrap;
+}
+.mobi-price-display--card .mobi-price-display-card-total {
+  color: #706b63;
+}
+.mobi-price-display--card .mobi-price-display-card-total strong {
+  color: #26382d;
+}
 .mobi-product-price-panel .mobi-price-display-value {
   font-size: clamp(30px, 3vw, 40px);
 }
