@@ -23,6 +23,7 @@ export function BannerSlide({
     <section
       className="mobi-hero mobi-hero-art"
       data-has-mobile-art={!!mobile}
+      data-legacy-photo={responsiveMedia?.showText ?? true}
       data-preview-format={previewViewport}
       aria-label={
         previewViewport
