@@ -31,7 +31,7 @@ const normalize = (value: string) =>
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 
-const dimensionPattern = /(\d{1,4}(?:[.,]\d{1,2})?)\s*(mm|cm|m)\b/gi;
+const dimensionPattern = /(?<![\d.,])(\d{1,4}(?:[.,]\d{1,3})?)\s*(mm|cm|m)\b/gi;
 const stopWords = new Set([
   "a",
   "as",
@@ -113,6 +113,21 @@ const knownColors = [
   { label: "Areia", terms: ["areia"] },
   { label: "Tabaco", terms: ["tabaco"] },
   { label: "Natural", terms: ["natural"] },
+  { label: "Cinamomo", terms: ["cinamomo"] },
+  { label: "Freijó", terms: ["freijo"] },
+  { label: "Nature", terms: ["nature"] },
+  { label: "Nogueira", terms: ["nogueira"] },
+  { label: "Mel", terms: ["mel"] },
+  { label: "Imbuia", terms: ["imbuia"] },
+  { label: "Cedro", terms: ["cedro"] },
+  { label: "Avelã", terms: ["avela"] },
+  { label: "Fendi", terms: ["fendi"] },
+  { label: "Champagne", terms: ["champagne", "champanhe"] },
+  { label: "Dourado", terms: ["dourado", "dourada"] },
+  { label: "Castanho", terms: ["castanho"] },
+  { label: "Demolição", terms: ["demolicao"] },
+  { label: "Rosê", terms: ["rose"] },
+  { label: "Vinho", terms: ["vinho", "marsala", "bordo"] },
   { label: "Bege", terms: ["bege"] },
   { label: "Cinza", terms: ["cinza"] },
   { label: "Branco", terms: ["branco", "branca"] },
@@ -124,6 +139,47 @@ const knownColors = [
   { label: "Vermelho", terms: ["vermelho", "vermelha"] },
   { label: "Amarelo", terms: ["amarelo", "amarela"] },
 ] as const;
+
+const noiseColorWords = new Set([
+  "available",
+  "unavailable",
+  "disponivel",
+  "indisponivel",
+  "estoque",
+  "esgotado",
+  "padrao",
+  "unico",
+  "unica",
+  "sem cor",
+  "sob consulta",
+  "casal",
+  "solteiro",
+  "queen",
+  "king",
+  "viuva",
+  "infantil",
+]);
+
+export function isNoiseColorToken(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed || /\d/.test(trimmed) || trimmed.length > 36) return true;
+  const normalized = normalize(trimmed);
+  if (!normalized || noiseColorWords.has(normalized)) return true;
+  return normalized.split(" ").some((word) => noiseColorWords.has(word));
+}
+
+export function cleanCatalogMeasurementText(value: string | null | undefined) {
+  let cleaned = (value ?? "").trim();
+  if (!cleaned) return "";
+  const trailingLabel =
+    /[\s;,.·/|:-]*\b(?:peso(?:\s+suportado|\s+bruto|\s+l[ií]quido)?|medidas?|dimens[oõ]es)\s*[:=-]?\s*$/i;
+  let previous = "";
+  while (cleaned !== previous) {
+    previous = cleaned;
+    cleaned = cleaned.replace(trailingLabel, "").replace(/^[\s;,.·/|:-]+|[\s;,.·/|:-]+$/g, "");
+  }
+  return /\d/.test(cleaned) ? cleaned : "";
+}
 
 const broaderColors: Record<string, string> = {
   "bege claro": "Bege",
@@ -232,7 +288,7 @@ function formatDimension(value: string, unit: string) {
 
 function getLabeledDimensions(value: string) {
   const pattern =
-    /\b(largura|altura|profundidade|comprimento|di[aâ]metro)\s*[:=-]?\s*(\d{1,4}(?:[.,]\d{1,2})?)\s*(mm|cm|m)\b/gi;
+    /\b(largura|altura|profundidade(?:\s+(?:fechad[oa]|abert[oa]))?|comprimento|di[aâ]metro)\s*(?:\([^)]*\))?\s*[:=-]?\s*(?<![\d.,])(\d{1,4}(?:[.,]\d{1,3})?)\s*(mm|cm|m)\b/gi;
   return [...value.matchAll(pattern)].map((match) => {
     const label = match[1][0].toUpperCase() + match[1].slice(1).toLowerCase();
     return {
@@ -293,9 +349,13 @@ export function getCatalogColors(product: SearchProduct) {
   const text = values.join(" ");
   const known = knownLabels(text, knownColors);
   const normalizedKnown = new Set(known.map(normalize));
-  const all = [
-    ...new Set([...known, ...values.filter((value) => !normalizedKnown.has(normalize(value)))]),
-  ];
+  const extraValues = values.filter((value) => {
+    if (normalizedKnown.has(normalize(value))) return false;
+    if (knownLabels(value, knownColors).length > 0) return false;
+    if (isNoiseColorToken(value) || /[/\\|;,]/.test(value)) return false;
+    return normalize(value).split(" ").length <= 2;
+  });
+  const all = [...new Set([...known, ...extraValues])];
   return all.filter((color) => {
     const normalized = normalize(color);
     return !all.some(
@@ -326,7 +386,15 @@ export function getCatalogFeatures(product: SearchProduct) {
 export function getCatalogDimensionLabel(product: SearchProduct) {
   const explicitDimensions = structuredDimensionLabels(product);
   if (explicitDimensions.length) return explicitDimensions.join(" · ");
-  if (product.medidas?.trim()) return product.medidas.trim();
+  const parsedMedidas = productMeasurements(product.medidas ?? null);
+  if (parsedMedidas.length) {
+    return parsedMedidas
+      .slice(0, 3)
+      .map((item) => `${item.label}: ${item.value}`)
+      .join(" · ");
+  }
+  const cleanedMedidas = cleanCatalogMeasurementText(product.medidas);
+  if (cleanedMedidas) return cleanedMedidas;
   const sources = getDimensionSources(product).filter((value) => value !== product.medidas);
   const labeled = sources.flatMap(getLabeledDimensions);
   const uniqueLabeled = labeled.filter(
@@ -404,7 +472,29 @@ export function matchesCatalogMaterials(product: SearchProduct, material: string
 }
 
 export function matchesCatalogColors(product: SearchProduct, color: string) {
-  return color === "all" || getCatalogColorFilterValues(product).includes(color);
+  if (color === "all") return true;
+  if (!getCatalogColorFilterValues(product).includes(color)) return false;
+  if (explicitValues(product.cores).length > 1) {
+    const titleKnown = knownLabels(product.nome, knownColors);
+    if (titleKnown.length > 0) {
+      const expandWithBroader = (labels: string[]) => {
+        const set = new Set(labels);
+        for (const label of labels) {
+          const broader = broaderColors[normalize(label)];
+          if (broader) set.add(broader);
+        }
+        return set;
+      };
+      const titleAllowed = expandWithBroader(titleKnown);
+      const variationText = (product.variacoes_preco ?? [])
+        .map((variation) => variation.name)
+        .filter(Boolean)
+        .join(" ");
+      const variationAllowed = expandWithBroader(knownLabels(variationText, knownColors));
+      if (!titleAllowed.has(color) && !variationAllowed.has(color)) return false;
+    }
+  }
+  return true;
 }
 
 export function matchesCatalogFeatures(product: SearchProduct, feature: string) {

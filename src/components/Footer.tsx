@@ -37,7 +37,7 @@ export function Footer() {
               <li>
                 <Link
                   to="/ajuda"
-                  className="inline-flex min-h-10 items-center text-xs text-sand underline underline-offset-4"
+                  className="inline-flex min-h-11 items-center text-xs text-sand underline underline-offset-4"
                 >
                   Central de ajuda
                 </Link>
@@ -47,7 +47,7 @@ export function Footer() {
                   <Link
                     to="/ajuda/$slug"
                     params={{ slug: page.slug }}
-                    className="inline-flex min-h-10 items-center text-xs text-sand underline underline-offset-4"
+                    className="inline-flex min-h-11 items-center text-xs text-sand underline underline-offset-4"
                   >
                     {page.title}
                   </Link>
@@ -57,7 +57,7 @@ export function Footer() {
                 <li>
                   <Link
                     to="/inspiracao"
-                    className="inline-flex min-h-10 items-center text-xs text-sand underline underline-offset-4"
+                    className="inline-flex min-h-11 items-center text-xs text-sand underline underline-offset-4"
                   >
                     Inspiração
                   </Link>

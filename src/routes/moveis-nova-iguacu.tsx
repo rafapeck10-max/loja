@@ -57,12 +57,16 @@ const departments = [
 
 function LocalPage() {
   return (
-    <main className="mobi-wrap py-8 sm:py-12">
-      <nav aria-label="Caminho da página" className="mb-6 text-sm text-text-light">
-        <Link to="/" search={{}} className="underline">
+    <div className="mobi-wrap py-8 sm:py-12">
+      <nav
+        aria-label="Caminho da página"
+        className="mb-6 flex flex-wrap items-center gap-2 text-sm text-text-light"
+      >
+        <Link to="/" search={{}} className="inline-flex min-h-11 items-center underline">
           Início
-        </Link>{" "}
-        / Móveis em Nova Iguaçu
+        </Link>
+        <span aria-hidden="true">/</span>
+        <span>Móveis em Nova Iguaçu</span>
       </nav>
       <h1 className="text-3xl text-deep-green sm:text-4xl">
         Móveis em Nova Iguaçu para cada ambiente da casa
@@ -170,6 +174,6 @@ function LocalPage() {
           Explorar todo o catálogo
         </Link>
       </section>
-    </main>
+    </div>
   );
 }

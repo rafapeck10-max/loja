@@ -1,6 +1,6 @@
 import { useLayoutEffect } from "react";
 import { createFileRoute, Link, notFound, useNavigate, useRouter } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 import { produtosQueryOptions } from "@/lib/products.functions";
 import { StoreCatalog } from "@/components/StoreCatalog";
@@ -12,11 +12,11 @@ import { CATALOG_BATCH_SIZE } from "@/lib/catalog-page-state";
 import {
   catalogUrlSearch,
   parseCatalogUrlState,
-  type CatalogUrlState,
+  type CatalogSearchParams,
 } from "@/lib/catalog-url-state";
 
 export const Route = createFileRoute("/categoria/$slug")({
-  validateSearch: (search: Record<string, unknown>): Partial<CatalogUrlState> => {
+  validateSearch: (search: Record<string, unknown>): CatalogSearchParams => {
     const state = parseCatalogUrlState(search);
     return catalogUrlSearch(state, state.page);
   },
@@ -24,6 +24,7 @@ export const Route = createFileRoute("/categoria/$slug")({
     if (!getCategory(params.slug)) throw notFound();
     return context.queryClient.ensureQueryData(produtosQueryOptions());
   },
+  pendingComponent: CategoriaLoadingState,
   head: ({ params, match, loaderData }) => {
     const cat = getCategory(params.slug);
     const {
@@ -99,10 +100,42 @@ function CategoriaError({ reset }: { error: unknown; reset: () => void }) {
   );
 }
 
+function CategoriaLoadingState() {
+  return (
+    <section className="mobi-wrap py-8" role="status" aria-busy="true" aria-live="polite">
+      <div className="mb-6 space-y-2">
+        <div className="h-4 w-36 animate-pulse rounded bg-[#eee8de]" />
+        <div className="h-9 w-56 animate-pulse rounded bg-[#eee8de]" />
+      </div>
+      <div className="mobi-grid" aria-hidden="true">
+        {Array.from({ length: 4 }, (_, index) => (
+          <div
+            key={index}
+            className="mobi-product animate-pulse overflow-hidden rounded-2xl border border-cacau/10 bg-white"
+          >
+            <div className="aspect-[4/3] bg-[#eee8de]" />
+            <div className="space-y-3 p-4">
+              <div className="h-3 w-1/2 rounded bg-[#eee8de]" />
+              <div className="h-4 w-4/5 rounded bg-[#eee8de]" />
+              <div className="h-3 w-2/3 rounded bg-[#eee8de]" />
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="sr-only">Carregando categoria.</p>
+    </section>
+  );
+}
+
 function CategoriaPage() {
   const { slug } = Route.useParams();
   const navigate = useNavigate({ from: "/categoria/$slug" });
-  const { data: produtos } = useSuspenseQuery(produtosQueryOptions());
+  const loaderProducts = Route.useLoaderData();
+  const { data: produtos = loaderProducts } = useQuery({
+    ...produtosQueryOptions(),
+    initialData: loaderProducts,
+    staleTime: 30_000,
+  });
   const {
     page,
     sort,

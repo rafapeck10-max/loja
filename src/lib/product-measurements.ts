@@ -24,7 +24,7 @@ export function productMeasurements(value: string | null): ProductMeasure[] {
   };
 
   for (const match of value.matchAll(
-    /\b(largura|comprimento)\s*(?:\([^)]*\))?\s*[:-]?\s*(\d+(?:[.,]\d+)?)\s*(mm|cm|m)\b/gi,
+    /\b(largura|comprimento)\s*(?:\([^)]*\))?\s*[:-]?\s*(?<![\d.,])(\d+(?:[.,]\d{1,3})?)\s*(mm|cm|m)\b/gi,
   )) {
     add(
       match[1].toLowerCase() === "largura" ? "Largura" : "Comprimento",
@@ -34,7 +34,7 @@ export function productMeasurements(value: string | null): ProductMeasure[] {
     );
   }
   for (const match of value.matchAll(
-    /\baltura\s*(?:\([^)]*\))?\s*[:-]?\s*(\d+(?:[.,]\d+)?)\s*(mm|cm|m)\b/gi,
+    /\baltura\s*(?:\([^)]*\))?\s*[:-]?\s*(?<![\d.,])(\d+(?:[.,]\d{1,3})?)\s*(mm|cm|m)\b/gi,
   )) {
     add("Altura", match[1], match[2], "vertical");
   }
@@ -45,15 +45,15 @@ export function productMeasurements(value: string | null): ProductMeasure[] {
   for (const [, depth] of depths) {
     // A period can be a decimal separator. Qualifiers may precede or follow the value.
     const opened =
-      depth.match(/(\d+(?:[.,]\d+)?)\s*(mm|cm|m)\b\s*\(?\s*abert[oa]\b/i) ??
-      depth.match(/\babert[oa]\b[^\d]{0,8}(\d+(?:[.,]\d+)?)\s*(mm|cm|m)\b/i);
+      depth.match(/(?<![\d.,])(\d+(?:[.,]\d{1,3})?)\s*(mm|cm|m)\b\s*\(?\s*abert[oa]\b/i) ??
+      depth.match(/\babert[oa]\b[^\d]{0,8}(?<![\d.,])(\d+(?:[.,]\d{1,3})?)\s*(mm|cm|m)\b/i);
     const closed =
-      depth.match(/(\d+(?:[.,]\d+)?)\s*(mm|cm|m)\b\s*\(?\s*fechad[oa]\b/i) ??
-      depth.match(/\bfechad[oa]\b[^\d]{0,8}(\d+(?:[.,]\d+)?)\s*(mm|cm|m)\b/i);
+      depth.match(/(?<![\d.,])(\d+(?:[.,]\d{1,3})?)\s*(mm|cm|m)\b\s*\(?\s*fechad[oa]\b/i) ??
+      depth.match(/\bfechad[oa]\b[^\d]{0,8}(?<![\d.,])(\d+(?:[.,]\d{1,3})?)\s*(mm|cm|m)\b/i);
     if (closed) add("Profundidade fechada", closed[1], closed[2], "ruler");
     if (opened) add("Profundidade aberta", opened[1], opened[2], "ruler");
     if (!closed && !opened) {
-      for (const single of depth.matchAll(/(\d+(?:[.,]\d+)?)\s*(mm|cm|m)\b/gi)) {
+      for (const single of depth.matchAll(/(?<![\d.,])(\d+(?:[.,]\d{1,3})?)\s*(mm|cm|m)\b/gi)) {
         add("Profundidade", single[1], single[2], "ruler");
       }
     }

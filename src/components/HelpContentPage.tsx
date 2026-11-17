@@ -17,14 +17,19 @@ export function HelpContentPage({ page }: { page: ContentPage }) {
 
   return (
     <div className="min-h-screen bg-[#fbfaf7] text-[#26392c]">
-      <div className="border-b border-[#e9e3d8] bg-white">
+      <div className="border-b border-gold/30 bg-deep-green text-sand">
         <header className="mx-auto flex min-h-[76px] max-w-6xl items-center justify-between gap-4 px-4 sm:px-8">
-          <Link to="/" search={{}} aria-label="Mobi — voltar ao início">
+          <Link
+            to="/"
+            search={{}}
+            aria-label="Mobi — voltar ao início"
+            className="inline-flex min-h-11 items-center"
+          >
             <MobiliLogo className="h-11 w-[106px]" />
           </Link>
           <Link
             to="/ajuda"
-            className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[#304a32] underline underline-offset-4"
+            className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-sand underline underline-offset-4 transition-colors hover:text-gold"
           >
             <ArrowLeft size={16} aria-hidden="true" /> Central de ajuda
           </Link>
@@ -70,15 +75,26 @@ export function HelpContentPage({ page }: { page: ContentPage }) {
         </aside>
 
         <article className="order-2 min-w-0 lg:order-1">
-          <nav className="mb-6 text-sm text-[#687268]" aria-label="Caminho da página">
-            <Link to="/" search={{}} className="underline underline-offset-4">
+          <nav
+            className="mb-6 flex flex-wrap items-center gap-2 text-sm text-[#687268]"
+            aria-label="Caminho da página"
+          >
+            <Link
+              to="/"
+              search={{}}
+              className="inline-flex min-h-11 items-center underline underline-offset-4"
+            >
               Início
-            </Link>{" "}
-            /{" "}
-            <Link to="/ajuda" className="underline underline-offset-4">
+            </Link>
+            <span aria-hidden="true">/</span>
+            <Link
+              to="/ajuda"
+              className="inline-flex min-h-11 items-center underline underline-offset-4"
+            >
               Ajuda
-            </Link>{" "}
-            / <span aria-current="page">{page.title}</span>
+            </Link>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">{page.title}</span>
           </nav>
           <header className="max-w-3xl">
             <span className="mobi-eyebrow">INFORMAÇÕES DA MOBI</span>

@@ -313,7 +313,6 @@ async function readPublicRows(
     process.env.SUPABASE_PUBLISHABLE_KEY!,
     { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
   );
-  const products: BasicPublicProductRow[] = [];
   const batchSize = 500;
   const selectColumns = withCuration
     ? withBundles
@@ -322,10 +321,10 @@ async function readPublicRows(
     : withBundles
       ? PRODUCT_SELECT_WITH_BUNDLES
       : PRODUCT_SELECT_BASE;
-  for (let offset = 0; ; offset += batchSize) {
-    const { data, error } = await supabase
+  const fetchRange = async (offset: number, withCount = false) => {
+    const { data, error, count } = await supabase
       .from("produtos")
-      .select(selectColumns)
+      .select(selectColumns, withCount ? { count: "exact" } : undefined)
       .gt("preco_atacado", 0)
       .gt("preco_atual", 0)
       .neq("url_imagem", "")
@@ -333,10 +332,29 @@ async function readPublicRows(
       .order("id", { ascending: true })
       .range(offset, offset + batchSize - 1);
     if (error) throw Object.assign(new Error(error.message), { code: error.code });
+    const rows = ((data ?? []) as unknown as BasicPublicProductRow[]).filter((row) =>
+      row.url_imagem?.trim(),
+    );
+    return { rows, rawLength: data?.length ?? 0, count };
+  };
 
-    const batch = (data ?? []) as unknown as BasicPublicProductRow[];
-    products.push(...batch.filter((row) => row.url_imagem?.trim()));
-    if ((data?.length ?? 0) < batchSize) break;
+  const first = await fetchRange(0, true);
+  if (first.rawLength < batchSize) return first.rows;
+
+  if (typeof first.count === "number" && first.count > batchSize) {
+    const offsets: number[] = [];
+    for (let offset = batchSize; offset < first.count; offset += batchSize) {
+      offsets.push(offset);
+    }
+    const rest = await Promise.all(offsets.map((offset) => fetchRange(offset)));
+    return [...first.rows, ...rest.flatMap((page) => page.rows)];
+  }
+
+  const products = [...first.rows];
+  for (let offset = batchSize; ; offset += batchSize) {
+    const next = await fetchRange(offset);
+    products.push(...next.rows);
+    if (next.rawLength < batchSize) break;
   }
   return products;
 }

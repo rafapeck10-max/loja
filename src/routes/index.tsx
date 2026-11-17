@@ -5,6 +5,7 @@ import {
   homepageProductsQueryOptions,
   produtosQueryOptions,
   type HomepageProducts,
+  type Produto,
 } from "@/lib/products.functions";
 import type { ProductBadge } from "@/components/ProductCard";
 import { HomepageContent } from "../components/HomepageContent";
@@ -21,10 +22,10 @@ import {
   parseCatalogUrlState,
   DEFAULT_CATALOG_FILTERS,
   type CatalogFilterState,
-  type CatalogUrlState,
+  type CatalogSearchParams,
 } from "@/lib/catalog-url-state";
 
-type IndexSearch = Partial<CatalogUrlState> & {
+type IndexSearch = CatalogSearchParams & {
   q?: string;
   ofertas?: boolean;
   all?: boolean;
@@ -46,9 +47,17 @@ export const Route = createFileRoute("/")({
       "depthClosedMaxCm",
       "depthOpenMaxCm",
     ].some((key) => search[key] !== undefined);
+    const q = typeof search.q === "string" && search.q ? search.q : undefined;
+    const defaultSort = q?.trim() ? "relevant" : "recommended";
+    const serialized = catalogUrlSearch(
+      state,
+      search.page === undefined ? 1 : parsePage(search.page),
+      defaultSort,
+    );
     return {
+      ...serialized,
       page: search.page === undefined ? undefined : parsePage(search.page),
-      q: typeof search.q === "string" && search.q ? search.q : undefined,
+      q,
       ofertas: search.ofertas === true || search.ofertas === "true" ? true : undefined,
       all:
         search.all === true ||
@@ -56,17 +65,7 @@ export const Route = createFileRoute("/")({
         (hasListingParams && !search.q && !search.ofertas)
           ? true
           : undefined,
-      sort: search.sort === undefined ? undefined : state.sort,
-      minPrice: search.minPrice === undefined ? undefined : state.minPrice,
-      maxPrice: search.maxPrice === undefined ? undefined : state.maxPrice,
-      material: search.material === undefined ? undefined : state.material,
-      color: search.color === undefined ? undefined : state.color,
-      feature: search.feature === undefined ? undefined : state.feature,
-      dimension: search.dimension === undefined ? undefined : state.dimension,
-      widthMaxCm: search.widthMaxCm === undefined ? undefined : state.widthMaxCm,
-      heightMaxCm: search.heightMaxCm === undefined ? undefined : state.heightMaxCm,
-      depthClosedMaxCm: search.depthClosedMaxCm === undefined ? undefined : state.depthClosedMaxCm,
-      depthOpenMaxCm: search.depthOpenMaxCm === undefined ? undefined : state.depthOpenMaxCm,
+      sort: search.sort === undefined ? undefined : serialized.sort,
     };
   },
   loaderDeps: ({ search }) => ({
@@ -92,9 +91,12 @@ export const Route = createFileRoute("/")({
     all: search.all,
     page: search.page,
   }),
-  loader: ({ context, deps }) => {
-    if (deps.catalog) return context.queryClient.ensureQueryData(produtosQueryOptions());
+  loader: async ({ context, deps }) => {
+    if (!deps.catalog) return { catalogProducts: undefined };
+    const catalogProducts = await context.queryClient.ensureQueryData(produtosQueryOptions());
+    return { catalogProducts };
   },
+  pendingComponent: CatalogLoadingState,
   head: ({ match }) => {
     const {
       q,
@@ -188,6 +190,8 @@ function IndexError({ reset }: { error: unknown; reset: () => void }) {
 
 function Index() {
   const search = Route.useSearch();
+  const loaderData = Route.useLoaderData();
+  const parsed = parseCatalogUrlState(search);
   const {
     q,
     ofertas,
@@ -225,19 +229,25 @@ function Index() {
   const filters: CatalogFilterState = {
     ...DEFAULT_CATALOG_FILTERS,
     sort: sort ?? (q?.trim() ? "relevant" : "recommended"),
-    minPrice: minPrice ?? "",
-    maxPrice: maxPrice ?? "",
-    material: material ?? "all",
-    color: color ?? "all",
-    feature: feature ?? "all",
-    dimension: dimension ?? "",
-    widthMaxCm: widthMaxCm ?? "",
-    heightMaxCm: heightMaxCm ?? "",
-    depthClosedMaxCm: depthClosedMaxCm ?? "",
-    depthOpenMaxCm: depthOpenMaxCm ?? "",
+    minPrice: parsed.minPrice,
+    maxPrice: parsed.maxPrice,
+    material: parsed.material,
+    color: parsed.color,
+    feature: parsed.feature,
+    dimension: parsed.dimension,
+    widthMaxCm: parsed.widthMaxCm,
+    heightMaxCm: parsed.heightMaxCm,
+    depthClosedMaxCm: parsed.depthClosedMaxCm,
+    depthOpenMaxCm: parsed.depthOpenMaxCm,
   };
   return catalog ? (
-    <CatalogIndex query={q} offers={ofertas} page={page} filters={filters} />
+    <CatalogIndex
+      query={q}
+      offers={ofertas}
+      page={page}
+      filters={filters}
+      initialProducts={loaderData?.catalogProducts}
+    />
   ) : (
     <HomepageIndex />
   );
@@ -248,19 +258,47 @@ function CatalogIndex({
   offers,
   page,
   filters,
+  initialProducts,
 }: {
   query?: string;
   offers?: boolean;
   page?: number;
   filters: CatalogFilterState;
+  initialProducts?: Produto[];
 }) {
   const navigate = useNavigate({ from: "/" });
   const [rotationDate, setRotationDate] = useState(() => new Date("2000-01-01T12:00:00.000Z"));
-  const result = useQuery(produtosQueryOptions());
+  const result = useQuery({
+    ...produtosQueryOptions(),
+    ...(initialProducts ? { initialData: initialProducts } : {}),
+    staleTime: 30_000,
+  });
   const produtos = result.data;
   useEffect(() => {
     setRotationDate(new Date());
   }, []);
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("mobi:catalog-return-position");
+      if (!saved) return;
+      sessionStorage.removeItem("mobi:catalog-return-position");
+      const position = JSON.parse(saved) as {
+        category?: unknown;
+        page?: unknown;
+        scrollY?: unknown;
+      };
+      if (
+        position.category === "__root__" &&
+        position.page === (page ?? 1) &&
+        typeof position.scrollY === "number" &&
+        Number.isFinite(position.scrollY)
+      ) {
+        window.requestAnimationFrame(() => window.scrollTo(0, position.scrollY as number));
+      }
+    } catch {
+      sessionStorage.removeItem("mobi:catalog-return-position");
+    }
+  }, [page]);
 
   if (!produtos && result.isError)
     return <IndexError error={result.error} reset={() => void result.refetch()} />;
@@ -370,8 +408,33 @@ function HomepageLoadingState() {
 
 function CatalogLoadingState() {
   return (
-    <section id="catalogo" className="mobi-wrap py-12" role="status" aria-live="polite">
-      Carregando produtos.
+    <section
+      id="catalogo"
+      className="mobi-wrap py-8"
+      role="status"
+      aria-busy="true"
+      aria-live="polite"
+    >
+      <div className="mb-6 space-y-2">
+        <div className="h-4 w-32 animate-pulse rounded bg-[#eee8de]" />
+        <div className="h-8 w-64 animate-pulse rounded bg-[#eee8de]" />
+      </div>
+      <div className="mobi-grid" aria-hidden="true">
+        {Array.from({ length: 4 }, (_, index) => (
+          <div
+            key={index}
+            className="mobi-product animate-pulse overflow-hidden rounded-2xl border border-cacau/10 bg-white"
+          >
+            <div className="aspect-[4/3] bg-[#eee8de]" />
+            <div className="space-y-3 p-4">
+              <div className="h-3 w-1/2 rounded bg-[#eee8de]" />
+              <div className="h-4 w-4/5 rounded bg-[#eee8de]" />
+              <div className="h-3 w-2/3 rounded bg-[#eee8de]" />
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="sr-only">Carregando produtos.</p>
     </section>
   );
 }

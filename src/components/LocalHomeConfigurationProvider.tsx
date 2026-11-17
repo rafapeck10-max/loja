@@ -16,7 +16,7 @@ export function LocalHomeConfigurationProvider({ children }: { children: ReactNo
   const { data } = useQuery({
     queryKey: ["local-home-configuration"],
     queryFn: getLocalPublicHome,
-    enabled: !landing,
+    enabled: !landing && !import.meta.env.PROD,
     staleTime: 0,
     refetchOnWindowFocus: true,
   });

@@ -79,6 +79,15 @@ export function parseCatalogUrlState(search: object): CatalogUrlState {
   };
 }
 
+function numericSearchValue(value: string): number | string | undefined {
+  if (!value) return undefined;
+  if (/^\d+(?:\.\d+)?$/.test(value)) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return value;
+}
+
 export function catalogUrlSearch(
   state: CatalogFilterState,
   page = 1,
@@ -87,17 +96,67 @@ export function catalogUrlSearch(
   return {
     page: page > 1 ? page : undefined,
     sort: state.sort === defaultSort ? undefined : state.sort,
-    minPrice: state.minPrice || undefined,
-    maxPrice: state.maxPrice || undefined,
+    minPrice: numericSearchValue(state.minPrice),
+    maxPrice: numericSearchValue(state.maxPrice),
     material: state.material === "all" ? undefined : state.material,
     color: state.color === "all" ? undefined : state.color,
     feature: state.feature === "all" ? undefined : state.feature,
     dimension: state.dimension || undefined,
-    widthMaxCm: state.widthMaxCm || undefined,
-    heightMaxCm: state.heightMaxCm || undefined,
-    depthClosedMaxCm: state.depthClosedMaxCm || undefined,
-    depthOpenMaxCm: state.depthOpenMaxCm || undefined,
+    widthMaxCm: numericSearchValue(state.widthMaxCm),
+    heightMaxCm: numericSearchValue(state.heightMaxCm),
+    depthClosedMaxCm: numericSearchValue(state.depthClosedMaxCm),
+    depthOpenMaxCm: numericSearchValue(state.depthOpenMaxCm),
   };
+}
+
+export type CatalogSearchParams = Partial<ReturnType<typeof catalogUrlSearch>>;
+
+export interface CatalogReturnState extends CatalogUrlState {
+  q?: string;
+  ofertas?: boolean;
+  all?: boolean;
+}
+
+export function parseCatalogReturnSearch(value: string | undefined): CatalogReturnState {
+  if (!value || value.length > 700) return parseCatalogUrlState({});
+  const raw = Object.fromEntries(new URLSearchParams(value));
+  const base = parseCatalogUrlState(raw);
+  const q = boundedText(raw.q, 120) || undefined;
+  const ofertas = raw.ofertas === "true" ? true : undefined;
+  const all = raw.all === "true" ? true : undefined;
+  return {
+    ...base,
+    ...(q ? { q } : {}),
+    ...(ofertas ? { ofertas } : {}),
+    ...(all ? { all } : {}),
+  };
+}
+
+export function serializeCatalogReturnSearch(
+  state: CatalogFilterState,
+  page = 1,
+  root?: { q?: string; offers?: boolean; all?: boolean },
+) {
+  const search = new URLSearchParams();
+  if (root?.q?.trim()) search.set("q", root.q.trim());
+  if (root?.offers) search.set("ofertas", "true");
+  if (root?.all) search.set("all", "true");
+  const params = catalogUrlSearch(state, page, root?.q?.trim() ? "relevant" : "recommended");
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined) search.set(key, String(value));
+  }
+  return search.toString();
+}
+
+export function normalizeCatalogReturnSearch(value: unknown): string | undefined {
+  if (typeof value !== "string" || value.length > 700) return undefined;
+  const parsed = parseCatalogReturnSearch(value);
+  const normalized = serializeCatalogReturnSearch(parsed, parsed.page, {
+    q: parsed.q,
+    offers: parsed.ofertas,
+    all: parsed.all,
+  });
+  return normalized || undefined;
 }
 
 export function serializeCatalogUrlState(

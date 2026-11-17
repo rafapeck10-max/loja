@@ -37,7 +37,7 @@ export function InspirationIndexView({ revisionId = null }: { revisionId?: numbe
   const list = filtered.filter((article) => article.id !== featured?.id);
 
   return (
-    <main className="mobi-wrap py-8 sm:py-12">
+    <div className="mobi-wrap py-8 sm:py-12">
       {revisionId !== null && (
         <div className="mb-5 border-b border-gold/30 bg-[#f3f4ed] px-4 py-2 text-center text-xs text-deep-green">
           Prévia editorial local · revisão {revisionId} · não publicada
@@ -173,6 +173,6 @@ export function InspirationIndexView({ revisionId = null }: { revisionId?: numbe
           </div>
         )}
       </section>
-    </main>
+    </div>
   );
 }

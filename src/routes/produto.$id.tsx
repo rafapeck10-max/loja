@@ -1,10 +1,11 @@
 import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ProductDetailView } from "@/components/ProductDetailView";
 import { produtoQueryOptions } from "@/lib/products.functions";
 import { parsePage } from "@/components/CatalogPagination";
 import { jsonLd, productSeo, seoHead } from "@/lib/seo";
-import { parseCatalogUrlString, serializeCatalogUrlState } from "@/lib/catalog-url-state";
+import { normalizeCatalogReturnSearch } from "@/lib/catalog-url-state";
+
 export const Route = createFileRoute("/produto/$id")({
   validateSearch: (
     search: Record<string, unknown>,
@@ -14,34 +15,46 @@ export const Route = createFileRoute("/produto/$id")({
       typeof search.returnCategory === "string" && /^[a-z0-9-]+$/i.test(search.returnCategory)
         ? search.returnCategory
         : undefined,
-    returnSearch:
-      typeof search.returnSearch === "string" && search.returnSearch.length <= 700
-        ? serializeCatalogUrlState(
-            parseCatalogUrlString(search.returnSearch),
-            parseCatalogUrlString(search.returnSearch).page,
-          ) || undefined
-        : undefined,
+    returnSearch: normalizeCatalogReturnSearch(search.returnSearch),
   }),
   loader: async ({ context, params }) => {
-    const produto = await context.queryClient.ensureQueryData(produtoQueryOptions(params.id));
-    if (!produto) throw notFound();
-    return productSeo(produto);
+    const product = await context.queryClient.ensureQueryData(produtoQueryOptions(params.id));
+    if (!product) throw notFound();
+    return { seo: productSeo(product), product };
   },
   head: ({ loaderData }) => {
-    if (!loaderData) {
+    if (!loaderData?.seo) {
       return {
         meta: [{ title: "Produto não encontrado | Mobi" }, { name: "robots", content: "noindex" }],
       };
     }
+    const { seo } = loaderData;
     return {
-      ...seoHead(loaderData.title, loaderData.description, loaderData.url, loaderData.image),
-      scripts: [jsonLd(loaderData.structured), jsonLd(loaderData.breadcrumb)],
+      ...seoHead(seo.title, seo.description, seo.url, seo.image),
+      scripts: [jsonLd(seo.structured), jsonLd(seo.breadcrumb)],
     };
   },
+  pendingComponent: ProductLoadingState,
   component: ProductPage,
   errorComponent: ProductError,
   notFoundComponent: ProductNotFound,
 });
+
+function ProductLoadingState() {
+  return (
+    <section className="mobi-wrap py-8" role="status" aria-busy="true" aria-live="polite">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.08fr)_minmax(390px,0.92fr)]">
+        <div className="aspect-[4/3] animate-pulse rounded-2xl bg-[#eee8de]" />
+        <div className="space-y-4">
+          <div className="h-4 w-28 animate-pulse rounded bg-[#eee8de]" />
+          <div className="h-8 w-4/5 animate-pulse rounded bg-[#eee8de]" />
+          <div className="h-32 animate-pulse rounded-xl bg-[#eee8de]" />
+        </div>
+      </div>
+      <p className="sr-only">Carregando produto.</p>
+    </section>
+  );
+}
 
 function ProductNotFound() {
   return (
@@ -80,7 +93,12 @@ function ProductError({ reset }: { error: unknown; reset: () => void }) {
 function ProductPage() {
   const { id } = Route.useParams();
   const { returnPage, returnCategory, returnSearch } = Route.useSearch();
-  const { data: product } = useSuspenseQuery(produtoQueryOptions(id));
+  const loaderData = Route.useLoaderData();
+  const { data: product = loaderData?.product } = useQuery({
+    ...produtoQueryOptions(id),
+    ...(loaderData?.product ? { initialData: loaderData.product } : {}),
+    staleTime: 30_000,
+  });
 
   if (!product) return null;
 

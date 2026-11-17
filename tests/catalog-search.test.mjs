@@ -113,3 +113,51 @@ test("unstructured marketing text does not become a confirmed filter attribute",
   assert.equal(matchesCatalogDimensions(product, "200 cm"), false);
   assert.equal(matchesCatalogSearch(product, "tecido linho"), false);
 });
+
+test("reads three-decimal meters cleanly and strips trailing valueless peso labels", () => {
+  assert.equal(
+    getCatalogDimensionLabel({
+      nome: "Sofá Retrátil",
+      categoria: "Sofás",
+      descricao: "Largura: 1,697 m. Profundidade: 0,865 m.",
+      medidas: null,
+    }),
+    "Largura: 1,697 m · Profundidade: 0,865 m",
+  );
+  assert.equal(
+    getCatalogDimensionLabel({
+      nome: "Sofá Retrátil",
+      categoria: "Sofás",
+      medidas: "Peso",
+      descricao: "",
+    }),
+    "",
+  );
+  assert.equal(
+    getCatalogDimensionLabel({
+      nome: "Sofá Retrátil",
+      categoria: "Sofás",
+      medidas: "Largura: 2,050 m; Peso",
+    }),
+    "Largura: 2,050 m",
+  );
+});
+
+test("cleans noisy scraper color values and excludes title-conflicting multi-color SKUs", () => {
+  assert.deepEqual(
+    getCatalogColors({
+      nome: "Guarda-roupa Casal",
+      categoria: "Roupeiros",
+      cores: ["available", "Casal", "Cinamomo / Off-white", "SKU-9999"],
+    }),
+    ["Off-white", "Cinamomo"],
+  );
+  const torontoAzul = {
+    nome: "Sofá Retrátil Toronto Azul",
+    categoria: "Sofás",
+    cores: ["Bege", "Azul"],
+    variacoes_preco: [],
+  };
+  assert.equal(matchesCatalogColors(torontoAzul, "Bege"), false);
+  assert.equal(matchesCatalogColors(torontoAzul, "Azul"), true);
+});

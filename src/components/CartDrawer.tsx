@@ -1,4 +1,5 @@
 import * as Dialog from "@radix-ui/react-dialog";
+import { Link } from "@tanstack/react-router";
 import { useState, useRef } from "react";
 import { Minus, Plus, Trash2, X, Truck, Sofa, ArrowLeft } from "lucide-react";
 import { useCart, cartItemKey } from "@/lib/cart-context";
@@ -128,6 +129,15 @@ export function CartDrawer() {
                   <div className="flex h-full flex-col items-center justify-center gap-4 text-text-light">
                     <Sofa className="h-14 w-14 text-gold/50" />
                     <p className="text-sm font-medium">Seu carrinho está vazio.</p>
+                    <Link
+                      to="/"
+                      search={{ all: true, page: 1 }}
+                      hash="catalogo"
+                      onClick={close}
+                      className="mt-2 inline-flex min-h-11 items-center justify-center bg-deep-green px-5 text-xs font-bold uppercase tracking-[1.2px] text-sand no-underline transition-colors hover:bg-gold hover:text-deep-green"
+                    >
+                      Explorar catálogo
+                    </Link>
                   </div>
                 ) : (
                   items.map((item) => {
@@ -206,25 +216,26 @@ export function CartDrawer() {
               </div>
 
               {/* Footer */}
-              <div className="border-t border-cacau/10 bg-white px-6 py-5">
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="text-sm font-semibold uppercase tracking-wide text-cacau">
-                    Subtotal no Pix:
-                  </span>
-                  <span className="text-xl font-bold text-price-green">{formatBRL(total)}</span>
+              {items.length > 0 && (
+                <div className="border-t border-cacau/10 bg-white px-6 py-5">
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="text-sm font-semibold uppercase tracking-wide text-cacau">
+                      Subtotal no Pix:
+                    </span>
+                    <span className="text-xl font-bold text-price-green">{formatBRL(total)}</span>
+                  </div>
+                  <p className="mb-4 flex items-center justify-center gap-2 text-center text-[11px] font-medium text-text-light">
+                    <Truck className="h-3.5 w-3.5 text-gold" /> Pague e receba em casa na Baixada
+                    Fluminense.
+                  </p>
+                  <button
+                    onClick={() => setStep("checkout")}
+                    className="w-full bg-deep-green py-4 text-sm font-bold uppercase tracking-[1.5px] text-sand transition-all duration-300 hover:bg-gold hover:text-deep-green"
+                  >
+                    Concluir Pedido
+                  </button>
                 </div>
-                <p className="mb-4 flex items-center justify-center gap-2 text-center text-[11px] font-medium text-text-light">
-                  <Truck className="h-3.5 w-3.5 text-gold" /> Pague e receba em casa na Baixada
-                  Fluminense.
-                </p>
-                <button
-                  disabled={items.length === 0}
-                  onClick={() => setStep("checkout")}
-                  className="w-full bg-deep-green py-4 text-sm font-bold uppercase tracking-[1.5px] text-sand transition-all duration-300 hover:bg-gold hover:text-deep-green disabled:pointer-events-none disabled:opacity-50"
-                >
-                  Concluir Pedido
-                </button>
-              </div>
+              )}
             </>
           ) : (
             <>
