@@ -1,23 +1,49 @@
-/* Task-first administration. Scoped to the Mobi admin; storefront stays unchanged. */
+/* Task-first administration with official Mobi tokens. Storefront stays unchanged. */
 .aw-layout {
-  background: #f5f5f0;
-  color: #29372d;
+  background: #f4efe6;
+  color: #493327;
 }
 .aw-main {
-  background: #f5f5f0;
+  background: #f7f4ed;
 }
 .aw-sidebar,
 .aw-drawer {
-  background: #252f27;
+  background: #2e3f32;
 }
 .aw-sidebar nav button {
-  border-radius: 10px;
-  min-height: 48px;
+  border-radius: 9px;
+  min-height: 46px;
 }
-.aw-sidebar nav button[aria-current],
-.aw-drawer nav button[aria-current] {
-  background: #f5f0e3;
-  color: #252f27;
+.aw-sidebar nav button[aria-current="page"],
+.aw-drawer nav button[aria-current="page"] {
+  background: #f4efe6;
+  color: #2e3f32;
+}
+.aw-nav-group {
+  display: grid;
+  gap: 4px;
+}
+.aw-nav-sublist {
+  display: grid;
+  gap: 3px;
+  margin: 0 0 4px 14px;
+  padding-left: 10px;
+  border-left: 1px solid #ffffff24;
+}
+.aw-sidebar .aw-nav-sublist button,
+.aw-drawer .aw-nav-sublist button {
+  min-height: 44px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: #dbe4d7;
+  border-radius: 7px;
+}
+.aw-sidebar .aw-nav-sublist button[aria-current="page"],
+.aw-drawer .aw-nav-sublist button[aria-current="page"] {
+  background: #f4efe61f;
+  color: #fffdf8;
+  box-shadow: inset 3px 0 #c5a059;
+  font-weight: 700;
 }
 .aw-topbar {
   border-bottom: 1px solid #e1e6df;
@@ -50,6 +76,44 @@
 .aw-layout select,
 .aw-layout textarea {
   font-size: 16px;
+}
+.aw-search {
+  min-height: 44px;
+}
+.aw-search input {
+  min-height: 44px;
+}
+.aw-action-danger {
+  border-color: #b5382a !important;
+  background: #b5382a !important;
+  color: #fff !important;
+}
+.aw-action-danger:hover {
+  background: #962b1f !important;
+  border-color: #962b1f !important;
+}
+.ov-quick-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -10px 0 18px;
+}
+.ov-quick-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid #ddd3c0;
+  border-radius: 999px;
+  background: #fffdfa;
+  color: #2e3f32;
+  font-size: 12px;
+  font-weight: 600;
+}
+.ov-quick-pill:hover {
+  border-color: #c5a059;
+  background: #faf5e8;
 }
 .aw-layout [hidden],
 .product-editor-section[hidden] {
@@ -92,9 +156,9 @@
   color: #5f6b60;
 }
 .mobi-task.is-featured {
-  background: #293d30;
+  background: #2e3f32;
   color: #fff;
-  border-color: #293d30;
+  border-color: #2e3f32;
 }
 .mobi-task.is-featured small {
   color: #e2d5b1;
@@ -225,12 +289,13 @@
 }
 .pricing-search {
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 12px 16px;
   align-items: end;
   margin: 18px 0;
 }
 .pricing-search > label:first-child {
-  flex: 1;
+  flex: 1 1 240px;
   display: grid;
   gap: 6px;
   font-size: 13px;
@@ -238,23 +303,77 @@
 }
 .pricing-search input[type="search"] {
   min-height: 48px;
-  border: 1px solid #ccd5c8;
+  border: 1px solid #d5cbb8;
   border-radius: 10px;
   background: white;
   padding: 10px 14px;
   width: 100%;
 }
-.pricing-toggle {
+.pricing-filter-pills {
   display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pricing-filter-pill {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-height: 48px;
-  font-size: 14px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #d8cebc;
+  border-radius: 999px;
+  background: #fffdfa;
+  color: #493327;
+  font-size: 13px;
+  font-weight: 600;
 }
-.pricing-toggle input {
-  width: 20px;
-  height: 20px;
-  accent-color: #293d30;
+.pricing-filter-pill[aria-pressed="true"] {
+  border-color: #2e3f32;
+  background: #2e3f32;
+  color: #fffdf8;
+}
+.pricing-filter-pill b {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #f0eadc;
+  color: #493327;
+  font-size: 11px;
+}
+.pricing-filter-pill[aria-pressed="true"] b {
+  background: #ffffff26;
+  color: #fffdf8;
+}
+.supplier-pricing-site-price {
+  display: grid;
+  gap: 2px;
+}
+.supplier-pricing-site-price small {
+  color: #6b5e4a;
+  font-size: 11px;
+  font-weight: 500;
+}
+.supplier-pricing-empty {
+  display: grid;
+  gap: 10px;
+}
+.supplier-pricing-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.supplier-pricing-empty-actions button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid #cfc4ae;
+  border-radius: 8px;
+  background: #fffdfa;
+  color: #2e3f32;
+  font-size: 13px;
+  font-weight: 600;
+}
+.supplier-pricing-empty-actions button:hover {
+  border-color: #c5a059;
+  background: #f7f1e3;
 }
 .product-editor-nav {
   display: flex;
@@ -267,16 +386,40 @@
 }
 .product-editor-nav button {
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   min-height: 44px;
   border: 1px solid transparent;
   border-radius: 9px;
-  padding: 8px 16px;
+  padding: 8px 14px;
   font-size: 14px;
   color: #53604f;
 }
 .product-editor-nav button[aria-pressed="true"] {
-  background: #293d30;
+  background: #2e3f32;
   color: #fff;
+}
+.product-editor-tab-pill {
+  border-radius: 999px;
+  background: #eef0e7;
+  color: #493327;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.product-editor-nav button[aria-pressed="true"] .product-editor-tab-pill {
+  background: #ffffff26;
+  color: #fff;
+}
+.product-editor-tab-pill.is-alert {
+  background: #f7e6cf;
+  color: #7c4917;
+}
+.product-editor-nav button[aria-pressed="true"] .product-editor-tab-pill.is-alert {
+  background: #c5a059;
+  color: #2e3f32;
 }
 .product-editor-identity {
   display: flex;
@@ -317,7 +460,17 @@
     padding: 16px;
   }
 }
+@media (max-width: 1023px) {
+  .aw-mobile-brand {
+    min-height: 44px;
+    min-width: 44px;
+    justify-content: center;
+  }
+}
 @media (max-width: 767px) {
+  .aw-breadcrumb > strong:not(:last-of-type) {
+    display: none;
+  }
   .aw-content {
     padding: 18px 14px 28px;
   }
@@ -406,5 +559,8 @@
   }
   .product-editor-nav button {
     min-width: 0;
+    flex-wrap: wrap;
+    padding: 6px 8px;
+    font-size: 12px;
   }
 }

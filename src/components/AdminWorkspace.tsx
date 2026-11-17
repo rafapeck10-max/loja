@@ -71,7 +71,7 @@ export function AdminWorkspace({
     onNavigate(next);
     setOpen(false);
   };
-  const navigation = (
+  const renderNavigation = (variant: "desktop" | "mobile") => (
     <>
       <a
         className="aw-brand"
@@ -84,21 +84,41 @@ export function AdminWorkspace({
         <span>mobimb.com.br</span>
       </a>
       <p className="aw-nav-label">OPERAÇÃO DA MOBI</p>
-      <nav aria-label="Navegação do painel">
+      <nav aria-label={variant === "mobile" ? "Navegação mobile do painel" : "Navegação do painel"}>
         {ADMIN_NAV_GROUPS.map((group) => {
           const Icon = groupIcons[group.id];
           const active = activeGroup.id === group.id;
+          const showSubviews = group.views.length > 1 && (variant === "mobile" || active);
           return (
-            <button
-              type="button"
-              key={group.id}
-              aria-current={active ? "page" : undefined}
-              onClick={() => navigate(group.defaultView)}
-            >
-              <Icon size={18} aria-hidden="true" />
-              <span>{group.label}</span>
-              {active && <span className="aw-active-dot" />}
-            </button>
+            <div className="aw-nav-group" key={group.id}>
+              <button
+                type="button"
+                aria-current={active ? "page" : undefined}
+                onClick={() => navigate(group.defaultView)}
+              >
+                <Icon size={18} aria-hidden="true" />
+                <span>{group.label}</span>
+                {active && <span className="aw-active-dot" />}
+              </button>
+              {showSubviews && (
+                <div
+                  className="aw-nav-sublist"
+                  role="group"
+                  aria-label={`Subáreas de ${group.label}`}
+                >
+                  {group.views.map((view) => (
+                    <button
+                      type="button"
+                      key={view.id}
+                      aria-current={area === view.id ? "page" : undefined}
+                      onClick={() => navigate(view.id)}
+                    >
+                      {view.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           );
         })}
       </nav>
@@ -118,7 +138,7 @@ export function AdminWorkspace({
   );
   return (
     <div className="aw-layout">
-      <aside className="aw-sidebar">{navigation}</aside>
+      <aside className="aw-sidebar">{renderNavigation("desktop")}</aside>
       <div className="aw-main">
         <header className="aw-topbar">
           <Dialog.Root open={open} onOpenChange={setOpen}>
@@ -144,7 +164,7 @@ export function AdminWorkspace({
                 >
                   <X size={20} />
                 </Dialog.Close>
-                {navigation}
+                {renderNavigation("mobile")}
               </Dialog.Content>
             </Dialog.Portal>
           </Dialog.Root>
@@ -174,7 +194,9 @@ export function AdminWorkspace({
               role="search"
               onSubmit={(event) => {
                 event.preventDefault();
-                onSearch(query.trim());
+                const term = query.trim();
+                onSearch(term);
+                if (term) setQuery("");
               }}
             >
               <Search size={17} aria-hidden="true" />

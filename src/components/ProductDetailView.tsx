@@ -29,7 +29,7 @@ import {
   WHATSAPP_URL,
 } from "@/lib/constants";
 import { useCart } from "@/lib/cart-context";
-import { publicDescription } from "@/lib/product-copy";
+import { parseProductPublicCopy, type DescriptionBlock } from "@/lib/product-copy";
 import { cleanCatalogMeasurementText, isNoiseColorToken } from "@/lib/catalog-search";
 import { cardQuote } from "@/lib/payment";
 import { productMeasurements } from "@/lib/product-measurements";
@@ -150,18 +150,57 @@ export function ProductDetailView({
   const currentPrice = selectedOption?.sale_price ?? product.preco_novo;
   const payment = cardQuote(currentPrice, MAX_INSTALLMENTS);
   const cleanedMedidas = cleanCatalogMeasurementText(product.medidas);
-  const measurements = productMeasurements(product.medidas);
+  const rawMeasurements = productMeasurements(product.medidas);
+  const parsedCopy = useMemo(
+    () =>
+      parseProductPublicCopy({
+        nome: product.nome,
+        descricao: product.descricao,
+        medidas: product.medidas,
+      }),
+    [product.nome, product.descricao, product.medidas],
+  );
+  const measurements =
+    rawMeasurements.length > 0 ? rawMeasurements : parsedCopy.extractedMeasurements;
+  const hasSupplementaryMeasurementText = Boolean(
+    cleanedMedidas &&
+    (measurements.length === 0 ||
+      /\b(?:peso|volume|m[oó]dulo|assento|bra[cç]o|bancada|espelheira|a[eé]reo|balc[aã]o|paneleiro|mesa|cadeira|total)\b/i.test(
+        cleanedMedidas,
+      )),
+  );
   const keyFacts =
     measurements.length > 0
       ? measurements
       : cleanedMedidas
         ? [{ label: "Medidas informadas", value: cleanedMedidas, icon: "ruler" as const }]
         : [];
-  const rawDescription = publicDescription(product.descricao);
-  const descriptionParts = rawDescription
-    .split(/\n\s*\n/)
-    .map((part) => part.trim())
-    .filter(Boolean);
+  const { leadDescriptionBlocks, extraDescriptionBlocks } = useMemo(() => {
+    const blocks = parsedCopy.blocks;
+    if (blocks.length === 0) {
+      return {
+        leadDescriptionBlocks: [] as DescriptionBlock[],
+        extraDescriptionBlocks: [] as DescriptionBlock[],
+      };
+    }
+    const blockLength = (block: DescriptionBlock) =>
+      block.kind === "list" ? block.items.join(" ").length : block.text.length;
+    let total = 0;
+    let splitIndex = 0;
+    for (let i = 0; i < blocks.length; i += 1) {
+      total += blockLength(blocks[i]);
+      splitIndex = i + 1;
+      if (total >= 650) break;
+    }
+    const remainingLength = blocks
+      .slice(splitIndex)
+      .reduce((sum, block) => sum + blockLength(block), 0);
+    if (remainingLength <= 160) splitIndex = blocks.length;
+    return {
+      leadDescriptionBlocks: blocks.slice(0, splitIndex),
+      extraDescriptionBlocks: blocks.slice(splitIndex),
+    };
+  }, [parsedCopy.blocks]);
   const reference = product.sku?.split("|")[0]?.trim();
   const hasCharacteristics = Boolean(
     cleanedMedidas || measurements.length || colors.length || pricedOptions.length || reference,
@@ -169,7 +208,9 @@ export function ProductDetailView({
   const returnContext = parseCatalogReturnSearch(returnSearch);
   const isRootCatalogReturn =
     !returnCategory && Boolean(returnContext.q || returnContext.ofertas || returnContext.all);
-  const hasInformation = Boolean(descriptionParts.length || hasCharacteristics);
+  const hasInformation = Boolean(
+    parsedCopy.blocks.length || parsedCopy.disclaimers.length || hasCharacteristics,
+  );
   const bundleProducts = useMemo(() => {
     const byId = new Map(allProducts.map((item) => [item.id, item]));
     return [...new Set(product.compre_junto_ids ?? [])]
@@ -659,17 +700,14 @@ export function ProductDetailView({
                 </div>
               ) : (
                 <p className="mobi-product-facts-missing">
-                  {descriptionParts.length > 0 &&
-                  /\b(\d+(?:[.,]\d+)?\s*(?:mm|cm|m)\b|largura|altura|profundidade|comprimento|dimens[oõ]es)/i.test(
-                    rawDescription,
-                  )
-                    ? "Confira as medidas detalhadas na descrição abaixo ou confirme com a Mobi pelo WhatsApp."
+                  {parsedCopy.blocks.length > 0
+                    ? "Confira as informações completas na descrição abaixo ou confirme as medidas com a Mobi pelo WhatsApp."
                     : "As medidas deste móvel ainda não foram informadas."}
                 </p>
               )}
               {hasInformation ? (
                 <a href="#caracteristicas-produto">
-                  {descriptionParts.length && hasCharacteristics
+                  {parsedCopy.blocks.length && hasCharacteristics
                     ? "Descrição e características"
                     : hasCharacteristics
                       ? "Ver características"
@@ -680,6 +718,133 @@ export function ProductDetailView({
           )}
         </section>
       </div>
+
+      {hasInformation && (
+        <section className="mobi-product-information mt-8" id="caracteristicas-produto">
+          {(parsedCopy.blocks.length > 0 || parsedCopy.disclaimers.length > 0) && (
+            <section
+              className="mobi-product-description-section"
+              aria-labelledby="mobi-product-description-title"
+            >
+              <div className="mobi-product-section-heading">
+                <div>
+                  <p>Detalhes do móvel</p>
+                  <h2 id="mobi-product-description-title">Descrição</h2>
+                </div>
+              </div>
+              <div className="mobi-product-description-body">
+                {leadDescriptionBlocks.map((block, index) =>
+                  block.kind === "list" ? (
+                    <ul className="mobi-product-description-list" key={`lead-list-${index}`}>
+                      {block.items.map((item, itemIndex) => (
+                        <li key={`lead-item-${index}-${itemIndex}`}>{item}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mobi-product-description-lead" key={`lead-para-${index}`}>
+                      {block.text}
+                    </p>
+                  ),
+                )}
+              </div>
+              {extraDescriptionBlocks.length > 0 && (
+                <details className="mobi-product-description">
+                  <summary>Ver descrição completa</summary>
+                  <div className="mobi-product-description-rest">
+                    {extraDescriptionBlocks.map((block, index) =>
+                      block.kind === "list" ? (
+                        <ul className="mobi-product-description-list" key={`rest-list-${index}`}>
+                          {block.items.map((item, itemIndex) => (
+                            <li key={`rest-item-${index}-${itemIndex}`}>{item}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p key={`rest-para-${index}`}>{block.text}</p>
+                      ),
+                    )}
+                  </div>
+                </details>
+              )}
+              {parsedCopy.disclaimers.length > 0 && (
+                <p className="mobi-product-description-note">{parsedCopy.disclaimers.join(" ")}</p>
+              )}
+            </section>
+          )}
+
+          {hasCharacteristics && (
+            <section
+              className="mobi-product-characteristics"
+              aria-labelledby="mobi-product-characteristics-title"
+            >
+              <div className="mobi-product-section-heading">
+                <div>
+                  <p>Informações cadastradas</p>
+                  <h2 id="mobi-product-characteristics-title">Características do produto</h2>
+                </div>
+              </div>
+              <div className="mobi-product-characteristics-grid">
+                {(cleanedMedidas || measurements.length > 0) && (
+                  <div className="mobi-product-characteristic-group">
+                    <h3>Dimensões</h3>
+                    <dl>
+                      {measurements.length > 0 ? (
+                        measurements.map((measure) => (
+                          <div key={measure.label}>
+                            <dt>{measure.label}</dt>
+                            <dd>{measure.value}</dd>
+                          </div>
+                        ))
+                      ) : (
+                        <div>
+                          <dt>Medidas informadas</dt>
+                          <dd>{cleanedMedidas}</dd>
+                        </div>
+                      )}
+                    </dl>
+                    {measurements.length > 0 && hasSupplementaryMeasurementText ? (
+                      <details className="mobi-product-measures-source">
+                        <summary>Ver medidas informadas</summary>
+                        <p>{cleanedMedidas}</p>
+                      </details>
+                    ) : null}
+                  </div>
+                )}
+                {(colors.length > 0 || pricedOptions.length > 0 || reference) && (
+                  <div className="mobi-product-characteristic-group">
+                    <h3>Acabamento e opções</h3>
+                    <dl>
+                      {reference ? (
+                        <div>
+                          <dt>Referência</dt>
+                          <dd>{reference}</dd>
+                        </div>
+                      ) : null}
+                      {colors.length ? (
+                        <div>
+                          <dt>Cores informadas</dt>
+                          <dd>{colors.join(", ")}</dd>
+                        </div>
+                      ) : null}
+                      {pricedOptions.map((option) => (
+                        <div key={option.sku}>
+                          <dt>{option.name}</dt>
+                          <dd>{formatBRL(option.sale_price ?? 0)}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                    {colors.length > 0 ? (
+                      <p>
+                        As cores cadastradas não garantem disponibilidade imediata. Confirme a opção
+                        com a Mobi.
+                      </p>
+                    ) : null}
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+        </section>
+      )}
 
       {bundleProducts.length > 0 && (
         <section className="mobi-product-bundle mt-8" aria-labelledby="mobi-product-bundle-title">
@@ -814,108 +979,6 @@ export function ProductDetailView({
               </button>
             </aside>
           </div>
-        </section>
-      )}
-
-      {hasInformation && (
-        <section className="mobi-product-information mt-8" id="caracteristicas-produto">
-          {descriptionParts.length > 0 && (
-            <section
-              className="mobi-product-description-section"
-              aria-labelledby="mobi-product-description-title"
-            >
-              <div className="mobi-product-section-heading">
-                <div>
-                  <p>Detalhes do móvel</p>
-                  <h2 id="mobi-product-description-title">Descrição</h2>
-                </div>
-              </div>
-              <p className="mobi-product-description-lead">{descriptionParts[0]}</p>
-              {descriptionParts.length > 1 && (
-                <details className="mobi-product-description">
-                  <summary>Ver descrição completa</summary>
-                  <div className="mobi-product-description-rest">
-                    {descriptionParts.slice(1).map((paragraph, index) => (
-                      <p key={`${index}-${paragraph}`}>{paragraph}</p>
-                    ))}
-                  </div>
-                </details>
-              )}
-            </section>
-          )}
-
-          {hasCharacteristics && (
-            <section
-              className="mobi-product-characteristics"
-              aria-labelledby="mobi-product-characteristics-title"
-            >
-              <div className="mobi-product-section-heading">
-                <div>
-                  <p>Informações cadastradas</p>
-                  <h2 id="mobi-product-characteristics-title">Características do produto</h2>
-                </div>
-              </div>
-              <div className="mobi-product-characteristics-grid">
-                {(cleanedMedidas || measurements.length > 0) && (
-                  <div className="mobi-product-characteristic-group">
-                    <h3>Dimensões</h3>
-                    <dl>
-                      {measurements.length > 0 ? (
-                        measurements.map((measure) => (
-                          <div key={measure.label}>
-                            <dt>{measure.label}</dt>
-                            <dd>{measure.value}</dd>
-                          </div>
-                        ))
-                      ) : (
-                        <div>
-                          <dt>Medidas informadas</dt>
-                          <dd>{cleanedMedidas}</dd>
-                        </div>
-                      )}
-                    </dl>
-                    {measurements.length > 0 && cleanedMedidas ? (
-                      <details className="mobi-product-measures-source">
-                        <summary>Ver medidas informadas</summary>
-                        <p>{cleanedMedidas}</p>
-                      </details>
-                    ) : null}
-                  </div>
-                )}
-                {(colors.length > 0 || pricedOptions.length > 0 || reference) && (
-                  <div className="mobi-product-characteristic-group">
-                    <h3>Acabamento e opções</h3>
-                    <dl>
-                      {reference ? (
-                        <div>
-                          <dt>Referência</dt>
-                          <dd>{reference}</dd>
-                        </div>
-                      ) : null}
-                      {colors.length ? (
-                        <div>
-                          <dt>Cores informadas</dt>
-                          <dd>{colors.join(", ")}</dd>
-                        </div>
-                      ) : null}
-                      {pricedOptions.map((option) => (
-                        <div key={option.sku}>
-                          <dt>{option.name}</dt>
-                          <dd>{formatBRL(option.sale_price ?? 0)}</dd>
-                        </div>
-                      ))}
-                    </dl>
-                    {colors.length > 0 ? (
-                      <p>
-                        As cores cadastradas não garantem disponibilidade imediata. Confirme a opção
-                        com a Mobi.
-                      </p>
-                    ) : null}
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
         </section>
       )}
 

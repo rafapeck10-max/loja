@@ -257,42 +257,38 @@ export function CampaignsPanel({
                   <fieldset>
                     <legend>Seções da home</legend>
                     {CAMPAIGN_SECTIONS.map((s) => (
-                      <label className="pm-field" key={s.id}>
-                        <span>
-                          <input
-                            type="checkbox"
-                            checked={campaign.sectionIds.includes(s.id)}
-                            onChange={(e) =>
-                              patch({
-                                sectionIds: e.target.checked
-                                  ? [...campaign.sectionIds, s.id]
-                                  : campaign.sectionIds.filter((id) => id !== s.id),
-                              })
-                            }
-                          />{" "}
-                          {s.title}
-                        </span>
+                      <label className="pm-check" key={s.id}>
+                        <input
+                          type="checkbox"
+                          checked={campaign.sectionIds.includes(s.id)}
+                          onChange={(e) =>
+                            patch({
+                              sectionIds: e.target.checked
+                                ? [...campaign.sectionIds, s.id]
+                                : campaign.sectionIds.filter((id) => id !== s.id),
+                            })
+                          }
+                        />
+                        <span>{s.title}</span>
                       </label>
                     ))}
                   </fieldset>
                   <fieldset>
                     <legend>Banners principais</legend>
                     {CAMPAIGN_BANNERS.map((b) => (
-                      <label className="pm-field" key={b.id}>
-                        <span>
-                          <input
-                            type="checkbox"
-                            checked={campaign.bannerIds.includes(b.id)}
-                            onChange={(e) =>
-                              patch({
-                                bannerIds: e.target.checked
-                                  ? [...campaign.bannerIds, b.id]
-                                  : campaign.bannerIds.filter((id) => id !== b.id),
-                              })
-                            }
-                          />{" "}
-                          {b.title}
-                        </span>
+                      <label className="pm-check" key={b.id}>
+                        <input
+                          type="checkbox"
+                          checked={campaign.bannerIds.includes(b.id)}
+                          onChange={(e) =>
+                            patch({
+                              bannerIds: e.target.checked
+                                ? [...campaign.bannerIds, b.id]
+                                : campaign.bannerIds.filter((id) => id !== b.id),
+                            })
+                          }
+                        />
+                        <span>{b.title}</span>
                       </label>
                     ))}
                   </fieldset>
@@ -315,18 +311,16 @@ export function CampaignsPanel({
                     placeholder="Sofá, guarda-roupa…"
                   />
                 </label>
-                <label className="pm-field">
-                  <span>
-                    <input
-                      type="checkbox"
-                      checked={onlySelected}
-                      onChange={(e) => {
-                        setOnlySelected(e.target.checked);
-                        setLimit(12);
-                      }}
-                    />{" "}
-                    Somente participantes
-                  </span>
+                <label className="pm-check">
+                  <input
+                    type="checkbox"
+                    checked={onlySelected}
+                    onChange={(e) => {
+                      setOnlySelected(e.target.checked);
+                      setLimit(12);
+                    }}
+                  />
+                  <span>Somente participantes</span>
                 </label>
               </div>
               <div className="pm-list">
@@ -336,22 +330,19 @@ export function CampaignsPanel({
                     Number.isFinite(Number(product.preco_atual)) && Number(product.preco_atual) > 0;
                   return (
                     <article className="pm-card" key={product.id}>
-                      <label className="pm-field">
-                        <span>
-                          <input
-                            type="checkbox"
-                            checked={!!p}
-                            disabled={!validBase}
-                            onChange={(e) => {
-                              const next = selectCampaignProduct(
-                                campaign,
-                                product,
-                                e.target.checked,
-                              );
-                              patch({ participants: next.participants });
-                            }}
-                          />{" "}
-                          <ProductIdentity product={product} /> · base Pix{" "}
+                      <label className="pm-check" style={{ flexWrap: "wrap" }}>
+                        <input
+                          type="checkbox"
+                          checked={!!p}
+                          disabled={!validBase}
+                          onChange={(e) => {
+                            const next = selectCampaignProduct(campaign, product, e.target.checked);
+                            patch({ participants: next.participants });
+                          }}
+                        />
+                        <ProductIdentity product={product} />
+                        <span className="pm-muted">
+                          base Pix{" "}
                           {validBase ? formatBRL(Number(product.preco_atual)) : "sem preço válido"}
                         </span>
                       </label>

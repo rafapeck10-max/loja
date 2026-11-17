@@ -528,7 +528,7 @@ export function AdminStudio({
             }
           />
         )}
-      <div className="pm-studio-toolbar">
+      <div className={`pm-studio-toolbar${dirty ? " is-dirty" : ""}`}>
         <div>
           <span className="pm-badge">
             {!loaded
@@ -546,13 +546,19 @@ export function AdminStudio({
             {conflict
               ? "rascunhos bloqueados para sua proteção"
               : dirty
-                ? "alterações não salvas"
+                ? "há alterações não salvas"
                 : "nenhuma alteração aberta"}
           </small>
+          {scope && !conflict && (
+            <div className="pm-studio-steps">
+              1. Edite abaixo → 2. Salvar rascunho → 3. Revisar alterações
+            </div>
+          )}
         </div>
         <div className="pm-actions">
           {scope && (
             <button
+              type="button"
               className="pm-button pm-primary"
               disabled={busy || !loaded || !dirtyScopes.includes(scope) || conflict}
               onClick={() => attempt(() => save(scope))}
@@ -562,6 +568,7 @@ export function AdminStudio({
           )}
           {scope && (
             <button
+              type="button"
               className="pm-button"
               disabled={
                 busy ||
@@ -576,7 +583,7 @@ export function AdminStudio({
               <FileCheck2 size={15} /> Revisar alterações
             </button>
           )}
-          <button className="pm-button" onClick={() => onNavigate("history")}>
+          <button type="button" className="pm-button" onClick={() => onNavigate("history")}>
             <History size={15} /> Histórico
           </button>
         </div>

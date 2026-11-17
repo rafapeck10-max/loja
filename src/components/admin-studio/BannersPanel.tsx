@@ -195,7 +195,7 @@ export function BannersPanel({ data, onChange }: BannersPanelProps) {
     <section className="pm-panel">
       <header className="pm-heading">
         <div>
-          <p className="pm-badge">PM-03 · Banners e mídias</p>
+          <p className="pm-badge">Vitrine principal · Banners</p>
           <h1>Artes que apresentam a Mobi</h1>
           <p className="pm-muted">
             Biblioteca de rascunho local, iniciada com os padrões do site. A produção não é
@@ -295,7 +295,7 @@ export function BannersPanel({ data, onChange }: BannersPanelProps) {
             </label>
           </div>
           <div className="pm-actions">
-            <label>
+            <label className="pm-check">
               <input
                 type="checkbox"
                 checked={banner.active}

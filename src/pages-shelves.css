@@ -116,7 +116,8 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 36px;
+  min-height: 44px;
+  min-width: 44px;
   border: 0;
   border-radius: 3px;
   background: transparent;
@@ -294,12 +295,13 @@
   font-weight: 600;
 }
 .ps-field > input,
+.ps-field > select,
 .ps-field > textarea,
 .ps-search {
   display: block;
   width: 100%;
   margin-top: 5px;
-  min-height: 40px;
+  min-height: 44px;
   border: 1px solid #dcd0bb;
   border-radius: 4px;
   background: #fff;
@@ -317,6 +319,7 @@
 .ps-search input {
   border: 0;
   background: transparent;
+  min-height: 44px;
   min-width: 0;
   width: 100%;
   outline: 0;
@@ -358,7 +361,7 @@
 }
 .ps-shelf-mode button {
   flex: 1;
-  min-height: 38px;
+  min-height: 44px;
   border: 1px solid transparent;
   border-radius: 4px;
   background: transparent;
@@ -384,7 +387,7 @@
   color: #6f624c;
 }
 .ps-auto-exceptions > summary {
-  min-height: 40px;
+  min-height: 44px;
   align-content: center;
   cursor: pointer;
   font-size: 10px;
@@ -466,8 +469,8 @@
   flex: 1;
 }
 .ps-product-actions button {
-  min-height: 32px;
-  min-width: 28px;
+  min-height: 44px;
+  min-width: 44px;
   border: 1px solid #ded4bf;
   background: #fffdfa;
   color: #8a7144;
@@ -475,8 +478,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
-  padding: 5px 7px;
+  font-size: 11px;
+  padding: 5px 8px;
 }
 .ps-add {
   margin: 2px 13px 13px;
@@ -509,7 +512,7 @@
 }
 .ps-reference summary {
   cursor: pointer;
-  min-height: 36px;
+  min-height: 44px;
   align-content: center;
 }
 .ps-reference p {
@@ -542,7 +545,7 @@
 .ps-exceptions select {
   margin: 8px 0 0 64px;
   max-width: calc(100% - 64px);
-  min-height: 36px;
+  min-height: 44px;
   border: 1px solid #dcd0bb;
   border-radius: 3px;
   padding: 5px 7px;

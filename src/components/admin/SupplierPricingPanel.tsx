@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Pencil } from "lucide-react";
 import type { ProdutoAdmin } from "../../lib/admin.functions";
 import { formatBRL } from "../../lib/constants";
+import { cardInstallment } from "../../lib/payment";
 import { productStatus, type ProductStatus } from "../../lib/admin-filters";
 
 export interface SupplierPricingSummary {
@@ -50,6 +51,8 @@ function differenceLabel(product: SupplierPricingProduct): string {
   return (amount < 0 ? "−" : "+") + formatBRL(Math.abs(amount));
 }
 
+type PricingQueueFilter = "awaiting" | "below-cost" | "missing-cost" | "all";
+
 export function SupplierPricingPanel<T extends SupplierPricingProduct>({
   summaries,
   products,
@@ -58,21 +61,37 @@ export function SupplierPricingPanel<T extends SupplierPricingProduct>({
   onEdit,
 }: SupplierPricingPanelProps<T>) {
   const [query, setQuery] = useState("");
-  const [onlyAwaiting, setOnlyAwaiting] = useState(true);
-  const filtered = products.filter(
-    (product) =>
-      (!onlyAwaiting || !(Number(product.preco_atual) > 0)) &&
-      (product.nome + " " + (product.sku ?? ""))
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .includes(
-          query
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .toLowerCase(),
-        ),
+  const [statusFilter, setStatusFilter] = useState<PricingQueueFilter>("awaiting");
+  const normalizedQuery = query
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+  const queryMatches = products.filter((product) =>
+    (product.nome + " " + (product.sku ?? ""))
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .includes(normalizedQuery),
   );
+  const counts = {
+    awaiting: queryMatches.filter((product) => !(Number(product.preco_atual) > 0)).length,
+    "below-cost": queryMatches.filter((product) => {
+      const delta = difference(product);
+      return delta !== null && delta < 0;
+    }).length,
+    "missing-cost": queryMatches.filter((product) => !(Number(product.preco_atacado) > 0)).length,
+    all: queryMatches.length,
+  };
+  const filtered = queryMatches.filter((product) => {
+    if (statusFilter === "awaiting") return !(Number(product.preco_atual) > 0);
+    if (statusFilter === "below-cost") {
+      const delta = difference(product);
+      return delta !== null && delta < 0;
+    }
+    if (statusFilter === "missing-cost") return !(Number(product.preco_atacado) > 0);
+    return true;
+  });
   const [page, setPage] = useState(1);
   const pageSize = 32;
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -81,7 +100,14 @@ export function SupplierPricingPanel<T extends SupplierPricingProduct>({
 
   useEffect(() => {
     setPage(1);
-  }, [filtered.length, selectedSupplier, query, onlyAwaiting]);
+  }, [filtered.length, selectedSupplier, query, statusFilter]);
+
+  const filterPills: ReadonlyArray<{ id: PricingQueueFilter; label: string; count: number }> = [
+    { id: "awaiting", label: "Aguardando preço", count: counts.awaiting },
+    { id: "below-cost", label: "Abaixo do custo", count: counts["below-cost"] },
+    { id: "missing-cost", label: "Sem custo", count: counts["missing-cost"] },
+    { id: "all", label: "Todos", count: counts.all },
+  ];
 
   return (
     <section className="supplier-pricing" aria-labelledby="supplier-pricing-title">
@@ -131,14 +157,24 @@ export function SupplierPricingPanel<T extends SupplierPricingProduct>({
             onChange={(event) => setQuery(event.target.value)}
           />
         </label>
-        <label className="pricing-toggle">
-          <input
-            type="checkbox"
-            checked={onlyAwaiting}
-            onChange={(event) => setOnlyAwaiting(event.target.checked)}
-          />{" "}
-          Só aguardando preço
-        </label>
+        <div
+          className="pricing-filter-pills"
+          role="group"
+          aria-label="Filtrar fila de precificação"
+        >
+          {filterPills.map((pill) => (
+            <button
+              key={pill.id}
+              type="button"
+              className="pricing-filter-pill"
+              aria-pressed={statusFilter === pill.id}
+              onClick={() => setStatusFilter(pill.id)}
+            >
+              <span>{pill.label}</span>
+              <b>{pill.count}</b>
+            </button>
+          ))}
+        </div>
       </div>
       <section className="supplier-pricing-results" aria-labelledby="supplier-selected-title">
         <header className="supplier-pricing-results-header">
@@ -158,9 +194,28 @@ export function SupplierPricingPanel<T extends SupplierPricingProduct>({
         </header>
 
         {filtered.length === 0 ? (
-          <p className="supplier-pricing-empty">
-            Nenhum produto nesta seleção. Tente outra busca ou desmarque “Só aguardando preço”.
-          </p>
+          <div className="supplier-pricing-empty">
+            <p>
+              Nenhum produto encontrado neste filtro.
+              {products.length > 0 && statusFilter !== "all"
+                ? " Você pode exibir todos os produtos deste fornecedor."
+                : ""}
+            </p>
+            {(statusFilter !== "all" || query) && products.length > 0 && (
+              <div className="supplier-pricing-empty-actions">
+                {statusFilter !== "all" && (
+                  <button type="button" onClick={() => setStatusFilter("all")}>
+                    Ver todos os produtos desta seleção
+                  </button>
+                )}
+                {query && (
+                  <button type="button" onClick={() => setQuery("")}>
+                    Limpar busca
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         ) : (
           <>
             <div className="supplier-pricing-table" role="table" aria-label="Preços por produto">
@@ -177,6 +232,7 @@ export function SupplierPricingPanel<T extends SupplierPricingProduct>({
               {visibleProducts.map((product) => {
                 const delta = difference(product);
                 const status = productStatus(product);
+                const sitePrice = Number(product.preco_atual ?? 0);
                 return (
                   <div className="supplier-pricing-row" role="row" key={product.id}>
                     <div className="supplier-pricing-product" role="cell">
@@ -192,11 +248,14 @@ export function SupplierPricingPanel<T extends SupplierPricingProduct>({
                       {price(product.preco_atacado)}
                     </span>
                     <span
-                      className="supplier-pricing-value"
+                      className="supplier-pricing-value supplier-pricing-site-price"
                       role="cell"
                       data-label="Preço à vista no site"
                     >
-                      {price(product.preco_atual)}
+                      <strong>{price(product.preco_atual)}</strong>
+                      {sitePrice > 0 && (
+                        <small>10x de {formatBRL(cardInstallment(sitePrice, 10))}</small>
+                      )}
                     </span>
                     <span
                       className={

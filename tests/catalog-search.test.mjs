@@ -2,12 +2,15 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   catalogSearchScore,
+  cleanCatalogMeasurementText,
   getCatalogColors,
   getCatalogColorFilterValues,
   getCatalogDimensionLabel,
+  getCatalogDimensions,
   getCatalogFeatures,
   getCatalogMaterials,
   matchesCatalogColors,
+  matchesCatalogDimensionLimits,
   matchesCatalogDimensions,
   matchesCatalogFeatures,
   matchesCatalogMaterials,
@@ -160,4 +163,44 @@ test("cleans noisy scraper color values and excludes title-conflicting multi-col
   };
   assert.equal(matchesCatalogColors(torontoAzul, "Bege"), false);
   assert.equal(matchesCatalogColors(torontoAzul, "Azul"), true);
+});
+
+test("cleans pasted product copy out of medidas while preserving multi-piece dimensions", () => {
+  assert.equal(
+    cleanCatalogMeasurementText(
+      "Larg:1,80m Alt: 0,50m Prof: 0,45m\\n\\n100% MDF Tampo e base de 25mm com bordas chanfradas",
+    ),
+    "Larg:1,80m Alt: 0,50m Prof: 0,45m",
+  );
+  assert.equal(
+    cleanCatalogMeasurementText(
+      "Mesa\nLarg: 0,90m\nAlt: 0,78m\nProf: 0,90m\n\nCadeira\nLarg: 36,6cm\nAlt: 88,5cm\nProf: 43,5cm",
+    ),
+    "Mesa\nLarg: 0,90m\nAlt: 0,78m\nProf: 0,90m\n\nCadeira\nLarg: 36,6cm\nAlt: 88,5cm\nProf: 43,5cm",
+  );
+  assert.equal(cleanCatalogMeasurementText("Suporta até 100kg\nProduto entregue montado"), "");
+});
+
+test("abbreviated measurements in medidas enter numeric dimension filters without reading descricao", () => {
+  const bancada = {
+    nome: "Bancada Nevada",
+    categoria: "Painéis e Racks",
+    medidas: "Larg:1,80m Alt: 0,50m Prof: 0,45m",
+    descricao: "Largura 9,99m na descrição.",
+  };
+  assert.deepEqual(getCatalogDimensions(bancada), {
+    widthCm: 180,
+    heightCm: 50,
+    depthClosedCm: 45,
+  });
+  assert.equal(matchesCatalogDimensionLimits(bancada, { widthCm: 190, depthClosedCm: 50 }), true);
+  assert.equal(matchesCatalogDimensionLimits(bancada, { widthCm: 150 }), false);
+  const onlyInDesc = {
+    nome: "Roupeiro Capelinha",
+    categoria: "Roupeiros",
+    medidas: null,
+    descricao: "Medidas: Alt 2,16m Larg 1,65m Prof 0,42m",
+  };
+  assert.deepEqual(getCatalogDimensions(onlyInDesc), {});
+  assert.equal(getCatalogDimensionLabel(onlyInDesc), "Altura: 2,16 m · Largura: 1,65 m");
 });

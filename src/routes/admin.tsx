@@ -39,8 +39,9 @@ import {
 } from "@/lib/admin.functions";
 import { formatBRL } from "@/lib/constants";
 import { adminCategoryKey, adminCategoryOptions } from "@/lib/admin-categories";
-import { cardInstallment } from "@/lib/payment";
+import { cardInstallment, cardQuote } from "@/lib/payment";
 import { hasRealReferencePrice } from "@/lib/price-reference";
+import { productMeasurements } from "@/lib/product-measurements";
 import { AdminWorkspace } from "@/components/AdminWorkspace";
 import { AdminStudio } from "@/components/admin-studio/AdminStudio";
 import { AdminOverview } from "@/components/AdminOverview";
@@ -765,7 +766,7 @@ export function AdminDashboard({
       {workspaceTab === "produtos" && (
         <div className="aw-editor-toolbar">
           <h1>Produtos</h1>
-          <button className="aw-action" onClick={startNew}>
+          <button type="button" className="aw-action" onClick={startNew}>
             <Plus size={16} /> Novo produto
           </button>
         </div>
@@ -773,7 +774,7 @@ export function AdminDashboard({
       {storageMode.isError && (
         <div role="alert" className="pm-note">
           Não foi possível confirmar onde salvar os rascunhos.{" "}
-          <button className="pm-button" onClick={() => storageMode.refetch()}>
+          <button type="button" className="pm-button" onClick={() => storageMode.refetch()}>
             Tentar novamente
           </button>
         </div>
@@ -794,11 +795,7 @@ export function AdminDashboard({
       />
       <div
         hidden={workspaceTab !== "produtos"}
-        className={
-          workspaceTab !== "produtos" && workspaceTab !== "revisao"
-            ? "hidden"
-            : "mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4"
-        }
+        className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4"
       >
         <button
           type="button"
@@ -892,7 +889,7 @@ export function AdminDashboard({
                   preço de venda só é definido por você ao completar o cadastro.
                 </p>
               </div>
-              <label className="inline-flex cursor-pointer items-center justify-center gap-2 bg-deep-green px-4 py-3 text-xs font-bold uppercase tracking-wider text-sand transition-colors hover:bg-gold hover:text-deep-green">
+              <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md bg-deep-green px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-sand transition-colors hover:bg-gold hover:text-deep-green">
                 <FileUp className="h-4 w-4" />
                 {importing ? "Importando…" : "Importar JSONL"}
                 <input
@@ -921,7 +918,7 @@ export function AdminDashboard({
                     type="button"
                     onClick={() => refreshScrapedProducts()}
                     disabled={isFetchingScraped}
-                    className="inline-flex items-center gap-1 font-semibold text-cacau"
+                    className="inline-flex min-h-11 items-center gap-1.5 px-2 font-semibold text-cacau"
                   >
                     <RefreshCw
                       className={`h-3.5 w-3.5 ${isFetchingScraped ? "animate-spin" : ""}`}
@@ -936,17 +933,13 @@ export function AdminDashboard({
                       className="border border-cacau/10 bg-white p-3 sm:p-4"
                     >
                       <div className="flex gap-3">
-                        {product.image_urls[0] ? (
-                          <ImageWithFallback
-                            src={product.image_urls[0]}
-                            alt={`Imagem de ${product.name}`}
-                            className="h-16 w-16 shrink-0 border border-cacau/10 object-contain sm:h-20 sm:w-20"
-                          />
-                        ) : (
-                          <div className="flex h-16 w-16 shrink-0 items-center justify-center border border-cacau/10 bg-sand text-[10px] text-text-light sm:h-20 sm:w-20">
-                            Sem foto
-                          </div>
-                        )}
+                        <ProductThumbnail
+                          product={{
+                            nome: product.name,
+                            url_imagem: product.image_urls[0],
+                            imagens: product.image_urls.slice(1),
+                          }}
+                        />
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-start justify-between gap-2">
                             <h3 className="font-semibold text-cacau">{product.name}</h3>
@@ -988,7 +981,7 @@ export function AdminDashboard({
                           <button
                             type="button"
                             onClick={() => startScrapedEdit(product)}
-                            className="mt-3 border border-gold px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-cacau hover:bg-gold hover:text-deep-green"
+                            className="mt-3 min-h-11 rounded border border-gold px-3 py-2 text-xs font-bold uppercase tracking-wide text-cacau transition-colors hover:bg-gold hover:text-deep-green"
                           >
                             Completar preço e fotos
                           </button>
@@ -1021,7 +1014,7 @@ export function AdminDashboard({
               <button
                 type="button"
                 onClick={clearFilters}
-                className="self-start text-xs font-bold uppercase tracking-wider text-cacau underline decoration-gold underline-offset-4"
+                className="min-h-11 self-start px-2 text-xs font-bold uppercase tracking-wider text-cacau underline decoration-gold underline-offset-4"
               >
                 Limpar filtros
               </button>
@@ -1159,8 +1152,15 @@ export function AdminDashboard({
                 </span>
               </div>
               {visibleProdutos.length === 0 ? (
-                <div className="border border-cacau/10 bg-white p-10 text-center text-sm text-text-light">
-                  Nenhum produto corresponde aos filtros atuais.
+                <div className="border border-cacau/10 bg-white p-8 text-center text-sm text-text-light">
+                  <p>Nenhum produto corresponde aos filtros atuais.</p>
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="mt-3 inline-flex min-h-11 items-center rounded-md border border-cacau/20 px-4 text-xs font-semibold text-cacau hover:border-gold hover:text-deep-green"
+                  >
+                    Limpar filtros
+                  </button>
                 </div>
               ) : (
                 <div className="space-y-5">
@@ -1177,23 +1177,20 @@ export function AdminDashboard({
                           const status = productStatus(p);
                           const source = sourceUrl(p);
                           const difference = grossPriceDifference(p);
+                          const sitePrice = Number(p.preco_atual ?? 0);
                           return (
                             <article
                               key={p.id}
-                              className="border border-cacau/10 bg-white p-4 transition-shadow hover:shadow-premium sm:p-5"
+                              className="rounded-lg border border-cacau/10 bg-white p-4 transition-shadow hover:shadow-premium sm:p-5"
                             >
                               <div className="flex gap-3">
-                                <ImageWithFallback
-                                  src={p.url_imagem}
-                                  alt={`Imagem de ${p.nome}`}
-                                  className="h-20 w-20 shrink-0 border border-cacau/10 object-cover sm:h-24 sm:w-24"
-                                />
+                                <ProductThumbnail product={p} />
                                 <div className="min-w-0 flex-1">
                                   <div className="flex flex-wrap items-start justify-between gap-2">
                                     <button
                                       type="button"
                                       onClick={() => startEdit(p)}
-                                      className="text-left font-semibold text-cacau hover:text-gold"
+                                      className="min-h-11 text-left font-semibold text-cacau hover:text-deep-green"
                                     >
                                       {p.nome}
                                     </button>
@@ -1234,6 +1231,11 @@ export function AdminDashboard({
                                   <div className="mt-1 font-bold text-price-green">
                                     {moneyOrDash(p.preco_atual)}
                                   </div>
+                                  {sitePrice > 0 && (
+                                    <div className="mt-0.5 text-[11px] text-text-light">
+                                      10x de {formatBRL(cardInstallment(sitePrice, 10))}
+                                    </div>
+                                  )}
                                 </div>
                                 <div>
                                   <div className="text-text-light">Diferença bruta</div>
@@ -1244,7 +1246,7 @@ export function AdminDashboard({
                                   </div>
                                 </div>
                               </div>
-                              <div className="flex items-center justify-between gap-3 pt-1">
+                              <div className="flex items-center justify-between gap-3 pt-2">
                                 <span className="text-xs text-text-light">
                                   {p.vendas_ultimos_30_dias ?? 0} venda(s) em 30 dias
                                 </span>
@@ -1252,7 +1254,7 @@ export function AdminDashboard({
                                   <button
                                     type="button"
                                     onClick={() => startEdit(p)}
-                                    className="inline-flex min-h-11 items-center gap-1.5 border border-cacau/20 px-3 py-2 text-xs font-bold uppercase tracking-wider text-cacau hover:border-gold hover:text-gold"
+                                    className="inline-flex min-h-11 items-center gap-1.5 rounded border border-cacau/20 px-3 py-2 text-xs font-bold uppercase tracking-wider text-cacau hover:border-gold hover:text-deep-green"
                                   >
                                     <Pencil className="h-3.5 w-3.5" /> Editar
                                   </button>
@@ -1260,7 +1262,7 @@ export function AdminDashboard({
                                     type="button"
                                     onClick={() => remove(p.id)}
                                     aria-label={`Remover ${p.nome}`}
-                                    className="min-h-11 min-w-11 border border-cacau/20 p-2 text-cacau hover:border-destructive hover:text-destructive"
+                                    className="min-h-11 min-w-11 rounded border border-cacau/20 p-2 text-cacau hover:border-destructive hover:text-destructive"
                                   >
                                     <Trash2 className="mx-auto h-4 w-4" />
                                   </button>
@@ -1280,7 +1282,7 @@ export function AdminDashboard({
                     type="button"
                     onClick={() => setPage((current) => Math.max(1, current - 1))}
                     disabled={page === 1}
-                    className="border border-cacau/20 px-4 py-2 text-xs font-bold uppercase tracking-wider text-cacau disabled:opacity-40"
+                    className="min-h-11 rounded border border-cacau/20 px-4 py-2 text-xs font-bold uppercase tracking-wider text-cacau disabled:opacity-40"
                   >
                     Anterior
                   </button>
@@ -1291,7 +1293,7 @@ export function AdminDashboard({
                     type="button"
                     onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
                     disabled={page === totalPages}
-                    className="border border-cacau/20 px-4 py-2 text-xs font-bold uppercase tracking-wider text-cacau disabled:opacity-40"
+                    className="min-h-11 rounded border border-cacau/20 px-4 py-2 text-xs font-bold uppercase tracking-wider text-cacau disabled:opacity-40"
                   >
                     Próxima
                   </button>
@@ -1348,15 +1350,17 @@ export function AdminDashboard({
           <Dialog.Overlay className="aw-overlay" />
           <Dialog.Content className="aw-help">
             <Dialog.Title>Remover produto da vitrine?</Dialog.Title>
-            <Dialog.Description>Confira o móvel antes de confirmar a remoção.</Dialog.Description>
+            <Dialog.Description>
+              Confira o móvel antes de confirmar. Esta ação remove o cadastro da loja.
+            </Dialog.Description>
             <ProductIdentity product={removing ?? undefined} />
-            <div className="pm-actions">
+            <div className="pm-actions mt-4 justify-between">
               <Dialog.Close className="aw-action" disabled={deleting}>
                 Cancelar remoção
               </Dialog.Close>
               <button
                 type="button"
-                className="aw-action"
+                className="aw-action aw-action-danger"
                 onClick={confirmRemoval}
                 disabled={deleting}
               >
@@ -1409,9 +1413,17 @@ function ProductForm({
   const label = "mb-1.5 block text-sm font-semibold text-cacau";
   const [section, setSection] = useState(initialSection);
   const [bundleSearch, setBundleSearch] = useState("");
+  const [coresText, setCoresText] = useState(() => (value.cores ?? []).join(", "));
+  const previousProductId = useRef(value.id);
   const editorScroll = useRef<HTMLDivElement>(null);
   const [uploading, setUploading] = useState(false);
   const originalValue = useRef(JSON.stringify(value));
+  useEffect(() => {
+    if (previousProductId.current !== value.id) {
+      previousProductId.current = value.id;
+      setCoresText((value.cores ?? []).join(", "));
+    }
+  }, [value.id, value.cores]);
   useEffect(() => {
     const warn = (event: BeforeUnloadEvent) => {
       if (JSON.stringify(value) !== originalValue.current) {
@@ -1425,6 +1437,7 @@ function ProductForm({
   const hasUnsavedChanges = JSON.stringify(value) !== originalValue.current;
   const supplierPrice = Number(value.preco_fornecedor ?? 0);
   const sitePrice = Number(value.preco_novo ?? 0);
+  const cardTerms = sitePrice > 0 ? cardQuote(sitePrice, 10) : null;
   const pricingDifference = supplierPrice > 0 && sitePrice > 0 ? sitePrice - supplierPrice : null;
   const pricingStatus =
     sitePrice > 0
@@ -1432,6 +1445,10 @@ function ProductForm({
       : supplierPrice > 0
         ? "Falta preço no site"
         : "Sem preços cadastrados";
+  const parsedMeasurements = productMeasurements(value.medidas ?? null);
+  const photoCount =
+    (value.imagem_url?.trim() ? 1 : 0) + (value.imagens?.filter((url) => url.trim()).length ?? 0);
+  const missingBasics = !value.nome.trim() || !value.categoria?.trim();
   const requestClose = () => {
     if (
       hasUnsavedChanges &&
@@ -1584,12 +1601,29 @@ function ProductForm({
           </header>
 
           <nav className="product-editor-nav" aria-label="Seções do produto">
-            {[
-              ["dados", "Dados do móvel"],
-              ["fotos", "Fotos"],
-              ["preco", "Preço e fornecedor"],
-              ["extras", "Compre junto"],
-            ].map(([key, title]) => (
+            {(
+              [
+                [
+                  "dados",
+                  "Dados do móvel",
+                  missingBasics ? "Faltam obrigatórios" : "",
+                  missingBasics,
+                ],
+                [
+                  "fotos",
+                  "Fotos",
+                  photoCount > 0 ? String(photoCount) : "Sem foto",
+                  photoCount === 0,
+                ],
+                [
+                  "preco",
+                  "Preço e fornecedor",
+                  sitePrice > 0 ? formatBRL(sitePrice) : "Sem preço",
+                  !(sitePrice > 0),
+                ],
+                ["extras", "Compre junto", `${selectedBundleIds.length}/3`, false],
+              ] as const
+            ).map(([key, title, pill, isAlert]) => (
               <button
                 type="button"
                 key={key}
@@ -1599,7 +1633,12 @@ function ProductForm({
                   editorScroll.current?.scrollTo({ top: 0 });
                 }}
               >
-                {title}
+                <span>{title}</span>
+                {pill && (
+                  <small className={`product-editor-tab-pill${isAlert ? " is-alert" : ""}`}>
+                    {pill}
+                  </small>
+                )}
               </button>
             ))}
           </nav>
@@ -1809,11 +1848,11 @@ function ProductForm({
                       site.
                     </p>
                   </div>
-                  <div className="sm:col-span-2 border border-cacau/10 bg-white p-3">
+                  <div className="sm:col-span-2 rounded-lg border border-cacau/10 bg-white p-3">
                     <div className="mb-2 text-xs font-bold uppercase tracking-wide text-cacau">
                       Conferência de preço
                     </div>
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                       <div>
                         <div className="text-xs text-text-light">Custo informado</div>
                         <div className="mt-1 font-bold text-cacau">
@@ -1825,6 +1864,19 @@ function ProductForm({
                         <div className="mt-1 font-bold text-price-green">
                           {moneyOrDash(value.preco_novo)}
                         </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-text-light">Cartão 10x</div>
+                        <div className="mt-1 font-bold text-deep-green">
+                          {cardTerms
+                            ? `10x de ${formatBRL(cardTerms.approximateInstallment)}`
+                            : "—"}
+                        </div>
+                        {cardTerms && (
+                          <div className="text-[11px] text-text-light">
+                            Total {formatBRL(cardTerms.total)}
+                          </div>
+                        )}
                       </div>
                       <div>
                         <div className="text-xs text-text-light">Diferença bruta</div>
@@ -1974,9 +2026,26 @@ function ProductForm({
                       className={field}
                     />
                     <small className="mt-1 block text-xs text-muted-foreground">
-                      Para filtros por medida, informe cada valor identificado. Sofás podem ter
-                      profundidade fechada e aberta separadas.
+                      Para filtros por medida, informe cada valor identificado (aceita Largura/Larg,
+                      Altura/Alt, Profundidade/Prof e Comprimento/Comp).
                     </small>
+                    {parsedMeasurements.length > 0 ? (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {parsedMeasurements.map((item) => (
+                          <span
+                            key={item.label}
+                            className="inline-flex items-center rounded bg-[#edf4e9] px-2 py-1 text-[11px] font-semibold text-deep-green"
+                          >
+                            {item.label}: {item.value}
+                          </span>
+                        ))}
+                      </div>
+                    ) : value.medidas?.trim() ? (
+                      <small className="mt-1 block text-[11px] text-cacau/75">
+                        Texto salvo como informativo; rotule cada dimensão com unidade (ex.: Larg
+                        1,80m) para entrar nos filtros numéricos.
+                      </small>
+                    ) : null}
                   </div>
                   <div className="sm:col-span-2">
                     <label htmlFor="product-field-12" className={label}>
@@ -1984,10 +2053,31 @@ function ProductForm({
                     </label>
                     <input
                       id="product-field-12"
-                      value={(value.cores ?? []).join(", ")}
-                      onChange={(e) => onChange({ ...value, cores: e.target.value.split(",") })}
+                      value={coresText}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        setCoresText(raw);
+                        const cleanedColors = raw
+                          .split(/[,;\n]/)
+                          .map((color) => color.trim())
+                          .filter(Boolean);
+                        onChange({ ...value, cores: cleanedColors });
+                      }}
+                      placeholder="Ex.: Cinamomo, Off-white, Bege"
                       className={field}
                     />
+                    {!!value.cores?.length && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {value.cores.map((color, index) => (
+                          <span
+                            key={`${color}-${index}`}
+                            className="inline-flex items-center rounded-full border border-cacau/15 bg-sand px-2.5 py-0.5 text-[11px] font-semibold text-cacau"
+                          >
+                            {color}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="sm:col-span-2">
                     <label htmlFor="product-field-13" className={label}>
@@ -1997,7 +2087,8 @@ function ProductForm({
                       id="product-field-13"
                       value={value.descricao ?? ""}
                       onChange={(e) => onChange({ ...value, descricao: e.target.value })}
-                      rows={3}
+                      rows={6}
+                      placeholder="Descreva materiais, estrutura, portas, gavetas e diferenciais do móvel."
                       className={field}
                     />
                   </div>
@@ -2095,11 +2186,7 @@ function ProductForm({
                               }
                               className="h-4 w-4 shrink-0 accent-[#304a32]"
                             />
-                            <ImageWithFallback
-                              src={candidate.url_imagem}
-                              alt=""
-                              className="h-10 w-10 shrink-0 object-contain"
-                            />
+                            <ProductThumbnail product={candidate} />
                             <span className="min-w-0 flex-1 truncate">{candidate.nome}</span>
                             <strong className="shrink-0 text-xs">
                               {formatBRL(Number(candidate.preco_atual))}
@@ -2164,7 +2251,7 @@ function ProductForm({
                       <ImageWithFallback
                         src={value.imagem_url}
                         alt="Prévia"
-                        className="mt-2 h-32 w-32 border border-cacau/10 object-cover"
+                        className="mt-2 h-32 w-32 rounded-lg border border-cacau/10 bg-white object-contain p-1"
                       />
                     )}
                   </div>

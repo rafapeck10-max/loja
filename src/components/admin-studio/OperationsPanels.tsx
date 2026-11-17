@@ -1,4 +1,4 @@
-import { ProductIdentity } from "../admin/ProductThumbnail";
+import { ProductIdentity, ProductThumbnail } from "../admin/ProductThumbnail";
 import { ProductPicker } from "../admin/ProductPicker";
 import { useState, useEffect } from "react";
 import { productStatus, type ProductStatus } from "../../lib/admin-filters";
@@ -89,7 +89,7 @@ export function NavigationPanel({
           <h1>Navegação e filtros</h1>
           <p>Organize as categorias da Mobi e confira os atributos disponíveis no catálogo.</p>
         </div>
-        <span className="pm-badge">MENU · LIST · SEARCH</span>
+        <span className="pm-badge">Menu e filtros da loja</span>
       </header>
       <div className="pm-split">
         <section className="pm-card">
@@ -269,7 +269,7 @@ export function NavigationPanel({
         <div className="pm-mini-products">
           {matching.slice(0, 8).map((p) => (
             <article key={p.id}>
-              <ImageWithFallback src={p.url_imagem} alt={p.nome} />
+              <ProductThumbnail product={p} />
               <strong>{p.nome}</strong>
               <span>{formatBRL(Number(p.preco_atual))}</span>
             </article>
@@ -1188,11 +1188,12 @@ export function ProductDraftPanel({
             {rows.slice(0, 40).map((x) => (
               <li key={x.id}>
                 <button
+                  type="button"
                   className="pm-item-button"
                   onClick={() => setId(x.id)}
                   aria-pressed={id === x.id}
                 >
-                  <ImageWithFallback src={x.url_imagem} alt={x.nome} />
+                  <ProductThumbnail product={x} />
                   <span>
                     <strong>{x.nome}</strong>
                     <small>

@@ -119,11 +119,12 @@ export function HomeConnectionPanel({
           </p>
         </div>
         <div className="pm-actions">
-          <button className="pm-button" disabled={busy} onClick={() => void run()}>
+          <button type="button" className="pm-button" disabled={busy} onClick={() => void run()}>
             Atualizar estado local
           </button>
           <button
-            className="pm-button primary"
+            type="button"
+            className="pm-button pm-primary"
             disabled={busy || !document}
             data-create-home-preview="true"
             onClick={() => void run({ action: "save", expected: document!.sequence })}
@@ -275,7 +276,8 @@ export function HomeConnectionPanel({
                     )}
                     {preview.status === "reviewed" && (
                       <button
-                        className="pm-button primary"
+                        type="button"
+                        className="pm-button pm-primary"
                         disabled={busy || !document}
                         onClick={async () => {
                           await run({
@@ -320,7 +322,7 @@ export function HomeConnectionPanel({
                       >
                         <div className="mobi-wrap pt-6">
                           <h2 id="pm-content-preview" className="text-xl text-deep-green">
-                            Conteúdo PM-07 nesta revisão
+                            Páginas de ajuda nesta revisão
                           </h2>
                         </div>
                         {preview.config.content.pages.map((page) => (
