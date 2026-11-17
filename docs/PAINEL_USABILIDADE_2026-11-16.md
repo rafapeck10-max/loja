@@ -52,3 +52,15 @@ Rafael aprovou o restante da revisão e pediu foto em toda referência a produto
 A seleção nativa de produto do atendimento virou diálogo com pesquisa e foto nas opções. A confirmação de remoção também mostra o móvel, mantendo cancelamento e a operação de exclusão existentes; confirmação fica bloqueada durante o envio. Nenhuma alteração de preço, taxa, cadastro ou fotos no banco.
 
 Validação adicional: TypeScript e ESLint direcionado; 20 testes pertinentes de imagem, resumo e campanhas passaram. No navegador: miniaturas no início e precificação; imagem real do Roma carregada tanto na linha de preço quanto no cabeçalho do editor; seleção de Roma no atendimento confirmada pelo ID `review-sofa-roma`; confirmação visual de remoção aberta e cancelada com o produto preservado. Em viewport 390px, largura útil e scrollWidth iguais a 375px. Os links de algumas fotos SR retornaram HTTP 503 nesta sessão; nesses casos foi observado o fallback, sem alegar recuperação da origem ou substituir foto de um móvel pela de outro.
+
+
+## Banners — autorização de publicação em 17/11/2026
+
+Rafael autorizou publicar a revisão, condicionando a publicação às dimensões da Sofá na Caixa. Conferência ao vivo em https://sofanacaixa.com.br/: imagens desktop 2500 × 700 (também 1300 × 364, mesma proporção), mobile 991 × 673; carrossel medido com 1252 × 350,55 px.
+
+| Requisito | Fonte | Implementação | Evidência | Limite |
+| --- | --- | --- | --- | --- |
+| Mesmas proporções responsivas | Pedido de Rafael; PM-03; MM-HOME-01 | src/home-redesign.css | Desktop 1252 × 351; celular 343 × 233, sem overflow | A resolução física das artes existentes não é alterada; contain preserva imagem inteira |
+| Prévia indica dimensões reais | PM-03; MM-CMS-01 | src/components/admin-studio/BannersPanel.tsx | Rótulos 2500 × 700 e 991 × 673; formatos forçados com as mesmas proporções | Sem recorte destrutivo; arte fora da proporção mantém faixas |
+
+17 testes de banners, seleção e fallback passaram; ESLint direcionado e build passaram. A prévia isolada mantém aviso de ausência do servidor local e algumas imagens do fornecedor indisponíveis, condições anteriores à alteração. Nenhuma alteração de artes, preços, taxas ou dados do catálogo. A publicação ocorre via PR #24 após prévia Vercel READY e nova conferência da origem em produção. O script PowerShell de preflight depende de ferramentas indisponíveis neste Linux; projeto, equipe, domínio, SHA de origem e caminhos alterados são conferidos por conectores e comparação Git equivalente, sem afirmar execução do script.

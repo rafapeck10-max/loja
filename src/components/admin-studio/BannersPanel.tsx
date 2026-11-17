@@ -318,12 +318,12 @@ export function BannersPanel({ data, onChange }: BannersPanelProps) {
           </p>
           <div className="pm-grid" key={banner.id}>
             <MediaField
-              label="Computador · 16:5"
+              label="Computador · 2500 × 700"
               value={banner.image_url}
               onApply={(source) => applyMedia(banner.id, "image_url", source)}
             />
             <MediaField
-              label="Celular · 1:1"
+              label="Celular · 991 × 673"
               value={banner.mobile_image_url}
               optional
               onApply={(source) => applyMedia(banner.id, "mobile_image_url", source)}
@@ -413,7 +413,7 @@ export function BannersPanel({ data, onChange }: BannersPanelProps) {
                 aria-pressed={previewViewport === "desktop"}
                 onClick={() => setPreviewViewport("desktop")}
               >
-                Computador · 16:5
+                Computador · 2500 × 700
               </button>
               <button
                 type="button"
@@ -421,7 +421,7 @@ export function BannersPanel({ data, onChange }: BannersPanelProps) {
                 aria-pressed={previewViewport === "mobile"}
                 onClick={() => setPreviewViewport("mobile")}
               >
-                Celular · 1:1
+                Celular · 991 × 673
               </button>
             </div>
           </div>
@@ -431,7 +431,7 @@ export function BannersPanel({ data, onChange }: BannersPanelProps) {
               : "Fora da exibição agora (estado ou vigência). A composição abaixo permite revisar a arte."}{" "}
             {previewViewport === "mobile" && !banner.mobile_image_url
               ? "Sem arte celular: a imagem larga é preservada inteira com faixas."
-              : "A imagem preenche a proporção: as bordas podem ser cortadas. Confira produto e textos."}
+              : "A imagem é preservada inteira, sem cortes. Use a dimensão indicada para evitar faixas."}
           </p>
           <div
             style={{
