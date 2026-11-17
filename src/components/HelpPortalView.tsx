@@ -70,16 +70,21 @@ export function HelpPortalView({ revisionId = null }: { revisionId?: number | nu
           Prévia de ajuda local · revisão {revisionId} · não publicado
         </div>
       )}
-      <div className="border-b border-[#e9e3d8] bg-white">
+      <div className="border-b border-gold/30 bg-deep-green text-sand">
         <header className="mx-auto flex min-h-[76px] max-w-6xl items-center justify-between gap-4 px-4 sm:px-8">
-          <Link to="/" search={{}} aria-label="Mobi — voltar ao início">
+          <Link
+            to="/"
+            search={{}}
+            aria-label="Mobi — voltar ao início"
+            className="inline-flex min-h-11 items-center"
+          >
             <MobiliLogo className="h-11 w-[106px]" />
           </Link>
           <Link
             to="/"
             search={{ all: true, page: 1 }}
             hash="catalogo"
-            className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[#304a32] underline underline-offset-4"
+            className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-sand underline underline-offset-4 transition-colors hover:text-gold"
           >
             Voltar à loja <ArrowRight size={16} aria-hidden="true" />
           </Link>
@@ -111,7 +116,7 @@ export function HelpPortalView({ revisionId = null }: { revisionId?: number | nu
         </div>
       </section>
 
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-8 sm:py-10">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-8 sm:py-10">
         <section aria-labelledby="mobi-help-topics">
           <div className="mb-4 flex items-end justify-between gap-4">
             <div>
@@ -228,7 +233,7 @@ export function HelpPortalView({ revisionId = null }: { revisionId?: number | nu
         <p className="mt-8 border-t border-[#e5dfd4] pt-4 text-xs leading-5 text-[#737a70]">
           Mobi é uma loja online. Não há atendimento presencial, showroom ou retirada em loja.
         </p>
-      </main>
+      </div>
     </div>
   );
 }

@@ -193,7 +193,7 @@ function RootComponent() {
             <div
               className={
                 isLinksRoute
-                  ? "flex min-h-screen flex-col bg-[#073f3b]"
+                  ? "flex min-h-screen flex-col bg-[#252F27]"
                   : isAdminRoute
                     ? "admin-shell flex min-h-screen flex-col"
                     : "store-shell flex min-h-screen flex-col"
@@ -207,12 +207,12 @@ function RootComponent() {
                 {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
                 <Outlet />
               </main>
-              {!isLinksRoute && !isAdminRoute && !isHelpRoute && <Footer />}
+              {!isLinksRoute && !isAdminRoute && <Footer />}
             </div>
-            {!isAdminRoute && !isLinksRoute && !isHelpRoute && <WhatsAppFloat />}
-            {!isHelpRoute && <CartDrawer />}
-            {!isHelpRoute && <MenuDrawer />}
-            {!isAdminRoute && !isLinksRoute && !isHelpRoute && <MobileBottomBar />}
+            {!isAdminRoute && !isLinksRoute && <WhatsAppFloat />}
+            <CartDrawer />
+            <MenuDrawer />
+            {!isAdminRoute && !isLinksRoute && <MobileBottomBar />}
             <Toaster
               position="bottom-left"
               toastOptions={{

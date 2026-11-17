@@ -24,7 +24,7 @@ export function InspirationArticleView({
   }, [article.relatedProductIds, productsQuery.data]);
   const shareText = `${article.title} · Mobi ${SITE_URL}/inspiracao/${article.slug}`;
   return (
-    <main className="mobi-wrap py-7 sm:py-10">
+    <div className="mobi-wrap py-7 sm:py-10">
       <div className="border-b border-gold/30 bg-[#f3f4ed] px-4 py-2 text-center text-xs text-deep-green">
         Prévia editorial local · revisão {revisionId} · não publicado
       </div>
@@ -99,6 +99,6 @@ export function InspirationArticleView({
           Voltar para ideias da Mobi
         </Link>
       </div>
-    </main>
+    </div>
   );
 }

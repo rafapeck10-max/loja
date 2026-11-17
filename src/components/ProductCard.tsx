@@ -36,11 +36,15 @@ export function ProductCard({
   const price = productDisplayPrice(produto);
   const payment = cardQuote(price, MAX_INSTALLMENTS);
   const saveCatalogReturnPosition = () => {
-    if (!returnCategory || !returnPage || typeof window === "undefined") return;
+    if (!returnPage || typeof window === "undefined") return;
     try {
       sessionStorage.setItem(
         "mobi:catalog-return-position",
-        JSON.stringify({ category: returnCategory, page: returnPage, scrollY: window.scrollY }),
+        JSON.stringify({
+          category: returnCategory ?? "__root__",
+          page: returnPage,
+          scrollY: window.scrollY,
+        }),
       );
     } catch {
       // Navigation should still work if browser storage is unavailable.

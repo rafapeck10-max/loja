@@ -93,6 +93,11 @@
   overflow-x: auto;
   padding: 3px 0 12px;
   border-bottom: 1px solid #e6dfd2;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.mobi-catalog-related::-webkit-scrollbar {
+  display: none;
 }
 .mobi-catalog-related a {
   flex-shrink: 0;
@@ -923,14 +928,14 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  min-height: 32px;
+  min-height: 44px;
   margin-bottom: 8px;
   font-size: 12px;
 }
 .mobi-catalog > .mobi-breadcrumb a {
   display: inline-flex;
   align-items: center;
-  min-height: 32px;
+  min-height: 44px;
   color: inherit;
   text-decoration: none;
 }

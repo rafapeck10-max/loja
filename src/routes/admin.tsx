@@ -170,7 +170,7 @@ function LoginForm({ onSuccess }: { onSuccess: (pwd: string) => void }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-deep-green py-3 text-xs font-bold uppercase tracking-[1.5px] text-sand transition-colors hover:bg-gold hover:text-deep-green disabled:opacity-60"
+            className="min-h-11 w-full bg-deep-green py-3 text-xs font-bold uppercase tracking-[1.5px] text-sand transition-colors hover:bg-gold hover:text-deep-green disabled:opacity-60"
           >
             {loading ? "Verificando…" : "Entrar"}
           </button>

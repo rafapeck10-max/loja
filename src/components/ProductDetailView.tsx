@@ -30,9 +30,10 @@ import {
 } from "@/lib/constants";
 import { useCart } from "@/lib/cart-context";
 import { publicDescription } from "@/lib/product-copy";
+import { cleanCatalogMeasurementText, isNoiseColorToken } from "@/lib/catalog-search";
 import { cardQuote } from "@/lib/payment";
 import { productMeasurements } from "@/lib/product-measurements";
-import { catalogUrlSearch, parseCatalogUrlString } from "@/lib/catalog-url-state";
+import { catalogUrlSearch, parseCatalogReturnSearch } from "@/lib/catalog-url-state";
 import type { Produto, ProductPriceVariation } from "@/lib/products.functions";
 
 type ProductDetailViewProps = {
@@ -59,7 +60,13 @@ function priceOptionsFor(product: Produto) {
 }
 
 function colorsFor(product: Produto) {
-  return [...new Set((product.cores ?? []).map((color) => color.trim()).filter(Boolean))];
+  return [
+    ...new Set(
+      (product.cores ?? [])
+        .map((color) => color.trim())
+        .filter((color) => color && !isNoiseColorToken(color)),
+    ),
+  ];
 }
 
 function bundleChoiceFor(product: Produto, sku?: string, colorName?: string) {
@@ -142,12 +149,13 @@ export function ProductDetailView({
       : null;
   const currentPrice = selectedOption?.sale_price ?? product.preco_novo;
   const payment = cardQuote(currentPrice, MAX_INSTALLMENTS);
+  const cleanedMedidas = cleanCatalogMeasurementText(product.medidas);
   const measurements = productMeasurements(product.medidas);
   const keyFacts =
     measurements.length > 0
       ? measurements
-      : product.medidas?.trim()
-        ? [{ label: "Medidas informadas", value: product.medidas, icon: "ruler" as const }]
+      : cleanedMedidas
+        ? [{ label: "Medidas informadas", value: cleanedMedidas, icon: "ruler" as const }]
         : [];
   const rawDescription = publicDescription(product.descricao);
   const descriptionParts = rawDescription
@@ -156,8 +164,11 @@ export function ProductDetailView({
     .filter(Boolean);
   const reference = product.sku?.split("|")[0]?.trim();
   const hasCharacteristics = Boolean(
-    product.medidas?.trim() || colors.length || pricedOptions.length || reference,
+    cleanedMedidas || measurements.length || colors.length || pricedOptions.length || reference,
   );
+  const returnContext = parseCatalogReturnSearch(returnSearch);
+  const isRootCatalogReturn =
+    !returnCategory && Boolean(returnContext.q || returnContext.ofertas || returnContext.all);
   const hasInformation = Boolean(descriptionParts.length || hasCharacteristics);
   const bundleProducts = useMemo(() => {
     const byId = new Map(allProducts.map((item) => [item.id, item]));
@@ -267,23 +278,45 @@ export function ProductDetailView({
         <Link
           to="/"
           search={{}}
-          className="shrink-0 text-inherit no-underline hover:text-price-green"
+          className="inline-flex min-h-11 shrink-0 items-center text-inherit no-underline hover:text-price-green"
         >
           Início
         </Link>
         <span aria-hidden="true">/</span>
-        <Link
-          to="/categoria/$slug"
-          params={{ slug: returnCategory ?? categorySlug(product.categoria) }}
-          search={catalogUrlSearch(
-            parseCatalogUrlString(returnSearch),
-            returnPage ?? parseCatalogUrlString(returnSearch).page,
-          )}
-          resetScroll={false}
-          className="shrink-0 text-inherit no-underline hover:text-price-green"
-        >
-          {product.categoria}
-        </Link>
+        {isRootCatalogReturn ? (
+          <Link
+            to="/"
+            search={{
+              ...(returnContext.q ? { q: returnContext.q } : {}),
+              ...(returnContext.ofertas ? { ofertas: true } : {}),
+              ...(returnContext.all ? { all: true } : {}),
+              ...catalogUrlSearch(
+                returnContext,
+                returnPage ?? returnContext.page,
+                returnContext.q ? "relevant" : "recommended",
+              ),
+            }}
+            hash="catalogo"
+            resetScroll={false}
+            className="inline-flex min-h-11 shrink-0 items-center text-inherit no-underline hover:text-price-green"
+          >
+            {returnContext.q
+              ? `Busca: “${returnContext.q}”`
+              : returnContext.ofertas
+                ? "Ofertas"
+                : "Catálogo"}
+          </Link>
+        ) : (
+          <Link
+            to="/categoria/$slug"
+            params={{ slug: returnCategory ?? categorySlug(product.categoria) }}
+            search={catalogUrlSearch(returnContext, returnPage ?? returnContext.page)}
+            resetScroll={false}
+            className="inline-flex min-h-11 shrink-0 items-center text-inherit no-underline hover:text-price-green"
+          >
+            {product.categoria}
+          </Link>
+        )}
         <span aria-hidden="true">/</span>
         <span aria-current="page" className="truncate font-medium text-cacau">
           {product.nome}
@@ -495,7 +528,7 @@ export function ProductDetailView({
 
           {pricedOptions.length === 0 && colors.length > 1 && (
             <fieldset className="mobi-product-colors">
-              <legend>Cor</legend>
+              <legend>Cor{currentColor ? `: ${currentColor}` : ""}</legend>
               <div>
                 {colors.map((color) => (
                   <button
@@ -596,7 +629,7 @@ export function ProductDetailView({
             </div>
           </section>
 
-          {(keyFacts.length > 0 || !product.medidas?.trim()) && (
+          {(keyFacts.length > 0 || !cleanedMedidas) && (
             <section
               className="mobi-product-key-facts mt-3"
               aria-labelledby="mobi-product-facts-title"
@@ -626,7 +659,12 @@ export function ProductDetailView({
                 </div>
               ) : (
                 <p className="mobi-product-facts-missing">
-                  As medidas deste móvel ainda não foram informadas.
+                  {descriptionParts.length > 0 &&
+                  /\b(\d+(?:[.,]\d+)?\s*(?:mm|cm|m)\b|largura|altura|profundidade|comprimento|dimens[oõ]es)/i.test(
+                    rawDescription,
+                  )
+                    ? "Confira as medidas detalhadas na descrição abaixo ou confirme com a Mobi pelo WhatsApp."
+                    : "As medidas deste móvel ainda não foram informadas."}
                 </p>
               )}
               {hasInformation ? (
@@ -818,7 +856,7 @@ export function ProductDetailView({
                 </div>
               </div>
               <div className="mobi-product-characteristics-grid">
-                {(product.medidas || measurements.length > 0) && (
+                {(cleanedMedidas || measurements.length > 0) && (
                   <div className="mobi-product-characteristic-group">
                     <h3>Dimensões</h3>
                     <dl>
@@ -832,14 +870,14 @@ export function ProductDetailView({
                       ) : (
                         <div>
                           <dt>Medidas informadas</dt>
-                          <dd>{product.medidas}</dd>
+                          <dd>{cleanedMedidas}</dd>
                         </div>
                       )}
                     </dl>
-                    {measurements.length > 0 ? (
+                    {measurements.length > 0 && cleanedMedidas ? (
                       <details className="mobi-product-measures-source">
                         <summary>Ver medidas informadas</summary>
-                        <p>{product.medidas}</p>
+                        <p>{cleanedMedidas}</p>
                       </details>
                     ) : null}
                   </div>
@@ -867,7 +905,7 @@ export function ProductDetailView({
                         </div>
                       ))}
                     </dl>
-                    {product.cores?.length ? (
+                    {colors.length > 0 ? (
                       <p>
                         As cores cadastradas não garantem disponibilidade imediata. Confirme a opção
                         com a Mobi.

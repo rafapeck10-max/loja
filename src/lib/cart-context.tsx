@@ -106,7 +106,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, { ...item, quantity }];
     });
-    toast.success(`${item.name} adicionado ao carrinho!`);
     setIsOpen(true);
   }, []);
 

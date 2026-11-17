@@ -65,7 +65,6 @@ export function Header() {
     };
   }, []);
   const navigate = useNavigate();
-  const { data: catalogProducts = [] } = useQuery(produtosQueryOptions());
   const routeQuery = useRouterState({
     select: (state) => (state.location.search as { q?: string }).q ?? "",
   });
@@ -73,6 +72,11 @@ export function Header() {
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [activeSuggestion, setActiveSuggestion] = useState(-1);
+  const { data: catalogProducts = [] } = useQuery({
+    ...produtosQueryOptions(),
+    enabled: suggestionsOpen,
+    staleTime: 30_000,
+  });
   const searchRef = useRef<HTMLInputElement>(null);
   const suggestionBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {

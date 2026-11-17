@@ -24,6 +24,7 @@ import {
   DEFAULT_CATALOG_FILTERS,
   isValidCatalogPriceRange,
   priceToCents,
+  serializeCatalogReturnSearch,
   serializeCatalogUrlState,
   type CatalogFilterState,
 } from "@/lib/catalog-url-state";
@@ -649,12 +650,16 @@ export function StoreCatalog({
                     key={product.id}
                     produto={product}
                     badge={badges[product.id]}
-                    returnPage={initialCategory !== "all" ? requestedPage : undefined}
+                    returnPage={requestedPage}
                     returnCategory={initialCategory !== "all" ? initialCategory : undefined}
                     returnSearch={
                       initialCategory !== "all"
                         ? serializeCatalogUrlState(filterState, requestedPage)
-                        : undefined
+                        : serializeCatalogReturnSearch(filterState, requestedPage, {
+                            q: query.trim() || undefined,
+                            offers: offers || undefined,
+                            all: !query.trim() && !offers ? true : undefined,
+                          })
                     }
                   />
                 ))}

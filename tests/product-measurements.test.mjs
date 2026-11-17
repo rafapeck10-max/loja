@@ -52,3 +52,11 @@ test("leaves conflicting labelled measurements in their original text", () => {
   assert.deepEqual(productMeasurements("Largura 2,00 m; Largura 1,80 m; altura 95 cm"), []);
   assert.deepEqual(values("Largura 2 m; largura 200 cm"), { Largura: "2 m" });
 });
+
+test("supports three-decimal metric dimensions without slicing trailing digits", () => {
+  assert.deepEqual(values("Largura: 1,697 m; altura: 0,865 m; profundidade: 2,050 m"), {
+    Largura: "1,697 m",
+    Altura: "0,865 m",
+    Profundidade: "2,050 m",
+  });
+});
