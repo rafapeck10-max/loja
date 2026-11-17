@@ -275,7 +275,7 @@
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
 }
 .mobi-hero-art-link {
   position: absolute;
@@ -1384,4 +1384,14 @@
 /* Explicit editor format takes precedence over the device used to edit. */
 .mobi-hero[data-preview-format="desktop"] {
   aspect-ratio: 2500 / 700;
+}
+
+/* Preserve a desktop-only artwork when no dedicated phone artwork exists. */
+@media (max-width: 767px) {
+  .mobi-hero-art[data-has-mobile-art="false"]:not([data-preview-format="desktop"]) .mobi-hero-image {
+    object-fit: contain;
+  }
+}
+.mobi-hero-art[data-preview-format="mobile"][data-has-mobile-art="false"] .mobi-hero-image {
+  object-fit: contain;
 }

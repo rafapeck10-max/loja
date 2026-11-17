@@ -64,3 +64,10 @@ Rafael autorizou publicar a revisão, condicionando a publicação às dimensõe
 | Prévia indica dimensões reais | PM-03; MM-CMS-01 | src/components/admin-studio/BannersPanel.tsx | Rótulos 2500 × 700 e 991 × 673; formatos forçados com as mesmas proporções | Sem recorte destrutivo; arte fora da proporção mantém faixas |
 
 17 testes de banners, seleção e fallback passaram; ESLint direcionado e build passaram. A prévia isolada mantém aviso de ausência do servidor local e algumas imagens do fornecedor indisponíveis, condições anteriores à alteração. Nenhuma alteração de artes, preços, taxas ou dados do catálogo. A publicação ocorre via PR #24 após prévia Vercel READY e nova conferência da origem em produção. O script PowerShell de preflight depende de ferramentas indisponíveis neste Linux; projeto, equipe, domínio, SHA de origem e caminhos alterados são conferidos por conectores e comparação Git equivalente, sem afirmar execução do script.
+
+
+### Correção solicitada durante a conferência
+
+Rafael esclareceu que deseja uma imagem única em todo o banner, tanto no computador quanto no celular. BannerSlide passa a renderizar somente picture/imagem e link de área inteira, inclusive para configurações antigas com show_text=true; nenhum texto HTML ou coluna lateral é criado. O editor remove a composição com títulos laterais e orienta incluir chamadas na própria arte. Valores antigos são preservados no contrato para compatibilidade. Desktop e arte mobile dedicada usam cover; na falta de arte celular, contain preserva a arte larga inteira. Novos rascunhos iniciam sem texto separado.
+
+Conferência visual com fotografia de demonstração (não altera as artes publicadas): uma imagem e zero blocos de texto no desktop 1252 × 351 e celular 343 × 233. Imagem carregada (1400 × 738) observada nas duas apresentações. Clique no banner navegou à rota correta /categoria/sofas; o servidor estático isolado não serve rotas dinâmicas. Nova compilação e testes direcionados após a correção. A tentativa anterior de merge foi bloqueada pela revisão automática ao receber a instrução mais recente; nenhuma versão intermediária foi publicada.

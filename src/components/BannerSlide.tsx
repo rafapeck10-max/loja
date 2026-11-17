@@ -8,21 +8,21 @@ interface BannerSlideProps {
   children?: ReactNode;
   previewViewport?: "desktop" | "mobile";
 }
-/** Shared composition: editable copy and an intact product photo, or an uploaded complete artwork. */
+/** One complete artwork per viewport, shared by the storefront and editor preview. */
 export function BannerSlide({
   banner,
   responsiveMedia,
   children,
   previewViewport,
 }: BannerSlideProps) {
-  const showText = responsiveMedia?.showText ?? true;
   const desktop = responsiveMedia?.desktop ?? banner.image_url;
   const mobile = responsiveMedia?.mobile;
   const alt = responsiveMedia?.alt ?? banner.title;
   const href = isSafeBannerDestination(banner.cta_href) ? banner.cta_href : undefined;
   return (
     <section
-      className={`mobi-hero ${showText ? "mobi-hero-product" : "mobi-hero-art"}`}
+      className="mobi-hero mobi-hero-art"
+      data-has-mobile-art={!!mobile}
       data-preview-format={previewViewport}
       aria-label={
         previewViewport
@@ -30,25 +30,6 @@ export function BannerSlide({
           : undefined
       }
     >
-      {showText && (
-        <div className="mobi-hero-copy">
-          {banner.eyebrow && <span className="mobi-eyebrow">{banner.eyebrow}</span>}
-          <h1>{banner.title}</h1>
-          {banner.subtitle && <p>{banner.subtitle}</p>}
-          {banner.cta_label &&
-            (href ? (
-              <a href={href} className="mobi-gold">
-                {banner.cta_label}
-                <span aria-hidden="true">↗</span>
-              </a>
-            ) : (
-              <span className="mobi-gold" aria-disabled="true">
-                {banner.cta_label}
-              </span>
-            ))}
-          {children}
-        </div>
-      )}
       <picture className="mobi-hero-media">
         {!previewViewport && <source media="(max-width:767px)" srcSet={mobile || desktop} />}
         <ImageWithFallback
@@ -58,11 +39,8 @@ export function BannerSlide({
           fetchPriority="high"
         />
       </picture>
-      {!showText && (
-        <>
-          {href && <a className="mobi-hero-art-link" href={href} aria-label={alt} />} {children}
-        </>
-      )}
+      {href && <a className="mobi-hero-art-link" href={href} aria-label={alt} />}
+      {children}
     </section>
   );
 }

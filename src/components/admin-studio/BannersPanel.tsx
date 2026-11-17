@@ -303,18 +303,10 @@ export function BannersPanel({ data, onChange }: BannersPanelProps) {
               />{" "}
               Ativo no rascunho
             </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={banner.show_text}
-                onChange={(e) => change({ show_text: e.target.checked })}
-              />{" "}
-              Exibir título e apoio sobre a arte
-            </label>
           </div>
           <p className="pm-muted">
-            Se a arte já contém textos, desmarque a sobreposição para evitar duplicação. Desative
-            antes de excluir.
+            Uma imagem ocupa todo o banner, sem texto ou coluna ao lado. Inclua as chamadas na
+            própria arte. Desative antes de excluir.
           </p>
           <div className="pm-grid" key={banner.id}>
             <MediaField
@@ -329,45 +321,8 @@ export function BannersPanel({ data, onChange }: BannersPanelProps) {
               onApply={(source) => applyMedia(banner.id, "mobile_image_url", source)}
             />
           </div>
-          {banner.show_text && (
-            <div className="pm-grid">
-              <label className="pm-field">
-                Chamada pequena
-                <input
-                  value={banner.eyebrow}
-                  maxLength={60}
-                  onChange={(e) => change({ eyebrow: e.target.value })}
-                />
-              </label>
-              <label className="pm-field">
-                Título
-                <input
-                  value={banner.title}
-                  maxLength={120}
-                  onChange={(e) => change({ title: e.target.value })}
-                />
-              </label>
-              <label className="pm-field">
-                Apoio
-                <textarea
-                  value={banner.subtitle}
-                  rows={2}
-                  maxLength={220}
-                  onChange={(e) => change({ subtitle: e.target.value })}
-                />
-              </label>
-              <label className="pm-field">
-                Texto do botão
-                <input
-                  value={banner.cta_label}
-                  maxLength={50}
-                  onChange={(e) => change({ cta_label: e.target.value })}
-                />
-              </label>
-            </div>
-          )}
           <label className="pm-field">
-            Destino do banner ou botão
+            Destino ao tocar no banner
             <input
               value={banner.cta_href}
               maxLength={300}
@@ -431,7 +386,7 @@ export function BannersPanel({ data, onChange }: BannersPanelProps) {
               : "Fora da exibição agora (estado ou vigência). A composição abaixo permite revisar a arte."}{" "}
             {previewViewport === "mobile" && !banner.mobile_image_url
               ? "Sem arte celular: a imagem larga é preservada inteira com faixas."
-              : "A imagem é preservada inteira, sem cortes. Use a dimensão indicada para evitar faixas."}
+              : "A arte ocupa todo o banner. Use a dimensão indicada para manter o enquadramento sem cortes."}
           </p>
           <div
             style={{

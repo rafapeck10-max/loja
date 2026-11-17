@@ -34,7 +34,7 @@ export function initialBannerData(
       name: `Banner ${banner.position}`,
       mobile_image_url: "",
       alt: banner.title,
-      show_text: true,
+      show_text: false,
       starts_at: "",
       ends_at: "",
     })),
