@@ -1,3 +1,4 @@
+import { ProductThumbnail } from "./admin/ProductThumbnail";
 import { useState } from "react";
 import {
   ArrowRight,
@@ -216,9 +217,7 @@ export function AdminOverview<T extends OverviewProduct>({
             <ul className="ov-issues">
               {(showAll ? issues.slice(0, 25) : issues.slice(0, 5)).map(({ product, reasons }) => (
                 <li key={product.id}>
-                  <div className="ov-issue-type" aria-hidden="true">
-                    <Package size={17} />
-                  </div>
+                  <ProductThumbnail product={product} />
                   <div className="ov-issue-content">
                     <h3>{product.nome}</h3>
                     <p className="ov-supplier">

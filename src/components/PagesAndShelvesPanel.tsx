@@ -1,3 +1,4 @@
+import { ProductIdentity } from "./admin/ProductThumbnail";
 import { useEffect, useMemo, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
@@ -532,7 +533,11 @@ export function PagesAndShelvesPanel({
                             <li key={id}>
                               <span className="ps-position">{index + 1}</span>
                               <div className="ps-product-identity">
-                                {p ? identity(p) : <strong>Produto {id} não encontrado</strong>}
+                                {p ? (
+                                  identity(p)
+                                ) : (
+                                  <ProductIdentity fallbackName={`Produto ${id} não encontrado`} />
+                                )}
                               </div>
                               {(!p || !isCurationProduct(p)) && (
                                 <p className="ps-warning">
@@ -621,7 +626,13 @@ export function PagesAndShelvesPanel({
                                 <li key={id}>
                                   <span className="ps-position">{index + 1}</span>
                                   <div className="ps-product-identity">
-                                    {p ? identity(p) : <strong>Produto {id} não encontrado</strong>}
+                                    {p ? (
+                                      identity(p)
+                                    ) : (
+                                      <ProductIdentity
+                                        fallbackName={`Produto ${id} não encontrado`}
+                                      />
+                                    )}
                                   </div>
                                   {(!p || !isCurationProduct(p)) && (
                                     <p className="ps-warning">

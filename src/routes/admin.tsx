@@ -46,6 +46,7 @@ import { AdminStudio } from "@/components/admin-studio/AdminStudio";
 import { AdminOverview } from "@/components/AdminOverview";
 import { ADMIN_REVIEW_QUERY_LIMIT } from "@/lib/admin-overview";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
+import { ProductThumbnail, ProductIdentity } from "@/components/admin/ProductThumbnail";
 import { SupplierPricingPanel } from "@/components/admin/SupplierPricingPanel";
 import { createRemoteStudioTransport } from "@/lib/admin-studio-remote";
 import { isEligibleBundleProduct } from "@/lib/product-bundles";
@@ -331,6 +332,8 @@ export function AdminDashboard({
     queryKey: ["admin-scraped-products"],
     queryFn: () => listPendingScrapedProducts({ data: { password } }),
   });
+  const [deleting, setDeleting] = useState(false);
+  const [removing, setRemoving] = useState<ProdutoAdmin | null>(null);
   const [editorSection, setEditorSection] = useState("dados");
   const [editing, setEditing] = useState<ProdutoInput | null>(null);
   const [activeScrapedImport, setActiveScrapedImport] = useState<ProdutoScrapImport | null>(null);
@@ -696,14 +699,20 @@ export function AdminDashboard({
     }
   };
 
-  const remove = async (id: string, nome: string) => {
-    if (!confirm(`Remover "${nome}" da vitrine?`)) return;
+  const remove = (id: string) => setRemoving(produtos.find((product) => product.id === id) ?? null);
+  const confirmRemoval = async () => {
+    if (!removing || deleting) return;
+    setDeleting(true);
+    const id = removing.id;
     try {
       await deleteProduto({ data: { password, id } });
+      setRemoving(null);
       toast.success("Produto removido.");
       await refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao remover");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -1249,7 +1258,7 @@ export function AdminDashboard({
                                   </button>
                                   <button
                                     type="button"
-                                    onClick={() => remove(p.id, p.nome)}
+                                    onClick={() => remove(p.id)}
                                     aria-label={`Remover ${p.nome}`}
                                     className="min-h-11 min-w-11 border border-cacau/20 p-2 text-cacau hover:border-destructive hover:text-destructive"
                                   >
@@ -1329,6 +1338,34 @@ export function AdminDashboard({
         </section>
       </div>
 
+      <Dialog.Root
+        open={Boolean(removing)}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setRemoving(null);
+        }}
+      >
+        <Dialog.Portal>
+          <Dialog.Overlay className="aw-overlay" />
+          <Dialog.Content className="aw-help">
+            <Dialog.Title>Remover produto da vitrine?</Dialog.Title>
+            <Dialog.Description>Confira o móvel antes de confirmar a remoção.</Dialog.Description>
+            <ProductIdentity product={removing ?? undefined} />
+            <div className="pm-actions">
+              <Dialog.Close className="aw-action" disabled={deleting}>
+                Cancelar remoção
+              </Dialog.Close>
+              <button
+                type="button"
+                className="aw-action"
+                onClick={confirmRemoval}
+                disabled={deleting}
+              >
+                {deleting ? "Removendo…" : "Confirmar remoção"}
+              </button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
       {editing && (
         <ProductForm
           value={editing}
@@ -1567,6 +1604,13 @@ function ProductForm({
             ))}
           </nav>
           <div className="product-editor-identity">
+            <ProductThumbnail
+              product={{
+                nome: value.nome || "Novo produto",
+                url_imagem: value.imagem_url,
+                imagens: value.imagens,
+              }}
+            />
             <strong>{value.nome || "Seu novo produto"}</strong>
             <span>{value.referencia || "Sem referência"}</span>
           </div>
@@ -1984,10 +2028,12 @@ function ProductForm({
                       key={id}
                       className="flex items-center justify-between gap-3 border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-cacau"
                     >
-                      <span>
-                        {products.find((product) => product.id === id)?.nome ?? id}: complemento
-                        indisponível para exibição.
-                      </span>
+                      <ProductIdentity
+                        product={products.find((product) => product.id === id)}
+                        fallbackName={id}
+                      >
+                        <small>Complemento indisponível para exibição.</small>
+                      </ProductIdentity>
                       <button
                         type="button"
                         className="min-h-11 font-semibold underline"

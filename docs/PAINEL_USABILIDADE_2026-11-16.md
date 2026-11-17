@@ -44,3 +44,11 @@ Não foram exercitados uploads, exclusão, importação em banco real, escrita r
 ## Publicação e reversão
 
 Entregar prévia/PR para revisão. Não integrar em main nem promover produção antes da aprovação da versão. Reversão: reverter somente o commit desta entrega; nenhuma migração, restauração de banco ou alteração de taxa é necessária. Antes de publicar, repetir a resolução do deployment e o preflight previsto em DEPLOYMENT.md para os caminhos aprovados.
+
+## Ajuste aprovado — miniaturas em 17/11/2026
+
+Rafael aprovou o restante da revisão e pediu foto em toda referência a produto no painel. Acrescentadas identidades visuais compartilhadas em precificação, filas iniciais, cabeçalho do editor, seleção/comparação/prévia de campanhas, produtos relacionados de artigos, seleção do atendimento e referências identificáveis no histórico/revisão. Listas e seleções que já tinham imagens foram preservadas. Produtos removidos ou sem imagem têm espaço reservado com indicação Sem foto. A miniatura tenta a galeria quando a principal falha; usa object-fit contain para não cortar o móvel.
+
+A seleção nativa de produto do atendimento virou diálogo com pesquisa e foto nas opções. A confirmação de remoção também mostra o móvel, mantendo cancelamento e a operação de exclusão existentes; confirmação fica bloqueada durante o envio. Nenhuma alteração de preço, taxa, cadastro ou fotos no banco.
+
+Validação adicional: TypeScript e ESLint direcionado; 20 testes pertinentes de imagem, resumo e campanhas passaram. No navegador: miniaturas no início e precificação; imagem real do Roma carregada tanto na linha de preço quanto no cabeçalho do editor; seleção de Roma no atendimento confirmada pelo ID `review-sofa-roma`; confirmação visual de remoção aberta e cancelada com o produto preservado. Em viewport 390px, largura útil e scrollWidth iguais a 375px. Os links de algumas fotos SR retornaram HTTP 503 nesta sessão; nesses casos foi observado o fallback, sem alegar recuperação da origem ou substituir foto de um móvel pela de outro.

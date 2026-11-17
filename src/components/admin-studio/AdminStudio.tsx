@@ -1,3 +1,4 @@
+import { ProductDiffReferences } from "../admin/ProductThumbnail";
 import { reopenHomeDraft } from "../../lib/home-configuration";
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -184,6 +185,10 @@ export function AdminStudio({
     // Keep invalid saved data visible to the existing recovery flow without rewriting it.
   }
   const data = { ...rawData, pages: editorPages } as StudioData;
+  const thumbnailProducts = useMemo(
+    () => new Map(products.map((product) => [product.id, product])),
+    [products],
+  );
   const productNames = Object.fromEntries(products.map((p) => [p.id, p.nome]));
   const humanDiff = (path: string) => describeDifferencePath(path, productNames);
   const scope = areaScopes[area];
@@ -856,6 +861,12 @@ export function AdminStudio({
                     {diffValues(r.before ?? defaults[r.scope], r.after).map((d, i) => (
                       <li key={i}>
                         <h3>{humanDiff(d.path)}</h3>
+                        <ProductDiffReferences
+                          productById={thumbnailProducts}
+                          path={d.path}
+                          before={d.before}
+                          after={d.after}
+                        />
                         <div className="pm-grid">
                           <div>
                             <small>Antes</small>
@@ -905,6 +916,12 @@ export function AdminStudio({
               {differences.map((d, i) => (
                 <li key={i}>
                   <h3>{humanDiff(d.path)}</h3>
+                  <ProductDiffReferences
+                    productById={thumbnailProducts}
+                    path={d.path}
+                    before={d.before}
+                    after={d.after}
+                  />
                   <div className="pm-grid">
                     <div>
                       <small>Antes · versão anterior</small>

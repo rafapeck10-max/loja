@@ -1,3 +1,5 @@
+import { ProductIdentity } from "../admin/ProductThumbnail";
+import { ProductPicker } from "../admin/ProductPicker";
 import { useState, useEffect } from "react";
 import { productStatus, type ProductStatus } from "../../lib/admin-filters";
 import { ArrowUp, ArrowDown, Plus, Trash2 } from "lucide-react";
@@ -684,7 +686,7 @@ export function ContentPanel({
                               })
                             }
                           />
-                          <span>{product.nome}</span>
+                          <ProductIdentity product={product} />
                         </label>
                       );
                     })}
@@ -1044,27 +1046,17 @@ export function ServicePanel({
             <p>{data.deliveryMessage}</p>
             <p>{data.assemblyMessage}</p>
           </details>
-          <label className="pm-field">
-            Produto
-            <select
+          <div className="pm-field">
+            <span>Produto</span>
+            <ProductPicker
+              products={products}
               value={activeId}
-              onChange={(e) => {
-                setId(e.target.value);
+              onChange={(id) => {
+                setId(id);
                 setConfirmed(false);
               }}
-            >
-              {!products.length && (
-                <option value="" disabled>
-                  Nenhum produto disponível no catálogo
-                </option>
-              )}
-              {products.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nome}
-                </option>
-              ))}
-            </select>
-          </label>
+            />
+          </div>
           <div className="pm-grid">
             <label className="pm-field">
               Variante
@@ -1217,7 +1209,9 @@ export function ProductDraftPanel({
         <section className="pm-card">
           {p ? (
             <>
-              <h2>{p.nome}</h2>
+              <h2>
+                <ProductIdentity product={p} />
+              </h2>
               <div className="pm-tabs">
                 {[
                   "identificacao",
@@ -1440,10 +1434,12 @@ export function ProductDraftPanel({
                           key={relatedId}
                           className="flex items-center justify-between gap-3 border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-cacau"
                         >
-                          <span>
-                            {products.find((item) => item.id === relatedId)?.nome ?? relatedId}:
-                            complemento indisponível para exibição.
-                          </span>
+                          <ProductIdentity
+                            product={products.find((item) => item.id === relatedId)}
+                            fallbackName={relatedId}
+                          >
+                            <small>Complemento indisponível para exibição.</small>
+                          </ProductIdentity>
                           <button
                             type="button"
                             className="min-h-11 font-semibold underline"

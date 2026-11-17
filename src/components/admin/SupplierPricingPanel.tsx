@@ -1,3 +1,4 @@
+import { ProductIdentity } from "./ProductThumbnail";
 import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Pencil } from "lucide-react";
 import type { ProdutoAdmin } from "../../lib/admin.functions";
@@ -179,8 +180,9 @@ export function SupplierPricingPanel<T extends SupplierPricingProduct>({
                 return (
                   <div className="supplier-pricing-row" role="row" key={product.id}>
                     <div className="supplier-pricing-product" role="cell">
-                      <strong>{product.nome}</strong>
-                      <small>{product.sku || "Sem SKU cadastrado"}</small>
+                      <ProductIdentity product={product}>
+                        <small>{product.sku || "Sem SKU cadastrado"}</small>
+                      </ProductIdentity>
                     </div>
                     <span
                       className="supplier-pricing-value"
