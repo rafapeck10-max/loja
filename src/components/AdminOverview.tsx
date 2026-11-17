@@ -1,5 +1,15 @@
+import { ProductThumbnail } from "./admin/ProductThumbnail";
 import { useState } from "react";
-import { ArrowRight, Check, CircleAlert, Package, RefreshCw } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  CircleAlert,
+  Package,
+  RefreshCw,
+  CircleDollarSign,
+  Images,
+  FileDown,
+} from "lucide-react";
 import {
   overviewImpact,
   summarizeOverview,
@@ -17,7 +27,8 @@ export interface AdminOverviewProps<T extends OverviewProduct = OverviewProduct>
   onRefresh: () => void;
   onProducts: (status: "all" | ProductStatus) => void;
   onEdit: (product: T) => void;
-  onNavigate: (area: "vitrine" | "banners" | "revisao") => void;
+  onPrice?: (product: T) => void;
+  onNavigate: (area: "vitrine" | "banners" | "revisao" | "fornecedores") => void;
   demonstration?: boolean;
 }
 
@@ -45,11 +56,16 @@ export function AdminOverview<T extends OverviewProduct>({
   onRefresh,
   onProducts,
   onEdit,
+  onPrice,
   onNavigate,
   demonstration = false,
 }: AdminOverviewProps<T>) {
   const [showAll, setShowAll] = useState(false);
-  const { counts, issues, reviewLimitReached } = summarizeOverview(catalog, review);
+  const [queue, setQueue] = useState<"pricing" | "repair">("pricing");
+  const { counts, issues: allIssues, reviewLimitReached } = summarizeOverview(catalog, review);
+  const pricing = allIssues.filter(({ product }) => !(Number(product.preco_atual) > 0));
+  const repairs = allIssues.filter(({ product }) => Number(product.preco_atual) > 0);
+  const issues = queue === "pricing" ? pricing : repairs;
   const ready = catalog.status === "success" && catalog.data !== undefined;
   const queueReady = review.status === "success" && review.data !== undefined;
 
@@ -58,8 +74,8 @@ export function AdminOverview<T extends OverviewProduct>({
       <header className="ov-heading">
         <div>
           <p className="ov-eyebrow">OPERAÇÃO DA MOBI</p>
-          <h1>Visão geral</h1>
-          <p>Veja o que precisa de revisão antes de expor seus móveis.</p>
+          <h1>Vamos cuidar da sua loja?</h1>
+          <p>Escolha uma tarefa e continue de onde parou.</p>
         </div>
         <div className="ov-heading-actions">
           <span className="ov-source-note">
@@ -91,12 +107,74 @@ export function AdminOverview<T extends OverviewProduct>({
         </button>
       </div>
 
+      <div className="mobi-task-grid" aria-label="Tarefas da loja">
+        <button
+          onClick={() => onNavigate("fornecedores")}
+          disabled={!ready}
+          className="mobi-task is-featured"
+        >
+          <CircleDollarSign size={24} />
+          <span>
+            <strong>Precificar produtos</strong>
+            <small>
+              {ready ? `${counts.awaiting} aguardando seu preço` : "Consultando catálogo…"}
+            </small>
+          </span>
+          <ArrowRight size={18} />
+        </button>
+        <button onClick={() => onNavigate("revisao")} disabled={!queueReady} className="mobi-task">
+          <FileDown size={24} />
+          <span>
+            <strong>Conferir importações</strong>
+            <small>
+              {queueReady
+                ? `${counts.review}${reviewLimitReached ? "+" : ""} para revisar`
+                : "Fila não confirmada"}
+            </small>
+          </span>
+          <ArrowRight size={18} />
+        </button>
+        <button onClick={() => onNavigate("vitrine")} className="mobi-task">
+          <Images size={24} />
+          <span>
+            <strong>Organizar a vitrine</strong>
+            <small>Escolha os destaques da loja</small>
+          </span>
+          <ArrowRight size={18} />
+        </button>
+      </div>
+      <div className="mobi-queue-tabs" aria-label="Filas de trabalho">
+        <button
+          aria-pressed={queue === "pricing"}
+          onClick={() => {
+            setQueue("pricing");
+            setShowAll(false);
+          }}
+        >
+          Aguardando meu preço <b>{ready ? pricing.length : "—"}</b>
+        </button>
+        <button
+          aria-pressed={queue === "repair"}
+          onClick={() => {
+            setQueue("repair");
+            setShowAll(false);
+          }}
+        >
+          Cadastros para conferir <b>{ready ? repairs.length : "—"}</b>
+        </button>
+      </div>
       <section className="ov-panel ov-queue" aria-labelledby="ov-attention-title">
         <div className="ov-panel-heading">
           <div>
             <p className="ov-eyebrow">CADASTRO DE PRODUTOS</p>
-            <h2 id="ov-attention-title">Precisa da sua atenção</h2>
-            <p>Preço, custo do fornecedor ou imagem principal pendente.</p>
+            <h2 id="ov-attention-title">
+              {queue === "pricing" ? "Prontos para você precificar" : "Confira estes cadastros"}
+            </h2>
+            <p>
+              {queue === "pricing"
+                ? "Produtos sem preço de venda. Aguardam sua decisão comercial."
+                : "Produtos com preço informado, mas sem custo ou endereço de foto válido."}
+            </p>
           </div>
           <span className="ov-count">
             {ready ? `${issues.length} ${issues.length === 1 ? "item" : "itens"}` : "Sem contagem"}
@@ -123,7 +201,7 @@ export function AdminOverview<T extends OverviewProduct>({
           <div className="ov-message ov-good">
             <Check />
             <div>
-              <h3>{counts.total === 0 ? "Seu catálogo está vazio" : "Cadastros conferidos"}</h3>
+              <h3>{counts.total === 0 ? "Seu catálogo está vazio" : "Nenhum item nesta fila"}</h3>
               <p>
                 {counts.total === 0
                   ? "Abra Produtos para começar um cadastro."
@@ -137,11 +215,9 @@ export function AdminOverview<T extends OverviewProduct>({
         ) : (
           <>
             <ul className="ov-issues">
-              {(showAll ? issues : issues.slice(0, 5)).map(({ product, reasons }) => (
+              {(showAll ? issues.slice(0, 25) : issues.slice(0, 5)).map(({ product, reasons }) => (
                 <li key={product.id}>
-                  <div className="ov-issue-type" aria-hidden="true">
-                    <Package size={17} />
-                  </div>
+                  <ProductThumbnail product={product} />
                   <div className="ov-issue-content">
                     <h3>{product.nome}</h3>
                     <p className="ov-supplier">
@@ -156,13 +232,15 @@ export function AdminOverview<T extends OverviewProduct>({
                   <button
                     type="button"
                     className="ov-review-button"
-                    aria-label={`Revisar ${product.nome}`}
+                    aria-label={`${queue === "pricing" ? "Precificar" : "Conferir"} ${product.nome}`}
                     onClick={() => {
                       const original = catalog.data?.find((item) => item.id === product.id);
-                      if (original) onEdit(original);
+                      if (queue === "pricing" && original && onPrice) onPrice(original);
+                      else if (queue === "pricing") onNavigate("fornecedores");
+                      else if (original) onEdit(original);
                     }}
                   >
-                    Corrigir <ArrowRight size={15} />
+                    {queue === "pricing" ? "Precificar" : "Conferir"} <ArrowRight size={15} />
                   </button>
                 </li>
               ))}
@@ -174,7 +252,7 @@ export function AdminOverview<T extends OverviewProduct>({
               </span>
               {issues.length > 5 && (
                 <button className="ov-text-button" onClick={() => setShowAll(!showAll)}>
-                  {showAll ? "Mostrar menos" : `Ver as ${issues.length} pendências`}
+                  {showAll ? "Mostrar menos" : `Ver mais (${issues.length} nesta fila)`}
                 </button>
               )}
             </div>

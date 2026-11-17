@@ -11,6 +11,8 @@ function demoProductsPlugin(): Plugin {
     name: "mobi-preview-product-functions",
     enforce: "pre",
     resolveId(id) {
+      if (id.includes("admin.functions") || id.includes("home-local.functions"))
+        return fileURLToPath(new URL("./admin-operations-fixture.ts", import.meta.url));
       return id.replaceAll("\\", "/").includes("products.functions") ? demoModule : null;
     },
   };
@@ -24,9 +26,11 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  build: { rollupOptions: { input: fileURLToPath(new URL("./index.html", import.meta.url)) } },
   resolve: { alias: { "@": fileURLToPath(new URL("../../src", import.meta.url)) } },
   server: {
-    host: "127.0.0.1",
+    host: "0.0.0.0",
+    allowedHosts: ["terminal.local"],
     port: 5187,
     strictPort: true,
     open: false,

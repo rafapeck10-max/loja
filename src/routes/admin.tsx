@@ -38,12 +38,15 @@ import {
   type PriceVariation,
 } from "@/lib/admin.functions";
 import { formatBRL } from "@/lib/constants";
+import { adminCategoryKey, adminCategoryOptions } from "@/lib/admin-categories";
+import { cardInstallment } from "@/lib/payment";
 import { hasRealReferencePrice } from "@/lib/price-reference";
 import { AdminWorkspace } from "@/components/AdminWorkspace";
 import { AdminStudio } from "@/components/admin-studio/AdminStudio";
 import { AdminOverview } from "@/components/AdminOverview";
 import { ADMIN_REVIEW_QUERY_LIMIT } from "@/lib/admin-overview";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
+import { ProductThumbnail, ProductIdentity } from "@/components/admin/ProductThumbnail";
 import { SupplierPricingPanel } from "@/components/admin/SupplierPricingPanel";
 import { createRemoteStudioTransport } from "@/lib/admin-studio-remote";
 import { isEligibleBundleProduct } from "@/lib/product-bundles";
@@ -293,7 +296,15 @@ function StatusBadge({ status }: { status: ProductStatus }) {
   );
 }
 
-export function AdminDashboard({ password, onLogout }: { password: string; onLogout: () => void }) {
+export function AdminDashboard({
+  password,
+  onLogout,
+  demonstration = false,
+}: {
+  password: string;
+  onLogout: () => void;
+  demonstration?: boolean;
+}) {
   const router = useRouter();
   const qc = useQueryClient();
   const {
@@ -321,6 +332,9 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
     queryKey: ["admin-scraped-products"],
     queryFn: () => listPendingScrapedProducts({ data: { password } }),
   });
+  const [deleting, setDeleting] = useState(false);
+  const [removing, setRemoving] = useState<ProdutoAdmin | null>(null);
+  const [editorSection, setEditorSection] = useState("dados");
   const [editing, setEditing] = useState<ProdutoInput | null>(null);
   const [activeScrapedImport, setActiveScrapedImport] = useState<ProdutoScrapImport | null>(null);
   const [saving, setSaving] = useState(false);
@@ -448,15 +462,12 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
     [produtos, supplierFilter],
   );
   const categories = useMemo(
-    () =>
-      Array.from(new Set(produtos.map((product) => product.categoria).filter(Boolean))).sort(
-        (a, b) => a.localeCompare(b, "pt-BR"),
-      ),
+    () => adminCategoryOptions(produtos.map((product) => product.categoria)),
     [produtos],
   );
   const filteredProdutos = useMemo(() => {
     const normalizedSearch = normalizeFilterText(search);
-    const normalizedCategory = normalizeFilterText(categoryFilter);
+    const normalizedCategory = adminCategoryKey(categoryFilter);
     return produtos
       .filter((product) => {
         const searchableText = normalizeFilterText(
@@ -483,7 +494,7 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
             ? !supplier
             : supplierFilter === supplierFilterValue(supplier));
         const matchesCategory =
-          categoryFilter === "all" || normalizeFilterText(product.categoria) === normalizedCategory;
+          categoryFilter === "all" || adminCategoryKey(product.categoria) === normalizedCategory;
         const matchesStatus = statusFilter === "all" || productStatus(product) === statusFilter;
         const matchesPrice = matchesPriceFilter(
           priceField === "site" ? product.preco_atual : product.preco_atacado,
@@ -571,10 +582,12 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
   };
 
   const startNew = () => {
+    setEditorSection("dados");
     setActiveScrapedImport(null);
     setEditing({ ...EMPTY });
   };
-  const startEdit = (p: ProdutoAdmin) => {
+  const startEdit = (p: ProdutoAdmin, section = "dados") => {
+    setEditorSection(section);
     setActiveScrapedImport(null);
     setEditing({
       id: p.id,
@@ -603,6 +616,7 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
   };
 
   const startScrapedEdit = (product: ProdutoScrapImport) => {
+    setEditorSection("preco");
     setActiveScrapedImport(product);
     setEditing({
       ...EMPTY,
@@ -685,14 +699,20 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
     }
   };
 
-  const remove = async (id: string, nome: string) => {
-    if (!confirm(`Remover "${nome}" da vitrine?`)) return;
+  const remove = (id: string) => setRemoving(produtos.find((product) => product.id === id) ?? null);
+  const confirmRemoval = async () => {
+    if (!removing || deleting) return;
+    setDeleting(true);
+    const id = removing.id;
     try {
       await deleteProduto({ data: { password, id } });
+      setRemoving(null);
       toast.success("Produto removido.");
       await refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao remover");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -733,6 +753,7 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
   return (
     <AdminWorkspace
       area={workspaceTab}
+      demonstration={demonstration}
       onNavigate={setWorkspaceTab}
       onLogout={onLogout}
       onSearch={(query) => {
@@ -797,7 +818,7 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
           className="border border-price-green/20 bg-price-green/5 p-4 text-left aria-pressed:ring-2 aria-pressed:ring-deep-green"
         >
           <div className="text-xs font-semibold uppercase tracking-wider text-price-green">
-            Publicados
+            Aptos para exibição
           </div>
           <div className="mt-1 text-2xl font-bold text-price-green">{totals.published}</div>
         </button>
@@ -833,6 +854,8 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
           aria-label="overview"
         >
           <AdminOverview
+            demonstration={demonstration}
+            onPrice={(product) => startEdit(product, "preco")}
             catalog={{
               status: isError ? "error" : isCatalogPending ? "pending" : "success",
               data: produtos,
@@ -850,7 +873,7 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
               void refreshScrapedProducts();
             }}
             onProducts={selectSummary}
-            onEdit={startEdit}
+            onEdit={(product) => startEdit(product)}
             onNavigate={setWorkspaceTab}
           />
         </section>
@@ -1235,7 +1258,7 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
                                   </button>
                                   <button
                                     type="button"
-                                    onClick={() => remove(p.id, p.nome)}
+                                    onClick={() => remove(p.id)}
                                     aria-label={`Remover ${p.nome}`}
                                     className="min-h-11 min-w-11 border border-cacau/20 p-2 text-cacau hover:border-destructive hover:text-destructive"
                                   >
@@ -1309,15 +1332,45 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
               products={supplierFilteredProducts}
               selectedSupplier={supplierFilter}
               onSelectSupplier={setSupplierFilter}
-              onEdit={startEdit}
+              onEdit={(product) => startEdit(product, "preco")}
             />
           )}
         </section>
       </div>
 
+      <Dialog.Root
+        open={Boolean(removing)}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setRemoving(null);
+        }}
+      >
+        <Dialog.Portal>
+          <Dialog.Overlay className="aw-overlay" />
+          <Dialog.Content className="aw-help">
+            <Dialog.Title>Remover produto da vitrine?</Dialog.Title>
+            <Dialog.Description>Confira o móvel antes de confirmar a remoção.</Dialog.Description>
+            <ProductIdentity product={removing ?? undefined} />
+            <div className="pm-actions">
+              <Dialog.Close className="aw-action" disabled={deleting}>
+                Cancelar remoção
+              </Dialog.Close>
+              <button
+                type="button"
+                className="aw-action"
+                onClick={confirmRemoval}
+                disabled={deleting}
+              >
+                {deleting ? "Removendo…" : "Confirmar remoção"}
+              </button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
       {editing && (
         <ProductForm
           value={editing}
+          initialSection={editorSection}
+          demonstration={demonstration}
           products={produtos}
           onChange={setEditing}
           onCancel={() => {
@@ -1333,6 +1386,8 @@ export function AdminDashboard({ password, onLogout }: { password: string; onLog
 }
 
 function ProductForm({
+  demonstration = false,
+  initialSection = "dados",
   value,
   products,
   onChange,
@@ -1340,6 +1395,8 @@ function ProductForm({
   onSave,
   saving,
 }: {
+  initialSection?: string;
+  demonstration?: boolean;
   value: ProdutoInput;
   products: ProdutoAdmin[];
   onChange: (v: ProdutoInput) => void;
@@ -1350,8 +1407,21 @@ function ProductForm({
   const field =
     "min-h-11 w-full rounded-lg border border-cacau/15 bg-white px-3 py-2.5 text-base text-cacau outline-none transition-colors placeholder:text-cacau/40 focus:border-deep-green focus:ring-2 focus:ring-deep-green/10 sm:text-sm";
   const label = "mb-1.5 block text-sm font-semibold text-cacau";
+  const [section, setSection] = useState(initialSection);
+  const [bundleSearch, setBundleSearch] = useState("");
+  const editorScroll = useRef<HTMLDivElement>(null);
   const [uploading, setUploading] = useState(false);
   const originalValue = useRef(JSON.stringify(value));
+  useEffect(() => {
+    const warn = (event: BeforeUnloadEvent) => {
+      if (JSON.stringify(value) !== originalValue.current) {
+        event.preventDefault();
+        event.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [value]);
   const hasUnsavedChanges = JSON.stringify(value) !== originalValue.current;
   const supplierPrice = Number(value.preco_fornecedor ?? 0);
   const sitePrice = Number(value.preco_novo ?? 0);
@@ -1393,6 +1463,10 @@ function ProductForm({
   );
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (demonstration) {
+      toast.info("Envio de arquivos desligado nesta prévia isolada.");
+      return;
+    }
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -1428,6 +1502,10 @@ function ProductForm({
   };
 
   const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (demonstration) {
+      toast.info("Envio de arquivos desligado nesta prévia isolada.");
+      return;
+    }
     const files = Array.from(e.target.files ?? []);
     e.target.value = "";
     if (!files.length) return;
@@ -1505,9 +1583,43 @@ function ProductForm({
             </div>
           </header>
 
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <nav className="product-editor-nav" aria-label="Seções do produto">
+            {[
+              ["dados", "Dados do móvel"],
+              ["fotos", "Fotos"],
+              ["preco", "Preço e fornecedor"],
+              ["extras", "Compre junto"],
+            ].map(([key, title]) => (
+              <button
+                type="button"
+                key={key}
+                aria-pressed={section === key}
+                onClick={() => {
+                  setSection(key);
+                  editorScroll.current?.scrollTo({ top: 0 });
+                }}
+              >
+                {title}
+              </button>
+            ))}
+          </nav>
+          <div className="product-editor-identity">
+            <ProductThumbnail
+              product={{
+                nome: value.nome || "Novo produto",
+                url_imagem: value.imagem_url,
+                imagens: value.imagens,
+              }}
+            />
+            <strong>{value.nome || "Seu novo produto"}</strong>
+            <span>{value.referencia || "Sem referência"}</span>
+          </div>
+          <div ref={editorScroll} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             <div className="grid items-start gap-4 p-4 sm:p-6 lg:grid-cols-2">
-              <section className="rounded-xl border border-cacau/10 bg-white p-4 lg:col-span-2 sm:p-5">
+              <section
+                hidden={section !== "dados"}
+                className="product-editor-section rounded-xl border border-cacau/10 bg-white p-4 lg:col-span-2 sm:p-5"
+              >
                 <div className="mb-4 flex items-center gap-3 border-b border-cacau/10 pb-3">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#edf1e9] text-deep-green">
                     <Package size={19} />
@@ -1521,18 +1633,22 @@ function ProductForm({
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="sm:col-span-2">
-                    <label className={label}>Nome *</label>
+                    <label htmlFor="product-field-1" className={label}>
+                      Nome *
+                    </label>
                     <input
+                      id="product-field-1"
                       value={value.nome}
                       onChange={(e) => onChange({ ...value, nome: e.target.value })}
                       className={field}
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className={label}>
+                    <label htmlFor="product-field-2" className={label}>
                       Slug (URL amigável) — deixe em branco para gerar do nome
                     </label>
                     <input
+                      id="product-field-2"
                       value={value.slug ?? ""}
                       onChange={(e) => onChange({ ...value, slug: e.target.value })}
                       placeholder="ex: poltrona-velvet"
@@ -1540,16 +1656,22 @@ function ProductForm({
                     />
                   </div>
                   <div>
-                    <label className={label}>Referência / SKU</label>
+                    <label htmlFor="product-field-3" className={label}>
+                      Referência / SKU
+                    </label>
                     <input
+                      id="product-field-3"
                       value={value.referencia ?? ""}
                       onChange={(e) => onChange({ ...value, referencia: e.target.value })}
                       className={field}
                     />
                   </div>
                   <div>
-                    <label className={label}>Categoria *</label>
+                    <label htmlFor="product-field-4" className={label}>
+                      Categoria *
+                    </label>
                     <select
+                      id="product-field-4"
                       value={value.categoria ?? ""}
                       onChange={(e) => onChange({ ...value, categoria: e.target.value })}
                       className={field}
@@ -1563,8 +1685,11 @@ function ProductForm({
                     </select>
                   </div>
                   <div>
-                    <label className={label}>Ordem na categoria</label>
+                    <label htmlFor="product-field-5" className={label}>
+                      Ordem na categoria
+                    </label>
                     <input
+                      id="product-field-5"
                       type="number"
                       value={value.ordem ?? 0}
                       onChange={(e) => onChange({ ...value, ordem: Number(e.target.value) })}
@@ -1573,7 +1698,10 @@ function ProductForm({
                   </div>
                 </div>
               </section>
-              <section className="rounded-xl border border-cacau/10 bg-white p-4 lg:col-span-2 sm:p-5">
+              <section
+                hidden={section !== "preco"}
+                className="product-editor-section rounded-xl border border-cacau/10 bg-white p-4 lg:col-span-2 sm:p-5"
+              >
                 <div className="mb-4 flex items-center gap-3 border-b border-cacau/10 pb-3">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f3ead6] text-[#8a682f]">
                     <CircleDollarSign size={19} />
@@ -1588,8 +1716,11 @@ function ProductForm({
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="grid grid-cols-1 gap-3 sm:col-span-2 sm:grid-cols-2 sm:gap-4">
                     <div className="min-w-0">
-                      <label className={label}>Custo informado pelo fornecedor (R$)</label>
+                      <label htmlFor="product-field-6" className={label}>
+                        Custo informado pelo fornecedor (R$)
+                      </label>
                       <input
+                        id="product-field-6"
                         type="number"
                         step="0.01"
                         min="0"
@@ -1604,11 +1735,14 @@ function ProductForm({
                       />
                     </div>
                     <div className="min-w-0">
-                      <label className={label}>Preço no site (R$) *</label>
+                      <label htmlFor="product-field-7" className={label}>
+                        Preço no site (R$) *
+                      </label>
                       <input
+                        id="product-field-7"
                         type="number"
                         step="0.01"
-                        value={value.preco_novo}
+                        value={value.preco_novo || ""}
                         onChange={(e) => {
                           const price = Number(e.target.value);
                           const variations = value.variacoes_preco ?? [];
@@ -1628,8 +1762,11 @@ function ProductForm({
                     </div>
                   </div>
                   <div className="sm:col-span-2">
-                    <label className={label}>Preço anterior (opcional)</label>
+                    <label htmlFor="product-field-8" className={label}>
+                      Preço anterior (opcional)
+                    </label>
                     <input
+                      id="product-field-8"
                       type="number"
                       step="0.01"
                       min="0"
@@ -1649,8 +1786,11 @@ function ProductForm({
                     </p>
                   </div>
                   <div>
-                    <label className={label}>Fornecedor (uso interno)</label>
+                    <label htmlFor="product-field-9" className={label}>
+                      Fornecedor (uso interno)
+                    </label>
                     <input
+                      id="product-field-9"
                       type="text"
                       value={value.fornecedor ?? ""}
                       onChange={(e) => onChange({ ...value, fornecedor: e.target.value })}
@@ -1710,8 +1850,11 @@ function ProductForm({
                     )}
                   </div>
                   <div className="sm:col-span-2">
-                    <label className={label}>Link do fornecedor / fonte do preço</label>
+                    <label htmlFor="product-field-10" className={label}>
+                      Link do fornecedor / fonte do preço
+                    </label>
                     <input
+                      id="product-field-10"
                       type="url"
                       value={value.link_fornecedor ?? value.fonte_preco ?? ""}
                       onChange={(e) =>
@@ -1788,7 +1931,10 @@ function ProductForm({
                   )}
                 </div>
               </section>
-              <section className="rounded-xl border border-cacau/10 bg-white p-4 lg:col-span-2 sm:p-5">
+              <section
+                hidden={section !== "dados"}
+                className="product-editor-section rounded-xl border border-cacau/10 bg-white p-4 lg:col-span-2 sm:p-5"
+              >
                 <div className="mb-4 flex items-center gap-3 border-b border-cacau/10 pb-3">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#edf1e9] text-deep-green">
                     <Ruler size={19} />
@@ -1802,8 +1948,11 @@ function ProductForm({
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className={label}>Vendas nos últimos 30 dias</label>
+                    <label htmlFor="product-field-11" className={label}>
+                      Vendas nos últimos 30 dias
+                    </label>
                     <input
+                      id="product-field-11"
                       type="number"
                       min="0"
                       value={value.vendas_ultimos_30_dias ?? 0}
@@ -1830,16 +1979,22 @@ function ProductForm({
                     </small>
                   </div>
                   <div className="sm:col-span-2">
-                    <label className={label}>Cores (separadas por vírgula)</label>
+                    <label htmlFor="product-field-12" className={label}>
+                      Cores (separadas por vírgula)
+                    </label>
                     <input
+                      id="product-field-12"
                       value={(value.cores ?? []).join(", ")}
                       onChange={(e) => onChange({ ...value, cores: e.target.value.split(",") })}
                       className={field}
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className={label}>Descrição</label>
+                    <label htmlFor="product-field-13" className={label}>
+                      Descrição
+                    </label>
                     <textarea
+                      id="product-field-13"
                       value={value.descricao ?? ""}
                       onChange={(e) => onChange({ ...value, descricao: e.target.value })}
                       rows={3}
@@ -1848,7 +2003,10 @@ function ProductForm({
                   </div>
                 </div>
               </section>
-              <section className="rounded-xl border border-cacau/10 bg-white p-4 lg:col-span-2 sm:p-5">
+              <section
+                hidden={section !== "extras"}
+                className="product-editor-section rounded-xl border border-cacau/10 bg-white p-4 lg:col-span-2 sm:p-5"
+              >
                 <div className="mb-4 flex items-center gap-3 border-b border-cacau/10 pb-3">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f3ead6] text-[#8a682f]">
                     <Layers3 size={19} />
@@ -1870,10 +2028,12 @@ function ProductForm({
                       key={id}
                       className="flex items-center justify-between gap-3 border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-cacau"
                     >
-                      <span>
-                        {products.find((product) => product.id === id)?.nome ?? id}: complemento
-                        indisponível para exibição.
-                      </span>
+                      <ProductIdentity
+                        product={products.find((product) => product.id === id)}
+                        fallbackName={id}
+                      >
+                        <small>Complemento indisponível para exibição.</small>
+                      </ProductIdentity>
                       <button
                         type="button"
                         className="min-h-11 font-semibold underline"
@@ -1888,40 +2048,65 @@ function ProductForm({
                       </button>
                     </div>
                   ))}
+                  <label className={label} htmlFor="bundle-search">
+                    Buscar complemento
+                  </label>
+                  <input
+                    id="bundle-search"
+                    className={field}
+                    placeholder="Nome ou referência do móvel"
+                    value={bundleSearch}
+                    onChange={(e) => setBundleSearch(e.target.value)}
+                  />
+                  {!bundleSearch.trim() && (
+                    <p className="my-3 text-sm text-text-light">
+                      Busque um móvel para adicionar. Os selecionados aparecem abaixo.
+                    </p>
+                  )}
                   <div className="max-h-56 divide-y divide-cacau/10 overflow-y-auto border border-cacau/10">
-                    {bundleCandidates.map((candidate) => {
-                      const checked = selectedBundleIds.includes(candidate.id);
-                      return (
-                        <label
-                          key={candidate.id}
-                          className="flex min-h-14 items-center gap-3 px-3 py-2 text-sm text-cacau"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            disabled={!checked && selectedBundleIds.length >= 3}
-                            onChange={(event) =>
-                              onChange({
-                                ...value,
-                                compre_junto_ids: event.target.checked
-                                  ? [...selectedBundleIds, candidate.id]
-                                  : selectedBundleIds.filter((id) => id !== candidate.id),
-                              })
-                            }
-                            className="h-4 w-4 shrink-0 accent-[#304a32]"
-                          />
-                          <ImageWithFallback
-                            src={candidate.url_imagem}
-                            alt=""
-                            className="h-10 w-10 shrink-0 object-contain"
-                          />
-                          <span className="min-w-0 flex-1 truncate">{candidate.nome}</span>
-                          <strong className="shrink-0 text-xs">
-                            {formatBRL(Number(candidate.preco_atual))}
-                          </strong>
-                        </label>
-                      );
-                    })}
+                    {bundleCandidates
+                      .filter(
+                        (candidate) =>
+                          selectedBundleIds.includes(candidate.id) ||
+                          (bundleSearch.trim() &&
+                            normalizeFilterText(candidate.nome + " " + candidate.sku).includes(
+                              normalizeFilterText(bundleSearch),
+                            )),
+                      )
+                      .slice(0, 30)
+                      .map((candidate) => {
+                        const checked = selectedBundleIds.includes(candidate.id);
+                        return (
+                          <label
+                            key={candidate.id}
+                            className="flex min-h-14 items-center gap-3 px-3 py-2 text-sm text-cacau"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              disabled={!checked && selectedBundleIds.length >= 3}
+                              onChange={(event) =>
+                                onChange({
+                                  ...value,
+                                  compre_junto_ids: event.target.checked
+                                    ? [...selectedBundleIds, candidate.id]
+                                    : selectedBundleIds.filter((id) => id !== candidate.id),
+                                })
+                              }
+                              className="h-4 w-4 shrink-0 accent-[#304a32]"
+                            />
+                            <ImageWithFallback
+                              src={candidate.url_imagem}
+                              alt=""
+                              className="h-10 w-10 shrink-0 object-contain"
+                            />
+                            <span className="min-w-0 flex-1 truncate">{candidate.nome}</span>
+                            <strong className="shrink-0 text-xs">
+                              {formatBRL(Number(candidate.preco_atual))}
+                            </strong>
+                          </label>
+                        );
+                      })}
                     {bundleCandidates.length === 0 && (
                       <p className="p-3 text-xs text-text-light">
                         Nenhum complemento com custo, preço, foto HTTPS e disponibilidade informada
@@ -1935,7 +2120,10 @@ function ProductForm({
                   </p>
                 </div>
               </section>
-              <section className="rounded-xl border border-cacau/10 bg-white p-4 lg:col-span-2 sm:p-5">
+              <section
+                hidden={section !== "fotos"}
+                className="product-editor-section rounded-xl border border-cacau/10 bg-white p-4 lg:col-span-2 sm:p-5"
+              >
                 <div className="mb-4 flex items-center gap-3 border-b border-cacau/10 pb-3">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#edf1e9] text-deep-green">
                     <Images size={19} />
@@ -1949,12 +2137,15 @@ function ProductForm({
                 </div>
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div className="sm:col-span-2">
-                    <label className={label}>Imagem do produto *</label>
+                    <label htmlFor="product-main-image" className={label}>
+                      Imagem do produto *
+                    </label>
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={value.imagem_url}
                         onChange={(e) => onChange({ ...value, imagem_url: e.target.value })}
+                        id="product-main-image"
                         placeholder="Insira a URL ou faça upload de um arquivo"
                         className={field}
                       />
@@ -1996,6 +2187,7 @@ function ProductForm({
                       </span>
                     </div>
                     <textarea
+                      aria-label="URLs das fotos adicionais"
                       value={(value.imagens ?? []).join("\n")}
                       onChange={(e) =>
                         onChange({
@@ -2029,7 +2221,17 @@ function ProductForm({
           </div>
           <footer className="z-10 flex shrink-0 flex-col-reverse gap-2 border-t border-cacau/10 bg-[#fbfaf6] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <p className="text-xs text-text-light">
-              As alterações só entram na loja depois de salvar.
+              {section === "preco" && sitePrice > 0 ? (
+                <>
+                  Prévia: {formatBRL(sitePrice)} à vista · 10x de{" "}
+                  {formatBRL(cardInstallment(sitePrice, 10))}
+                  <br />
+                </>
+              ) : null}
+              {hasUnsavedChanges
+                ? "Alterações ainda não salvas."
+                : "Nenhuma alteração neste produto."}{" "}
+              Salvar atualiza a loja.
             </p>
             <div className="flex gap-2 sm:justify-end">
               <button

@@ -1,3 +1,4 @@
+import { ProductDiffReferences } from "../admin/ProductThumbnail";
 import { reopenHomeDraft } from "../../lib/home-configuration";
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -184,6 +185,10 @@ export function AdminStudio({
     // Keep invalid saved data visible to the existing recovery flow without rewriting it.
   }
   const data = { ...rawData, pages: editorPages } as StudioData;
+  const thumbnailProducts = useMemo(
+    () => new Map(products.map((product) => [product.id, product])),
+    [products],
+  );
   const productNames = Object.fromEntries(products.map((p) => [p.id, p.nome]));
   const humanDiff = (path: string) => describeDifferencePath(path, productNames);
   const scope = areaScopes[area];
@@ -526,11 +531,23 @@ export function AdminStudio({
       <div className="pm-studio-toolbar">
         <div>
           <span className="pm-badge">
-            {busy ? "Salvando…" : remote ? "Rascunho no servidor" : "Rascunho local"}
+            {!loaded
+              ? "Abrindo rascunhos…"
+              : busy
+                ? "Salvando…"
+                : conflict
+                  ? "Revisão necessária"
+                  : remote
+                    ? "Rascunho no servidor"
+                    : "Rascunho neste navegador"}
           </span>{" "}
           <small>
-            Versão {workspace.revision} · {dirty ? "há alterações abertas" : "edição em dia"} · loja
-            preservada
+            Versão {blockedWorkspace?.revision ?? workspace.revision} ·{" "}
+            {conflict
+              ? "rascunhos bloqueados para sua proteção"
+              : dirty
+                ? "alterações não salvas"
+                : "nenhuma alteração aberta"}
           </small>
         </div>
         <div className="pm-actions">
@@ -565,45 +582,59 @@ export function AdminStudio({
         </div>
       </div>
       {remote && scope && (
-        <button
-          className="pm-button"
-          disabled={busy || !loaded}
-          onClick={() =>
-            attempt(() => {
-              const local = inspectLocalWorkspaceImport(localStorage, storageKey);
-              if (local.status !== "ready" || !Object.hasOwn(local.workspace.entries, scope))
-                throw new Error("Não há rascunho local válido desta área para comparar.");
-              if (
-                dirty &&
-                !window.confirm(
-                  "Substituir somente a edição aberta pela cópia local para comparação?",
+        <details className="pm-secondary-tools">
+          <summary>Outras opções de rascunho</summary>
+          <button
+            className="pm-button"
+            disabled={busy || !loaded}
+            onClick={() =>
+              attempt(() => {
+                const local = inspectLocalWorkspaceImport(localStorage, storageKey);
+                if (local.status !== "ready" || !Object.hasOwn(local.workspace.entries, scope))
+                  throw new Error("Não há rascunho local válido desta área para comparar.");
+                if (
+                  dirty &&
+                  !window.confirm(
+                    "Substituir somente a edição aberta pela cópia local para comparação?",
+                  )
                 )
-              )
-                return;
-              change(scope, local.workspace.entries[scope] as never);
-              setMessage(
-                "Cópia local aberta para comparação. Confira as diferenças e salve para importar. O original permanece neste navegador.",
-              );
-            })
-          }
-        >
-          Comparar rascunho deste navegador
-        </button>
+                  return;
+                change(scope, local.workspace.entries[scope] as never);
+                setMessage(
+                  "Cópia local aberta para comparação. Confira as diferenças e salve para importar. O original permanece neste navegador.",
+                );
+              })
+            }
+          >
+            Comparar rascunho deste navegador
+          </button>
+        </details>
       )}
       {message && (
-        <div className="pm-note" role="status">
-          {message}
+        <div className="pm-note" role={conflict ? "alert" : "status"}>
+          {conflict ? (
+            <>
+              <strong>Seu rascunho precisa de conferência.</strong>
+              <p>A cópia salva foi preservada. Confira os detalhes antes de recuperar.</p>
+              <details>
+                <summary>Ver o motivo</summary>
+                <p>{message}</p>
+              </details>
+            </>
+          ) : (
+            message
+          )}
         </div>
       )}
       {area === "vitrine" && remote && (
         <div className="pm-note" role="status">
           {workspace.publishedHomePage ? (
             <>
-              A loja está usando a revisão PM-02 {workspace.publishedHomePage.revisionId} · aplicada
-              em {time(workspace.publishedHomePage.appliedAt)}.
+              A página inicial usa a revisão {workspace.publishedHomePage.revisionId} · aplicada em{" "}
+              {time(workspace.publishedHomePage.appliedAt)}.
             </>
           ) : (
-            <>Ainda não há seleção PM-02 aplicada à loja. A versão atual permanece intacta.</>
+            <>Nenhuma seleção deste editor foi aplicada. A loja continua com a versão atual.</>
           )}
           {!homePublicationEnabled && (
             <span> A aplicação pública está desativada neste ambiente de prévia.</span>
@@ -645,7 +676,7 @@ export function AdminStudio({
             permanecem no histórico.
           </p>
           <button className="pm-button" disabled={dirty} onClick={recover}>
-            Abrir fonte atual como novo rascunho
+            Recuperar com o catálogo atual
           </button>
         </div>
       )}
@@ -830,6 +861,12 @@ export function AdminStudio({
                     {diffValues(r.before ?? defaults[r.scope], r.after).map((d, i) => (
                       <li key={i}>
                         <h3>{humanDiff(d.path)}</h3>
+                        <ProductDiffReferences
+                          productById={thumbnailProducts}
+                          path={d.path}
+                          before={d.before}
+                          after={d.after}
+                        />
                         <div className="pm-grid">
                           <div>
                             <small>Antes</small>
@@ -879,9 +916,15 @@ export function AdminStudio({
               {differences.map((d, i) => (
                 <li key={i}>
                   <h3>{humanDiff(d.path)}</h3>
+                  <ProductDiffReferences
+                    productById={thumbnailProducts}
+                    path={d.path}
+                    before={d.before}
+                    after={d.after}
+                  />
                   <div className="pm-grid">
                     <div>
-                      <small>Antes · versão local anterior</small>
+                      <small>Antes · versão anterior</small>
                       <pre className="pm-diff-value">{JSON.stringify(d.before, null, 2)}</pre>
                     </div>
                     <div>

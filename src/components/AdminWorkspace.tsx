@@ -25,6 +25,7 @@ import {
 } from "../lib/admin-navigation";
 import "../admin-overview.css";
 import "../admin-density.css";
+import "../admin-usability.css";
 
 const groupIcons = {
   start: LayoutDashboard,
@@ -55,6 +56,9 @@ export function AdminWorkspace({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const activeGroup = getAdminNavGroup(area);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [area]);
   useEffect(() => {
     const desktop = window.matchMedia("(min-width: 1024px)");
     const close = () => {
@@ -164,25 +168,27 @@ export function AdminWorkspace({
               </>
             )}
           </div>
-          <form
-            className="aw-search"
-            role="search"
-            onSubmit={(event) => {
-              event.preventDefault();
-              onSearch(query.trim());
-            }}
-          >
-            <Search size={17} aria-hidden="true" />
-            <input
-              aria-label="Buscar produtos pelo nome ou SKU"
-              placeholder="Buscar produto ou SKU…"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-            />
-            <button type="submit" aria-label="Buscar produtos">
-              <ArrowUpRight size={16} />
-            </button>
-          </form>
+          {area !== "produtos" && area !== "fornecedores" && (
+            <form
+              className="aw-search"
+              role="search"
+              onSubmit={(event) => {
+                event.preventDefault();
+                onSearch(query.trim());
+              }}
+            >
+              <Search size={17} aria-hidden="true" />
+              <input
+                aria-label="Buscar produtos pelo nome ou SKU"
+                placeholder="Buscar produto ou SKU…"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+              <button type="submit" aria-label="Buscar produtos">
+                <ArrowUpRight size={16} />
+              </button>
+            </form>
+          )}
           <a className="aw-store-link" href={storefrontHref} target="_blank" rel="noreferrer">
             Ver loja <ArrowUpRight size={15} />
           </a>
@@ -201,13 +207,14 @@ export function AdminWorkspace({
                   vitrines, banners, campanhas ou a evolução do site.
                 </Dialog.Description>
                 <p>
-                  A busca do topo encontra produtos por nome ou SKU. “Não integrado” indica que a
-                  capacidade ainda não fornece informações ao resumo.
+                  Use Produtos para buscar, filtrar e editar. Em Precificar, confira os custos e
+                  defina seus preços. “Não integrado” indica que a capacidade ainda não fornece
+                  informações ao resumo.
                 </p>
                 <p>
                   {demonstration
                     ? "Esta prévia usa dados demonstrativos e salva rascunhos somente neste navegador. Revise as diferenças no histórico; a loja publicada permanece preservada."
-                    : "As áreas editoriais salvam rascunhos locais. O cadastro e a importação de produtos mantêm as operações administrativas existentes. Abrir uma área não salva alterações."}
+                    : "O status de cada área editorial informa se o rascunho está neste navegador ou no servidor. O cadastro e a importação de produtos mantêm as operações administrativas existentes. Abrir uma área não salva alterações."}
                 </p>
                 <Dialog.Close className="aw-action">Entendi</Dialog.Close>
               </Dialog.Content>

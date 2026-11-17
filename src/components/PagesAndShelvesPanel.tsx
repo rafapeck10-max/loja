@@ -1,3 +1,4 @@
+import { ProductIdentity } from "./admin/ProductThumbnail";
 import { useEffect, useMemo, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
@@ -195,7 +196,7 @@ export function PagesAndShelvesPanel({
     if (managed) {
       managed.onChange(baseline);
       setMessage(
-        "Edição restaurada para os dados consultados. Salve para registrar uma nova versão local.",
+        "Edição restaurada para os dados consultados. Salve para registrar uma nova versão.",
       );
       return;
     }
@@ -374,7 +375,12 @@ export function PagesAndShelvesPanel({
           </button>
         </div>
       </div>
-      <p className="ps-source">{sourceLabel}. Alterações são salvas somente neste navegador.</p>
+      <p className="ps-source">
+        {sourceLabel}.{" "}
+        {managed
+          ? "Use Salvar rascunho no topo. A revisão não publica alterações na loja."
+          : "Alterações são salvas somente neste navegador."}
+      </p>
       {stored && stored !== lastSaved && (
         <div className="ps-notice">
           <span>Há um rascunho local salvo para esta página.</span>
@@ -527,7 +533,11 @@ export function PagesAndShelvesPanel({
                             <li key={id}>
                               <span className="ps-position">{index + 1}</span>
                               <div className="ps-product-identity">
-                                {p ? identity(p) : <strong>Produto {id} não encontrado</strong>}
+                                {p ? (
+                                  identity(p)
+                                ) : (
+                                  <ProductIdentity fallbackName={`Produto ${id} não encontrado`} />
+                                )}
                               </div>
                               {(!p || !isCurationProduct(p)) && (
                                 <p className="ps-warning">
@@ -616,7 +626,13 @@ export function PagesAndShelvesPanel({
                                 <li key={id}>
                                   <span className="ps-position">{index + 1}</span>
                                   <div className="ps-product-identity">
-                                    {p ? identity(p) : <strong>Produto {id} não encontrado</strong>}
+                                    {p ? (
+                                      identity(p)
+                                    ) : (
+                                      <ProductIdentity
+                                        fallbackName={`Produto ${id} não encontrado`}
+                                      />
+                                    )}
                                   </div>
                                   {(!p || !isCurationProduct(p)) && (
                                     <p className="ps-warning">

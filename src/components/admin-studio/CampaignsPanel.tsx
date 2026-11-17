@@ -1,3 +1,4 @@
+import { ProductIdentity } from "../admin/ProductThumbnail";
 import { useEffect, useRef, useState } from "react";
 import type { EditorProduct } from "../../lib/homepage-curation";
 import { formatBRL } from "../../lib/constants";
@@ -350,7 +351,7 @@ export function CampaignsPanel({
                               patch({ participants: next.participants });
                             }}
                           />{" "}
-                          <strong>{product.nome}</strong> · base Pix{" "}
+                          <ProductIdentity product={product} /> · base Pix{" "}
                           {validBase ? formatBRL(Number(product.preco_atual)) : "sem preço válido"}
                         </span>
                       </label>
@@ -449,7 +450,9 @@ export function CampaignsPanel({
                       }
                       return (
                         <tr key={p.productId}>
-                          <th scope="row">{product?.nome ?? p.productId}</th>
+                          <th scope="row">
+                            <ProductIdentity product={product} fallbackName={p.productId} />
+                          </th>
                           {quote ? (
                             <>
                               <td>
@@ -512,7 +515,7 @@ export function CampaignsPanel({
                   .filter((p) => campaign.participants.some((item) => item.productId === p.id))
                   .map((product) => (
                     <article key={product.id} className="pm-card">
-                      <strong>{product.nome}</strong>
+                      <ProductIdentity product={product} />
                       <p>Pix na prévia: {formatBRL(Number(product.preco_atual))}</p>
                       <span className="pm-muted">
                         {preview.overriddenIds.includes(product.id)

@@ -1,3 +1,4 @@
+import { ProductIdentity } from "./ProductThumbnail";
 import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Pencil } from "lucide-react";
 import type { ProdutoAdmin } from "../../lib/admin.functions";
@@ -56,23 +57,39 @@ export function SupplierPricingPanel<T extends SupplierPricingProduct>({
   onSelectSupplier,
   onEdit,
 }: SupplierPricingPanelProps<T>) {
+  const [query, setQuery] = useState("");
+  const [onlyAwaiting, setOnlyAwaiting] = useState(true);
+  const filtered = products.filter(
+    (product) =>
+      (!onlyAwaiting || !(Number(product.preco_atual) > 0)) &&
+      (product.nome + " " + (product.sku ?? ""))
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .includes(
+          query
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase(),
+        ),
+  );
   const [page, setPage] = useState(1);
   const pageSize = 32;
-  const totalPages = Math.max(1, Math.ceil(products.length / pageSize));
-  const visibleProducts = products.slice((page - 1) * pageSize, page * pageSize);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const visibleProducts = filtered.slice((page - 1) * pageSize, page * pageSize);
   const selected = summaries.find((summary) => summary.key === selectedSupplier) ?? summaries[0];
 
   useEffect(() => {
     setPage(1);
-  }, [products.length, selectedSupplier]);
+  }, [filtered.length, selectedSupplier, query, onlyAwaiting]);
 
   return (
     <section className="supplier-pricing" aria-labelledby="supplier-pricing-title">
       <header className="supplier-pricing-header">
         <div>
           <p className="supplier-pricing-eyebrow">CATÁLOGO MOBI</p>
-          <h1 id="supplier-pricing-title">Fornecedores e preços</h1>
-          <p>Confira o custo informado e o preço cadastrado na loja.</p>
+          <h1 id="supplier-pricing-title">Precificar produtos</h1>
+          <p>Escolha o fornecedor, confira o custo e defina seu preço de venda.</p>
         </div>
         <p className="supplier-pricing-caveat">
           Diferença bruta = preço no site menos custo informado. Não representa lucro e não inclui
@@ -104,12 +121,31 @@ export function SupplierPricingPanel<T extends SupplierPricingProduct>({
         })}
       </div>
 
+      <div className="pricing-search">
+        <label>
+          Buscar nesta seleção
+          <input
+            type="search"
+            placeholder="Nome ou referência do produto"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </label>
+        <label className="pricing-toggle">
+          <input
+            type="checkbox"
+            checked={onlyAwaiting}
+            onChange={(event) => setOnlyAwaiting(event.target.checked)}
+          />{" "}
+          Só aguardando preço
+        </label>
+      </div>
       <section className="supplier-pricing-results" aria-labelledby="supplier-selected-title">
         <header className="supplier-pricing-results-header">
           <div>
             <h2 id="supplier-selected-title">{selected?.label ?? "Produtos"}</h2>
             <p>
-              {products.length} {products.length === 1 ? "produto" : "produtos"} nesta seleção
+              {filtered.length} {filtered.length === 1 ? "produto" : "produtos"} nesta seleção
             </p>
           </div>
           {selected && (
@@ -121,8 +157,10 @@ export function SupplierPricingPanel<T extends SupplierPricingProduct>({
           )}
         </header>
 
-        {products.length === 0 ? (
-          <p className="supplier-pricing-empty">Nenhum produto neste grupo.</p>
+        {filtered.length === 0 ? (
+          <p className="supplier-pricing-empty">
+            Nenhum produto nesta seleção. Tente outra busca ou desmarque “Só aguardando preço”.
+          </p>
         ) : (
           <>
             <div className="supplier-pricing-table" role="table" aria-label="Preços por produto">
@@ -142,8 +180,9 @@ export function SupplierPricingPanel<T extends SupplierPricingProduct>({
                 return (
                   <div className="supplier-pricing-row" role="row" key={product.id}>
                     <div className="supplier-pricing-product" role="cell">
-                      <strong>{product.nome}</strong>
-                      <small>{product.sku || "Sem SKU cadastrado"}</small>
+                      <ProductIdentity product={product}>
+                        <small>{product.sku || "Sem SKU cadastrado"}</small>
+                      </ProductIdentity>
                     </div>
                     <span
                       className="supplier-pricing-value"
@@ -179,10 +218,10 @@ export function SupplierPricingPanel<T extends SupplierPricingProduct>({
                     <span className="supplier-pricing-action" role="cell">
                       <button
                         type="button"
-                        aria-label={"Editar " + product.nome}
+                        aria-label={"Precificar " + product.nome}
                         onClick={() => onEdit(product)}
                       >
-                        <Pencil size={15} /> <span>Editar</span>
+                        <Pencil size={15} /> <span>Precificar</span>
                       </button>
                     </span>
                   </div>
