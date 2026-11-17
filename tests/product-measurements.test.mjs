@@ -60,3 +60,45 @@ test("supports three-decimal metric dimensions without slicing trailing digits",
     Profundidade: "2,050 m",
   });
 });
+
+test("supports abbreviated measurement labels including missing space before value", () => {
+  assert.deepEqual(values("Alt 1,24m | Larg 1,40m | Prof 0,14m"), {
+    Largura: "1,40 m",
+    Altura: "1,24 m",
+    Profundidade: "0,14 m",
+  });
+  assert.deepEqual(values("Alt 0,04m Larg1,00m Prof 1,50m"), {
+    Largura: "1,00 m",
+    Altura: "0,04 m",
+    Profundidade: "1,50 m",
+  });
+  assert.deepEqual(values("Comp. 1,20m; Alt.: 0,75m; Prof.: 0,80m"), {
+    Comprimento: "1,20 m",
+    Altura: "0,75 m",
+    Profundidade: "0,80 m",
+  });
+});
+
+test("does not confuse board thickness later in sentence with depth or drop open/closed prof", () => {
+  assert.deepEqual(values("Medidas: Alt 2,16m Larg 1,65m Prof 0,42m, Estrutura 100% MDP 15mm"), {
+    Largura: "1,65 m",
+    Altura: "2,16 m",
+    Profundidade: "0,42 m",
+  });
+  assert.deepEqual(
+    values(
+      "Alt 1,12m Larg: 2 Módulos 0,90m + Braço 0,25m Prof Fechado 1,20m Prof Aberto 1,80m Peso 84Kg",
+    ),
+    {
+      Altura: "1,12 m",
+      "Profundidade fechada": "1,20 m",
+      "Profundidade aberta": "1,80 m",
+    },
+  );
+  assert.deepEqual(
+    productMeasurements(
+      "Mesa\nLarg: 0,90m\nAlt: 0,78m\nProf: 0,90m\n\nCadeira\nLarg: 36,6cm\nAlt: 88,5cm\nProf: 43,5cm",
+    ),
+    [],
+  );
+});

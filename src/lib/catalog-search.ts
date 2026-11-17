@@ -31,7 +31,7 @@ const normalize = (value: string) =>
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 
-const dimensionPattern = /(?<![\d.,])(\d{1,4}(?:[.,]\d{1,3})?)\s*(mm|cm|m)\b/gi;
+const dimensionPattern = /(?<![\d.,])(\d{1,4}(?:[.,]\d{1,3})?)\s*(mm|cm|m)(?![A-Za-zÀ-ÿ0-9_])/gi;
 const stopWords = new Set([
   "a",
   "as",
@@ -169,8 +169,35 @@ export function isNoiseColorToken(value: string) {
 }
 
 export function cleanCatalogMeasurementText(value: string | null | undefined) {
-  let cleaned = (value ?? "").trim();
+  let cleaned = (value ?? "")
+    .replace(/\\r\\n|\\n|`n|\r\n/g, "\n")
+    .replace(/\u2800+/g, " ")
+    .trim();
   if (!cleaned) return "";
+  cleaned = cleaned
+    .split("\n")
+    .filter(
+      (line) =>
+        !/^\s*(disponibilidade(?:\s+no\s+fornecedor)?|fornecedor|link do fornecedor|origem|custo|pre[cç]o de atacado|c[oó]digos por cor na sr)\s*:/i.test(
+          line,
+        ),
+    )
+    .join("\n")
+    .trim();
+  const paragraphs = cleaned
+    .split(/\n\s*\n/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const dimLabelPattern =
+    /\b(?:largura(?=\b)|larg(?=\b|\.|\d)|altura(?=\b)|alt(?=\b|\.|\d)|profundidade(?=\b)|prof(?=\b|\.|\d)|comprimento(?=\b)|comp(?=\b|\.|\d)|di[aâ]metro(?=\b)|medidas?(?=\b)|dimens[oõ]es(?=\b)|[alp]\s*=|[lp]\s*:)/i;
+  if (paragraphs.length > 1) {
+    const measureParagraphs = paragraphs.filter(
+      (part) => dimLabelPattern.test(part) && /\d/.test(part),
+    );
+    if (measureParagraphs.length > 0 && measureParagraphs.length < paragraphs.length) {
+      cleaned = measureParagraphs.join("\n\n");
+    }
+  }
   const trailingLabel =
     /[\s;,.·/|:-]*\b(?:peso(?:\s+suportado|\s+bruto|\s+l[ií]quido)?|medidas?|dimens[oõ]es)\s*[:=-]?\s*$/i;
   let previous = "";
@@ -178,7 +205,10 @@ export function cleanCatalogMeasurementText(value: string | null | undefined) {
     previous = cleaned;
     cleaned = cleaned.replace(trailingLabel, "").replace(/^[\s;,.·/|:-]+|[\s;,.·/|:-]+$/g, "");
   }
-  return /\d/.test(cleaned) ? cleaned : "";
+  const hasMeasurementSignal =
+    dimLabelPattern.test(cleaned) ||
+    /\d+(?:[.,]\d+)?\s*(?:mm|cm|m)\b|\d+\s*[x×]\s*\d+/i.test(cleaned);
+  return /\d/.test(cleaned) && hasMeasurementSignal ? cleaned : "";
 }
 
 const broaderColors: Record<string, string> = {
@@ -287,10 +317,20 @@ function formatDimension(value: string, unit: string) {
 }
 
 function getLabeledDimensions(value: string) {
+  const normalized = value.replace(/\\r\\n|\\n|`n|\r\n/g, "\n").replace(/\u2800+/g, " ");
   const pattern =
-    /\b(largura|altura|profundidade(?:\s+(?:fechad[oa]|abert[oa]))?|comprimento|di[aâ]metro)\s*(?:\([^)]*\))?\s*[:=-]?\s*(?<![\d.,])(\d{1,4}(?:[.,]\d{1,3})?)\s*(mm|cm|m)\b/gi;
-  return [...value.matchAll(pattern)].map((match) => {
-    const label = match[1][0].toUpperCase() + match[1].slice(1).toLowerCase();
+    /\b(largura(?![A-Za-zÀ-ÿ0-9_])|larg(?![A-Za-zÀ-ÿ_])|altura(?![A-Za-zÀ-ÿ0-9_])|alt(?![A-Za-zÀ-ÿ_])|profundidade(?:\s+(?:fechad[oa]|abert[oa]))?(?![A-Za-zÀ-ÿ0-9_])|prof(?![A-Za-zÀ-ÿ_])|comprimento(?![A-Za-zÀ-ÿ0-9_])|comp(?![A-Za-zÀ-ÿ_])|di[aâ]metro(?![A-Za-zÀ-ÿ0-9_]))\.?\s*(?:\([^)]*\))?\s*[:=-]?\s*(?<![\d.,])(\d{1,4}(?:[.,]\d{1,3})?)\s*(mm|cm|m)(?![A-Za-zÀ-ÿ0-9_])/gi;
+  return [...normalized.matchAll(pattern)].map((match) => {
+    const raw = match[1].toLowerCase();
+    const label = raw.startsWith("larg")
+      ? "Largura"
+      : raw.startsWith("alt")
+        ? "Altura"
+        : raw.startsWith("comp")
+          ? "Comprimento"
+          : raw === "prof"
+            ? "Profundidade"
+            : match[1][0].toUpperCase() + match[1].slice(1).toLowerCase();
     return {
       label,
       cm: getDimensionCm(Number(match[2].replace(",", ".")), match[3]),
@@ -449,6 +489,8 @@ export function getCatalogDimensions(product: SearchProduct): CatalogDimensions 
     if (measure.label === "Largura" && values.widthCm === undefined) values.widthCm = cm;
     if (measure.label === "Altura" && values.heightCm === undefined) values.heightCm = cm;
     if (measure.label === "Profundidade fechada" && values.depthClosedCm === undefined)
+      values.depthClosedCm = cm;
+    if (measure.label === "Profundidade" && values.depthClosedCm === undefined)
       values.depthClosedCm = cm;
     if (measure.label === "Profundidade aberta" && values.depthOpenCm === undefined)
       values.depthOpenCm = cm;

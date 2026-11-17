@@ -15,7 +15,7 @@ export type OverviewProduct = Pick<
   ProdutoAdmin,
   "id" | "nome" | "preco_atual" | "preco_atacado" | "url_imagem"
 > &
-  Partial<Pick<ProdutoAdmin, "fornecedor">>;
+  Partial<Pick<ProdutoAdmin, "fornecedor" | "sku">>;
 
 export interface OverviewSource<T> {
   status: "pending" | "success" | "error";

@@ -2281,6 +2281,11 @@
   border-bottom: 1px solid rgb(73 51 39 / 12%);
   padding-bottom: 24px;
 }
+.mobi-product-description-body {
+  display: grid;
+  gap: 12px;
+  max-width: 1080px;
+}
 .mobi-product-description-lead,
 .mobi-product-description-rest p {
   max-width: 1080px;
@@ -2289,6 +2294,24 @@
   font-size: 15px;
   line-height: 1.75;
   white-space: pre-line;
+}
+.mobi-product-description-list {
+  display: grid;
+  gap: 7px;
+  max-width: 1080px;
+  margin: 0;
+  padding-left: 20px;
+  list-style: disc;
+  color: var(--cacau);
+  font-size: 15px;
+  line-height: 1.65;
+}
+.mobi-product-description-note {
+  max-width: 1080px;
+  margin: 12px 0 0;
+  color: var(--text-light);
+  font-size: 12px;
+  line-height: 1.55;
 }
 .mobi-product-description-rest {
   display: grid;

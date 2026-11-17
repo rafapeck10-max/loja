@@ -9,6 +9,7 @@ import {
   CircleDollarSign,
   Images,
   FileDown,
+  Tag,
 } from "lucide-react";
 import {
   overviewImpact,
@@ -16,6 +17,7 @@ import {
   type OverviewProduct,
   type OverviewSource,
 } from "../lib/admin-overview";
+import { formatBRL } from "../lib/constants";
 import type { ProductStatus } from "../lib/admin-filters";
 import "../admin-overview.css";
 import "../admin-density.css";
@@ -28,7 +30,9 @@ export interface AdminOverviewProps<T extends OverviewProduct = OverviewProduct>
   onProducts: (status: "all" | ProductStatus) => void;
   onEdit: (product: T) => void;
   onPrice?: (product: T) => void;
-  onNavigate: (area: "vitrine" | "banners" | "revisao" | "fornecedores") => void;
+  onNavigate: (
+    area: "produtos" | "vitrine" | "banners" | "revisao" | "fornecedores" | "campaigns",
+  ) => void;
   demonstration?: boolean;
 }
 
@@ -109,6 +113,7 @@ export function AdminOverview<T extends OverviewProduct>({
 
       <div className="mobi-task-grid" aria-label="Tarefas da loja">
         <button
+          type="button"
           onClick={() => onNavigate("fornecedores")}
           disabled={!ready}
           className="mobi-task is-featured"
@@ -122,7 +127,12 @@ export function AdminOverview<T extends OverviewProduct>({
           </span>
           <ArrowRight size={18} />
         </button>
-        <button onClick={() => onNavigate("revisao")} disabled={!queueReady} className="mobi-task">
+        <button
+          type="button"
+          onClick={() => onNavigate("revisao")}
+          disabled={!queueReady}
+          className="mobi-task"
+        >
           <FileDown size={24} />
           <span>
             <strong>Conferir importações</strong>
@@ -134,13 +144,24 @@ export function AdminOverview<T extends OverviewProduct>({
           </span>
           <ArrowRight size={18} />
         </button>
-        <button onClick={() => onNavigate("vitrine")} className="mobi-task">
+        <button type="button" onClick={() => onNavigate("vitrine")} className="mobi-task">
           <Images size={24} />
           <span>
             <strong>Organizar a vitrine</strong>
             <small>Escolha os destaques da loja</small>
           </span>
           <ArrowRight size={18} />
+        </button>
+      </div>
+      <div className="ov-quick-strip" aria-label="Atalhos diretos">
+        <button type="button" className="ov-quick-pill" onClick={() => onProducts("all")}>
+          <Package size={15} aria-hidden="true" /> Catálogo completo ({counts.total ?? "—"})
+        </button>
+        <button type="button" className="ov-quick-pill" onClick={() => onNavigate("banners")}>
+          <Images size={15} aria-hidden="true" /> Banners e mídias
+        </button>
+        <button type="button" className="ov-quick-pill" onClick={() => onNavigate("campaigns")}>
+          <Tag size={15} aria-hidden="true" /> Simular ofertas
         </button>
       </div>
       <div className="mobi-queue-tabs" aria-label="Filas de trabalho">
@@ -215,35 +236,43 @@ export function AdminOverview<T extends OverviewProduct>({
         ) : (
           <>
             <ul className="ov-issues">
-              {(showAll ? issues.slice(0, 25) : issues.slice(0, 5)).map(({ product, reasons }) => (
-                <li key={product.id}>
-                  <ProductThumbnail product={product} />
-                  <div className="ov-issue-content">
-                    <h3>{product.nome}</h3>
-                    <p className="ov-supplier">
-                      Fornecedor: {product.fornecedor?.trim() || "não cadastrado"}
-                    </p>
-                    <p className="ov-problem">{reasons.join(" · ")}</p>
-                    <details className="ov-impact-detail">
-                      <summary>Por que revisar</summary>
-                      <p className="ov-impact">{overviewImpact(product)}</p>
-                    </details>
-                  </div>
-                  <button
-                    type="button"
-                    className="ov-review-button"
-                    aria-label={`${queue === "pricing" ? "Precificar" : "Conferir"} ${product.nome}`}
-                    onClick={() => {
-                      const original = catalog.data?.find((item) => item.id === product.id);
-                      if (queue === "pricing" && original && onPrice) onPrice(original);
-                      else if (queue === "pricing") onNavigate("fornecedores");
-                      else if (original) onEdit(original);
-                    }}
-                  >
-                    {queue === "pricing" ? "Precificar" : "Conferir"} <ArrowRight size={15} />
-                  </button>
-                </li>
-              ))}
+              {(showAll ? issues.slice(0, 25) : issues.slice(0, 5)).map(({ product, reasons }) => {
+                const cost = Number(product.preco_atacado ?? 0);
+                const sale = Number(product.preco_atual ?? 0);
+                const metaParts = [
+                  `Fornecedor: ${product.fornecedor?.trim() || "não cadastrado"}`,
+                  product.sku ? `Ref.: ${product.sku}` : "",
+                  cost > 0 ? `Custo: ${formatBRL(cost)}` : "",
+                  sale > 0 ? `Site: ${formatBRL(sale)}` : "",
+                ].filter(Boolean);
+                return (
+                  <li key={product.id}>
+                    <ProductThumbnail product={product} />
+                    <div className="ov-issue-content">
+                      <h3>{product.nome}</h3>
+                      <p className="ov-supplier">{metaParts.join(" · ")}</p>
+                      <p className="ov-problem">{reasons.join(" · ")}</p>
+                      <details className="ov-impact-detail">
+                        <summary>Por que revisar</summary>
+                        <p className="ov-impact">{overviewImpact(product)}</p>
+                      </details>
+                    </div>
+                    <button
+                      type="button"
+                      className="ov-review-button"
+                      aria-label={`${queue === "pricing" ? "Precificar" : "Conferir"} ${product.nome}`}
+                      onClick={() => {
+                        const original = catalog.data?.find((item) => item.id === product.id);
+                        if (queue === "pricing" && original && onPrice) onPrice(original);
+                        else if (queue === "pricing") onNavigate("fornecedores");
+                        else if (original) onEdit(original);
+                      }}
+                    >
+                      {queue === "pricing" ? "Precificar" : "Conferir"} <ArrowRight size={15} />
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
             <div className="ov-list-footer">
               <span>

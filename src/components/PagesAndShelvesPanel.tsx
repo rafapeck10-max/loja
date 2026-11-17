@@ -1,4 +1,4 @@
-import { ProductIdentity } from "./admin/ProductThumbnail";
+import { ProductIdentity, ProductThumbnail } from "./admin/ProductThumbnail";
 import { useEffect, useMemo, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
@@ -46,7 +46,6 @@ import { HomepageSectionOrder } from "./HomepageSectionOrder";
 import { HomeProductSection } from "./HomeProductSection";
 import { BlackFridayHomeSection } from "./BlackFridayHomeSection";
 import { MobiliLogo } from "./MobiliLogo";
-import { ImageWithFallback } from "./ImageWithFallback";
 import { formatBRL } from "../lib/constants";
 import "../pages-shelves.css";
 
@@ -308,7 +307,7 @@ export function PagesAndShelvesPanel({
   const filtered = products.filter(matches);
   const identity = (p: EditorProduct) => (
     <>
-      <ImageWithFallback src={p.url_imagem} alt={p.nome} />
+      <ProductThumbnail product={p} />
       <span>
         <strong>{p.nome}</strong>
         <small>
@@ -367,10 +366,14 @@ export function PagesAndShelvesPanel({
           Ver loja atual <ArrowUpRight size={14} />
         </a>
         <div className="ps-modes" aria-label="Modo do editor">
-          <button aria-pressed={mode === "edit"} onClick={() => setMode("edit")}>
+          <button type="button" aria-pressed={mode === "edit"} onClick={() => setMode("edit")}>
             Editor
           </button>
-          <button aria-pressed={mode === "preview"} onClick={() => setMode("preview")}>
+          <button
+            type="button"
+            aria-pressed={mode === "preview"}
+            onClick={() => setMode("preview")}
+          >
             <Eye size={14} /> Prévia
           </button>
         </div>
@@ -771,6 +774,7 @@ export function PagesAndShelvesPanel({
             <h2>Prévia da composição</h2>
             <div className="ps-devices">
               <button
+                type="button"
                 aria-label="Prévia computador"
                 aria-pressed={device === "desktop"}
                 onClick={() => setDevice("desktop")}
@@ -778,6 +782,7 @@ export function PagesAndShelvesPanel({
                 <Monitor size={16} />
               </button>
               <button
+                type="button"
                 aria-label="Prévia celular"
                 aria-pressed={device === "mobile"}
                 onClick={() => setDevice("mobile")}
