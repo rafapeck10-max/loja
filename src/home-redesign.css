@@ -1395,3 +1395,8 @@
 .mobi-hero-art[data-preview-format="mobile"][data-has-mobile-art="false"] .mobi-hero-image {
   object-fit: contain;
 }
+
+/* Existing photo-based banners keep the complete furniture visible. */
+.mobi-hero-art[data-legacy-photo="true"] .mobi-hero-image {
+  object-fit: contain;
+}
