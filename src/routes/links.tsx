@@ -88,7 +88,7 @@ function LinksPage() {
           </div>
         </header>
         <nav aria-label="Links oficiais da Mobi" className="mt-7 grid gap-4 sm:mt-9">
-          <Link to="/" search={{ all: true, page: 1 }} hash="catalogo" className={linkClass}>
+          <Link to="/" className={linkClass}>
             <Globe className="h-7 w-7" aria-hidden="true" />
             <span className="text-center text-[15px] font-semibold uppercase leading-snug tracking-wide sm:text-base">
               Escolha seu móvel aqui
