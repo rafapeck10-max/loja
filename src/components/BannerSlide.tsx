@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { ImageWithFallback } from "./ImageWithFallback";
-import type { HomepageBanner } from "../lib/homepage-banners";
+import { approvedBannerArtwork, type HomepageBanner } from "../lib/homepage-banners";
 import { isSafeBannerDestination, type BannerResponsiveMedia } from "../lib/banner-drafts";
 interface BannerSlideProps {
   banner: HomepageBanner;
@@ -16,13 +16,16 @@ export function BannerSlide({
   previewViewport,
 }: BannerSlideProps) {
   const desktop = responsiveMedia?.desktop ?? banner.image_url;
-  const mobile = responsiveMedia?.mobile;
+  const artwork = approvedBannerArtwork(desktop);
+  const mobile = responsiveMedia?.mobile || artwork?.mobile;
   const alt = responsiveMedia?.alt ?? banner.title;
   const href = isSafeBannerDestination(banner.cta_href) ? banner.cta_href : undefined;
   return (
     <section
       className="mobi-hero mobi-hero-art"
       data-has-mobile-art={!!mobile}
+      data-approved-art={!!artwork}
+      style={artwork ? { backgroundColor: artwork.background } : undefined}
       data-legacy-photo={responsiveMedia?.showText ?? true}
       data-preview-format={previewViewport}
       aria-label={

@@ -1,4 +1,8 @@
-import { DEFAULT_HOMEPAGE_BANNERS, type HomepageBanner } from "./homepage-banners.ts";
+import {
+  approvedBannerArtwork,
+  DEFAULT_HOMEPAGE_BANNERS,
+  type HomepageBanner,
+} from "./homepage-banners.ts";
 import { getCategory, WHATSAPP_NUMBER } from "./constants.ts";
 
 export interface BannerDraft extends HomepageBanner {
@@ -32,7 +36,7 @@ export function initialBannerData(
       ...banner,
       id: `hero-${banner.position}`,
       name: `Banner ${banner.position}`,
-      mobile_image_url: "",
+      mobile_image_url: approvedBannerArtwork(banner.image_url)?.mobile ?? "",
       alt: banner.title,
       show_text: false,
       starts_at: "",

@@ -1400,3 +1400,8 @@
 .mobi-hero-art[data-legacy-photo="true"] .mobi-hero-image {
   object-fit: contain;
 }
+
+/* Approved native artwork must never lose its copy, logo or furniture to cropping. */
+.mobi-hero-art[data-approved-art="true"] .mobi-hero-image {
+  object-fit: contain;
+}
