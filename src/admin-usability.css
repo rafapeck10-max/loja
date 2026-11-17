@@ -1,0 +1,410 @@
+/* Task-first administration. Scoped to the Mobi admin; storefront stays unchanged. */
+.aw-layout {
+  background: #f5f5f0;
+  color: #29372d;
+}
+.aw-main {
+  background: #f5f5f0;
+}
+.aw-sidebar,
+.aw-drawer {
+  background: #252f27;
+}
+.aw-sidebar nav button {
+  border-radius: 10px;
+  min-height: 48px;
+}
+.aw-sidebar nav button[aria-current],
+.aw-drawer nav button[aria-current] {
+  background: #f5f0e3;
+  color: #252f27;
+}
+.aw-topbar {
+  border-bottom: 1px solid #e1e6df;
+}
+.aw-store-link {
+  margin-left: auto;
+}
+.aw-subnav button {
+  font-size: 14px;
+  min-height: 50px;
+}
+.aw-content {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 28px;
+}
+.aw-content h1 {
+  letter-spacing: -0.7px;
+}
+.aw-layout button:focus-visible,
+.product-editor-nav button:focus-visible {
+  outline: 3px solid #a68136;
+  outline-offset: 3px;
+}
+.aw-layout button,
+.aw-layout summary {
+  min-height: 44px;
+}
+.aw-layout input,
+.aw-layout select,
+.aw-layout textarea {
+  font-size: 16px;
+}
+.aw-layout [hidden],
+.product-editor-section[hidden] {
+  display: none !important;
+}
+.mobi-task-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 10px 0 26px;
+}
+.mobi-task {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 22px 18px;
+  border: 1px solid #dce2d8;
+  border-radius: 14px;
+  background: white;
+  text-align: left;
+  color: #354a3b;
+  box-shadow: 0 3px 10px #25302704;
+}
+.mobi-task > svg {
+  flex-shrink: 0;
+}
+.mobi-task > svg:last-child {
+  margin-left: auto;
+  width: 16px;
+}
+.mobi-task span {
+  display: grid;
+  gap: 6px;
+}
+.mobi-task strong {
+  font-size: 15px;
+}
+.mobi-task small {
+  font-size: 13px;
+  color: #5f6b60;
+}
+.mobi-task.is-featured {
+  background: #293d30;
+  color: #fff;
+  border-color: #293d30;
+}
+.mobi-task.is-featured small {
+  color: #e2d5b1;
+}
+.mobi-task:hover {
+  border-color: #a4884b;
+  transform: translateY(-1px);
+}
+.mobi-queue-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.mobi-queue-tabs button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 24px;
+  border: 1px solid #d8ded5;
+  background: white;
+  font-size: 14px;
+}
+.mobi-queue-tabs button[aria-pressed="true"] {
+  background: #e7eddf;
+  border-color: #53694c;
+  color: #293d30;
+}
+.mobi-queue-tabs b {
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: #f2f4ee;
+}
+.ov-heading h1 {
+  font-size: 30px;
+}
+.ov-heading > div > p:last-child {
+  font-size: 14px;
+  max-width: none;
+}
+.ov-summary {
+  border-radius: 10px;
+}
+.ov-summary-item span {
+  font-size: 13px;
+}
+.ov-panel {
+  border-radius: 14px;
+  border-color: #dce2d8;
+  background: white;
+  overflow: hidden;
+}
+.ov-queue .ov-panel-heading {
+  padding: 20px;
+}
+.ov-queue .ov-panel-heading h2 {
+  font-size: 19px;
+}
+.ov-queue .ov-panel-heading > div > p:last-child {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.ov-issue-content h3 {
+  font-size: 14px;
+}
+.ov-supplier,
+.ov-problem,
+.ov-impact-detail,
+.ov-impact,
+.ov-list-footer {
+  font-size: 13px;
+}
+.ov-review-button {
+  min-height: 44px;
+  border-radius: 9px;
+  padding: 8px 14px;
+  font-size: 13px !important;
+}
+.supplier-pricing-header h1 {
+  font-size: 30px;
+}
+.supplier-pricing-header > div > p:last-child,
+.supplier-pricing-caveat {
+  font-size: 13px;
+}
+.supplier-pricing-groups {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+  gap: 10px;
+}
+.supplier-pricing-group {
+  border-radius: 12px;
+  padding: 15px;
+  min-height: 90px;
+}
+.supplier-pricing-group-top strong {
+  font-size: 14px;
+}
+.supplier-pricing-group-meta,
+.supplier-pricing-selected-summary span {
+  font-size: 12px;
+}
+.supplier-pricing-results {
+  border-radius: 12px;
+  overflow: hidden;
+  border-color: #dce2d8;
+}
+.supplier-pricing-results-header p,
+.supplier-pricing-product small {
+  font-size: 12px;
+  color: #606c61;
+}
+.supplier-pricing-product strong,
+.supplier-pricing-value {
+  font-size: 14px;
+}
+.supplier-pricing-table-head,
+.supplier-pricing-status {
+  font-size: 12px;
+}
+.supplier-pricing-row {
+  padding: 14px;
+}
+.supplier-pricing-action button {
+  border-radius: 8px;
+  font-size: 13px;
+  background: #edf2e8;
+}
+.pricing-search {
+  display: flex;
+  gap: 16px;
+  align-items: end;
+  margin: 18px 0;
+}
+.pricing-search > label:first-child {
+  flex: 1;
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.pricing-search input[type="search"] {
+  min-height: 48px;
+  border: 1px solid #ccd5c8;
+  border-radius: 10px;
+  background: white;
+  padding: 10px 14px;
+  width: 100%;
+}
+.pricing-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  font-size: 14px;
+}
+.pricing-toggle input {
+  width: 20px;
+  height: 20px;
+  accent-color: #293d30;
+}
+.product-editor-nav {
+  display: flex;
+  overflow-x: auto;
+  flex-shrink: 0;
+  gap: 6px;
+  padding: 10px 20px;
+  border-bottom: 1px solid #dce2d8;
+  background: white;
+}
+.product-editor-nav button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #53604f;
+}
+.product-editor-nav button[aria-pressed="true"] {
+  background: #293d30;
+  color: #fff;
+}
+.product-editor-identity {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 24px;
+  font-size: 14px;
+  background: #eef0e7;
+}
+.product-editor-identity strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.product-editor-identity span {
+  flex-shrink: 0;
+  color: #5e6657;
+}
+.pm-secondary-tools {
+  margin: 8px 0;
+  font-size: 13px;
+  color: #5e6657;
+}
+.pm-secondary-tools summary {
+  cursor: pointer;
+  padding: 8px 0;
+}
+.pm-studio-toolbar {
+  border-radius: 12px;
+}
+@media (max-width: 1100px) {
+  .mobi-task-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .mobi-task {
+    padding: 16px;
+  }
+}
+@media (max-width: 767px) {
+  .aw-content {
+    padding: 18px 14px 28px;
+  }
+  .aw-subnav {
+    padding: 0 8px;
+  }
+  .aw-subnav button {
+    font-size: 14px;
+    padding: 0 12px;
+  }
+  .ov-heading h1,
+  .supplier-pricing-header h1 {
+    font-size: 25px;
+  }
+  .ov-source-note {
+    font-size: 11px;
+  }
+  .mobi-task-grid {
+    margin-bottom: 20px;
+  }
+  .mobi-queue-tabs {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .mobi-queue-tabs button {
+    justify-content: space-between;
+    border-radius: 10px;
+  }
+  .ov-queue .ov-panel-heading {
+    align-items: start;
+    padding: 16px;
+  }
+  .ov-queue .ov-panel-heading h2 {
+    font-size: 17px;
+  }
+  .ov-issues li {
+    flex-wrap: wrap;
+  }
+  .ov-issue-content {
+    min-width: 0;
+    flex-basis: 100%;
+  }
+  .ov-review-button {
+    width: 100%;
+    justify-content: center;
+  }
+  .supplier-pricing-groups {
+    grid-template-columns: 1fr;
+  }
+  .supplier-pricing-group {
+    min-height: 72px;
+  }
+  .supplier-pricing-group-top strong {
+    font-size: 14px;
+  }
+  .supplier-pricing-group-meta {
+    font-size: 12px;
+  }
+  .supplier-pricing-row [data-label]::before {
+    font-size: 12px;
+    color: #5f695c;
+  }
+  .pricing-search {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  .product-editor-nav {
+    padding: 8px 12px;
+    gap: 4px;
+  }
+  .product-editor-nav button {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  .product-editor-identity {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}
+@media (max-width: 767px) {
+  .product-editor-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+  }
+  .product-editor-nav button {
+    min-width: 0;
+  }
+}

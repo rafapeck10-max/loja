@@ -37,14 +37,14 @@ export const ADMIN_NAV_GROUPS = [
     defaultView: "produtos",
     views: [
       { id: "produtos", label: "Produtos" },
-      { id: "fornecedores", label: "Fornecedores e preços" },
-      { id: "revisao", label: "Coletas para revisar" },
+      { id: "fornecedores", label: "Precificar" },
+      { id: "revisao", label: "Importações" },
       { id: "navigation", label: "Categorias e filtros" },
     ],
   },
   {
     id: "storeContent",
-    label: "Conteúdo da loja",
+    label: "Vitrine e banners",
     defaultView: "vitrine",
     views: [
       { id: "vitrine", label: "Páginas e vitrines" },
@@ -54,9 +54,9 @@ export const ADMIN_NAV_GROUPS = [
   },
   {
     id: "offers",
-    label: "Ofertas",
+    label: "Simular ofertas",
     defaultView: "campaigns",
-    views: [{ id: "campaigns", label: "Ofertas e campanhas" }],
+    views: [{ id: "campaigns", label: "Simulador de ofertas" }],
   },
   {
     id: "service",
@@ -66,7 +66,7 @@ export const ADMIN_NAV_GROUPS = [
   },
   {
     id: "more",
-    label: "Mais",
+    label: "Configurações",
     defaultView: "history",
     views: [
       { id: "history", label: "Histórico e estado do painel" },

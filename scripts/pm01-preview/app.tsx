@@ -1,3 +1,4 @@
+import { AdminDashboard } from "../../src/routes/admin";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { UIProvider } from "../../src/lib/ui-context";
 import { CartProvider } from "../../src/lib/cart-context";
@@ -346,6 +347,14 @@ function PreviewShell() {
 }
 function LegacyEntry() {
   const search = useRouterState({ select: (state) => state.location.search }) as PreviewSearch;
+  if (search.view === "operations")
+    return (
+      <AdminDashboard
+        password="isolated-demo"
+        onLogout={() => window.location.reload()}
+        demonstration
+      />
+    );
   return search.view === "home" || search.all || search.q || search.ofertas ? (
     <LocalStorefront />
   ) : (

@@ -195,7 +195,7 @@ export function PagesAndShelvesPanel({
     if (managed) {
       managed.onChange(baseline);
       setMessage(
-        "Edição restaurada para os dados consultados. Salve para registrar uma nova versão local.",
+        "Edição restaurada para os dados consultados. Salve para registrar uma nova versão.",
       );
       return;
     }
@@ -374,7 +374,12 @@ export function PagesAndShelvesPanel({
           </button>
         </div>
       </div>
-      <p className="ps-source">{sourceLabel}. Alterações são salvas somente neste navegador.</p>
+      <p className="ps-source">
+        {sourceLabel}.{" "}
+        {managed
+          ? "Use Salvar rascunho no topo. A revisão não publica alterações na loja."
+          : "Alterações são salvas somente neste navegador."}
+      </p>
       {stored && stored !== lastSaved && (
         <div className="ps-notice">
           <span>Há um rascunho local salvo para esta página.</span>
