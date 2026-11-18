@@ -206,6 +206,7 @@ const EMPTY: ProdutoInput = {
   cores: [],
   status_estoque: "nao_verificado",
   compre_junto_ids: [],
+  vitrine_black_friday: null,
 };
 
 const STATUS_LABELS: Record<ProductStatus, string> = {
@@ -596,6 +597,7 @@ export function AdminDashboard({
     setActiveScrapedImport(null);
     setEditing({
       id: p.id,
+      vitrine_black_friday: p.vitrine_black_friday ?? null,
       nome: p.nome,
       slug: p.slug,
       preco_antigo: hasRealReferencePrice(Number(p.preco_antigo), Number(p.preco_atual))
@@ -1789,6 +1791,38 @@ function ProductForm({
                         </option>
                       ))}
                     </select>
+                  </div>
+                  <div>
+                    <label htmlFor="product-black-friday" className={label}>
+                      Vitrine Black Friday
+                    </label>
+                    <select
+                      id="product-black-friday"
+                      className={field}
+                      value={
+                        value.vitrine_black_friday == null
+                          ? "automatico"
+                          : value.vitrine_black_friday
+                            ? "incluir"
+                            : "ocultar"
+                      }
+                      onChange={(event) =>
+                        onChange({
+                          ...value,
+                          vitrine_black_friday:
+                            event.target.value === "automatico"
+                              ? null
+                              : event.target.value === "incluir",
+                        })
+                      }
+                    >
+                      <option value="automatico">Automático: seguir oferta cadastrada</option>
+                      <option value="incluir">Incluir na Black Friday</option>
+                      <option value="ocultar">Ocultar da Black Friday</option>
+                    </select>
+                    <p className="mt-1 text-xs text-text-light">
+                      Controla a vitrine e o selo, sem alterar o preço.
+                    </p>
                   </div>
                   <div>
                     <label htmlFor="product-field-5" className={label}>

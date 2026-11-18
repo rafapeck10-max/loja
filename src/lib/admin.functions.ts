@@ -36,6 +36,7 @@ export interface ProdutoInput {
   cores?: string[];
   status_estoque?: "nao_verificado" | "disponivel" | "esgotado" | "revisar";
   compre_junto_ids?: string[];
+  vitrine_black_friday?: boolean | null;
   deduplicateExisting?: boolean;
 }
 
@@ -531,6 +532,13 @@ function normalize(input: ProdutoInput) {
         };
       })
     : [];
+  if (
+    input.vitrine_black_friday !== undefined &&
+    input.vitrine_black_friday !== null &&
+    typeof input.vitrine_black_friday !== "boolean"
+  ) {
+    throw new Error("Participação Black Friday inválida.");
+  }
   const precoAntigoInput =
     input.preco_antigo == null || input.preco_antigo === 0 ? null : Number(input.preco_antigo);
   if (precoAntigoInput != null && (!Number.isFinite(precoAntigoInput) || precoAntigoInput < 0)) {
@@ -555,6 +563,7 @@ function normalize(input: ProdutoInput) {
     nome: nome.slice(0, 200),
     slug,
     preco_antigo: precoAntigoInput,
+    vitrine_black_friday: input.vitrine_black_friday,
     preco_novo: precoNovo,
     imagem_url: imagem.slice(0, 500),
     imagens: Array.isArray(input.imagens)
@@ -768,6 +777,9 @@ export const upsertProduto = createServerFn({ method: "POST" })
             estoque_atualizado_em: new Date().toISOString(),
             estoque_fonte: "Painel Mobi",
           }
+        : {}),
+      ...(row.vitrine_black_friday !== undefined
+        ? { vitrine_black_friday: row.vitrine_black_friday }
         : {}),
       ...bundleWrite,
     };

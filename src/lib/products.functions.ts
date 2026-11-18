@@ -45,6 +45,7 @@ export interface Produto {
   vitrine_novidade: "automatico" | "incluir" | "ocultar";
   vitrine_sala: "automatico" | "incluir" | "ocultar";
   vitrine_descoberta: boolean;
+  vitrine_black_friday?: boolean | null;
   curadoriaDisponivel: boolean;
 }
 
@@ -56,7 +57,7 @@ export interface ProductPriceVariation {
 }
 
 const PRODUCT_SELECT_BASE =
-  "id, nome, slug, preco_antigo, preco_atual, categoria, url_imagem, ordem, descricao, imagens, sku, medidas, cores, status_estoque, parcelas_sem_juros, variacoes_preco, created_at";
+  "id, nome, slug, preco_antigo, preco_atual, categoria, url_imagem, ordem, descricao, imagens, sku, medidas, cores, status_estoque, vitrine_black_friday, parcelas_sem_juros, variacoes_preco, created_at";
 const PRODUCT_SELECT_WITH_BUNDLES = PRODUCT_SELECT_BASE + ", compre_junto_ids";
 const PRODUCT_SELECT_CURATION =
   PRODUCT_SELECT_BASE +
@@ -65,7 +66,7 @@ const PRODUCT_SELECT =
   PRODUCT_SELECT_WITH_BUNDLES +
   ", vitrine_semana_ordem, vitrine_novidade, vitrine_sala, vitrine_descoberta";
 const HOMEPAGE_CANDIDATE_SELECT_BASE =
-  "id, nome, slug, preco_antigo, preco_atual, categoria, url_imagem, ordem, descricao, sku, medidas, cores, status_estoque, created_at";
+  "id, nome, slug, preco_antigo, preco_atual, categoria, url_imagem, ordem, descricao, sku, medidas, cores, status_estoque, vitrine_black_friday, created_at";
 const HOMEPAGE_CANDIDATE_SELECT =
   HOMEPAGE_CANDIDATE_SELECT_BASE +
   ", vitrine_semana_ordem, vitrine_novidade, vitrine_sala, vitrine_descoberta";
@@ -85,6 +86,7 @@ type BasicPublicProductRow = Pick<
   | "sku"
   | "medidas"
   | "cores"
+  | "vitrine_black_friday"
   | "status_estoque"
   | "compre_junto_ids"
   | "parcelas_sem_juros"
@@ -110,6 +112,7 @@ type HomepageCandidateRow = Pick<
   | "sku"
   | "medidas"
   | "cores"
+  | "vitrine_black_friday"
   | "status_estoque"
   | "created_at"
 > &
@@ -160,6 +163,7 @@ function mapProduto(
     medidas: row.medidas ?? null,
     cores: Array.isArray(row.cores) ? row.cores.filter(Boolean) : null,
     status_estoque: normalizeStockStatus(row.status_estoque),
+    vitrine_black_friday: row.vitrine_black_friday ?? null,
     compre_junto_ids: Array.isArray(row.compre_junto_ids)
       ? [
           ...new Set(row.compre_junto_ids.filter((id) => typeof id === "string" && id !== row.id)),
@@ -193,6 +197,7 @@ function mapHomepageCandidate(row: HomepageCandidateRow, curadoriaDisponivel: bo
     medidas: row.medidas ?? null,
     cores: Array.isArray(row.cores) ? row.cores.filter(Boolean) : null,
     status_estoque: normalizeStockStatus(row.status_estoque),
+    vitrine_black_friday: row.vitrine_black_friday ?? null,
     compre_junto_ids: [],
     parcelas_sem_juros: 0,
     variacoes_preco: [],
