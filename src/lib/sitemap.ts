@@ -29,10 +29,10 @@ export function buildSitemap(products: SitemapProduct[]) {
     "/moveis-nova-iguacu",
     "/ajuda",
     "/ajuda/como-comprar",
-    "/ajuda/entrega",
+    "/ajuda/entrega-e-montagem",
     "/ajuda/pagamento",
     "/ajuda/trocas-e-garantia",
-    "/inspiracao",
+    "/ajuda/contato",
   ]) {
     urlEntries.set(staticPath, undefined);
   }

@@ -3,12 +3,14 @@ export type AdminViewId =
   | "produtos"
   | "fornecedores"
   | "revisao"
+  | "shopping"
   | "navigation"
   | "vitrine"
   | "banners"
   | "content"
   | "campaigns"
   | "service"
+  | "pedidos"
   | "history"
   | "evolution";
 
@@ -39,6 +41,7 @@ export const ADMIN_NAV_GROUPS = [
       { id: "produtos", label: "Produtos" },
       { id: "fornecedores", label: "Precificar" },
       { id: "revisao", label: "Importações" },
+      { id: "shopping", label: "Google Shopping" },
       { id: "navigation", label: "Categorias e filtros" },
     ],
   },
@@ -62,7 +65,10 @@ export const ADMIN_NAV_GROUPS = [
     id: "service",
     label: "Atendimento",
     defaultView: "service",
-    views: [{ id: "service", label: "Atendimento online" }],
+    views: [
+      { id: "pedidos", label: "Pedidos do site" },
+      { id: "service", label: "Atendimento online" },
+    ],
   },
   {
     id: "more",

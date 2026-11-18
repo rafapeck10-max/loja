@@ -225,10 +225,11 @@ interface SeoProduct {
   imagens: string[];
   sku: string | null;
   preco_novo: number;
+  status_estoque?: string | null;
   variacoes_preco: Array<{ sale_price: number | null }>;
 }
 
-function structuredSku(value: string | null): string | undefined {
+export function structuredSku(value: string | null): string | undefined {
   if (typeof value !== "string" || value.includes("|")) return undefined;
   if (/[\p{Cc}\p{Cs}\p{Cf}\p{Noncharacter_Code_Point}]/u.test(value)) return undefined;
   const sku = value.split("|")[0].trim();
@@ -268,7 +269,9 @@ export function productSeo(product: SeoProduct) {
   const facts = details.join(". ");
   let copy = plainText(
     parsedCopy.blocks.length
-      ? parsedCopy.blocks.map((block) => (block.kind === "list" ? block.items.join(", ") : block.text)).join(" ")
+      ? parsedCopy.blocks
+          .map((block) => (block.kind === "list" ? block.items.join(", ") : block.text))
+          .join(" ")
       : publicDescription(product.descricao),
   ).replace(/^descrição\s*:?\s*/i, "");
   if (copy.toLocaleLowerCase("pt-BR").startsWith(name.toLocaleLowerCase("pt-BR"))) {
@@ -305,12 +308,19 @@ export function productSeo(product: SeoProduct) {
     merchantReturnDays: 7,
     returnMethod: "https://schema.org/ReturnByMail",
   };
+  const schemaAvailability =
+    product.status_estoque === "disponivel"
+      ? "https://schema.org/InStock"
+      : product.status_estoque === "esgotado"
+        ? "https://schema.org/OutOfStock"
+        : undefined;
   const offer = {
     url,
     priceCurrency: "BRL",
     itemCondition: "https://schema.org/NewCondition",
     seller: { "@id": `${SITE_URL}/#organization` },
     hasMerchantReturnPolicy: merchantReturnPolicy,
+    ...(schemaAvailability ? { availability: schemaAvailability } : {}),
     ...(prices.length > 1
       ? {
           "@type": "AggregateOffer",
@@ -321,7 +331,9 @@ export function productSeo(product: SeoProduct) {
       : { "@type": "Offer", price: prices[0] ?? product.preco_novo }),
   };
   const cmValue = (cm?: number) =>
-    cm ? { "@type": "QuantitativeValue", value: Number(cm.toFixed(1)), unitCode: "CMT" } : undefined;
+    cm
+      ? { "@type": "QuantitativeValue", value: Number(cm.toFixed(1)), unitCode: "CMT" }
+      : undefined;
   return {
     title: `${name} | Mobi`,
     description,

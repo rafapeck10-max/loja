@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AjudaRouteImport } from './routes/ajuda'
+import { Route as GoogleMerchantDottsvRouteImport } from './routes/google-merchant[.]tsv'
 import { Route as InspiracaoRouteImport } from './routes/inspiracao'
 import { Route as LinksRouteImport } from './routes/links'
 import { Route as MoveisNovaIguacuRouteImport } from './routes/moveis-nova-iguacu'
@@ -34,6 +35,11 @@ const AdminRoute = AdminRouteImport.update({
 const AjudaRoute = AjudaRouteImport.update({
   id: '/ajuda',
   path: '/ajuda',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GoogleMerchantDottsvRoute = GoogleMerchantDottsvRouteImport.update({
+  id: '/google-merchant.tsv',
+  path: '/google-merchant.tsv',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InspiracaoRoute = InspiracaoRouteImport.update({
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/ajuda': typeof AjudaRouteWithChildren
+  '/google-merchant.tsv': typeof GoogleMerchantDottsvRoute
   '/inspiracao': typeof InspiracaoRouteWithChildren
   '/links': typeof LinksRoute
   '/moveis-nova-iguacu': typeof MoveisNovaIguacuRoute
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/ajuda': typeof AjudaRouteWithChildren
+  '/google-merchant.tsv': typeof GoogleMerchantDottsvRoute
   '/inspiracao': typeof InspiracaoRouteWithChildren
   '/links': typeof LinksRoute
   '/moveis-nova-iguacu': typeof MoveisNovaIguacuRoute
@@ -108,6 +116,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/ajuda': typeof AjudaRouteWithChildren
+  '/google-merchant.tsv': typeof GoogleMerchantDottsvRoute
   '/inspiracao': typeof InspiracaoRouteWithChildren
   '/links': typeof LinksRoute
   '/moveis-nova-iguacu': typeof MoveisNovaIguacuRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/ajuda'
+    | '/google-merchant.tsv'
     | '/inspiracao'
     | '/links'
     | '/moveis-nova-iguacu'
@@ -136,6 +146,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/ajuda'
+    | '/google-merchant.tsv'
     | '/inspiracao'
     | '/links'
     | '/moveis-nova-iguacu'
@@ -149,6 +160,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/ajuda'
+    | '/google-merchant.tsv'
     | '/inspiracao'
     | '/links'
     | '/moveis-nova-iguacu'
@@ -163,6 +175,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   AjudaRoute: typeof AjudaRouteWithChildren
+  GoogleMerchantDottsvRoute: typeof GoogleMerchantDottsvRoute
   InspiracaoRoute: typeof InspiracaoRouteWithChildren
   LinksRoute: typeof LinksRoute
   MoveisNovaIguacuRoute: typeof MoveisNovaIguacuRoute
@@ -192,6 +205,13 @@ declare module '@tanstack/react-router' {
       path: '/ajuda'
       fullPath: '/ajuda'
       preLoaderRoute: typeof AjudaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/google-merchant.tsv': {
+      id: '/google-merchant.tsv'
+      path: '/google-merchant.tsv'
+      fullPath: '/google-merchant.tsv'
+      preLoaderRoute: typeof GoogleMerchantDottsvRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/inspiracao': {
@@ -279,6 +299,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   AjudaRoute: AjudaRouteWithChildren,
+  GoogleMerchantDottsvRoute: GoogleMerchantDottsvRoute,
   InspiracaoRoute: InspiracaoRouteWithChildren,
   LinksRoute: LinksRoute,
   MoveisNovaIguacuRoute: MoveisNovaIguacuRoute,

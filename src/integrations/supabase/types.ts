@@ -73,6 +73,9 @@ export type Database = {
           vitrine_novidade: string;
           vitrine_sala: string;
           vitrine_descoberta: boolean;
+          status_estoque: string;
+          estoque_atualizado_em: string | null;
+          estoque_fonte: string | null;
         };
         Insert: {
           categoria?: string;
@@ -102,6 +105,9 @@ export type Database = {
           vitrine_novidade?: string;
           vitrine_sala?: string;
           vitrine_descoberta?: boolean;
+          status_estoque?: string;
+          estoque_atualizado_em?: string | null;
+          estoque_fonte?: string | null;
         };
         Update: {
           categoria?: string;
@@ -131,6 +137,69 @@ export type Database = {
           vitrine_novidade?: string;
           vitrine_sala?: string;
           vitrine_descoberta?: boolean;
+          status_estoque?: string;
+          estoque_atualizado_em?: string | null;
+          estoque_fonte?: string | null;
+        };
+        Relationships: [];
+      };
+      pedidos: {
+        Row: {
+          id: string;
+          codigo: string;
+          cliente_nome: string;
+          cliente_telefone: string;
+          endereco_rua: string;
+          endereco_bairro: string;
+          endereco_cidade: string;
+          endereco_cep: string | null;
+          forma_pagamento: string;
+          itens: Json;
+          total_pix: number;
+          total_cartao: number;
+          parcelas: number;
+          status: string;
+          observacoes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          codigo: string;
+          cliente_nome: string;
+          cliente_telefone: string;
+          endereco_rua: string;
+          endereco_bairro: string;
+          endereco_cidade: string;
+          endereco_cep?: string | null;
+          forma_pagamento: string;
+          itens: Json;
+          total_pix: number;
+          total_cartao: number;
+          parcelas?: number;
+          status?: string;
+          observacoes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          codigo?: string;
+          cliente_nome?: string;
+          cliente_telefone?: string;
+          endereco_rua?: string;
+          endereco_bairro?: string;
+          endereco_cidade?: string;
+          endereco_cep?: string | null;
+          forma_pagamento?: string;
+          itens?: Json;
+          total_pix?: number;
+          total_cartao?: number;
+          parcelas?: number;
+          status?: string;
+          observacoes?: string | null;
+          created_at?: string;
+          updated_at?: string;
         };
         Relationships: [];
       };

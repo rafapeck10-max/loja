@@ -9,13 +9,15 @@ export const Route = createFileRoute("/ajuda")({
     const home = await getLocalPublicHome();
     return { revisionId: home?.revisionId ?? null };
   },
-  head: () => {
+  head: ({ loaderData }) => {
     const head = seoHead(
       "Central de ajuda | Mobi",
-      "Orientações de compra e atendimento online da Mobi.",
+      "Como comprar, entrega e montagem, formas de pagamento, trocas, devolução e garantia da Mobi.",
       `${SITE_URL}/ajuda`,
     );
-    return { ...head, meta: [...head.meta, { name: "robots", content: "noindex,follow" }] };
+    return loaderData?.revisionId != null
+      ? { ...head, meta: [...head.meta, { name: "robots", content: "noindex,follow" }] }
+      : head;
   },
   component: HelpPortal,
 });

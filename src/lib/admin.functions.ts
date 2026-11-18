@@ -34,6 +34,7 @@ export interface ProdutoInput {
   descricao?: string;
   medidas?: string;
   cores?: string[];
+  status_estoque?: "nao_verificado" | "disponivel" | "esgotado" | "revisar";
   compre_junto_ids?: string[];
   deduplicateExisting?: boolean;
 }
@@ -587,6 +588,13 @@ function normalize(input: ProdutoInput) {
           .map((cor) => cor.trim())
           .filter(Boolean)
       : [],
+    status_estoque:
+      input.status_estoque === "disponivel" ||
+      input.status_estoque === "esgotado" ||
+      input.status_estoque === "revisar" ||
+      input.status_estoque === "nao_verificado"
+        ? input.status_estoque
+        : undefined,
     compre_junto_ids:
       input.compre_junto_ids === undefined
         ? undefined
@@ -754,6 +762,13 @@ export const upsertProduto = createServerFn({ method: "POST" })
       descricao: existing?.descricao || row.descricao,
       medidas: existing?.medidas || row.medidas,
       cores: existing?.cores?.length ? existing.cores : row.cores,
+      status_estoque: row.status_estoque ?? existing?.status_estoque ?? "nao_verificado",
+      ...(row.status_estoque
+        ? {
+            estoque_atualizado_em: new Date().toISOString(),
+            estoque_fonte: "Painel Mobi",
+          }
+        : {}),
       ...bundleWrite,
     };
 
@@ -770,6 +785,126 @@ export const upsertProduto = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     if (!inserted) throw new Error("Erro ao salvar produto no banco.");
     return { ok: true as const, id: inserted.id, duplicate: Boolean(existing) };
+  });
+
+const ALLOWED_STOCK_STATUSES = new Set([
+  "nao_verificado",
+  "disponivel",
+  "esgotado",
+  "revisar",
+] as const);
+
+function classifyScrapedAvailability(value: unknown): "disponivel" | "esgotado" | null {
+  const entries = Array.isArray(value) ? value.map(String) : [];
+  if (entries.length === 0) return null;
+  if (
+    entries.some((entry) => /\bdispon[ií]vel\b/i.test(entry) && !/indispon[ií]vel/i.test(entry))
+  ) {
+    return "disponivel";
+  }
+  if (entries.some((entry) => /indispon[ií]vel|esgotad/i.test(entry))) {
+    return "esgotado";
+  }
+  return null;
+}
+
+export const bulkUpdateProductStock = createServerFn({ method: "POST" })
+  .inputValidator(
+    (input: {
+      password: string;
+      status: "nao_verificado" | "disponivel" | "esgotado" | "revisar";
+      supplier?: string;
+      ids?: string[];
+      onlyUnverified?: boolean;
+    }) => {
+      const status = String(input?.status ?? "").trim() as
+        "nao_verificado" | "disponivel" | "esgotado" | "revisar";
+      if (!ALLOWED_STOCK_STATUSES.has(status)) throw new Error("Status de estoque inválido.");
+      const supplier = input?.supplier?.trim() || undefined;
+      const ids = Array.isArray(input?.ids)
+        ? input.ids.map((id) => String(id).trim()).filter(Boolean)
+        : undefined;
+      if (!supplier && !ids?.length) {
+        throw new Error("Informe um fornecedor ou lista de produtos para atualizar.");
+      }
+      return {
+        password: String(input?.password ?? ""),
+        status,
+        supplier,
+        ids,
+        onlyUnverified: Boolean(input?.onlyUnverified),
+      };
+    },
+  )
+  .handler(async ({ data }) => {
+    checkPassword(data.password);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const now = new Date().toISOString();
+    let query = supabaseAdmin
+      .from("produtos")
+      .update({
+        status_estoque: data.status,
+        estoque_atualizado_em: now,
+        estoque_fonte: "Painel Mobi",
+      })
+      .gt("preco_atacado", 0)
+      .gt("preco_atual", 0)
+      .neq("url_imagem", "");
+    if (data.supplier) query = query.eq("fornecedor", data.supplier);
+    if (data.ids?.length) query = query.in("id", data.ids);
+    if (data.onlyUnverified) query = query.eq("status_estoque", "nao_verificado");
+    const { data: updated, error } = await query.select("id");
+    if (error) throw new Error(error.message);
+    return { updated: updated?.length ?? 0 };
+  });
+
+export const syncScrapedStockToProducts = createServerFn({ method: "POST" })
+  .inputValidator((input: { password: string }) => ({ password: String(input?.password ?? "") }))
+  .handler(async ({ data }) => {
+    checkPassword(data.password);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: scrapedRows, error } = await supabaseAdmin
+      .from("scraped_products")
+      .select("product_id, availability")
+      .not("product_id", "is", null);
+    if (error) throw new Error(error.message);
+
+    const availIds: string[] = [];
+    const outIds: string[] = [];
+    for (const row of scrapedRows ?? []) {
+      const pid = row.product_id?.trim();
+      if (!pid) continue;
+      const classified = classifyScrapedAvailability(row.availability);
+      if (classified === "disponivel") availIds.push(pid);
+      else if (classified === "esgotado") outIds.push(pid);
+    }
+
+    const now = new Date().toISOString();
+    const updateBatch = async (ids: string[], status: "disponivel" | "esgotado") => {
+      let total = 0;
+      for (let i = 0; i < ids.length; i += 200) {
+        const chunk = ids.slice(i, i + 200);
+        const { data: rows, error: updateError } = await supabaseAdmin
+          .from("produtos")
+          .update({
+            status_estoque: status,
+            estoque_atualizado_em: now,
+            estoque_fonte: "Raspagem vinculada",
+          })
+          .in("id", chunk)
+          .select("id");
+        if (updateError) throw new Error(updateError.message);
+        total += rows?.length ?? 0;
+      }
+      return total;
+    };
+
+    const disponivelCount = availIds.length
+      ? await updateBatch([...new Set(availIds)], "disponivel")
+      : 0;
+    const outOnlyIds = [...new Set(outIds)].filter((id) => !availIds.includes(id));
+    const esgotadoCount = outOnlyIds.length ? await updateBatch(outOnlyIds, "esgotado") : 0;
+    return { disponivelCount, esgotadoCount };
   });
 
 export const deleteProduto = createServerFn({ method: "POST" })

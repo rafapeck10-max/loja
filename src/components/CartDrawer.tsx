@@ -1,15 +1,17 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { Link } from "@tanstack/react-router";
 import { useState, useRef } from "react";
-import { Minus, Plus, Trash2, X, Truck, Sofa, ArrowLeft } from "lucide-react";
+import { CheckCircle2, Minus, Plus, Trash2, X, Truck, Sofa, ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
 import { useCart, cartItemKey } from "@/lib/cart-context";
 import { formatBRL, WHATSAPP_NUMBER } from "@/lib/constants";
 import { MAX_INSTALLMENTS } from "@/lib/constants";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
 import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import { cartPaymentLine, orderPaymentSummary, orderWhatsAppMessage } from "@/lib/cart-payment";
+import { createStoreOrder } from "@/lib/orders.functions";
 
-type Step = "cart" | "checkout";
+type Step = "cart" | "checkout" | "confirmed";
 
 const PAYMENT_OPTIONS = [
   { value: "PIX", label: "PIX", desc: "Preço com desconto à vista" },
@@ -19,18 +21,28 @@ const PAYMENT_OPTIONS = [
     desc: `Até ${MAX_INSTALLMENTS}x `,
   },
   { value: "Dinheiro na entrega", label: "Dinheiro", desc: "Pague ao receber e montar" },
-];
+] as const;
 
 export function CartDrawer() {
   const opener = useRef<HTMLElement | null>(null);
-  const { items, total, isOpen, closeCart, updateQuantity, removeItem } = useCart();
+  const { items, total, isOpen, closeCart, updateQuantity, removeItem, clearCart } = useCart();
   const [step, setStep] = useState<Step>("cart");
+  const [submitting, setSubmitting] = useState(false);
+  const [confirmedOrder, setConfirmedOrder] = useState<{
+    codigo: string;
+    totalPix: number;
+    totalCartao: number;
+    formaPagamento: string;
+    whatsappUrl: string;
+  } | null>(null);
   const [form, setForm] = useState({
     nome: "",
+    telefone: "",
     rua: "",
     bairro: "",
     cidade: "Nova Iguaçu - RJ",
-    pagamento: PAYMENT_OPTIONS[0].value,
+    cep: "",
+    pagamento: PAYMENT_OPTIONS[0].value as (typeof PAYMENT_OPTIONS)[number]["value"],
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const isCardPayment = form.pagamento === "Cartão na entrega";
@@ -39,21 +51,65 @@ export function CartDrawer() {
   const close = () => {
     closeCart();
     setStep("cart");
+    setConfirmedOrder(null);
+    setSubmitting(false);
   };
 
   const validate = () => {
     const errs: Record<string, string> = {};
-    if (!form.nome.trim()) errs.nome = "Informe seu nome";
+    if (!form.nome.trim() || form.nome.trim().length < 2) errs.nome = "Informe seu nome";
     else if (form.nome.trim().length > 100) errs.nome = "Nome muito longo";
-    if (!form.rua.trim()) errs.rua = "Informe rua e número";
+    if (form.telefone.replace(/\D+/g, "").length < 10) {
+      errs.telefone = "Informe seu WhatsApp ou telefone com DDD";
+    }
+    if (!form.rua.trim() || form.rua.trim().length < 3) errs.rua = "Informe rua e número";
     else if (form.rua.trim().length > 200) errs.rua = "Endereço muito longo";
-    if (!form.bairro.trim()) errs.bairro = "Informe o bairro";
+    if (!form.bairro.trim() || form.bairro.trim().length < 2) errs.bairro = "Informe o bairro";
     else if (form.bairro.trim().length > 100) errs.bairro = "Bairro muito longo";
-    if (!form.cidade.trim()) errs.cidade = "Informe a cidade";
+    if (!form.cidade.trim() || form.cidade.trim().length < 2) errs.cidade = "Informe a cidade";
     setErrors(errs);
     const firstInvalid = Object.keys(errs)[0];
     if (firstInvalid) document.getElementById(`checkout-${firstInvalid}`)?.focus();
     return Object.keys(errs).length === 0;
+  };
+
+  const confirmOnSiteOrder = async () => {
+    if (!validate() || submitting || items.length === 0) return;
+    setSubmitting(true);
+    try {
+      const result = await createStoreOrder({
+        data: {
+          nome: form.nome.trim(),
+          telefone: form.telefone.trim(),
+          rua: form.rua.trim(),
+          bairro: form.bairro.trim(),
+          cidade: form.cidade.trim(),
+          cep: form.cep.trim() || undefined,
+          pagamento: form.pagamento,
+          items: items.map((item) => ({
+            id: item.id,
+            quantity: item.quantity,
+            color: item.color ?? null,
+            finish: item.finish ?? null,
+            variant: item.variant ?? null,
+          })),
+        },
+      });
+      setConfirmedOrder({
+        codigo: result.codigo,
+        totalPix: result.totalPix,
+        totalCartao: result.totalCartao,
+        formaPagamento: result.formaPagamento,
+        whatsappUrl: result.whatsappUrl,
+      });
+      clearCart();
+      setStep("confirmed");
+      toast.success(`Pedido ${result.codigo} registrado!`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível registrar o pedido.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const sendToWhatsApp = () => {
@@ -109,7 +165,11 @@ export function CartDrawer() {
                 </button>
               )}
               <Dialog.Title className="text-2xl text-gold">
-                {step === "cart" ? "Seu Carrinho" : "Finalizar Pedido"}
+                {step === "cart"
+                  ? "Seu Carrinho"
+                  : step === "checkout"
+                    ? "Finalizar Pedido"
+                    : "Pedido Registrado"}
               </Dialog.Title>
             </div>
             <button
@@ -237,12 +297,12 @@ export function CartDrawer() {
                 </div>
               )}
             </>
-          ) : (
+          ) : step === "checkout" ? (
             <>
               {/* Checkout form */}
               <div className="flex-1 overflow-y-auto px-6 py-5">
                 <p className="mb-5 text-xs uppercase tracking-[1.5px] text-text-light">
-                  Endereço de Entrega
+                  Dados e Endereço de Entrega
                 </p>
                 <div className="space-y-4">
                   <div>
@@ -270,6 +330,35 @@ export function CartDrawer() {
                         className="mt-1 text-xs text-destructive"
                       >
                         {errors.nome}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="checkout-telefone"
+                      className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-cacau"
+                    >
+                      WhatsApp / Telefone *
+                    </label>
+                    <input
+                      id="checkout-telefone"
+                      type="tel"
+                      autoComplete="tel"
+                      aria-invalid={Boolean(errors.telefone)}
+                      aria-describedby={errors.telefone ? "checkout-telefone-error" : undefined}
+                      value={form.telefone}
+                      onChange={(e) => setForm({ ...form, telefone: e.target.value })}
+                      placeholder="(21) 99999-9999"
+                      maxLength={30}
+                      className={inputClass("telefone")}
+                    />
+                    {errors.telefone && (
+                      <p
+                        id="checkout-telefone-error"
+                        role="alert"
+                        className="mt-1 text-xs text-destructive"
+                      >
+                        {errors.telefone}
                       </p>
                     )}
                   </div>
@@ -349,6 +438,23 @@ export function CartDrawer() {
                       />
                     </div>
                   </div>
+                  <div>
+                    <label
+                      htmlFor="checkout-cep"
+                      className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-cacau"
+                    >
+                      CEP (opcional)
+                    </label>
+                    <input
+                      id="checkout-cep"
+                      autoComplete="postal-code"
+                      value={form.cep}
+                      onChange={(e) => setForm({ ...form, cep: e.target.value })}
+                      placeholder="26000-000"
+                      maxLength={16}
+                      className={inputClass("cep")}
+                    />
+                  </div>
 
                   {errors.cidade && (
                     <p id="checkout-cidade-error" role="alert" className="text-xs text-destructive">
@@ -357,7 +463,7 @@ export function CartDrawer() {
                   )}
                   <div className="pt-2">
                     <p className="mb-3 text-xs uppercase tracking-[1.5px] text-text-light">
-                      Forma de Pagamento
+                      Forma de Pagamento na Entrega
                     </p>
                     <div className="space-y-2">
                       {PAYMENT_OPTIONS.map((opt) => (
@@ -387,13 +493,13 @@ export function CartDrawer() {
                   </div>
                 </div>
                 {isCardPayment && (
-                  <div className="mb-3 space-y-2 text-xs text-text-light">
+                  <div className="mb-3 mt-4 space-y-2 text-xs text-text-light">
                     {items.map((item, index) => {
                       const line = summary.lines[index];
                       return (
                         <p key={cartItemKey(item)}>
-                          {item.name} · {item.quantity} unidade(s): até {MAX_INSTALLMENTS}x sem
-                          juros; {line.installments}x de {formatBRL(line.approximateInstallment)}.{" "}
+                          {item.name} · {item.quantity} unidade(s): até {MAX_INSTALLMENTS}x no
+                          cartão; {line.installments}x de {formatBRL(line.approximateInstallment)}.{" "}
                           Total no cartão: {formatBRL(line.cardTotal)}.
                           {line.rateVerification === "inferred" &&
                             " Crédito à vista provisório: confirmar taxa na conta."}
@@ -418,14 +524,77 @@ export function CartDrawer() {
                     {formatBRL(orderTotal)}
                   </span>
                 </div>
-                <button
-                  onClick={sendToWhatsApp}
-                  className="flex w-full items-center justify-center gap-2 bg-whatsapp py-4 text-sm font-bold uppercase tracking-[1.5px] text-white transition-all duration-300 hover:brightness-110"
-                >
-                  <WhatsAppIcon className="h-5 w-5" /> Enviar Pedido no WhatsApp
-                </button>
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    disabled={submitting}
+                    onClick={confirmOnSiteOrder}
+                    className="min-h-12 w-full bg-deep-green py-3.5 text-sm font-bold uppercase tracking-[1.2px] text-sand transition-colors hover:bg-gold hover:text-deep-green disabled:opacity-60"
+                  >
+                    {submitting ? "Registrando pedido…" : "Confirmar Pedido (Pagar na Entrega)"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={sendToWhatsApp}
+                    className="flex min-h-11 w-full items-center justify-center gap-2 border border-whatsapp bg-white py-2.5 text-xs font-bold uppercase tracking-[1.2px] text-whatsapp transition-colors hover:bg-whatsapp/10"
+                  >
+                    <WhatsAppIcon className="h-4 w-4" /> Apenas tirar dúvida no WhatsApp
+                  </button>
+                </div>
               </div>
             </>
+          ) : (
+            <div className="flex flex-1 flex-col justify-between overflow-y-auto px-6 py-6">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 rounded-xl border border-price-green/25 bg-[#edf4e9] p-4 text-deep-green">
+                  <CheckCircle2 className="h-7 w-7 shrink-0 text-price-green" aria-hidden="true" />
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-wide">
+                      Protocolo registrado
+                    </div>
+                    <strong className="text-xl">{confirmedOrder?.codigo}</strong>
+                  </div>
+                </div>
+                <p className="text-sm leading-relaxed text-cacau">
+                  Recebemos seu pedido com pagamento na entrega ({confirmedOrder?.formaPagamento}).
+                  Nossa equipe confirmará disponibilidade, frete e horário de entrega pelo WhatsApp{" "}
+                  <strong>{form.telefone}</strong>.
+                </p>
+                {confirmedOrder && (
+                  <div className="rounded-xl border border-cacau/10 bg-white p-4 text-sm text-cacau">
+                    <div className="flex justify-between py-1">
+                      <span>Valor à vista (Pix / dinheiro)</span>
+                      <strong className="text-price-green">
+                        {formatBRL(confirmedOrder.totalPix)}
+                      </strong>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      <span>Total no cartão ({MAX_INSTALLMENTS}x)</span>
+                      <strong>{formatBRL(confirmedOrder.totalCartao)}</strong>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="mt-6 space-y-2 border-t border-cacau/10 pt-5">
+                {confirmedOrder && (
+                  <a
+                    href={confirmedOrder.whatsappUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex min-h-12 w-full items-center justify-center gap-2 bg-whatsapp py-3.5 text-sm font-bold uppercase tracking-[1.2px] text-white no-underline hover:brightness-110"
+                  >
+                    <WhatsAppIcon className="h-5 w-5" /> Enviar protocolo no WhatsApp
+                  </a>
+                )}
+                <button
+                  type="button"
+                  onClick={close}
+                  className="min-h-11 w-full border border-cacau/20 bg-white py-3 text-xs font-bold uppercase tracking-[1.2px] text-cacau hover:bg-sand"
+                >
+                  Voltar à loja
+                </button>
+              </div>
+            </div>
           )}
         </Dialog.Content>
       </Dialog.Portal>

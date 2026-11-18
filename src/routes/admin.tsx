@@ -50,6 +50,8 @@ import { ADMIN_REVIEW_QUERY_LIMIT } from "@/lib/admin-overview";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
 import { ProductThumbnail, ProductIdentity } from "@/components/admin/ProductThumbnail";
 import { SupplierPricingPanel } from "@/components/admin/SupplierPricingPanel";
+import { GoogleShoppingPanel } from "@/components/admin/GoogleShoppingPanel";
+import { StoreOrdersPanel } from "@/components/admin/StoreOrdersPanel";
 import { createRemoteStudioTransport } from "@/lib/admin-studio-remote";
 import { isEligibleBundleProduct } from "@/lib/product-bundles";
 import type { AdminViewId } from "@/lib/admin-navigation";
@@ -202,6 +204,7 @@ const EMPTY: ProdutoInput = {
   descricao: "",
   medidas: "",
   cores: [],
+  status_estoque: "nao_verificado",
   compre_junto_ids: [],
 };
 
@@ -613,6 +616,12 @@ export function AdminDashboard({
       descricao: p.descricao ?? "",
       medidas: p.medidas ?? "",
       cores: p.cores ?? [],
+      status_estoque:
+        p.status_estoque === "disponivel" ||
+        p.status_estoque === "esgotado" ||
+        p.status_estoque === "revisar"
+          ? p.status_estoque
+          : "nao_verificado",
       compre_junto_ids: p.compre_junto_ids ?? [],
     });
   };
@@ -1339,6 +1348,27 @@ export function AdminDashboard({
             />
           )}
         </section>
+        <section
+          hidden={workspaceTab !== "shopping"}
+          data-state={workspaceTab === "shopping" ? "active" : "inactive"}
+          className="admin-workspace-panel"
+          aria-label="Google Shopping"
+        >
+          <GoogleShoppingPanel
+            password={password}
+            products={produtos}
+            onUpdated={refresh}
+            demonstration={demonstration}
+          />
+        </section>
+        <section
+          hidden={workspaceTab !== "pedidos"}
+          data-state={workspaceTab === "pedidos" ? "active" : "inactive"}
+          className="admin-workspace-panel"
+          aria-label="Pedidos do site"
+        >
+          <StoreOrdersPanel password={password} />
+        </section>
       </div>
 
       <Dialog.Root
@@ -1467,6 +1497,7 @@ function ProductForm({
     imagens: value.imagens ?? [],
     sku: value.referencia ?? null,
     preco_novo: sitePrice,
+    status_estoque: value.status_estoque ?? "nao_verificado",
     variacoes_preco: (value.variacoes_preco ?? []).map((item) => ({
       sale_price: item.sale_price ?? null,
     })),
@@ -1477,6 +1508,10 @@ function ProductForm({
     { label: "Cor informada", ok: (value.cores ?? []).length > 0 },
     { label: "SKU único", ok: Boolean(seoPreview.structured.sku) },
     { label: "Descrição útil", ok: (value.descricao?.trim().length ?? 0) >= 40 },
+    {
+      label: "Disponibilidade confirmada",
+      ok: value.status_estoque === "disponivel" || value.status_estoque === "esgotado",
+    },
   ];
   const photoCount =
     (value.imagem_url?.trim() ? 1 : 0) + (value.imagens?.filter((url) => url.trim()).length ?? 0);
@@ -2047,6 +2082,30 @@ function ProductForm({
                     />
                   </div>
                   <div>
+                    <label className={label} htmlFor="admin-product-stock-status">
+                      Disponibilidade no site e Google Shopping
+                    </label>
+                    <select
+                      id="admin-product-stock-status"
+                      value={value.status_estoque ?? "nao_verificado"}
+                      onChange={(e) =>
+                        onChange({
+                          ...value,
+                          status_estoque: e.target.value as ProdutoInput["status_estoque"],
+                        })
+                      }
+                      className={field}
+                    >
+                      <option value="nao_verificado">Não verificado (fora do feed TSV)</option>
+                      <option value="disponivel">Disponível (in_stock)</option>
+                      <option value="esgotado">Esgotado / Indisponível (out_of_stock)</option>
+                      <option value="revisar">Em revisão</option>
+                    </select>
+                    <small className="mt-1 block text-xs text-muted-foreground">
+                      Sincronizado automaticamente com o feed `/google-merchant.tsv` e o JSON-LD.
+                    </small>
+                  </div>
+                  <div className="sm:col-span-2">
                     <label className={label} htmlFor="admin-product-measurements">
                       Medidas
                     </label>
