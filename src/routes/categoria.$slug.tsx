@@ -6,7 +6,14 @@ import { produtosQueryOptions } from "@/lib/products.functions";
 import { StoreCatalog } from "@/components/StoreCatalog";
 
 import { categoryMatches, getCategory } from "@/lib/constants";
-import { breadcrumbs, categoryDescription, categoryUrl, jsonLd, seoHead } from "@/lib/seo";
+import {
+  breadcrumbs,
+  categoryDescription,
+  categoryUrl,
+  collectionSeo,
+  jsonLd,
+  seoHead,
+} from "@/lib/seo";
 import { SITE_URL } from "@/lib/site-metadata";
 import { CATALOG_BATCH_SIZE } from "@/lib/catalog-page-state";
 import {
@@ -43,10 +50,12 @@ export const Route = createFileRoute("/categoria/$slug")({
     } = parseCatalogUrlState(match.search);
     const title = `${cat?.label ?? "Categoria"} em Nova Iguaçu${page > 1 ? ` – Página ${page}` : ""} | Mobi`;
     const url = categoryUrl(params.slug, page);
-    const head = seoHead(title, categoryDescription(params.slug), url);
-    const count =
-      loaderData?.filter((product) => categoryMatches(product.categoria, params.slug)).length ?? 0;
+    const matchingProducts =
+      loaderData?.filter((product) => categoryMatches(product.categoria, params.slug)) ?? [];
+    const count = matchingProducts.length;
     const outOfRange = page > Math.max(1, Math.ceil(count / CATALOG_BATCH_SIZE));
+    const description = categoryDescription(params.slug);
+    const head = seoHead(title, description, url);
     return {
       ...head,
       meta: [
@@ -75,6 +84,18 @@ export const Route = createFileRoute("/categoria/$slug")({
             { name: cat?.label ?? "Categoria", url },
           ]),
         ),
+        ...(cat && count > 0 && !outOfRange
+          ? [
+              jsonLd(
+                collectionSeo({
+                  label: cat.label,
+                  description,
+                  url,
+                  products: matchingProducts,
+                }),
+              ),
+            ]
+          : []),
       ],
     };
   },

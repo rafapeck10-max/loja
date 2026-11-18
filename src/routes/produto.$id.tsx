@@ -30,7 +30,10 @@ export const Route = createFileRoute("/produto/$id")({
     }
     const { seo } = loaderData;
     return {
-      ...seoHead(seo.title, seo.description, seo.url, seo.image),
+      ...seoHead(seo.title, seo.description, seo.url, seo.image, {
+        imageAlt: seo.structured.name,
+        type: "product",
+      }),
       scripts: [jsonLd(seo.structured), jsonLd(seo.breadcrumb)],
     };
   },

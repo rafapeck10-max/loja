@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { categoryDescription, categoryUrl, jsonLd, productSeo } from "../src/lib/seo.ts";
+import { categoryDescription, categoryUrl, collectionSeo, jsonLd, productSeo } from "../src/lib/seo.ts";
 import { CATEGORIES, SUBCATEGORIES } from "../src/lib/constants.ts";
 import { buildSitemap, collectSitemapProducts } from "../src/lib/sitemap.ts";
 
@@ -109,4 +109,45 @@ test("SKU estruturado aceita apenas identificador único válido", () => {
     assert.equal(result.structured.offers.price, 1999);
     assert.equal(result.structured.name, product.nome);
   }
+});
+
+test("productSeo includes Brand, NewCondition, MerchantReturnPolicy, and structured dimensions", () => {
+  const seo = productSeo({
+    ...product,
+    descricao: "Sofá retrátil com madeira eucalipto e espuma D33.",
+  });
+  assert.equal(seo.structured.brand.name, "Mobi");
+  assert.equal(seo.structured.offers.itemCondition, "https://schema.org/NewCondition");
+  assert.equal(seo.structured.offers.hasMerchantReturnPolicy.applicableCountry, "BR");
+  assert.equal(seo.structured.offers.hasMerchantReturnPolicy.merchantReturnDays, 7);
+  assert.equal(seo.structured.width.value, 200);
+  assert.equal(seo.structured.width.unitCode, "CMT");
+  assert.equal(seo.structured.height.value, 95);
+  assert.ok(seo.description.length <= 160);
+});
+
+test("collectionSeo emits CollectionPage with bounded ItemList", () => {
+  const list = collectionSeo({
+    label: "Sofás",
+    description: "Sofás para sua sala",
+    url: "https://www.mobimb.com.br/categoria/sofas",
+    products: Array.from({ length: 30 }, (_, index) => ({
+      nome: `Sofá ${index}`,
+      slug: `sofa-${index}`,
+      imagem_url: `https://example.com/${index}.jpg`,
+    })),
+  });
+  assert.equal(list["@type"], "CollectionPage");
+  assert.equal(list.mainEntity.numberOfItems, 30);
+  assert.equal(list.mainEntity.itemListElement.length, 24);
+  assert.equal(list.mainEntity.itemListElement[0].url, "https://www.mobimb.com.br/produto/sofa-0");
+});
+
+test("sitemap emits Google Image entries for HTTPS images and core public routes", () => {
+  const xml = buildSitemap([
+    { slug: "sofa-roma", categoria: "Sofás", url_imagem: "https://example.com/roma.jpg" },
+  ]);
+  assert.match(xml, /xmlns:image="http:\/\/www\.google\.com\/schemas\/sitemap-image\/1\.1"/);
+  assert.match(xml, /<image:loc>https:\/\/example\.com\/roma\.jpg<\/image:loc>/);
+  assert.match(xml, /https:\/\/www\.mobimb\.com\.br\/ajuda</);
 });

@@ -42,6 +42,7 @@ import { adminCategoryKey, adminCategoryOptions } from "@/lib/admin-categories";
 import { cardInstallment, cardQuote } from "@/lib/payment";
 import { hasRealReferencePrice } from "@/lib/price-reference";
 import { productMeasurements } from "@/lib/product-measurements";
+import { productSeo } from "@/lib/seo";
 import { AdminWorkspace } from "@/components/AdminWorkspace";
 import { AdminStudio } from "@/components/admin-studio/AdminStudio";
 import { AdminOverview } from "@/components/AdminOverview";
@@ -1446,6 +1447,37 @@ function ProductForm({
         ? "Falta preço no site"
         : "Sem preços cadastrados";
   const parsedMeasurements = productMeasurements(value.medidas ?? null);
+  const seoSlug =
+    value.slug?.trim() ||
+    value.nome
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") ||
+    "produto";
+  const seoPreview = productSeo({
+    nome: value.nome.trim() || "Móvel Mobi",
+    slug: seoSlug,
+    categoria: value.categoria?.trim() || "Móveis",
+    descricao: value.descricao ?? "",
+    medidas: value.medidas ?? null,
+    cores: value.cores ?? null,
+    imagem_url: value.imagem_url ?? "",
+    imagens: value.imagens ?? [],
+    sku: value.referencia ?? null,
+    preco_novo: sitePrice,
+    variacoes_preco: (value.variacoes_preco ?? []).map((item) => ({
+      sale_price: item.sale_price ?? null,
+    })),
+  });
+  const seoChecks = [
+    { label: "Foto HTTPS", ok: /^https?:\/\//i.test(value.imagem_url?.trim() ?? "") },
+    { label: "Medidas reconhecidas", ok: parsedMeasurements.length > 0 },
+    { label: "Cor informada", ok: (value.cores ?? []).length > 0 },
+    { label: "SKU único", ok: Boolean(seoPreview.structured.sku) },
+    { label: "Descrição útil", ok: (value.descricao?.trim().length ?? 0) >= 40 },
+  ];
   const photoCount =
     (value.imagem_url?.trim() ? 1 : 0) + (value.imagens?.filter((url) => url.trim()).length ?? 0);
   const missingBasics = !value.nome.trim() || !value.categoria?.trim();
@@ -1985,20 +2017,20 @@ function ProductForm({
               </section>
               <section
                 hidden={section !== "dados"}
-                className="product-editor-section rounded-xl border border-cacau/10 bg-white p-4 lg:col-span-2 sm:p-5"
+                className="product-editor-section min-w-0 rounded-xl border border-cacau/10 bg-white p-4 lg:col-span-2 sm:p-5"
               >
                 <div className="mb-4 flex items-center gap-3 border-b border-cacau/10 pb-3">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#edf1e9] text-deep-green">
                     <Ruler size={19} />
                   </span>
-                  <div>
+                  <div className="min-w-0">
                     <h3 className="text-base font-bold text-deep-green">Detalhes do produto</h3>
                     <p className="mt-0.5 text-xs text-text-light">
                       Informações úteis para apresentar e filtrar o móvel.
                     </p>
                   </div>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid min-w-0 gap-4 sm:grid-cols-2">
                   <div>
                     <label htmlFor="product-field-11" className={label}>
                       Vendas nos últimos 30 dias
@@ -2091,6 +2123,45 @@ function ProductForm({
                       placeholder="Descreva materiais, estrutura, portas, gavetas e diferenciais do móvel."
                       className={field}
                     />
+                  </div>
+                  <div className="min-w-0 overflow-hidden sm:col-span-2 rounded-lg border border-cacau/15 bg-[#faf7f1] p-3.5">
+                    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                      <strong className="text-xs uppercase tracking-wide text-deep-green">
+                        Prévia no Google Search (SEO)
+                      </strong>
+                      <span className="text-[11px] text-text-light">
+                        {seoPreview.description.length}/160 caracteres no resumo
+                      </span>
+                    </div>
+                    <div className="min-w-0 overflow-hidden rounded-md border border-cacau/10 bg-white p-3">
+                      <div className="truncate text-[11px] text-[#3f503f]">
+                        mobimb.com.br › produto › {seoSlug}
+                      </div>
+                      <div className="mt-0.5 break-words text-sm font-semibold text-[#1558d6]">
+                        {seoPreview.title}
+                      </div>
+                      <p className="mt-1 break-words text-xs leading-relaxed text-[#4d5156]">
+                        {seoPreview.description}
+                      </p>
+                      {sitePrice > 0 && cardTerms && (
+                        <div className="mt-1.5 text-[11px] font-medium text-[#186839]">
+                          {formatBRL(sitePrice)} · Devolução em 7 dias · Até 10x de{" "}
+                          {formatBRL(cardTerms.approximateInstallment)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-2.5 flex flex-wrap gap-1.5">
+                      {seoChecks.map((check) => (
+                        <span
+                          key={check.label}
+                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                            check.ok ? "bg-[#edf4e9] text-deep-green" : "bg-[#f4efe6] text-cacau/75"
+                          }`}
+                        >
+                          {check.ok ? "✓" : "•"} {check.label}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </section>

@@ -406,6 +406,17 @@ const articleRoute = createRoute({
   path: "/inspiracao/$slug",
   component: () => <LocalStorefront page="article" />,
 });
+const adminPreviewRoute = createRoute({
+  getParentRoute: () => previewRoot,
+  path: "/admin",
+  component: () => (
+    <AdminDashboard
+      password="isolated-demo"
+      onLogout={() => window.location.reload()}
+      demonstration
+    />
+  ),
+});
 const legacyRoute = createRoute({
   getParentRoute: () => previewRoot,
   path: "/scripts/pm01-preview/index.html",
@@ -421,6 +432,7 @@ const previewRouter = createRouter({
     helpIndexRoute,
     inspirationRoute,
     articleRoute,
+    adminPreviewRoute,
     legacyRoute,
   ]),
   history: createBrowserHistory(),
