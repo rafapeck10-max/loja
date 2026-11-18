@@ -1,0 +1,320 @@
+/* Seasonal presentation only; catalog pricing and checkout remain shared. */
+.store-shell .mobi-black-friday .mobi-section-title {
+  background: #111;
+  border-color: #c0a264;
+}
+.mobi-black-page {
+  background: #101010;
+  color: #f6f3ec;
+  padding-bottom: 32px;
+}
+.mobi-black-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-block: 15px;
+  font-size: 12px;
+  color: #d0c9bb;
+}
+.mobi-black-breadcrumb a {
+  padding-block: 8px;
+}
+.mobi-black-art {
+  display: block;
+  max-width: 1600px;
+  margin: auto;
+}
+.mobi-black-art img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.mobi-black-benefits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px 40px;
+  justify-content: center;
+  padding-block: 20px;
+  border-bottom: 1px solid #ffffff24;
+  font-size: 13px;
+}
+.mobi-black-benefits :is(span, a) {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  min-height: 24px;
+}
+.mobi-black-benefits svg {
+  color: #c0a264;
+  flex-shrink: 0;
+}
+.mobi-black-offers {
+  padding-top: 32px;
+  scroll-margin-top: 160px;
+}
+.mobi-black-heading {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  align-items: end;
+  margin-bottom: 24px;
+}
+.mobi-black-eyebrow {
+  color: #c0a264;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+}
+.mobi-black-heading h1 {
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.15;
+  font-weight: 700;
+  margin: 7px 0 10px;
+  color: #fff;
+}
+.mobi-black-heading h1 span {
+  color: #c0a264;
+}
+.mobi-black-heading p,
+.mobi-black-help p,
+.mobi-black-empty p {
+  color: #ccc6bb;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.mobi-black-heading > a {
+  color: #e3c995;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.mobi-black-page :is(a, button):focus-visible,
+.mobi-black-page select:focus-visible {
+  outline: 2px solid #e3c995;
+  outline-offset: 4px;
+}
+.mobi-black-heading > a,
+.mobi-black-more button,
+.mobi-black-help a,
+.mobi-black-empty a {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  min-height: 44px;
+}
+.mobi-black-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: end;
+  margin-bottom: 20px;
+  padding: 18px;
+  border: 1px solid #ffffff24;
+  border-radius: 8px;
+  background: #1a1a1a;
+}
+.mobi-black-toolbar label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: #d8d1c5;
+}
+.mobi-black-toolbar select {
+  min-height: 44px;
+  max-width: 100%;
+  border: 1px solid #ffffff40;
+  border-radius: 5px;
+  background: #242424;
+  color: #fff;
+  padding: 8px 32px 8px 12px;
+  font: inherit;
+}
+.mobi-black-toolbar p {
+  margin-left: auto;
+  padding-block: 12px;
+  font-size: 13px;
+  color: #d8d1c5;
+}
+.mobi-black-page .mobi-product {
+  color: #493327;
+  background: #fff;
+}
+.mobi-black-more {
+  text-align: center;
+  margin-top: 24px;
+}
+.mobi-black-more button,
+.mobi-black-help a,
+.mobi-black-empty a {
+  padding: 10px 22px;
+  border-radius: 5px;
+  background: #c0a264;
+  color: #101010;
+  font-size: 13px;
+  font-weight: 700;
+}
+.mobi-black-help {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin-top: 32px;
+  padding: 24px;
+  border: 1px solid #c0a26466;
+  border-radius: 8px;
+}
+.mobi-black-help h2,
+.mobi-black-empty h2 {
+  font-size: 21px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.mobi-black-help a {
+  flex-shrink: 0;
+}
+.mobi-black-empty,
+.mobi-black-state {
+  padding: 48px 24px;
+  text-align: center;
+}
+.mobi-black-empty a {
+  margin-top: 20px;
+}
+.mobi-black-state a,
+.mobi-black-state button {
+  display: inline-flex;
+  padding: 14px;
+  text-decoration: underline;
+}
+.store-shell .mobi-black-nav {
+  color: #e3c995;
+  font-weight: 700;
+}
+.mobi-navigation-drawer .mobi-black-nav {
+  background: #101010;
+  color: #e3c995;
+  border-radius: 6px;
+  padding-inline: 16px;
+}
+.mobi-black-invite {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 32px;
+  background: #101010;
+  color: #eee8dd;
+  padding: 14px 5%;
+  font-size: 12px;
+  min-height: 52px;
+}
+.mobi-black-invite strong {
+  color: white;
+  margin-right: 16px;
+  letter-spacing: 0.05em;
+}
+.mobi-black-invite strong span,
+.mobi-black-invite > span:last-child {
+  color: #e3c995;
+}
+@media (max-width: 767px) {
+  .mobi-black-heading,
+  .mobi-black-help {
+    flex-direction: column;
+    align-items: start;
+    gap: 12px;
+  }
+  .mobi-black-benefits {
+    justify-content: start;
+    gap: 12px 20px;
+    font-size: 12px;
+    padding-block: 16px;
+  }
+  .mobi-black-benefits a {
+    min-height: 44px;
+  }
+  .mobi-black-offers {
+    padding-top: 24px;
+  }
+  .mobi-black-toolbar {
+    padding: 12px;
+    gap: 12px;
+  }
+  .mobi-black-toolbar label {
+    width: calc(50% - 6px);
+    min-width: 0;
+  }
+  .mobi-black-toolbar p {
+    margin: 0;
+    padding: 0;
+  }
+  .mobi-black-help {
+    padding: 20px;
+  }
+  .mobi-black-invite {
+    justify-content: space-between;
+    gap: 14px;
+    line-height: 1.6;
+  }
+  .mobi-black-invite strong {
+    display: block;
+    margin-right: 0;
+  }
+  .mobi-black-invite > span:last-child {
+    flex-shrink: 0;
+    font-weight: 600;
+  }
+}
+
+/* The same catalog selection is signaled wherever the shared card is used. */
+.store-shell .mobi-black-product-label {
+  padding: 10px 14px 0;
+}
+.store-shell .mobi-black-product-label a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #c0a264;
+  border-radius: 5px;
+  background: #101010;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+}
+.store-shell .mobi-black-product-label :is(svg, strong) {
+  color: #e3c995;
+}
+.store-shell .mobi-black-product-label a:hover {
+  background: #292319;
+}
+.store-shell .mobi-black-product-label a:focus-visible {
+  outline: 2px solid #c0a264;
+  outline-offset: 3px;
+}
+.store-shell .mobi-black-product-label.is-detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  padding: 16px 0 0;
+}
+.store-shell .mobi-black-product-label.is-detail > span {
+  font-size: 12px;
+  color: #493327;
+}
+
+@media (min-width: 768px) {
+  .store-shell
+    :is(.mobi-home-product-grid, .mobi-catalog-grid).is-single
+    .mobi-black-product-label {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 2;
+    padding: 0;
+  }
+}

@@ -4,6 +4,7 @@
 @import "tw-animate-css";
 @import "./storefront.css";
 @import "./home-redesign.css";
+@import "./black-friday.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -217,4 +218,3 @@
     }
   }
 }
-
