@@ -28,3 +28,16 @@ test("checking membership does not change catalog prices or variants", () => {
   isBlackFridayProduct(product);
   assert.deepEqual(product, before);
 });
+
+test("explicit participation includes products without reference discounts; false removes them", () => {
+  assert.equal(
+    isBlackFridayProduct({ ...product, preco_antigo: 1000, vitrine_black_friday: true }),
+    true,
+  );
+  assert.equal(isBlackFridayProduct({ ...product, vitrine_black_friday: false }), false);
+  assert.equal(isBlackFridayProduct({ ...product, vitrine_black_friday: null }), true);
+  assert.equal(
+    isBlackFridayProduct({ ...product, preco_novo: 0, vitrine_black_friday: true }),
+    false,
+  );
+});

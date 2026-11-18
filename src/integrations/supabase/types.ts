@@ -73,6 +73,7 @@ export type Database = {
           vitrine_novidade: string;
           vitrine_sala: string;
           vitrine_descoberta: boolean;
+          vitrine_black_friday: boolean | null;
           status_estoque: string;
           estoque_atualizado_em: string | null;
           estoque_fonte: string | null;
@@ -105,6 +106,7 @@ export type Database = {
           vitrine_novidade?: string;
           vitrine_sala?: string;
           vitrine_descoberta?: boolean;
+          vitrine_black_friday?: boolean | null;
           status_estoque?: string;
           estoque_atualizado_em?: string | null;
           estoque_fonte?: string | null;
@@ -137,6 +139,7 @@ export type Database = {
           vitrine_novidade?: string;
           vitrine_sala?: string;
           vitrine_descoberta?: boolean;
+          vitrine_black_friday?: boolean | null;
           status_estoque?: string;
           estoque_atualizado_em?: string | null;
           estoque_fonte?: string | null;
