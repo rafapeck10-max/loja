@@ -56,6 +56,20 @@ test("buildMerchantFeedTsv includes confirmed stocks, syncs prices, and skips un
   assert.equal(row1[idx("additional_image_link")], "https://example.com/roma-2.jpg");
   assert.doesNotMatch(row1[idx("description")], /Fornecedor|Custo|900/);
 
+  const encodedTsv = buildMerchantFeedTsv([
+    {
+      ...sampleBase,
+      url_imagem: "https://example.com/Pasta Teste/Foto NOVO .jpg",
+      imagens: ["https://example.com/Foto 2.jpg"],
+    },
+  ]);
+  const encodedCols = encodedTsv.split("\n")[1].split("\t");
+  assert.equal(
+    encodedCols[idx("image_link")],
+    "https://example.com/Pasta%20Teste/Foto%20NOVO%20.jpg",
+  );
+  assert.equal(encodedCols[idx("additional_image_link")], "https://example.com/Foto%202.jpg");
+
   const row2 = lines[2].split("\t");
   assert.equal(row2[idx("availability")], "out_of_stock");
   assert.equal(row2[idx("price")], "1850.00 BRL");

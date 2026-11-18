@@ -16,6 +16,7 @@ import { Route as GoogleMerchantDottsvRouteImport } from './routes/google-mercha
 import { Route as InspiracaoRouteImport } from './routes/inspiracao'
 import { Route as LinksRouteImport } from './routes/links'
 import { Route as MoveisNovaIguacuRouteImport } from './routes/moveis-nova-iguacu'
+import { Route as MoveisPagamentoNaEntregaRouteImport } from './routes/moveis-pagamento-na-entrega'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AjudaSlugRouteImport } from './routes/ajuda.$slug'
 import { Route as CategoriaSlugRouteImport } from './routes/categoria.$slug'
@@ -57,6 +58,12 @@ const MoveisNovaIguacuRoute = MoveisNovaIguacuRouteImport.update({
   path: '/moveis-nova-iguacu',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MoveisPagamentoNaEntregaRoute =
+  MoveisPagamentoNaEntregaRouteImport.update({
+    id: '/moveis-pagamento-na-entrega',
+    path: '/moveis-pagamento-na-entrega',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -91,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/inspiracao': typeof InspiracaoRouteWithChildren
   '/links': typeof LinksRoute
   '/moveis-nova-iguacu': typeof MoveisNovaIguacuRoute
+  '/moveis-pagamento-na-entrega': typeof MoveisPagamentoNaEntregaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/ajuda/$slug': typeof AjudaSlugRoute
   '/categoria/$slug': typeof CategoriaSlugRoute
@@ -105,6 +113,7 @@ export interface FileRoutesByTo {
   '/inspiracao': typeof InspiracaoRouteWithChildren
   '/links': typeof LinksRoute
   '/moveis-nova-iguacu': typeof MoveisNovaIguacuRoute
+  '/moveis-pagamento-na-entrega': typeof MoveisPagamentoNaEntregaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/ajuda/$slug': typeof AjudaSlugRoute
   '/categoria/$slug': typeof CategoriaSlugRoute
@@ -120,6 +129,7 @@ export interface FileRoutesById {
   '/inspiracao': typeof InspiracaoRouteWithChildren
   '/links': typeof LinksRoute
   '/moveis-nova-iguacu': typeof MoveisNovaIguacuRoute
+  '/moveis-pagamento-na-entrega': typeof MoveisPagamentoNaEntregaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/ajuda/$slug': typeof AjudaSlugRoute
   '/categoria/$slug': typeof CategoriaSlugRoute
@@ -136,6 +146,7 @@ export interface FileRouteTypes {
     | '/inspiracao'
     | '/links'
     | '/moveis-nova-iguacu'
+    | '/moveis-pagamento-na-entrega'
     | '/sitemap.xml'
     | '/ajuda/$slug'
     | '/categoria/$slug'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/inspiracao'
     | '/links'
     | '/moveis-nova-iguacu'
+    | '/moveis-pagamento-na-entrega'
     | '/sitemap.xml'
     | '/ajuda/$slug'
     | '/categoria/$slug'
@@ -164,6 +176,7 @@ export interface FileRouteTypes {
     | '/inspiracao'
     | '/links'
     | '/moveis-nova-iguacu'
+    | '/moveis-pagamento-na-entrega'
     | '/sitemap.xml'
     | '/ajuda/$slug'
     | '/categoria/$slug'
@@ -179,6 +192,7 @@ export interface RootRouteChildren {
   InspiracaoRoute: typeof InspiracaoRouteWithChildren
   LinksRoute: typeof LinksRoute
   MoveisNovaIguacuRoute: typeof MoveisNovaIguacuRoute
+  MoveisPagamentoNaEntregaRoute: typeof MoveisPagamentoNaEntregaRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   CategoriaSlugRoute: typeof CategoriaSlugRoute
   ProdutoIdRoute: typeof ProdutoIdRoute
@@ -233,6 +247,13 @@ declare module '@tanstack/react-router' {
       path: '/moveis-nova-iguacu'
       fullPath: '/moveis-nova-iguacu'
       preLoaderRoute: typeof MoveisNovaIguacuRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/moveis-pagamento-na-entrega': {
+      id: '/moveis-pagamento-na-entrega'
+      path: '/moveis-pagamento-na-entrega'
+      fullPath: '/moveis-pagamento-na-entrega'
+      preLoaderRoute: typeof MoveisPagamentoNaEntregaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -303,6 +324,7 @@ const rootRouteChildren: RootRouteChildren = {
   InspiracaoRoute: InspiracaoRouteWithChildren,
   LinksRoute: LinksRoute,
   MoveisNovaIguacuRoute: MoveisNovaIguacuRoute,
+  MoveisPagamentoNaEntregaRoute: MoveisPagamentoNaEntregaRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   CategoriaSlugRoute: CategoriaSlugRoute,
   ProdutoIdRoute: ProdutoIdRoute,

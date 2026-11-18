@@ -48,13 +48,16 @@ export const Route = createFileRoute("/categoria/$slug")({
       depthClosedMaxCm,
       depthOpenMaxCm,
     } = parseCatalogUrlState(match.search);
-    const title = `${cat?.label ?? "Categoria"} em Nova Iguaçu${page > 1 ? ` – Página ${page}` : ""} | Mobi`;
+    const title = `${cat?.label ?? "Categoria"} em Nova Iguaçu – Pagamento na Entrega${page > 1 ? ` – Página ${page}` : ""} | Mobi`;
     const url = categoryUrl(params.slug, page);
     const matchingProducts =
       loaderData?.filter((product) => categoryMatches(product.categoria, params.slug)) ?? [];
     const count = matchingProducts.length;
     const outOfRange = page > Math.max(1, Math.ceil(count / CATALOG_BATCH_SIZE));
-    const description = categoryDescription(params.slug);
+    const rawDescription = categoryDescription(params.slug);
+    const suffix = " Pagamento na entrega e frete grátis.";
+    const description =
+      rawDescription.length + suffix.length <= 160 ? `${rawDescription}${suffix}` : rawDescription;
     const head = seoHead(title, description, url);
     return {
       ...head,
@@ -231,15 +234,29 @@ function CategoriaPage() {
           {categoryDescription(slug)}
         </p>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-text-light">
-          Veja os detalhes na página de cada produto. Para Nova Iguaçu e Baixada Fluminense,
-          consulte condições e disponibilidade de entrega com a Mobi pelo WhatsApp.
+          Na Mobi você compra online sem pagar adiantado: o{" "}
+          <strong className="font-semibold text-deep-green">pagamento é somente na entrega</strong>{" "}
+          (Pix com desconto, dinheiro ou cartão em até 10x), com{" "}
+          <strong className="font-semibold text-deep-green">
+            frete grátis em até 7 dias úteis
+          </strong>{" "}
+          nas localidades atendidas em até 30 km de Nova Iguaçu (exceto Belford Roxo e áreas com
+          restrição de acesso).
         </p>
-        <Link
-          to="/moveis-nova-iguacu"
-          className="mt-3 inline-flex min-h-11 items-center text-sm text-deep-green underline underline-offset-4"
-        >
-          Atendimento da Mobi para Nova Iguaçu
-        </Link>
+        <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
+          <Link
+            to="/moveis-nova-iguacu"
+            className="inline-flex min-h-11 items-center text-sm text-deep-green underline underline-offset-4"
+          >
+            Móveis em Nova Iguaçu e região atendida
+          </Link>
+          <Link
+            to="/moveis-pagamento-na-entrega"
+            className="inline-flex min-h-11 items-center text-sm text-deep-green underline underline-offset-4"
+          >
+            Como funciona o pagamento na entrega
+          </Link>
+        </div>
       </section>
     </>
   );

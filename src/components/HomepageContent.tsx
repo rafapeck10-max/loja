@@ -165,12 +165,26 @@ export function HomepageContent({
           return (
             <section className="mobi-catalog-invite mobi-wrap">
               <div>
-                <h2>Móveis para Nova Iguaçu e Baixada Fluminense.</h2>
+                <h2>Móveis em Nova Iguaçu com pagamento na entrega e frete grátis.</h2>
                 <p>
                   Compare modelos, medidas e cores.{" "}
                   {config?.service.deliveryMessage ??
-                    "Frete e data de entrega combinados pelo WhatsApp."}
+                    "Compre online sem pagar adiantado: frete grátis em até 7 dias úteis na região atendida (exceto Belford Roxo e áreas com restrição de acesso) e pagamento somente na entrega."}
                 </p>
+                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs font-semibold text-deep-green">
+                  <Link
+                    to="/moveis-nova-iguacu"
+                    className="inline-flex min-h-11 items-center underline underline-offset-4"
+                  >
+                    Móveis em Nova Iguaçu
+                  </Link>
+                  <Link
+                    to="/moveis-pagamento-na-entrega"
+                    className="inline-flex min-h-11 items-center underline underline-offset-4"
+                  >
+                    Como funciona o pagamento na entrega
+                  </Link>
+                </div>
               </div>
               <Link to="/" search={{ all: true, page: 1 }} hash="catalogo" className="mobi-primary">
                 Explorar todo o catálogo

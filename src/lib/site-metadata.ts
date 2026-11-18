@@ -1,5 +1,5 @@
 export const SITE_URL = "https://www.mobimb.com.br";
 export const SOCIAL_IMAGE_URL = `${SITE_URL}/mobi-social-preview.png`;
-export const SITE_TITLE = "Mobi | Móveis em Nova Iguaçu e na Baixada Fluminense";
+export const SITE_TITLE = "Móveis em Nova Iguaçu com Pagamento na Entrega e Frete Grátis | Mobi";
 export const SITE_DESCRIPTION =
-  "Móveis para Nova Iguaçu e Baixada Fluminense: sofás, guarda-roupas, colchões e cozinhas. Compare medidas e cores e consulte entrega com a Mobi pelo WhatsApp.";
+  "Loja online de móveis em Nova Iguaçu e Baixada Fluminense: pague somente na entrega (Pix, dinheiro ou cartão até 10x) e ganhe frete grátis na região atendida.";

@@ -4,7 +4,7 @@ import {
   getCatalogMaterials,
 } from "./catalog-search.ts";
 import { parseProductPublicCopy, publicDescription } from "./product-copy.ts";
-import { structuredSku } from "./seo.ts";
+import { normalizeHttpUrl, structuredSku } from "./seo.ts";
 import { SITE_URL } from "./site-metadata.ts";
 
 export interface MerchantFeedProduct {
@@ -95,14 +95,20 @@ export function buildMerchantFeedTsv(products: ReadonlyArray<MerchantFeedProduct
     const effectivePrice =
       variationPrices.length > 0 ? Math.min(...variationPrices) : Number(product.preco_atual);
     if (!Number.isFinite(effectivePrice) || effectivePrice <= 0) continue;
-    const primaryImage = product.url_imagem?.trim() ?? "";
-    if (!/^https:\/\//i.test(primaryImage) || !product.slug?.trim()) continue;
+    const primaryImage = normalizeHttpUrl(product.url_imagem, true) ?? "";
+    if (!primaryImage || !product.slug?.trim()) continue;
 
     const additionalImages = [
       ...new Set(
         (Array.isArray(product.imagens) ? product.imagens : [])
-          .map((src) => String(src ?? "").trim())
-          .filter((src) => /^https:\/\//i.test(src) && src !== primaryImage && !src.includes(",")),
+          .map((src) => normalizeHttpUrl(String(src ?? ""), true))
+          .filter(
+            (src): src is string =>
+              typeof src === "string" &&
+              src !== primaryImage &&
+              !src.includes(",") &&
+              !src.includes("\t"),
+          ),
       ),
     ].slice(0, 10);
 
