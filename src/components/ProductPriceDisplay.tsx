@@ -9,18 +9,35 @@ export function ProductPriceDisplay({
   oldPrice,
   payment,
   layout = "detail",
+  blackFriday = false,
 }: {
   price: number;
   oldPrice: number;
   payment: ReturnType<typeof cardQuote>;
   layout?: "card" | "detail";
+  blackFriday?: boolean;
 }) {
   const isCardLayout = layout === "card";
   const pixSaving = payment.total > price ? roundMoney(payment.total - price) : 0;
   const pixSavingLabel = `${formatBRL(pixSaving)} a menos no Pix em relação ao total no cartão em até ${payment.count}x`;
   return (
     <div className={`mobi-price-display${isCardLayout ? " mobi-price-display--card" : ""}`}>
-      <ProductDiscountLine oldPrice={oldPrice} currentPrice={price} />
+      {blackFriday ? (
+        <div
+          className="mobi-discount-line"
+          role="group"
+          aria-label={`No cartão: ${formatBRL(payment.total)}. Preço Black Friday no Pix: ${formatBRL(price)}.`}
+        >
+          {payment.total > price && (
+            <span>
+              No cartão: <s>{formatBRL(payment.total)}</s>
+            </span>
+          )}
+          <span className="mobi-discount-badge">Preço Black Friday</span>
+        </div>
+      ) : (
+        <ProductDiscountLine oldPrice={oldPrice} currentPrice={price} />
+      )}
       <div className="mobi-price-display-main">
         <strong className="mobi-price-display-value">{formatBRL(price)}</strong>
         <span className="mobi-price-display-method">
