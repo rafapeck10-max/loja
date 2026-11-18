@@ -93,6 +93,9 @@ test("productSeo syncs Schema.org availability only for verified stock states", 
 test("public policy help pages cover exchanges/warranty and canonical delivery routes", () => {
   assert.ok(PUBLIC_HELP_PAGES.length >= 5);
   assert.equal(findPublicHelpPage("trocas-e-garantia")?.slug, "trocas-e-garantia");
-  assert.equal(findPublicHelpPage("entrega")?.slug, "entrega-e-montagem");
+  const deliveryPage = findPublicHelpPage("entrega");
+  assert.equal(deliveryPage?.slug, "entrega-e-montagem");
+  assert.match(deliveryPage?.body ?? "", /frete grátis/i);
+  assert.match(deliveryPage?.body ?? "", /não realizamos entregas em Belford Roxo/i);
   assert.equal(findPublicHelpPage("nao-existe"), undefined);
 });
