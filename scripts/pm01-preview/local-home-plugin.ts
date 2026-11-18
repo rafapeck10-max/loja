@@ -35,6 +35,7 @@ export function localHomePlugin(storeDirectory?: string): Plugin {
         // opening a category/product in a new tab work in this isolated preview.
         const storefrontPage =
           path === "/" ||
+          path === "/admin" ||
           path === "/moveis-nova-iguacu" ||
           path === "/ajuda" ||
           path === "/inspiracao" ||

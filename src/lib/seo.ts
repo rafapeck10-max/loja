@@ -1,5 +1,11 @@
 import { CATEGORIES, SUBCATEGORIES, categoryMatches } from "./constants.ts";
-import { publicDescription } from "./product-copy.ts";
+import {
+  cleanCatalogMeasurementText,
+  getCatalogColors,
+  getCatalogDimensions,
+  getCatalogMaterials,
+} from "./catalog-search.ts";
+import { parseProductPublicCopy, publicDescription } from "./product-copy.ts";
 import { SITE_URL, SOCIAL_IMAGE_URL } from "./site-metadata.ts";
 
 const categoryCopy: Record<string, string> = {
@@ -118,20 +124,60 @@ export function categoryUrl(slug: string, page = 1) {
   return `${SITE_URL}/categoria/${encodeURIComponent(slug)}${page > 1 ? `?page=${page}` : ""}`;
 }
 
-export function seoHead(title: string, description: string, url: string, image = SOCIAL_IMAGE_URL) {
+export function seoHead(
+  title: string,
+  description: string,
+  url: string,
+  image = SOCIAL_IMAGE_URL,
+  options?: { imageAlt?: string; type?: "website" | "product" },
+) {
   return {
     meta: [
       { title },
       { name: "description", content: description },
       { property: "og:title", content: title },
       { property: "og:description", content: description },
+      { property: "og:type", content: options?.type ?? "website" },
       { property: "og:url", content: url },
       { property: "og:image", content: image },
+      ...(options?.imageAlt ? [{ property: "og:image:alt", content: options.imageAlt }] : []),
       { name: "twitter:title", content: title },
       { name: "twitter:description", content: description },
       { name: "twitter:image", content: image },
     ],
     links: [{ rel: "canonical", href: url }],
+  };
+}
+
+export function collectionSeo({
+  label,
+  description,
+  url,
+  products,
+}: {
+  label: string;
+  description: string;
+  url: string;
+  products: ReadonlyArray<{ nome: string; slug: string; imagem_url: string }>;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: `${label} | Mobi`,
+    description,
+    url,
+    isPartOf: { "@id": `${SITE_URL}/#website` },
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: products.length,
+      itemListElement: products.slice(0, 24).map((product, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        url: `${SITE_URL}/produto/${encodeURIComponent(product.slug)}`,
+        name: plainText(product.nome),
+        ...(/^https?:\/\//i.test(product.imagem_url) ? { image: product.imagem_url } : {}),
+      })),
+    },
   };
 }
 
@@ -193,18 +239,43 @@ function structuredSku(value: string | null): string | undefined {
 export function productSeo(product: SeoProduct) {
   const sku = structuredSku(product.sku);
   const name = plainText(product.nome);
+  const parsedCopy = parseProductPublicCopy({
+    nome: product.nome,
+    descricao: product.descricao,
+    medidas: product.medidas,
+  });
+  const cleanedMeasures = cleanCatalogMeasurementText(product.medidas);
+  const extractedMeasuresSummary = parsedCopy.extractedMeasurements
+    .map((item) => `${item.label} ${item.value}`)
+    .join("; ");
+  const measuresFact = cleanedMeasures
+    ? `Medidas: ${plainText(cleanedMeasures)}`
+    : extractedMeasuresSummary
+      ? `Medidas: ${extractedMeasuresSummary}`
+      : "";
+  const cleanColors = getCatalogColors({
+    nome: product.nome,
+    categoria: product.categoria,
+    cores: product.cores,
+    descricao: product.descricao,
+    medidas: product.medidas,
+  });
   const details = [
     excerpt(name, 110),
-    product.medidas ? `Medidas: ${plainText(product.medidas)}` : "",
-    product.cores?.length ? `Cores: ${product.cores.map(plainText).join(", ")}` : "",
+    measuresFact,
+    cleanColors.length ? `Cores: ${cleanColors.map(plainText).join(", ")}` : "",
   ].filter(Boolean);
   const facts = details.join(". ");
-  let copy = plainText(publicDescription(product.descricao)).replace(/^descrição\s*:?\s*/i, "");
+  let copy = plainText(
+    parsedCopy.blocks.length
+      ? parsedCopy.blocks.map((block) => (block.kind === "list" ? block.items.join(", ") : block.text)).join(" ")
+      : publicDescription(product.descricao),
+  ).replace(/^descrição\s*:?\s*/i, "");
   if (copy.toLocaleLowerCase("pt-BR").startsWith(name.toLocaleLowerCase("pt-BR"))) {
     copy = copy.slice(name.length).replace(/^[\s.,:;–—-]+/, "");
   }
-  if (facts.length < 140 && copy) details.push(copy);
-  const description = excerpt(details.join(". ").replace(/\.{2,}/g, "."), 210);
+  if (facts.length < 135 && copy) details.push(copy);
+  const description = excerpt(details.join(". ").replace(/\.{2,}/g, "."), 160);
   const url = `${SITE_URL}/produto/${encodeURIComponent(product.slug)}`;
   const prices = product.variacoes_preco
     .map((v) => v.sale_price)
@@ -217,10 +288,29 @@ export function productSeo(product: SeoProduct) {
   const category =
     SUBCATEGORIES.find((cat) => categoryMatches(product.categoria, cat.slug)) ??
     CATEGORIES.find((cat) => categoryMatches(product.categoria, cat.slug));
+  const dimensions = getCatalogDimensions({
+    nome: product.nome,
+    categoria: product.categoria,
+    medidas: product.medidas,
+  });
+  const materials = getCatalogMaterials({
+    nome: product.nome,
+    categoria: product.categoria,
+    descricao: product.descricao,
+  });
+  const merchantReturnPolicy = {
+    "@type": "MerchantReturnPolicy",
+    applicableCountry: "BR",
+    returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+    merchantReturnDays: 7,
+    returnMethod: "https://schema.org/ReturnByMail",
+  };
   const offer = {
     url,
     priceCurrency: "BRL",
+    itemCondition: "https://schema.org/NewCondition",
     seller: { "@id": `${SITE_URL}/#organization` },
+    hasMerchantReturnPolicy: merchantReturnPolicy,
     ...(prices.length > 1
       ? {
           "@type": "AggregateOffer",
@@ -230,6 +320,8 @@ export function productSeo(product: SeoProduct) {
         }
       : { "@type": "Offer", price: prices[0] ?? product.preco_novo }),
   };
+  const cmValue = (cm?: number) =>
+    cm ? { "@type": "QuantitativeValue", value: Number(cm.toFixed(1)), unitCode: "CMT" } : undefined;
   return {
     title: `${name} | Mobi`,
     description,
@@ -243,9 +335,14 @@ export function productSeo(product: SeoProduct) {
       description,
       url,
       image,
+      brand: { "@type": "Brand", name: "Mobi" },
       category: product.categoria,
       ...(sku ? { sku } : {}),
-      ...(product.cores?.length ? { color: product.cores.join(", ") } : {}),
+      ...(cleanColors.length ? { color: cleanColors.join(", ") } : {}),
+      ...(materials.length ? { material: materials.join(", ") } : {}),
+      ...(cmValue(dimensions.widthCm) ? { width: cmValue(dimensions.widthCm) } : {}),
+      ...(cmValue(dimensions.heightCm) ? { height: cmValue(dimensions.heightCm) } : {}),
+      ...(cmValue(dimensions.depthClosedCm) ? { depth: cmValue(dimensions.depthClosedCm) } : {}),
       ...(Number.isFinite(product.preco_novo) && product.preco_novo > 0 ? { offers: offer } : {}),
     },
     breadcrumb: breadcrumbs([

@@ -92,9 +92,22 @@ export const Route = createFileRoute("/")({
     page: search.page,
   }),
   loader: async ({ context, deps }) => {
-    if (!deps.catalog) return { catalogProducts: undefined };
-    const catalogProducts = await context.queryClient.ensureQueryData(produtosQueryOptions());
-    return { catalogProducts };
+    if (deps.catalog) {
+      const catalogProducts = await context.queryClient.ensureQueryData(produtosQueryOptions());
+      return { catalogProducts };
+    }
+    try {
+      const [homepageData, bannerData] = await Promise.all([
+        context.queryClient.ensureQueryData(homepageProductsQueryOptions()),
+        context.queryClient.ensureQueryData({
+          queryKey: ["homepage-banners"],
+          queryFn: getHomepageBanners,
+        }),
+      ]);
+      return { catalogProducts: undefined, homepageData, bannerData };
+    } catch {
+      return { catalogProducts: undefined };
+    }
   },
   pendingComponent: CatalogLoadingState,
   head: ({ match }) => {
@@ -249,7 +262,10 @@ function Index() {
       initialProducts={loaderData?.catalogProducts}
     />
   ) : (
-    <HomepageIndex />
+    <HomepageIndex
+      initialHomepage={loaderData?.homepageData}
+      initialBanners={loaderData?.bannerData}
+    />
   );
 }
 
@@ -350,10 +366,23 @@ function CatalogIndex({
   );
 }
 
-function HomepageIndex() {
+function HomepageIndex({
+  initialHomepage,
+  initialBanners,
+}: {
+  initialHomepage?: HomepageProducts;
+  initialBanners?: Awaited<ReturnType<typeof getHomepageBanners>>;
+}) {
   const configuration = useHomeConfiguration();
-  const result = useQuery(homepageProductsQueryOptions());
-  const banners = useQuery({ queryKey: ["homepage-banners"], queryFn: getHomepageBanners });
+  const result = useQuery({
+    ...homepageProductsQueryOptions(),
+    ...(initialHomepage ? { initialData: initialHomepage } : {}),
+  });
+  const banners = useQuery({
+    queryKey: ["homepage-banners"],
+    queryFn: getHomepageBanners,
+    ...(initialBanners ? { initialData: initialBanners } : {}),
+  });
   const data: HomepageProducts | undefined = result.data;
   const products = data?.products;
   const failed = result.isError;
