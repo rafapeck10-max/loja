@@ -598,6 +598,7 @@ export function ProductDetailView({
               oldPrice={selectedOption ? 0 : product.preco_antigo}
               price={currentPrice}
               payment={payment}
+              blackFriday={isBlackFridayProduct(product)}
             />
             <button
               type="button"
