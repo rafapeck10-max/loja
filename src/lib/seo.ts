@@ -149,6 +149,25 @@ export function seoHead(
   };
 }
 
+export function normalizeHttpUrl(
+  value: string | null | undefined,
+  httpsOnly = false,
+): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  if (!trimmed || !(httpsOnly ? /^https:\/\//i : /^https?:\/\//i).test(trimmed)) {
+    return undefined;
+  }
+  try {
+    const parsed = new URL(trimmed);
+    if (httpsOnly && parsed.protocol !== "https:") return undefined;
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return undefined;
+    return parsed.href;
+  } catch {
+    return trimmed.replace(/ /g, "%20");
+  }
+}
+
 export function collectionSeo({
   label,
   description,
@@ -170,13 +189,16 @@ export function collectionSeo({
     mainEntity: {
       "@type": "ItemList",
       numberOfItems: products.length,
-      itemListElement: products.slice(0, 24).map((product, index) => ({
-        "@type": "ListItem",
-        position: index + 1,
-        url: `${SITE_URL}/produto/${encodeURIComponent(product.slug)}`,
-        name: plainText(product.nome),
-        ...(/^https?:\/\//i.test(product.imagem_url) ? { image: product.imagem_url } : {}),
-      })),
+      itemListElement: products.slice(0, 24).map((product, index) => {
+        const normalizedImage = normalizeHttpUrl(product.imagem_url);
+        return {
+          "@type": "ListItem",
+          position: index + 1,
+          url: `${SITE_URL}/produto/${encodeURIComponent(product.slug)}`,
+          name: plainText(product.nome),
+          ...(normalizedImage ? { image: normalizedImage } : {}),
+        };
+      }),
     },
   };
 }
@@ -285,9 +307,10 @@ export function productSeo(product: SeoProduct) {
     .filter(
       (price): price is number => typeof price === "number" && Number.isFinite(price) && price > 0,
     );
-  const image = [...new Set([product.imagem_url, ...product.imagens])].filter((src) =>
-    /^https?:\/\//i.test(src),
-  );
+  const primaryImage = normalizeHttpUrl(product.imagem_url);
+  const image = [
+    ...new Set([primaryImage, ...product.imagens.map((src) => normalizeHttpUrl(src))]),
+  ].filter((src): src is string => Boolean(src));
   const category =
     SUBCATEGORIES.find((cat) => categoryMatches(product.categoria, cat.slug)) ??
     CATEGORIES.find((cat) => categoryMatches(product.categoria, cat.slug));
@@ -338,7 +361,7 @@ export function productSeo(product: SeoProduct) {
     title: `${name} | Mobi`,
     description,
     url,
-    image: product.imagem_url,
+    image: primaryImage ?? product.imagem_url,
     structured: {
       "@context": "https://schema.org",
       "@type": "Product",

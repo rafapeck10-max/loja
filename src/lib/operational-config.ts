@@ -49,7 +49,8 @@ export function safeMobiLink(value: string) {
     if (u.protocol !== "https:" || u.username || u.password) return false;
     if (u.hostname === "wa.me") return u.pathname === `/${WHATSAPP_NUMBER}`;
     if (!["mobimb.com.br", "www.mobimb.com.br"].includes(u.hostname)) return false;
-    if (["/", "/links", "/moveis-nova-iguacu"].includes(u.pathname)) return true;
+    if (["/", "/links", "/moveis-nova-iguacu", "/moveis-pagamento-na-entrega"].includes(u.pathname))
+      return true;
     const category = u.pathname.match(/^\/categoria\/([a-z0-9-]+)$/);
     if (category) return !!getCategory(category[1]);
     if (/^\/ajuda\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(u.pathname)) return true;

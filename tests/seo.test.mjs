@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { categoryDescription, categoryUrl, collectionSeo, jsonLd, productSeo } from "../src/lib/seo.ts";
+import {
+  categoryDescription,
+  categoryUrl,
+  collectionSeo,
+  jsonLd,
+  productSeo,
+} from "../src/lib/seo.ts";
 import { CATEGORIES, SUBCATEGORIES } from "../src/lib/constants.ts";
 import { buildSitemap, collectSitemapProducts } from "../src/lib/sitemap.ts";
 
@@ -101,7 +107,19 @@ test("every catalog category has its own descriptive copy", () => {
 test("SKU estruturado aceita apenas identificador único válido", () => {
   const valid = productSeo({ ...product, sku: "ABC-123" });
   assert.equal(valid.structured.sku, "ABC-123");
-  for (const sku of [null, "", "   ", "NT 4040", "TROP\t00452", "MESA1\nCADEIRA2", "ABC\u00a0DEF", "ABC\u2003DEF", "MESA1|CADEIRA2", "ABC\ud800", "ABC\ufdd0"]) {
+  for (const sku of [
+    null,
+    "",
+    "   ",
+    "NT 4040",
+    "TROP\t00452",
+    "MESA1\nCADEIRA2",
+    "ABC\u00a0DEF",
+    "ABC\u2003DEF",
+    "MESA1|CADEIRA2",
+    "ABC\ud800",
+    "ABC\ufdd0",
+  ]) {
     const input = { ...product, sku };
     const result = productSeo(input);
     assert.equal(Object.hasOwn(result.structured, "sku"), false, JSON.stringify(sku));
@@ -145,9 +163,10 @@ test("collectionSeo emits CollectionPage with bounded ItemList", () => {
 
 test("sitemap emits Google Image entries for HTTPS images and core public routes", () => {
   const xml = buildSitemap([
-    { slug: "sofa-roma", categoria: "Sofás", url_imagem: "https://example.com/roma.jpg" },
+    { slug: "sofa-roma", categoria: "Sofás", url_imagem: "https://example.com/roma NOVO .jpg" },
   ]);
   assert.match(xml, /xmlns:image="http:\/\/www\.google\.com\/schemas\/sitemap-image\/1\.1"/);
-  assert.match(xml, /<image:loc>https:\/\/example\.com\/roma\.jpg<\/image:loc>/);
+  assert.match(xml, /<image:loc>https:\/\/example\.com\/roma%20NOVO%20\.jpg<\/image:loc>/);
+  assert.match(xml, /https:\/\/www\.mobimb\.com\.br\/moveis-pagamento-na-entrega</);
   assert.match(xml, /https:\/\/www\.mobimb\.com\.br\/ajuda</);
 });

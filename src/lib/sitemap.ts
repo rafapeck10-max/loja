@@ -1,4 +1,5 @@
 import { CATEGORIES, SUBCATEGORIES, categoryMatches } from "./constants.ts";
+import { normalizeHttpUrl } from "./seo.ts";
 import { SITE_URL } from "./site-metadata.ts";
 
 export interface SitemapProduct {
@@ -27,6 +28,7 @@ export function buildSitemap(products: SitemapProduct[]) {
   for (const staticPath of [
     "/",
     "/moveis-nova-iguacu",
+    "/moveis-pagamento-na-entrega",
     "/ajuda",
     "/ajuda/como-comprar",
     "/ajuda/entrega-e-montagem",
@@ -43,10 +45,7 @@ export function buildSitemap(products: SitemapProduct[]) {
     if (!product.slug?.trim()) continue;
     const path = `/produto/${encodeURIComponent(product.slug)}`;
     if (urlEntries.has(path)) continue;
-    const validImage =
-      product.url_imagem && /^https?:\/\//i.test(product.url_imagem.trim())
-        ? product.url_imagem.trim()
-        : undefined;
+    const validImage = normalizeHttpUrl(product.url_imagem);
     urlEntries.set(path, validImage);
   }
   if (urlEntries.size > 50_000) throw new Error("Sitemap requires an index above 50,000 URLs");

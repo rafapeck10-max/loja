@@ -151,7 +151,7 @@ export const Route = createFileRoute("/")({
       : `${SITE_URL}/`;
     const head = seoHead(
       catalog
-        ? `Catálogo de móveis${catalogPage > 1 ? ` – Página ${catalogPage}` : ""} | Mobi`
+        ? `Catálogo de Móveis em Nova Iguaçu – Pagamento na Entrega${catalogPage > 1 ? ` – Página ${catalogPage}` : ""} | Mobi`
         : SITE_TITLE,
       SITE_DESCRIPTION,
       url,

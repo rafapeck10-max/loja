@@ -63,7 +63,8 @@ export function isSafeBannerDestination(value: string): boolean {
     if (url.hostname === "wa.me") return !local && url.pathname === `/${WHATSAPP_NUMBER}`;
     if (url.hostname !== "mobimb.com.br") return false;
     const path = url.pathname;
-    if (["/", "/links", "/moveis-nova-iguacu"].includes(path)) return true;
+    if (["/", "/links", "/moveis-nova-iguacu", "/moveis-pagamento-na-entrega"].includes(path))
+      return true;
     if (/^\/produto\/[a-zA-Z0-9_-]+$/.test(path)) return true;
     const category = /^\/categoria\/([a-z0-9-]+)$/.exec(path);
     return !!category && !!getCategory(category[1]);

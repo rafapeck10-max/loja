@@ -35,6 +35,13 @@ export function Footer() {
           >
             Móveis e atendimento em Nova Iguaçu
           </Link>
+          <br />
+          <Link
+            to="/moveis-pagamento-na-entrega"
+            className="inline-flex min-h-11 items-center text-sm text-sand underline underline-offset-4"
+          >
+            Móveis com pagamento na entrega
+          </Link>
           <nav className="mt-4" aria-label="Informações e ajuda">
             <h2 className="mb-1 text-xs font-semibold text-gold">Informações e ajuda</h2>
             <ul className="flex flex-col">
