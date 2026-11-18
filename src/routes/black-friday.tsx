@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CreditCard, MessageCircle, Truck } from "lucide-react";
 import { ProductCard, productDisplayPrice } from "@/components/ProductCard";
 import { produtosQueryOptions } from "@/lib/products.functions";
-import { hasRealReferencePrice } from "@/lib/price-reference";
+import { isBlackFridayProduct } from "@/lib/black-friday";
 import { MAX_INSTALLMENTS, WHATSAPP_URL } from "@/lib/constants";
 import { seoHead } from "@/lib/seo";
 import { SITE_URL } from "@/lib/site-metadata";
@@ -39,13 +39,7 @@ function BlackFridayPage() {
   const { data: products = initialData } = useQuery({ ...produtosQueryOptions(), initialData });
   const [category, setCategory] = useState("all");
   const [sort, setSort] = useState("recommended");
-  const offers = useMemo(
-    () =>
-      products.filter((product) =>
-        hasRealReferencePrice(product.preco_antigo, productDisplayPrice(product)),
-      ),
-    [products],
-  );
+  const offers = useMemo(() => products.filter(isBlackFridayProduct), [products]);
   const categories = [...new Set(offers.map((product) => product.categoria))].sort((a, b) =>
     a.localeCompare(b, "pt-BR"),
   );

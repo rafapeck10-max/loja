@@ -10,16 +10,12 @@ import {
 } from "@/lib/catalog-search";
 import type { Produto } from "@/lib/products.functions";
 import { cardQuote } from "@/lib/payment";
+import { productDisplayPrice } from "@/lib/product-display-price";
+import { isBlackFridayProduct } from "@/lib/black-friday";
+import { BlackFridayBadge } from "./BlackFridayBadge";
+export { productDisplayPrice } from "@/lib/product-display-price";
 
 export type ProductBadge = "week" | "new";
-export function productDisplayPrice(produto: Produto) {
-  const variations = (produto as Produto & { variacoes_preco?: { sale_price: number | null }[] })
-    .variacoes_preco;
-  return (
-    variations?.find((variation) => variation.sale_price != null && variation.sale_price > 0)
-      ?.sale_price ?? produto.preco_novo
-  );
-}
 export function ProductCard({
   produto,
   badge,
@@ -34,6 +30,7 @@ export function ProductCard({
   returnSearch?: string;
 }) {
   const price = productDisplayPrice(produto);
+  const blackFriday = isBlackFridayProduct(produto);
   const payment = cardQuote(price, MAX_INSTALLMENTS);
   const saveCatalogReturnPosition = () => {
     if (!returnPage || typeof window === "undefined") return;
@@ -87,7 +84,8 @@ export function ProductCard({
           loading="lazy"
         />
       </Link>
-      {badge && (
+      {blackFriday && <BlackFridayBadge />}
+      {badge && !blackFriday && (
         <div className="mobi-badge-row">
           {
             <span className={`mobi-badge mobi-badge-${badge}`}>

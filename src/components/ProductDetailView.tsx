@@ -21,6 +21,8 @@ import {
 import { toast } from "sonner";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
 import { ProductPriceDisplay } from "@/components/ProductPriceDisplay";
+import { BlackFridayBadge } from "./BlackFridayBadge";
+import { isBlackFridayProduct } from "@/lib/black-friday";
 import {
   categoryMatches,
   formatBRL,
@@ -590,6 +592,7 @@ export function ProductDetailView({
             </fieldset>
           )}
 
+          {isBlackFridayProduct(product) && <BlackFridayBadge detail />}
           <div className="mobi-product-price-panel mt-4 rounded-xl border border-cacau/10 border-l-4 border-l-gold bg-white p-4 sm:p-5">
             <ProductPriceDisplay
               oldPrice={selectedOption ? 0 : product.preco_antigo}
