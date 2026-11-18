@@ -30,7 +30,7 @@ export function ProductPriceDisplay({
         >
           {payment.total > price && (
             <span>
-              No cartão: <s>{formatBRL(payment.total)}</s>
+              <s>{formatBRL(payment.total)}</s>
             </span>
           )}
           <span className="mobi-discount-badge">Preço Black Friday</span>
