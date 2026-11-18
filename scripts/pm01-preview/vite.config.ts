@@ -11,9 +11,14 @@ function demoProductsPlugin(): Plugin {
     name: "mobi-preview-product-functions",
     enforce: "pre",
     resolveId(id) {
-      if (id.includes("admin.functions") || id.includes("home-local.functions"))
+      const normalized = id.replaceAll("\\", "/");
+      if (
+        normalized.includes("admin.functions") ||
+        normalized.includes("orders.functions") ||
+        normalized.includes("home-local.functions")
+      )
         return fileURLToPath(new URL("./admin-operations-fixture.ts", import.meta.url));
-      return id.replaceAll("\\", "/").includes("products.functions") ? demoModule : null;
+      return normalized.includes("products.functions") ? demoModule : null;
     },
   };
 }

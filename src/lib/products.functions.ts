@@ -8,6 +8,13 @@ import { rehydrateHomepageSections } from "@/lib/homepage-selection";
 import { selectHomepageRoomImages, type HomepageRoomImage } from "@/lib/homepage-room-categories";
 import { isMissingCurationSchema, readWithOptionalProductColumns } from "./product-schema.ts";
 
+export type ProductStockStatus = "nao_verificado" | "disponivel" | "esgotado" | "revisar";
+
+export function normalizeStockStatus(value: unknown): ProductStockStatus {
+  if (value === "disponivel" || value === "esgotado" || value === "revisar") return value;
+  return "nao_verificado";
+}
+
 export interface Produto {
   id: string;
   nome: string;
@@ -23,6 +30,7 @@ export interface Produto {
   fornecedor: string | null;
   medidas: string | null;
   cores: string[] | null;
+  status_estoque?: ProductStockStatus;
   materiais?: string[] | null;
   caracteristicas?: string[] | null;
   width_cm?: number | null;
@@ -48,7 +56,7 @@ export interface ProductPriceVariation {
 }
 
 const PRODUCT_SELECT_BASE =
-  "id, nome, slug, preco_antigo, preco_atual, categoria, url_imagem, ordem, descricao, imagens, sku, medidas, cores, parcelas_sem_juros, variacoes_preco, created_at";
+  "id, nome, slug, preco_antigo, preco_atual, categoria, url_imagem, ordem, descricao, imagens, sku, medidas, cores, status_estoque, parcelas_sem_juros, variacoes_preco, created_at";
 const PRODUCT_SELECT_WITH_BUNDLES = PRODUCT_SELECT_BASE + ", compre_junto_ids";
 const PRODUCT_SELECT_CURATION =
   PRODUCT_SELECT_BASE +
@@ -57,7 +65,7 @@ const PRODUCT_SELECT =
   PRODUCT_SELECT_WITH_BUNDLES +
   ", vitrine_semana_ordem, vitrine_novidade, vitrine_sala, vitrine_descoberta";
 const HOMEPAGE_CANDIDATE_SELECT_BASE =
-  "id, nome, slug, preco_antigo, preco_atual, categoria, url_imagem, ordem, descricao, sku, medidas, cores, created_at";
+  "id, nome, slug, preco_antigo, preco_atual, categoria, url_imagem, ordem, descricao, sku, medidas, cores, status_estoque, created_at";
 const HOMEPAGE_CANDIDATE_SELECT =
   HOMEPAGE_CANDIDATE_SELECT_BASE +
   ", vitrine_semana_ordem, vitrine_novidade, vitrine_sala, vitrine_descoberta";
@@ -77,6 +85,7 @@ type BasicPublicProductRow = Pick<
   | "sku"
   | "medidas"
   | "cores"
+  | "status_estoque"
   | "compre_junto_ids"
   | "parcelas_sem_juros"
   | "variacoes_preco"
@@ -101,6 +110,7 @@ type HomepageCandidateRow = Pick<
   | "sku"
   | "medidas"
   | "cores"
+  | "status_estoque"
   | "created_at"
 > &
   Partial<
@@ -149,6 +159,7 @@ function mapProduto(
     fornecedor: null, // Supplier stays in the admin; not sent by the storefront API.
     medidas: row.medidas ?? null,
     cores: Array.isArray(row.cores) ? row.cores.filter(Boolean) : null,
+    status_estoque: normalizeStockStatus(row.status_estoque),
     compre_junto_ids: Array.isArray(row.compre_junto_ids)
       ? [
           ...new Set(row.compre_junto_ids.filter((id) => typeof id === "string" && id !== row.id)),
@@ -181,6 +192,7 @@ function mapHomepageCandidate(row: HomepageCandidateRow, curadoriaDisponivel: bo
     fornecedor: null,
     medidas: row.medidas ?? null,
     cores: Array.isArray(row.cores) ? row.cores.filter(Boolean) : null,
+    status_estoque: normalizeStockStatus(row.status_estoque),
     compre_junto_ids: [],
     parcelas_sem_juros: 0,
     variacoes_preco: [],
@@ -212,8 +224,8 @@ async function readHomepageCandidates(withCuration: boolean): Promise<HomepageCa
       .order("id", { ascending: true })
       .range(offset, offset + batchSize - 1);
     if (error) throw Object.assign(new Error(error.message), { code: error.code });
-    return ((data ?? []) as unknown as HomepageCandidateRow[]).filter((row) =>
-      row.url_imagem?.trim(),
+    return ((data ?? []) as unknown as HomepageCandidateRow[]).filter(
+      (row) => row.url_imagem?.trim() && row.status_estoque !== "esgotado",
     );
   };
 

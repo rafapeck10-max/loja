@@ -244,7 +244,11 @@ export function ProductDetailView({
     setZoomOpen(false);
   }, [product.id]);
 
+  const isOutOfStock = product.status_estoque === "esgotado";
+  const isVerifiedInStock = product.status_estoque === "disponivel";
+
   const addToCart = () => {
+    if (isOutOfStock) return;
     addItem({
       id: product.id,
       name: product.nome,
@@ -603,6 +607,19 @@ export function ProductDetailView({
               Parcelamento de 1x a {MAX_INSTALLMENTS}x pelo mesmo total. Consulte a Mobi para outras
               bandeiras ou condições de cartão.
             </p>
+            {isVerifiedInStock && (
+              <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#edf4e9] px-3 py-1 text-xs font-semibold text-deep-green">
+                Disponível para pedido · entrega combinada na Baixada Fluminense
+              </p>
+            )}
+            {isOutOfStock && (
+              <p
+                role="status"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#f7ece8] px-3 py-1 text-xs font-semibold text-[#7a2e1d]"
+              >
+                Indisponível no momento
+              </p>
+            )}
           </div>
 
           <div className="mobi-product-quantity-row mt-4 flex flex-wrap items-end gap-4">
@@ -612,7 +629,7 @@ export function ProductDetailView({
                 <button
                   type="button"
                   aria-label="Diminuir quantidade"
-                  disabled={quantity <= 1}
+                  disabled={isOutOfStock || quantity <= 1}
                   onClick={() => setQuantity((value) => Math.max(1, value - 1))}
                 >
                   <Minus size={16} aria-hidden="true" />
@@ -621,6 +638,7 @@ export function ProductDetailView({
                 <button
                   type="button"
                   aria-label="Aumentar quantidade"
+                  disabled={isOutOfStock}
                   onClick={() => setQuantity((value) => value + 1)}
                 >
                   <Plus size={16} aria-hidden="true" />
@@ -641,9 +659,29 @@ export function ProductDetailView({
           </aside>
 
           <div className="mobi-product-actions mt-4 grid gap-2">
-            <button type="button" onClick={addToCart} className="mobi-product-buy-now">
-              Comprar agora
-            </button>
+            {isOutOfStock ? (
+              <>
+                <button
+                  type="button"
+                  disabled
+                  className="mobi-product-buy-now cursor-not-allowed opacity-60"
+                >
+                  Indisponível no momento
+                </button>
+                <a
+                  href={whatsappProductLink(product.nome)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mobi-product-delivery-link inline-flex min-h-11 items-center justify-center rounded-md px-3 text-sm font-semibold"
+                >
+                  Consultar opções similares pelo WhatsApp
+                </a>
+              </>
+            ) : (
+              <button type="button" onClick={addToCart} className="mobi-product-buy-now">
+                Comprar agora
+              </button>
+            )}
             <p>Revise no carrinho e combine o pedido com a Mobi. Pagamento somente na entrega.</p>
           </div>
 
@@ -995,13 +1033,20 @@ export function ProductDetailView({
 
       <div className="mobi-product-sticky" aria-label="Compra rápida">
         <div className="min-w-0">
-          <span className="block text-[11px] leading-tight text-text-light">À vista</span>
+          <span className="block text-[11px] leading-tight text-text-light">
+            {isOutOfStock ? "Status" : "À vista"}
+          </span>
           <strong className="block truncate text-base font-bold leading-tight text-deep-green">
-            {formatBRL(currentPrice)}
+            {isOutOfStock ? "Indisponível" : formatBRL(currentPrice)}
           </strong>
         </div>
-        <button type="button" onClick={addToCart} className="mobi-product-sticky-button">
-          Comprar agora
+        <button
+          type="button"
+          disabled={isOutOfStock}
+          onClick={addToCart}
+          className={`mobi-product-sticky-button${isOutOfStock ? " cursor-not-allowed opacity-60" : ""}`}
+        >
+          {isOutOfStock ? "Indisponível" : "Comprar agora"}
         </button>
       </div>
 

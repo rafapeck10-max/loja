@@ -25,11 +25,13 @@ export interface BundleCandidate {
   url_imagem?: string | null;
   descricao?: string | null;
   cores?: string[] | null;
+  status_estoque?: string | null;
 }
 
 /** Same cost/price requirements as the public query and availability rule used by curation. */
 export function isEligibleBundleProduct(product: BundleCandidate): boolean {
   if (!product || typeof product !== "object" || Array.isArray(product)) return false;
+  if (product.status_estoque === "esgotado") return false;
   const price = Number(product.preco_atual);
   const cost = Number(product.preco_atacado);
   return (

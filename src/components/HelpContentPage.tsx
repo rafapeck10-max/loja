@@ -4,12 +4,14 @@ import { ArrowLeft, MessageCircle } from "lucide-react";
 import { MobiliLogo } from "@/components/MobiliLogo";
 import { useHomeConfiguration } from "@/components/HomeConfigurationContext";
 import { WHATSAPP_NUMBER } from "@/lib/constants";
+import { PUBLIC_HELP_PAGES } from "@/lib/public-help-pages";
 
 export function HelpContentPage({ page }: { page: ContentPage }) {
   const configuration = useHomeConfiguration();
-  const relatedPages = (configuration?.content?.pages ?? []).filter(
-    (candidate) => candidate.id !== page.id,
-  );
+  const availablePages = configuration?.content?.pages?.length
+    ? configuration.content.pages
+    : PUBLIC_HELP_PAGES;
+  const relatedPages = availablePages.filter((candidate) => candidate.id !== page.id);
   const paragraphs = page.body
     .split(/\n\s*\n/)
     .map((paragraph) => paragraph.trim())

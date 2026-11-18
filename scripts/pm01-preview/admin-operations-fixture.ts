@@ -90,3 +90,10 @@ export const changeAdminStudioWorkspace = async ({
 export const adminLocalHome = async () => {
   throw new Error("Aplicação pública desligada nesta prévia.");
 };
+export const createStoreOrder = async () => {
+  throw new Error("Registro de pedidos disponível somente na loja real.");
+};
+export const listAdminOrders = async () => [];
+export const updateAdminOrderStatus = async () => ({ ok: true as const });
+export const bulkUpdateProductStock = async () => ({ updated: 0 });
+export const syncScrapedStockToProducts = async () => ({ disponivelCount: 0, esgotadoCount: 0 });

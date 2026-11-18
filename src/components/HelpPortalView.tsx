@@ -4,6 +4,7 @@ import { ArrowRight, CreditCard, Headphones, MapPin, Search, Truck } from "lucid
 import { MobiliLogo } from "@/components/MobiliLogo";
 import { useHomeConfiguration } from "@/components/HomeConfigurationContext";
 import { WHATSAPP_NUMBER } from "@/lib/constants";
+import { PUBLIC_HELP_PAGES } from "@/lib/public-help-pages";
 
 const topics = [
   {
@@ -38,7 +39,9 @@ function helpLink(message: string) {
 
 export function HelpPortalView({ revisionId = null }: { revisionId?: number | null }) {
   const configuration = useHomeConfiguration();
-  const pages = configuration?.content?.pages;
+  const pages = configuration?.content?.pages?.length
+    ? configuration.content.pages
+    : PUBLIC_HELP_PAGES;
   const [query, setQuery] = useState("");
   const normalizedQuery = query
     .normalize("NFD")

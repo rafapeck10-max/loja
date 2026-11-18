@@ -4,10 +4,14 @@ import { MobiliLogo } from "@/components/MobiliLogo";
 import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import { PixIcon } from "@/components/PixIcon";
 import { MAX_INSTALLMENTS, WHATSAPP_DISPLAY, WHATSAPP_URL } from "@/lib/constants";
+import { PUBLIC_HELP_PAGES } from "@/lib/public-help-pages";
 import { useHomeConfiguration } from "./HomeConfigurationContext";
 
 export function Footer() {
   const configuration = useHomeConfiguration();
+  const helpPages = configuration?.content?.pages?.length
+    ? configuration.content.pages
+    : PUBLIC_HELP_PAGES;
   return (
     <footer className="border-t border-gold/40 bg-deep-green text-sand">
       <div className="mx-auto grid max-w-[1300px] gap-5 px-4 py-7 sm:grid-cols-3 sm:gap-8 sm:px-8 sm:py-10">
@@ -42,7 +46,7 @@ export function Footer() {
                   Central de ajuda
                 </Link>
               </li>
-              {(configuration?.content?.pages ?? []).map((page) => (
+              {helpPages.map((page) => (
                 <li key={page.id}>
                   <Link
                     to="/ajuda/$slug"
