@@ -609,7 +609,7 @@ export function ProductDetailView({
             </p>
             {isVerifiedInStock && (
               <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#edf4e9] px-3 py-1 text-xs font-semibold text-deep-green">
-                Disponível para pedido · entrega combinada na Baixada Fluminense
+                Disponível para pedido · frete grátis na região atendida
               </p>
             )}
             {isOutOfStock && (
@@ -690,11 +690,12 @@ export function ProductDetailView({
               <Truck size={20} className="mt-0.5 shrink-0 text-price-green" aria-hidden="true" />
               <div className="min-w-0">
                 <h2 className="m-0 text-sm font-semibold text-deep-green">
-                  Consulte entrega e disponibilidade
+                  Frete grátis na região atendida
                 </h2>
                 <p className="mb-3 mt-1 text-sm leading-relaxed text-text-light">
-                  A Mobi atende online em Nova Iguaçu e regiões próximas. Frete, prazo e
-                  disponibilidade são confirmados pelo WhatsApp.
+                  Entregamos com frete grátis em um raio de até 30 km a partir de Nova Iguaçu
+                  (exceto Belford Roxo e áreas com restrição de acesso). Prazo e rota são
+                  confirmados pelo WhatsApp.
                 </p>
                 <a
                   href={whatsappProductLink(product.nome)}

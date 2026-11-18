@@ -6,7 +6,7 @@ export const PUBLIC_HELP_PAGES: readonly ContentPage[] = [
     id: "comprar",
     title: "Como comprar na Mobi",
     slug: "como-comprar",
-    body: "A Mobi atende online para Nova Iguaçu e Baixada Fluminense, sem loja física aberta ao público.\n\nEscolha os móveis no catálogo, confira fotos, medidas e valores (à vista no Pix/dinheiro ou no cartão) e adicione ao carrinho. No checkout do site você informa seu endereço de entrega, seleciona a forma de pagamento na entrega e gera seu protocolo de pedido.\n\nDepois de registrar o pedido, nossa equipe confirma disponibilidade, frete e data de entrega pelo WhatsApp.",
+    body: "A Mobi atende online a partir de Nova Iguaçu, sem loja física aberta ao público.\n\nEscolha os móveis no catálogo, confira fotos, medidas e valores (à vista no Pix/dinheiro ou no cartão) e adicione ao carrinho. No checkout do site você informa seu endereço de entrega, seleciona a forma de pagamento na entrega e gera seu protocolo de pedido.\n\nO frete é grátis nas localidades atendidas dentro de um raio de até 30 km a partir do bairro Botafogo, em Nova Iguaçu (exceto Belford Roxo e áreas com barricadas ou restrição de acesso). Nossa equipe confirma disponibilidade, elegibilidade do endereço e janela de entrega pelo WhatsApp.",
     status: "review",
     reviewedAt: "2026-11-18T09:00:00Z",
     faqs: [
@@ -18,7 +18,7 @@ export const PUBLIC_HELP_PAGES: readonly ContentPage[] = [
       {
         question: "A Mobi tem loja física para visitar?",
         answer:
-          "Não. A operação é 100% online para manter preços competitivos em Nova Iguaçu e na Baixada Fluminense, com suporte direto pelo WhatsApp.",
+          "Não. A operação é 100% online para manter preços competitivos com frete grátis na região atendida (até 30 km de Botafogo, Nova Iguaçu, exceto Belford Roxo e áreas com restrição de acesso).",
       },
     ],
     links: [
@@ -30,14 +30,14 @@ export const PUBLIC_HELP_PAGES: readonly ContentPage[] = [
     id: "entrega",
     title: "Entrega e montagem",
     slug: "entrega-e-montagem",
-    body: "Entregamos em Nova Iguaçu e cidades da Baixada Fluminense (Duque de Caxias, Belford Roxo, São João de Meriti, Nilópolis, Mesquita, Queimados e região). O valor do frete e a janela de entrega são confirmados de acordo com o bairro e o móvel selecionado.\n\nOs móveis seguem embalados de fábrica para montagem por profissional qualificado conforme o manual do fabricante. Caso precise de indicação de montador na região, solicite orientação pelo WhatsApp antes ou após a entrega.",
+    body: "Entregamos com frete grátis nas localidades atendidas dentro de um raio de até 30 km a partir do bairro Botafogo, em Nova Iguaçu – RJ: Nova Iguaçu, Mesquita, Nilópolis, São João de Meriti, Duque de Caxias, Queimados, Japeri, Paracambi, Seropédica e bairros próximos das Zonas Norte e Oeste do Rio de Janeiro (como Anchieta, Pavuna, Irajá, Madureira, Méier, Penha, Ilha do Governador, Realengo, Bangu, Campo Grande e Jacarepaguá).\n\nExceções de cobertura: não realizamos entregas em Belford Roxo nem em endereços situados em áreas de risco, vias com barricadas/bloqueios ou locais com restrição de acesso e segurança para a equipe de entrega. A elegibilidade do logradouro e a janela de entrega são confirmadas pelo WhatsApp após o registro do pedido.\n\nOs móveis seguem embalados de fábrica para montagem por profissional qualificado conforme o manual do fabricante. Caso precise de indicação de montador na região, solicite orientação pelo WhatsApp antes ou após a entrega.",
     status: "review",
     reviewedAt: "2026-11-18T09:00:00Z",
     faqs: [
       {
-        question: "Como confirmo prazo e frete para meu CEP?",
+        question: "Como confirmo se meu CEP tem entrega com frete grátis e qual o prazo?",
         answer:
-          "Registre seu pedido no site ou informe bairro, cidade e CEP pelo WhatsApp para receber a janela de entrega e o frete aplicável.",
+          "Registre seu pedido no site ou informe seu endereço completo, bairro e CEP pelo WhatsApp para confirmarmos a cobertura dentro do raio de 30 km de Botafogo (Nova Iguaçu), sem restrições de acesso, e informarmos a janela de entrega.",
       },
       {
         question: "A montagem está incluída no preço?",
