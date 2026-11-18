@@ -1,5 +1,6 @@
 import { formatBRL } from "@/lib/constants";
 import { roundMoney } from "@/lib/payment";
+import { pixSavingPercent } from "@/lib/pix-saving";
 import { ProductDiscountLine } from "./ProductDiscountLine";
 import type { cardQuote } from "@/lib/payment";
 import "./product-price-display.css";
@@ -9,18 +10,35 @@ export function ProductPriceDisplay({
   oldPrice,
   payment,
   layout = "detail",
+  showPixPercentage = false,
 }: {
   price: number;
   oldPrice: number;
   payment: ReturnType<typeof cardQuote>;
   layout?: "card" | "detail";
+  showPixPercentage?: boolean;
 }) {
   const isCardLayout = layout === "card";
   const pixSaving = payment.total > price ? roundMoney(payment.total - price) : 0;
+  const percentage = pixSavingPercent(price, payment.total);
   const pixSavingLabel = `${formatBRL(pixSaving)} a menos no Pix em relação ao total no cartão em até ${payment.count}x`;
   return (
     <div className={`mobi-price-display${isCardLayout ? " mobi-price-display--card" : ""}`}>
-      <ProductDiscountLine oldPrice={oldPrice} currentPrice={price} />
+      {showPixPercentage && percentage > 0 ? (
+        <div
+          className="mobi-discount-line"
+          role="group"
+          aria-label={`${percentage}% de economia no Pix em relação ao total no cartão em até ${payment.count}x`}
+          title={pixSavingLabel}
+        >
+          <span>
+            No cartão: <s>{formatBRL(payment.total)}</s>
+          </span>
+          <span className="mobi-discount-badge">-{percentage}% NO PIX</span>
+        </div>
+      ) : (
+        <ProductDiscountLine oldPrice={oldPrice} currentPrice={price} />
+      )}
       <div className="mobi-price-display-main">
         <strong className="mobi-price-display-value">{formatBRL(price)}</strong>
         <span className="mobi-price-display-method">

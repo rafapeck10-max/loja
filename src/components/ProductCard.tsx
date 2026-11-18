@@ -111,6 +111,7 @@ export function ProductCard({
             price={price}
             payment={payment}
             layout="card"
+            showPixPercentage={blackFriday}
           />
         </div>
         <Link
