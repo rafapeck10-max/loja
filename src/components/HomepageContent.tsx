@@ -83,6 +83,15 @@ export function HomepageContent({
           return (
             <>
               <HeroCarouselView banners={config?.banners ?? banners} />
+              <Link to="/black-friday" className="mobi-black-invite">
+                <span>
+                  <strong>
+                    BLACK FRIDAY <span>MOBI</span>
+                  </strong>{" "}
+                  Conforto para renovar sua casa.
+                </span>
+                <span>Explorar ofertas →</span>
+              </Link>
               <div className="mobi-home-benefits mobi-wrap" aria-label="Como comprar na Mobi">
                 <span>
                   <Truck size={16} />

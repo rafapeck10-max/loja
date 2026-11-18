@@ -356,6 +356,9 @@ export function Header() {
             Todas as categorias
           </button>
           <nav aria-label="Acesso rápido às categorias">
+            <Link to="/black-friday" className="mobi-black-nav">
+              Black Friday
+            </Link>
             {(
               configuration?.navigation ?? [
                 { id: "sofas", label: "Sofás", href: "/categoria/sofas", visible: true },

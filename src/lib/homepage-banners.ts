@@ -23,7 +23,7 @@ export const DEFAULT_HOMEPAGE_BANNERS: HomepageBanner[] = [
     title: "Black Friday Mobi — confira os modelos",
     subtitle: "",
     cta_label: "Confira os modelos",
-    cta_href: "/categoria/sofas",
+    cta_href: "/black-friday",
     active: true,
     updated_at: "",
   },

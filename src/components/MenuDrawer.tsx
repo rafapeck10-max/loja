@@ -81,6 +81,10 @@ export function MenuDrawer() {
             Encontre por tipo de móvel ou ambiente.
           </Dialog.Description>
           <nav aria-label="Catálogo por ambiente" className="mobi-menu-scroll">
+            <Link to="/black-friday" onClick={closeMenu} className="mobi-menu-link mobi-black-nav">
+              Black Friday Mobi
+              <ChevronRight size={16} aria-hidden="true" />
+            </Link>
             <Link
               to="/"
               search={{ all: true, page: 1 }}
