@@ -23,6 +23,7 @@ import { ImageWithFallback } from "@/components/ImageWithFallback";
 import { ProductPriceDisplay } from "@/components/ProductPriceDisplay";
 import { BlackFridayBadge } from "./BlackFridayBadge";
 import { BlackFridayCountdown } from "./BlackFridayCountdown";
+import { resolveDisplayOldPrice } from "@/lib/price-reference";
 import { isBlackFridayProduct } from "@/lib/black-friday";
 import {
   categoryMatches,
@@ -151,6 +152,7 @@ export function ProductDetailView({
       ? (colors.find((color) => color === selectedColor) ?? colors[0] ?? null)
       : null;
   const currentPrice = selectedOption?.sale_price ?? product.preco_novo;
+    const displayOldPrice = resolveDisplayOldPrice({ oldPrice: selectedOption ? 0 : product.preco_antigo, currentPrice, productKey: product.slug, isBlackFriday: isBlackFridayProduct(product) });
   const payment = cardQuote(currentPrice, MAX_INSTALLMENTS);
   const cleanedMedidas = cleanCatalogMeasurementText(product.medidas);
   const rawMeasurements = productMeasurements(product.medidas);
@@ -601,7 +603,7 @@ export function ProductDetailView({
           )}
           <div className="mobi-product-price-panel mt-4 rounded-xl border border-cacau/10 border-l-4 border-l-gold bg-white p-4 sm:p-5">
             <ProductPriceDisplay
-              oldPrice={selectedOption ? 0 : product.preco_antigo}
+              oldPrice={displayOldPrice}
               price={currentPrice}
               payment={payment}
             />

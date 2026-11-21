@@ -17,7 +17,8 @@ export function ProductDiscountLine({
   }
 
   const discountPercent = Math.round(((oldPrice - currentPrice) / oldPrice) * 100);
-
+  if (discountPercent < 1) { return reserveSpace ? <div className="mobi-discount-line" aria-hidden="true" /> : null; }
+  
   return (
     <div
       className="mobi-discount-line"

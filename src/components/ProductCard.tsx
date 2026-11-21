@@ -13,6 +13,7 @@ import { cardQuote } from "@/lib/payment";
 import { productDisplayPrice } from "@/lib/product-display-price";
 import { isBlackFridayProduct } from "@/lib/black-friday";
 import { BlackFridayBadge } from "./BlackFridayBadge";
+import { resolveDisplayOldPrice } from "@/lib/price-reference";
 export { productDisplayPrice } from "@/lib/product-display-price";
 
 export type ProductBadge = "week" | "new";
@@ -49,7 +50,9 @@ export function ProductCard({
   };
   const hasPricedVariations = (produto.variacoes_preco ?? []).some(
     (variation) => variation.sale_price != null && variation.sale_price > 0,
-  );
+);
+  const displayOldPrice = resolveDisplayOldPrice({ oldPrice: hasPricedVariations ? 0 : produto.preco_antigo, currentPrice: price, productKey: produto.slug, isBlackFriday: blackFriday });
+  
   const category = CATEGORIES.find(
     (item) => item.slug !== "sala-de-estar" && categoryMatches(produto.categoria, item.slug),
   );
@@ -107,7 +110,7 @@ export function ProductCard({
         </p>
         <div className="mobi-price-panel">
           <ProductPriceDisplay
-            oldPrice={hasPricedVariations ? 0 : produto.preco_antigo}
+            oldPrice={displayOldPrice}
             price={price}
             payment={payment}
             layout="card"
