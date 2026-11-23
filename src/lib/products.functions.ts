@@ -3,7 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { queryOptions } from "@tanstack/react-query";
 import { createClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/integrations/supabase/types";
-import { categoryMatches, getCategory } from "@/lib/constants";
+import { CATEGORIES, categoryMatches, getCategory } from "@/lib/constants";
 import { rehydrateHomepageSections } from "@/lib/homepage-selection";
 import { selectHomepageRoomImages, type HomepageRoomImage } from "@/lib/homepage-room-categories";
 import { isMissingCurationSchema, readWithOptionalProductColumns } from "./product-schema.ts";
@@ -460,4 +460,89 @@ export const categoriaProdutosQueryOptions = (slug: string) =>
   queryOptions({
     queryKey: ["produtos", "categoria", slug],
     queryFn: () => getProdutosByCategoria({ data: { slug } }),
+  });
+
+export const getRelatedProdutos = createServerFn({ method: "GET" })
+  .inputValidator((input: { id: string; categoria: string; preco: number }) => {
+    const id = typeof input?.id === "string" ? input.id.trim() : "";
+    const categoria = typeof input?.categoria === "string" ? input.categoria.trim() : "";
+    const preco = Number(input?.preco);
+    if (!id || !categoria || !Number.isFinite(preco) || preco <= 0) {
+      throw new Error("Parâmetros inválidos para produtos relacionados");
+    }
+    return { id, categoria, preco };
+  })
+  .handler(async ({ data }): Promise<Produto[]> => {
+    const supabase = createClient<Database>(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_PUBLISHABLE_KEY!,
+      { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
+    );
+
+    const sortRelated = (items: Produto[]) =>
+      [...items].sort((a, b) => {
+        const diffA = Math.abs(a.preco_novo - data.preco);
+        const diffB = Math.abs(b.preco_novo - data.preco);
+        if (diffA !== diffB) return diffA - diffB;
+        const orderDiff = (a.ordem ?? 0) - (b.ordem ?? 0);
+        if (orderDiff !== 0) return orderDiff;
+        return a.id.localeCompare(b.id, "pt-BR");
+      });
+
+    const { data: exactRows, error } = await supabase
+      .from("produtos")
+      .select(PRODUCT_SELECT_BASE)
+      .eq("categoria", data.categoria)
+      .neq("id", data.id)
+      .neq("status_estoque", "esgotado")
+      .gt("preco_atacado", 0)
+      .gt("preco_atual", 0)
+      .neq("url_imagem", "")
+      .order("ordem", { ascending: true })
+      .limit(24);
+    if (error) throw new Error(error.message);
+
+    const exactMatches = sortRelated(
+      ((exactRows ?? []) as unknown as BasicPublicProductRow[])
+        .filter((row) => Boolean(row.url_imagem?.trim()))
+        .map((row) => mapProduto(row)),
+    ).slice(0, 4);
+
+    if (exactMatches.length >= 4) return exactMatches;
+
+    const parentRoom = CATEGORIES.find((room) => categoryMatches(data.categoria, room.slug));
+    if (!parentRoom) return exactMatches;
+
+    const { data: fallbackRows, error: fallbackError } = await supabase
+      .from("produtos")
+      .select(PRODUCT_SELECT_BASE)
+      .neq("id", data.id)
+      .neq("status_estoque", "esgotado")
+      .gt("preco_atacado", 0)
+      .gt("preco_atual", 0)
+      .neq("url_imagem", "")
+      .order("ordem", { ascending: true })
+      .limit(80);
+    if (fallbackError) throw new Error(fallbackError.message);
+
+    const seenIds = new Set(exactMatches.map((item) => item.id));
+    const roomMatches = sortRelated(
+      ((fallbackRows ?? []) as unknown as BasicPublicProductRow[])
+        .filter(
+          (row) =>
+            Boolean(row.url_imagem?.trim()) &&
+            !seenIds.has(row.id) &&
+            categoryMatches(row.categoria, parentRoom.slug),
+        )
+        .map((row) => mapProduto(row)),
+    );
+
+    return [...exactMatches, ...roomMatches].slice(0, 4);
+  });
+
+export const relatedProdutosQueryOptions = (id: string, categoria: string, preco: number) =>
+  queryOptions({
+    queryKey: ["produtos", "related", id, categoria, preco],
+    queryFn: () => getRelatedProdutos({ data: { id, categoria, preco } }),
+    staleTime: 60_000,
   });

@@ -20,7 +20,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
+import { ProductCard } from "@/components/ProductCard";
 import { ProductPriceDisplay } from "@/components/ProductPriceDisplay";
+import { CepCoverageChecker } from "@/components/CepCoverageChecker";
 import { BlackFridayBadge } from "./BlackFridayBadge";
 import { BlackFridayCountdown } from "./BlackFridayCountdown";
 import { resolveDisplayOldPrice } from "@/lib/price-reference";
@@ -43,6 +45,7 @@ import type { Produto, ProductPriceVariation } from "@/lib/products.functions";
 type ProductDetailViewProps = {
   product: Produto;
   catalogProducts?: Produto[];
+  relatedProducts?: Produto[];
   returnPage?: number;
   returnCategory?: string;
   returnSearch?: string;
@@ -110,6 +113,7 @@ function whatsappProductLink(productName: string) {
 export function ProductDetailView({
   product,
   catalogProducts,
+  relatedProducts = [],
   returnPage,
   returnCategory,
   returnSearch,
@@ -152,7 +156,12 @@ export function ProductDetailView({
       ? (colors.find((color) => color === selectedColor) ?? colors[0] ?? null)
       : null;
   const currentPrice = selectedOption?.sale_price ?? product.preco_novo;
-    const displayOldPrice = resolveDisplayOldPrice({ oldPrice: selectedOption ? 0 : product.preco_antigo, currentPrice, productKey: product.slug, isBlackFriday: isBlackFridayProduct(product) });
+  const displayOldPrice = resolveDisplayOldPrice({
+    oldPrice: selectedOption ? 0 : product.preco_antigo,
+    currentPrice,
+    productKey: product.slug,
+    isBlackFriday: isBlackFridayProduct(product),
+  });
   const payment = cardQuote(currentPrice, MAX_INSTALLMENTS);
   const cleanedMedidas = cleanCatalogMeasurementText(product.medidas);
   const rawMeasurements = productMeasurements(product.medidas);
@@ -703,21 +712,24 @@ export function ProductDetailView({
                 <h2 className="m-0 text-sm font-semibold text-deep-green">
                   Frete grátis na região atendida
                 </h2>
-                <p className="mb-3 mt-1 text-sm leading-relaxed text-text-light">
+                <p className="mb-0 mt-1 text-sm leading-relaxed text-text-light">
                   Entregamos com frete grátis em um raio de até 30 km a partir de Nova Iguaçu
-                  (exceto Belford Roxo e áreas com restrição de acesso). Prazo e rota são
-                  confirmados pelo WhatsApp.
+                  (exceto Belford Roxo e áreas com restrição de acesso). Prazo estimado de até 7
+                  dias úteis, com pagamento somente na entrega.
                 </p>
-                <a
-                  href={whatsappProductLink(product.nome)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mobi-product-delivery-link inline-flex min-h-11 items-center justify-center rounded-md px-3 text-sm font-semibold"
-                >
-                  Consultar pelo WhatsApp
-                </a>
               </div>
             </div>
+            <div className="mt-3">
+              <CepCoverageChecker productName={product.nome} />
+            </div>
+            <a
+              href={whatsappProductLink(product.nome)}
+              target="_blank"
+              rel="noreferrer"
+              className="mobi-product-delivery-link mt-3 inline-flex min-h-11 items-center justify-center rounded-md px-3 text-sm font-semibold"
+            >
+              Consultar pelo WhatsApp
+            </a>
           </section>
 
           {(keyFacts.length > 0 || !cleanedMedidas) && (
@@ -1028,6 +1040,30 @@ export function ProductDetailView({
                 {bundleCount === 1 ? "item" : "itens"}
               </button>
             </aside>
+          </div>
+        </section>
+      )}
+
+      {relatedProducts.length > 0 && (
+        <section className="mobi-product-related mt-8" aria-labelledby="mobi-product-related-title">
+          <div className="mobi-section-title">
+            <div>
+              <p className="mobi-section-kicker">Continue explorando</p>
+              <h2 id="mobi-product-related-title">Outros móveis para o mesmo ambiente</h2>
+            </div>
+            <Link
+              to="/categoria/$slug"
+              params={{ slug: categorySlug(product.categoria) }}
+              search={{}}
+              className="mobi-section-link"
+            >
+              Ver mais de {product.categoria}
+            </Link>
+          </div>
+          <div className="mobi-home-product-grid">
+            {relatedProducts.map((item) => (
+              <ProductCard key={item.id} produto={item} />
+            ))}
           </div>
         </section>
       )}
