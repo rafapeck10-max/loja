@@ -8,6 +8,9 @@ import {
   selectBlackFridayTabProducts,
 } from "../src/lib/black-friday.ts";
 import { buildSitemap } from "../src/lib/sitemap.ts";
+import { isSafeBannerDestination } from "../src/lib/banner-drafts.ts";
+import { safeMobiLink } from "../src/lib/operational-config.ts";
+import { DEFAULT_HOMEPAGE_BANNERS, resolvePublicBannerHref } from "../src/lib/homepage-banners.ts";
 
 function makeProduct(overrides = {}) {
   return {
@@ -137,4 +140,26 @@ test("Black Friday public copy complies with Mobi store policies and sitemap inc
   if (BLACK_FRIDAY_PUBLIC_ENABLED) {
     assert.match(xml, /https:\/\/www\.mobimb\.com\.br\/black-friday</);
   }
+});
+
+test("Black Friday hero banner destination routes safely to /black-friday without altering other banners", () => {
+  assert.equal(isSafeBannerDestination("/black-friday"), true);
+  assert.equal(safeMobiLink("/black-friday"), true);
+  assert.equal(DEFAULT_HOMEPAGE_BANNERS[0].cta_href, "/black-friday");
+  assert.equal(
+    resolvePublicBannerHref({
+      image_url: DEFAULT_HOMEPAGE_BANNERS[0].image_url,
+      title: "Black Friday Mobi — confira os modelos",
+      cta_href: "/categoria/sofas",
+    }),
+    "/black-friday",
+  );
+  assert.equal(
+    resolvePublicBannerHref({
+      image_url: DEFAULT_HOMEPAGE_BANNERS[1].image_url,
+      title: DEFAULT_HOMEPAGE_BANNERS[1].title,
+      cta_href: DEFAULT_HOMEPAGE_BANNERS[1].cta_href,
+    }),
+    DEFAULT_HOMEPAGE_BANNERS[1].cta_href,
+  );
 });

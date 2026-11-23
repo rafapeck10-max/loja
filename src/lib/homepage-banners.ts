@@ -1,3 +1,5 @@
+import { BLACK_FRIDAY_PUBLIC_ENABLED } from "./black-friday.ts";
+
 export interface HomepageBanner {
   position: number;
   image_url: string;
@@ -23,7 +25,7 @@ export const DEFAULT_HOMEPAGE_BANNERS: HomepageBanner[] = [
     title: "Black Friday Mobi — confira os modelos",
     subtitle: "",
     cta_label: "Confira os modelos",
-    cta_href: "/categoria/sofas",
+    cta_href: BLACK_FRIDAY_PUBLIC_ENABLED ? "/black-friday" : "/categoria/sofas",
     active: true,
     updated_at: "",
   },
@@ -61,6 +63,21 @@ export function approvedBannerArtwork(imageUrl: string) {
         background: banner.position === 1 ? "#0b0b0b" : "#252f27",
       }
     : undefined;
+}
+
+/** Directs the Black Friday hero banner to /black-friday even while live Supabase holds legacy /categoria/sofas. */
+export function resolvePublicBannerHref(
+  banner: Pick<HomepageBanner, "image_url" | "title" | "cta_href">,
+): string {
+  if (
+    BLACK_FRIDAY_PUBLIC_ENABLED &&
+    banner.cta_href === "/categoria/sofas" &&
+    (banner.image_url === DEFAULT_HOMEPAGE_BANNERS[0].image_url ||
+      /black\s*friday/i.test(banner.title))
+  ) {
+    return "/black-friday";
+  }
+  return banner.cta_href;
 }
 
 export const HOMEPAGE_BANNERS_QUERY_KEY = ["homepage-banners"] as const;
