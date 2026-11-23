@@ -201,7 +201,7 @@ function BlackFridayPage() {
               className="mobi-bf-hero-secondary"
             >
               <WhatsAppIcon className="h-4 w-4 shrink-0" />
-              <span>Falar no WhatsApp ({WHATSAPP_DISPLAY})</span>
+              <span>Falar no WhatsApp · {WHATSAPP_DISPLAY}</span>
             </a>
           </div>
 

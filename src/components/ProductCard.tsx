@@ -100,6 +100,11 @@ export function ProductCard({
               className={`mobi-badge ${
                 badge === "blackFriday" ? "mobi-badge-black-friday" : `mobi-badge-${badge}`
               }`}
+              aria-label={
+                badge === "blackFriday" && discountPercent && discountPercent > 0
+                  ? `Black Friday com ${discountPercent}% de desconto`
+                  : undefined
+              }
             >
               {badge === "new" ? (
                 <Sparkles size={13} strokeWidth={1.8} aria-hidden="true" />
@@ -112,9 +117,7 @@ export function ProductCard({
                 {badge === "new"
                   ? "Novo no catálogo"
                   : badge === "blackFriday"
-                    ? discountPercent && discountPercent > 0
-                      ? `BLACK FRIDAY · -${discountPercent}%`
-                      : "BLACK FRIDAY"
+                    ? "BLACK FRIDAY"
                     : "Escolha da semana"}
               </span>
             </span>

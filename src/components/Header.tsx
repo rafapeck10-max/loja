@@ -9,7 +9,6 @@ import {
   MessageCircle,
   Search,
   Clock3,
-  Tag,
   X,
 } from "lucide-react";
 import {
@@ -186,18 +185,6 @@ export function Header() {
   };
   return (
     <header ref={headerRef} className="mobi-header">
-      {BLACK_FRIDAY_PUBLIC_ENABLED && !isAdmin && (
-        <div className="mobi-bf-topbar">
-          <Link to="/black-friday" search={{}} className="mobi-bf-topbar-link mobi-wrap">
-            <span className="mobi-bf-topbar-text">
-              <Tag size={13} aria-hidden="true" />
-              <strong>Black Friday Mobi</strong>
-              <span>· Pagamento só na entrega e frete grátis na região</span>
-            </span>
-            <span className="mobi-bf-topbar-cta">Ver área Black →</span>
-          </Link>
-        </div>
-      )}
       {!isAdmin && (
         <div className="mobi-header-channel mobi-wrap">
           <Link to="/moveis-nova-iguacu">

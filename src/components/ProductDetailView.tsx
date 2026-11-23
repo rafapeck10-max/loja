@@ -701,19 +701,19 @@ export function ProductDetailView({
                   (exceto Belford Roxo e áreas com restrição de acesso). Prazo e rota são
                   confirmados pelo WhatsApp.
                 </p>
-                <div className="mb-3">
-                  <CepCoverageChecker productName={product.nome} variant="light" />
-                </div>
-                <a
-                  href={whatsappProductLink(product.nome)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mobi-product-delivery-link inline-flex min-h-11 items-center justify-center rounded-md px-3 text-sm font-semibold"
-                >
-                  Consultar pelo WhatsApp
-                </a>
               </div>
             </div>
+            <div className="mb-3">
+              <CepCoverageChecker productName={product.nome} variant="light" />
+            </div>
+            <a
+              href={whatsappProductLink(product.nome)}
+              target="_blank"
+              rel="noreferrer"
+              className="mobi-product-delivery-link inline-flex min-h-11 items-center justify-center rounded-md px-3 text-sm font-semibold"
+            >
+              Consultar pelo WhatsApp
+            </a>
           </section>
 
           {(keyFacts.length > 0 || !cleanedMedidas) && (
