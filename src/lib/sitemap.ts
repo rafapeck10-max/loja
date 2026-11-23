@@ -27,6 +27,7 @@ export function buildSitemap(products: SitemapProduct[]) {
   const urlEntries = new Map<string, string | undefined>();
   for (const staticPath of [
     "/",
+    "/black-friday",
     "/moveis-nova-iguacu",
     "/moveis-pagamento-na-entrega",
     "/ajuda",

@@ -63,4 +63,17 @@ export function approvedBannerArtwork(imageUrl: string) {
     : undefined;
 }
 
+/** Resolves public banner destination while legacy DB rows still hold /categoria/sofas for Black Friday. */
+export function resolvePublicBannerHref(
+  banner: Pick<HomepageBanner, "image_url" | "title" | "cta_href">,
+): string {
+  const isBlackFridayBanner =
+    banner.image_url === DEFAULT_HOMEPAGE_BANNERS[0].image_url ||
+    /black\s*friday/i.test(banner.title);
+  if (isBlackFridayBanner && banner.cta_href === "/categoria/sofas") {
+    return "/black-friday";
+  }
+  return banner.cta_href;
+}
+
 export const HOMEPAGE_BANNERS_QUERY_KEY = ["homepage-banners"] as const;

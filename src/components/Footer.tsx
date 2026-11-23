@@ -109,7 +109,7 @@ export function Footer() {
           <p className="mt-3 text-xs leading-relaxed text-sand/80">
             Confira o total parcelado na página de cada produto.{" "}
             {configuration?.service.deliveryMessage ??
-              "Frete e data de entrega combinados pelo WhatsApp."}
+              "Frete grátis em até 7 dias úteis na região atendida (raio de 30 km de Nova Iguaçu, exceto Belford Roxo e áreas com restrição de acesso)."}
           </p>
           {configuration?.service.assemblyMessage && (
             <p className="mt-2 text-xs leading-relaxed text-sand/80">
