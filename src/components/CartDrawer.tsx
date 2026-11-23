@@ -9,6 +9,14 @@ import { MAX_INSTALLMENTS } from "@/lib/constants";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
 import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import { cartPaymentLine, orderPaymentSummary, orderWhatsAppMessage } from "@/lib/cart-payment";
+import {
+  formatCep,
+  lookupCepWithCoverage,
+  normalizeCepDigits,
+  readSavedCep,
+  saveLastCep,
+  type CepCoverageResult,
+} from "@/lib/delivery-coverage";
 import { createStoreOrder } from "@/lib/orders.functions";
 
 type Step = "cart" | "checkout" | "confirmed";
@@ -42,8 +50,12 @@ export function CartDrawer() {
     bairro: "",
     cidade: "Nova Iguaçu - RJ",
     cep: "",
+    observacoes: "",
     pagamento: PAYMENT_OPTIONS[0].value as (typeof PAYMENT_OPTIONS)[number]["value"],
   });
+  const [cepCoverage, setCepCoverage] = useState<CepCoverageResult | null>(null);
+  const [checkingCep, setCheckingCep] = useState(false);
+  const lastAutoStreetRef = useRef("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const isCardPayment = form.pagamento === "Cartão na entrega";
   const summary = orderPaymentSummary(items);
@@ -53,6 +65,55 @@ export function CartDrawer() {
     setStep("cart");
     setConfirmedOrder(null);
     setSubmitting(false);
+  };
+
+  const handleCepLookup = async (rawCep: string) => {
+    const formatted = formatCep(rawCep);
+    setForm((prev) => ({ ...prev, cep: formatted }));
+    const digits = normalizeCepDigits(rawCep);
+    if (digits.length < 8) {
+      setCepCoverage(null);
+      return;
+    }
+    setCheckingCep(true);
+    try {
+      const resolved = await lookupCepWithCoverage(digits);
+      setCepCoverage(resolved);
+      if (resolved.status !== "invalid" && resolved.status !== "not_found") {
+        saveLastCep(digits);
+      }
+      if (resolved.address) {
+        const cityUf = resolved.address.localidade
+          ? `${resolved.address.localidade}${resolved.address.uf ? ` - ${resolved.address.uf}` : ""}`
+          : "";
+        setForm((prev) => {
+          const canUpdateRua =
+            Boolean(resolved.address?.logradouro) &&
+            (!prev.rua.trim() || prev.rua.trim() === lastAutoStreetRef.current);
+          if (canUpdateRua && resolved.address?.logradouro) {
+            lastAutoStreetRef.current = resolved.address.logradouro;
+          }
+          return {
+            ...prev,
+            ...(canUpdateRua && resolved.address?.logradouro
+              ? { rua: resolved.address.logradouro }
+              : {}),
+            ...(resolved.address?.bairro ? { bairro: resolved.address.bairro } : {}),
+            ...(cityUf ? { cidade: cityUf } : {}),
+          };
+        });
+      }
+    } finally {
+      setCheckingCep(false);
+    }
+  };
+
+  const openCheckout = () => {
+    setStep("checkout");
+    if (!form.cep.trim()) {
+      const saved = readSavedCep();
+      if (saved) void handleCepLookup(saved);
+    }
   };
 
   const validate = () => {
@@ -85,6 +146,7 @@ export function CartDrawer() {
           bairro: form.bairro.trim(),
           cidade: form.cidade.trim(),
           cep: form.cep.trim() || undefined,
+          observacoes: form.observacoes.trim() || undefined,
           pagamento: form.pagamento,
           items: items.map((item) => ({
             id: item.id,
@@ -115,7 +177,12 @@ export function CartDrawer() {
   const sendToWhatsApp = () => {
     if (!validate()) return;
 
-    const message = orderWhatsAppMessage(items, form);
+    const baseMessage = orderWhatsAppMessage(items, form);
+    const extraLines = [
+      form.cep.trim() ? `CEP: ${form.cep.trim()}` : "",
+      form.observacoes.trim() ? `Observações de entrega: ${form.observacoes.trim()}` : "",
+    ].filter(Boolean);
+    const message = extraLines.length ? `${baseMessage}\n${extraLines.join("\n")}` : baseMessage;
 
     window.open(
       `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`,
@@ -278,18 +345,22 @@ export function CartDrawer() {
               {/* Footer */}
               {items.length > 0 && (
                 <div className="border-t border-cacau/10 bg-white px-6 py-5">
-                  <div className="mb-3 flex items-center justify-between">
+                  <div className="mb-1.5 flex items-center justify-between">
                     <span className="text-sm font-semibold uppercase tracking-wide text-cacau">
                       Subtotal no Pix:
                     </span>
                     <span className="text-xl font-bold text-price-green">{formatBRL(total)}</span>
                   </div>
+                  <div className="mb-3 flex items-center justify-between text-xs text-text-light">
+                    <span>No cartão em até {MAX_INSTALLMENTS}x:</span>
+                    <strong className="text-cacau">{formatBRL(summary.cardTotal)}</strong>
+                  </div>
                   <p className="mb-4 flex items-center justify-center gap-2 text-center text-[11px] font-medium text-text-light">
-                    <Truck className="h-3.5 w-3.5 text-gold" /> Pague e receba em casa na Baixada
-                    Fluminense.
+                    <Truck className="h-3.5 w-3.5 shrink-0 text-gold" /> Frete grátis no raio de 30
+                    km de Nova Iguaçu · Pague somente na entrega.
                   </p>
                   <button
-                    onClick={() => setStep("checkout")}
+                    onClick={openCheckout}
                     className="w-full bg-deep-green py-4 text-sm font-bold uppercase tracking-[1.5px] text-sand transition-all duration-300 hover:bg-gold hover:text-deep-green"
                   >
                     Concluir Pedido
@@ -359,6 +430,58 @@ export function CartDrawer() {
                         className="mt-1 text-xs text-destructive"
                       >
                         {errors.telefone}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="checkout-cep"
+                      className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-cacau"
+                    >
+                      CEP (preenche o endereço e confirma o frete grátis)
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        id="checkout-cep"
+                        inputMode="numeric"
+                        autoComplete="postal-code"
+                        value={form.cep}
+                        onChange={(e) => {
+                          const next = formatCep(e.target.value);
+                          setForm((prev) => ({ ...prev, cep: next }));
+                          if (normalizeCepDigits(next).length === 8) {
+                            void handleCepLookup(next);
+                          } else {
+                            setCepCoverage(null);
+                          }
+                        }}
+                        placeholder="26000-000"
+                        maxLength={9}
+                        className={inputClass("cep")}
+                      />
+                      <button
+                        type="button"
+                        disabled={checkingCep}
+                        onClick={() => void handleCepLookup(form.cep)}
+                        className="min-h-11 shrink-0 border border-deep-green/25 bg-white px-4 text-xs font-bold uppercase tracking-wide text-deep-green transition-colors hover:bg-deep-green hover:text-sand disabled:opacity-60"
+                      >
+                        {checkingCep ? "..." : "Buscar"}
+                      </button>
+                    </div>
+                    {cepCoverage && (
+                      <p
+                        role="status"
+                        className={`mt-2 rounded border px-3 py-2 text-xs leading-relaxed ${
+                          cepCoverage.status === "eligible"
+                            ? "border-price-green/30 bg-[#edf4e9] text-deep-green"
+                            : cepCoverage.status === "excluded_belford_roxo" ||
+                                cepCoverage.status === "invalid" ||
+                                cepCoverage.status === "not_found"
+                              ? "border-[#c45b47]/35 bg-[#fdf2ef] text-[#7a2e1d]"
+                              : "border-gold/40 bg-gold/10 text-cacau"
+                        }`}
+                      >
+                        {cepCoverage.message}
                       </p>
                     )}
                   </div>
@@ -440,19 +563,18 @@ export function CartDrawer() {
                   </div>
                   <div>
                     <label
-                      htmlFor="checkout-cep"
+                      htmlFor="checkout-observacoes"
                       className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-cacau"
                     >
-                      CEP (opcional)
+                      Complemento / observações de entrega (opcional)
                     </label>
                     <input
-                      id="checkout-cep"
-                      autoComplete="postal-code"
-                      value={form.cep}
-                      onChange={(e) => setForm({ ...form, cep: e.target.value })}
-                      placeholder="26000-000"
-                      maxLength={16}
-                      className={inputClass("cep")}
+                      id="checkout-observacoes"
+                      value={form.observacoes}
+                      onChange={(e) => setForm({ ...form, observacoes: e.target.value })}
+                      placeholder="Ex.: Apto 202, sem elevador, preferência manhã"
+                      maxLength={300}
+                      className={inputClass("observacoes")}
                     />
                   </div>
 

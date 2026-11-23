@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { MobiliLogo } from "@/components/MobiliLogo";
 import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import { PixIcon } from "@/components/PixIcon";
+import { BLACK_FRIDAY_PUBLIC_ENABLED } from "@/lib/black-friday";
 import { MAX_INSTALLMENTS, WHATSAPP_DISPLAY, WHATSAPP_URL } from "@/lib/constants";
 import { PUBLIC_HELP_PAGES } from "@/lib/public-help-pages";
 import { useHomeConfiguration } from "./HomeConfigurationContext";
@@ -29,6 +30,18 @@ export function Footer() {
             {configuration?.service.regionMessage ?? "Atendemos Nova Iguaçu e regiões próximas."}{" "}
             Atendimento online, sem loja física para visitação.
           </p>
+          {BLACK_FRIDAY_PUBLIC_ENABLED && (
+            <>
+              <Link
+                to="/black-friday"
+                search={{}}
+                className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-gold underline underline-offset-4"
+              >
+                Black Friday Mobi
+              </Link>
+              <br />
+            </>
+          )}
           <Link
             to="/moveis-nova-iguacu"
             className="mt-3 inline-flex min-h-11 items-center text-sm text-sand underline underline-offset-4"
@@ -109,7 +122,7 @@ export function Footer() {
           <p className="mt-3 text-xs leading-relaxed text-sand/80">
             Confira o total parcelado na página de cada produto.{" "}
             {configuration?.service.deliveryMessage ??
-              "Frete e data de entrega combinados pelo WhatsApp."}
+              "Frete grátis em até 7 dias úteis na região atendida (raio de 30 km de Nova Iguaçu, exceto Belford Roxo e áreas com restrição de acesso)."}
           </p>
           {configuration?.service.assemblyMessage && (
             <p className="mt-2 text-xs leading-relaxed text-sand/80">

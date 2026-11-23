@@ -9,6 +9,7 @@ import {
   MessageCircle,
   Search,
   Clock3,
+  Tag,
   X,
 } from "lucide-react";
 import {
@@ -17,6 +18,7 @@ import {
   WHATSAPP_DISPLAY,
   normalizeCategory,
 } from "../lib/constants";
+import { BLACK_FRIDAY_PUBLIC_ENABLED } from "../lib/black-friday";
 import { catalogSearchScore, matchesCatalogSearch } from "@/lib/catalog-search";
 import { produtosQueryOptions, type Produto } from "@/lib/products.functions";
 import { useHomeConfiguration } from "./HomeConfigurationContext";
@@ -184,6 +186,18 @@ export function Header() {
   };
   return (
     <header ref={headerRef} className="mobi-header">
+      {BLACK_FRIDAY_PUBLIC_ENABLED && !isAdmin && (
+        <div className="mobi-bf-topbar">
+          <Link to="/black-friday" search={{}} className="mobi-bf-topbar-link mobi-wrap">
+            <span className="mobi-bf-topbar-text">
+              <Tag size={13} aria-hidden="true" />
+              <strong>Black Friday Mobi</strong>
+              <span>· Pagamento só na entrega e frete grátis na região</span>
+            </span>
+            <span className="mobi-bf-topbar-cta">Ver área Black →</span>
+          </Link>
+        </div>
+      )}
       {!isAdmin && (
         <div className="mobi-header-channel mobi-wrap">
           <Link to="/moveis-nova-iguacu">
@@ -356,6 +370,11 @@ export function Header() {
             Todas as categorias
           </button>
           <nav aria-label="Acesso rápido às categorias">
+            {BLACK_FRIDAY_PUBLIC_ENABLED && (
+              <Link to="/black-friday" search={{}} className="mobi-bf-nav-pill">
+                Black Friday
+              </Link>
+            )}
             {(
               configuration?.navigation ?? [
                 { id: "sofas", label: "Sofás", href: "/categoria/sofas", visible: true },

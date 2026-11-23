@@ -390,6 +390,7 @@ function HomepageIndex({
     <HomepageContent
       products={products ?? []}
       sectionIds={data?.sectionIds ?? { weekly: [], discovery: [], new: [], room: [] }}
+      blackFridayProductIds={data?.blackFridayIds}
       publishedHomePage={data?.publishedHomePage}
       roomImages={data?.roomImages}
       configuration={configuration}

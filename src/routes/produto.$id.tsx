@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ProductDetailView } from "@/components/ProductDetailView";
-import { produtoQueryOptions } from "@/lib/products.functions";
+import { produtoQueryOptions, relatedProdutosQueryOptions } from "@/lib/products.functions";
 import { parsePage } from "@/components/CatalogPagination";
 import { jsonLd, productSeo, seoHead } from "@/lib/seo";
 import { normalizeCatalogReturnSearch } from "@/lib/catalog-url-state";
@@ -20,7 +20,12 @@ export const Route = createFileRoute("/produto/$id")({
   loader: async ({ context, params }) => {
     const product = await context.queryClient.ensureQueryData(produtoQueryOptions(params.id));
     if (!product) throw notFound();
-    return { seo: productSeo(product), product };
+    const relatedProducts = await context.queryClient
+      .ensureQueryData(
+        relatedProdutosQueryOptions(product.id, product.categoria, product.preco_novo),
+      )
+      .catch(() => []);
+    return { seo: productSeo(product), product, relatedProducts };
   },
   head: ({ loaderData }) => {
     if (!loaderData?.seo) {
@@ -102,6 +107,16 @@ function ProductPage() {
     ...(loaderData?.product ? { initialData: loaderData.product } : {}),
     staleTime: 30_000,
   });
+  const relatedQuery = useQuery({
+    ...relatedProdutosQueryOptions(
+      product?.id ?? "pending",
+      product?.categoria ?? "Sofás",
+      product?.preco_novo && product.preco_novo > 0 ? product.preco_novo : 1,
+    ),
+    enabled: Boolean(product?.id && product?.categoria && product?.preco_novo > 0),
+    ...(loaderData?.relatedProducts ? { initialData: loaderData.relatedProducts } : {}),
+    staleTime: 60_000,
+  });
 
   if (!product) return null;
 
@@ -109,6 +124,7 @@ function ProductPage() {
     <ProductDetailView
       key={product.id}
       product={product}
+      relatedProducts={relatedQuery.data ?? loaderData?.relatedProducts}
       returnPage={returnPage}
       returnCategory={returnCategory}
       returnSearch={returnSearch}

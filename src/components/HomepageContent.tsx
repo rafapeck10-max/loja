@@ -15,6 +15,11 @@ import {
   type HomeConfiguration,
   type HomeBanner,
 } from "../lib/home-configuration";
+import {
+  BLACK_FRIDAY_COPY,
+  BLACK_FRIDAY_PUBLIC_ENABLED,
+  selectBlackFridayHomeProducts,
+} from "../lib/black-friday";
 import type { Produto } from "../lib/products.functions";
 import type { PublishedHomePage } from "../lib/pages-shelves";
 import type { ProductBadge } from "./ProductCard";
@@ -24,6 +29,7 @@ import { useHomeConfiguration } from "./HomeConfigurationContext";
 export function HomepageContent({
   products,
   sectionIds,
+  blackFridayProductIds,
   configuration,
   banners,
   children,
@@ -32,6 +38,7 @@ export function HomepageContent({
 }: {
   products: Produto[];
   sectionIds: HomeConfiguration["sectionIds"];
+  blackFridayProductIds?: string[];
   configuration?: HomeConfiguration | null;
   banners?: HomeBanner[];
   children?: React.ReactNode;
@@ -70,8 +77,28 @@ export function HomepageContent({
       if (timer !== undefined) window.clearTimeout(timer);
     };
   }, [campaigns]);
+  const isStorefrontSeasonalBlackFriday = BLACK_FRIDAY_PUBLIC_ENABLED && !config;
   const blackFridayIds = activeBlackFridayProductIds(config, campaignClock);
-  const sections = publishedHomePage?.sections ?? config?.sections ?? defaultHomeSections();
+  const rawSections = publishedHomePage?.sections ?? config?.sections ?? defaultHomeSections();
+  const sections = isStorefrontSeasonalBlackFriday
+    ? rawSections.map((section) =>
+        section.id === "blackFriday"
+          ? {
+              ...section,
+              enabled: true,
+              title:
+                !section.title || section.title === "Black Friday da Mobi"
+                  ? BLACK_FRIDAY_COPY.homeTitle
+                  : section.title,
+              subtitle:
+                !section.subtitle ||
+                section.subtitle === "Veja os produtos selecionados para a campanha."
+                  ? BLACK_FRIDAY_COPY.homeSubtitle
+                  : section.subtitle,
+            }
+          : section,
+      )
+    : rawSections;
   const badges: Record<string, ProductBadge> = {};
   ids.new.forEach((id) => (badges[id] = "new"));
   ids.weekly.forEach((id) => (badges[id] = "week"));
@@ -105,15 +132,23 @@ export function HomepageContent({
               {children}
             </>
           );
-        if (section.id === "blackFriday")
+        if (section.id === "blackFriday") {
+          const campaignProducts = blackFridayIds.flatMap((id) => byId.get(id) ?? []);
+          const seasonalProducts = isStorefrontSeasonalBlackFriday
+            ? blackFridayProductIds?.length
+              ? blackFridayProductIds.flatMap((id) => byId.get(id) ?? [])
+              : selectBlackFridayHomeProducts(products, 4)
+            : [];
           return (
             <BlackFridayHomeSection
               title={section.title}
               subtitle={section.subtitle}
-              products={blackFridayIds.flatMap((id) => byId.get(id) ?? [])}
-              demonstration={!!config?.blackFridayCampaigns?.length}
+              products={campaignProducts.length ? campaignProducts : seasonalProducts}
+              demonstration={Boolean(config?.blackFridayCampaigns?.length)}
+              ctaHref={isStorefrontSeasonalBlackFriday ? "/black-friday" : undefined}
             />
           );
+        }
         if (["weekly", "discovery", "new", "room"].includes(section.id))
           return (
             <HomeProductSection

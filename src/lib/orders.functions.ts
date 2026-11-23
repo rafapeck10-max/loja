@@ -263,6 +263,7 @@ export const createStoreOrder = createServerFn({ method: "POST" })
       `Protocolo do pedido: ${inserted.codigo}`,
       `Telefone: ${data.telefone}`,
       data.cep ? `CEP: ${data.cep}` : "",
+      data.observacoes ? `Observações de entrega: ${data.observacoes}` : "",
       "",
       baseMessage,
     ]

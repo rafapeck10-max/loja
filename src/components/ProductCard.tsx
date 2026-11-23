@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Sparkles, Star } from "lucide-react";
+import { Sparkles, Star, Tag } from "lucide-react";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
 import { ProductPriceDisplay } from "@/components/ProductPriceDisplay";
 import { CATEGORIES, categoryMatches, MAX_INSTALLMENTS } from "@/lib/constants";
@@ -11,7 +11,7 @@ import {
 import type { Produto } from "@/lib/products.functions";
 import { cardQuote } from "@/lib/payment";
 
-export type ProductBadge = "week" | "new";
+export type ProductBadge = "week" | "new" | "blackFriday";
 export function productDisplayPrice(produto: Produto) {
   const variations = (produto as Produto & { variacoes_preco?: { sale_price: number | null }[] })
     .variacoes_preco;
@@ -23,12 +23,16 @@ export function productDisplayPrice(produto: Produto) {
 export function ProductCard({
   produto,
   badge,
+  theme = "default",
+  discountPercent,
   returnPage,
   returnCategory,
   returnSearch,
 }: {
   produto: Produto;
   badge?: ProductBadge;
+  theme?: "default" | "blackFriday";
+  discountPercent?: number | null;
   returnPage?: number;
   returnCategory?: string;
   returnSearch?: string;
@@ -67,7 +71,9 @@ export function ProductCard({
       .filter(Boolean)
       .join(" · ") || produto.categoria;
   return (
-    <article className="mobi-product">
+    <article
+      className={`mobi-product${theme === "blackFriday" ? " mobi-product--black-friday" : ""}`}
+    >
       <Link
         to="/produto/$id"
         params={{ id: produto.slug }}
@@ -90,13 +96,27 @@ export function ProductCard({
       {badge && (
         <div className="mobi-badge-row">
           {
-            <span className={`mobi-badge mobi-badge-${badge}`}>
+            <span
+              className={`mobi-badge ${
+                badge === "blackFriday" ? "mobi-badge-black-friday" : `mobi-badge-${badge}`
+              }`}
+            >
               {badge === "new" ? (
                 <Sparkles size={13} strokeWidth={1.8} aria-hidden="true" />
+              ) : badge === "blackFriday" ? (
+                <Tag size={13} strokeWidth={1.8} aria-hidden="true" />
               ) : (
                 <Star size={13} strokeWidth={1.8} aria-hidden="true" />
               )}
-              <span>{badge === "new" ? "Novo no catálogo" : "Escolha da semana"}</span>
+              <span>
+                {badge === "new"
+                  ? "Novo no catálogo"
+                  : badge === "blackFriday"
+                    ? discountPercent && discountPercent > 0
+                      ? `BLACK FRIDAY · -${discountPercent}%`
+                      : "BLACK FRIDAY"
+                    : "Escolha da semana"}
+              </span>
             </span>
           }
         </div>

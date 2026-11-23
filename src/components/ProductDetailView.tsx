@@ -19,7 +19,9 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { CepCoverageChecker } from "@/components/CepCoverageChecker";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
+import { ProductCard } from "@/components/ProductCard";
 import { ProductPriceDisplay } from "@/components/ProductPriceDisplay";
 import {
   categoryMatches,
@@ -39,6 +41,7 @@ import type { Produto, ProductPriceVariation } from "@/lib/products.functions";
 type ProductDetailViewProps = {
   product: Produto;
   catalogProducts?: Produto[];
+  relatedProducts?: Produto[];
   returnPage?: number;
   returnCategory?: string;
   returnSearch?: string;
@@ -106,6 +109,7 @@ function whatsappProductLink(productName: string) {
 export function ProductDetailView({
   product,
   catalogProducts,
+  relatedProducts,
   returnPage,
   returnCategory,
   returnSearch,
@@ -697,6 +701,9 @@ export function ProductDetailView({
                   (exceto Belford Roxo e áreas com restrição de acesso). Prazo e rota são
                   confirmados pelo WhatsApp.
                 </p>
+                <div className="mb-3">
+                  <CepCoverageChecker productName={product.nome} variant="light" />
+                </div>
                 <a
                   href={whatsappProductLink(product.nome)}
                   target="_blank"
@@ -1017,6 +1024,32 @@ export function ProductDetailView({
                 {bundleCount === 1 ? "item" : "itens"}
               </button>
             </aside>
+          </div>
+        </section>
+      )}
+
+      {relatedProducts && relatedProducts.length > 0 && (
+        <section className="mobi-product-related mt-8" aria-labelledby="mobi-product-related-title">
+          <div className="mobi-section-title">
+            <div>
+              <h2 id="mobi-product-related-title">Outros móveis para o mesmo ambiente</h2>
+              <p>Alternativas na mesma faixa e categoria para comparar medidas e valores.</p>
+            </div>
+            <Link
+              to="/categoria/$slug"
+              params={{ slug: categorySlug(product.categoria) }}
+              search={{ page: 1 }}
+              className="mobi-text-link"
+            >
+              Ver todos →
+            </Link>
+          </div>
+          <div
+            className={`mobi-grid mobi-home-product-grid${relatedProducts.length === 1 ? " is-single" : ""}`}
+          >
+            {relatedProducts.map((item) => (
+              <ProductCard key={item.id} produto={item} />
+            ))}
           </div>
         </section>
       )}

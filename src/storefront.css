@@ -176,6 +176,12 @@
   color: #fff;
   font-weight: 700;
 }
+.mobi-menu-black-friday {
+  background: #101c14;
+  color: #e7c888;
+  font-weight: 800;
+  border-bottom: 1px solid rgb(197 160 89 / 35%);
+}
 .mobi-menu-group {
   border-bottom: 1px solid #ded4c3;
 }

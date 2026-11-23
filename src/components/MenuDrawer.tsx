@@ -3,6 +3,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { ChevronRight, X } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useUI } from "@/lib/ui-context";
+import { BLACK_FRIDAY_PUBLIC_ENABLED } from "@/lib/black-friday";
 import { catalogEnvironments as rooms } from "@/lib/catalog-navigation";
 import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import { useHomeConfiguration } from "./HomeConfigurationContext";
@@ -81,6 +82,17 @@ export function MenuDrawer() {
             Encontre por tipo de móvel ou ambiente.
           </Dialog.Description>
           <nav aria-label="Catálogo por ambiente" className="mobi-menu-scroll">
+            {BLACK_FRIDAY_PUBLIC_ENABLED && (
+              <Link
+                to="/black-friday"
+                search={{}}
+                onClick={closeMenu}
+                className="mobi-menu-link mobi-menu-black-friday"
+              >
+                Black Friday Mobi
+                <ChevronRight size={16} aria-hidden="true" />
+              </Link>
+            )}
             <Link
               to="/"
               search={{ all: true, page: 1 }}

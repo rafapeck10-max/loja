@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AjudaRouteImport } from './routes/ajuda'
+import { Route as BlackFridayRouteImport } from './routes/black-friday'
 import { Route as GoogleMerchantDottsvRouteImport } from './routes/google-merchant[.]tsv'
 import { Route as InspiracaoRouteImport } from './routes/inspiracao'
 import { Route as LinksRouteImport } from './routes/links'
@@ -36,6 +37,11 @@ const AdminRoute = AdminRouteImport.update({
 const AjudaRoute = AjudaRouteImport.update({
   id: '/ajuda',
   path: '/ajuda',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlackFridayRoute = BlackFridayRouteImport.update({
+  id: '/black-friday',
+  path: '/black-friday',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GoogleMerchantDottsvRoute = GoogleMerchantDottsvRouteImport.update({
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/ajuda': typeof AjudaRouteWithChildren
+  '/black-friday': typeof BlackFridayRoute
   '/google-merchant.tsv': typeof GoogleMerchantDottsvRoute
   '/inspiracao': typeof InspiracaoRouteWithChildren
   '/links': typeof LinksRoute
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/ajuda': typeof AjudaRouteWithChildren
+  '/black-friday': typeof BlackFridayRoute
   '/google-merchant.tsv': typeof GoogleMerchantDottsvRoute
   '/inspiracao': typeof InspiracaoRouteWithChildren
   '/links': typeof LinksRoute
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/ajuda': typeof AjudaRouteWithChildren
+  '/black-friday': typeof BlackFridayRoute
   '/google-merchant.tsv': typeof GoogleMerchantDottsvRoute
   '/inspiracao': typeof InspiracaoRouteWithChildren
   '/links': typeof LinksRoute
@@ -142,6 +151,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/ajuda'
+    | '/black-friday'
     | '/google-merchant.tsv'
     | '/inspiracao'
     | '/links'
@@ -157,6 +167,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/ajuda'
+    | '/black-friday'
     | '/google-merchant.tsv'
     | '/inspiracao'
     | '/links'
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/ajuda'
+    | '/black-friday'
     | '/google-merchant.tsv'
     | '/inspiracao'
     | '/links'
@@ -188,6 +200,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   AjudaRoute: typeof AjudaRouteWithChildren
+  BlackFridayRoute: typeof BlackFridayRoute
   GoogleMerchantDottsvRoute: typeof GoogleMerchantDottsvRoute
   InspiracaoRoute: typeof InspiracaoRouteWithChildren
   LinksRoute: typeof LinksRoute
@@ -219,6 +232,13 @@ declare module '@tanstack/react-router' {
       path: '/ajuda'
       fullPath: '/ajuda'
       preLoaderRoute: typeof AjudaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/black-friday': {
+      id: '/black-friday'
+      path: '/black-friday'
+      fullPath: '/black-friday'
+      preLoaderRoute: typeof BlackFridayRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/google-merchant.tsv': {
@@ -320,6 +340,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   AjudaRoute: AjudaRouteWithChildren,
+  BlackFridayRoute: BlackFridayRoute,
   GoogleMerchantDottsvRoute: GoogleMerchantDottsvRoute,
   InspiracaoRoute: InspiracaoRouteWithChildren,
   LinksRoute: LinksRoute,

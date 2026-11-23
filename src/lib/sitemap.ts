@@ -1,3 +1,4 @@
+import { BLACK_FRIDAY_PUBLIC_ENABLED } from "./black-friday.ts";
 import { CATEGORIES, SUBCATEGORIES, categoryMatches } from "./constants.ts";
 import { normalizeHttpUrl } from "./seo.ts";
 import { SITE_URL } from "./site-metadata.ts";
@@ -27,6 +28,7 @@ export function buildSitemap(products: SitemapProduct[]) {
   const urlEntries = new Map<string, string | undefined>();
   for (const staticPath of [
     "/",
+    ...(BLACK_FRIDAY_PUBLIC_ENABLED ? ["/black-friday"] : []),
     "/moveis-nova-iguacu",
     "/moveis-pagamento-na-entrega",
     "/ajuda",
