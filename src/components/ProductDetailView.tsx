@@ -1060,7 +1060,7 @@ export function ProductDetailView({
               Ver mais de {product.categoria}
             </Link>
           </div>
-          <div className="mobi-home-product-grid">
+          <div className="mobi-grid mobi-home-product-grid">
             {relatedProducts.map((item) => (
               <ProductCard key={item.id} produto={item} />
             ))}
