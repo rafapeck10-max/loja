@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { CepCoverageChecker } from "@/components/CepCoverageChecker";
 import { MAX_INSTALLMENTS, WHATSAPP_DISPLAY, WHATSAPP_URL } from "@/lib/constants";
+import { REGIONAL_STORE_PAGES } from "@/lib/regional-pages";
 import { breadcrumbs, jsonLd, seoHead } from "@/lib/seo";
 import { SITE_URL } from "@/lib/site-metadata";
 
@@ -176,6 +178,26 @@ function LocalPage() {
           </Link>
           .
         </p>
+        <div className="mt-4 max-w-xl">
+          <CepCoverageChecker />
+        </div>
+      </section>
+
+      <section className="mt-9 max-w-3xl" aria-labelledby="local-other-cities">
+        <h2 id="local-other-cities" className="text-xl text-deep-green">
+          Outras cidades atendidas com frete grátis
+        </h2>
+        <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+          {REGIONAL_STORE_PAGES.map((item) => (
+            <Link
+              key={item.slug}
+              to={item.path}
+              className="inline-flex min-h-11 items-center text-deep-green underline underline-offset-4"
+            >
+              {item.cityName}
+            </Link>
+          ))}
+        </div>
       </section>
 
       <section className="mt-9 max-w-3xl" aria-labelledby="local-checklist">

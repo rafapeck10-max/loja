@@ -40,6 +40,9 @@ import { cleanCatalogMeasurementText, isNoiseColorToken } from "@/lib/catalog-se
 import { cardQuote } from "@/lib/payment";
 import { productMeasurements } from "@/lib/product-measurements";
 import { catalogUrlSearch, parseCatalogReturnSearch } from "@/lib/catalog-url-state";
+import type { CepCoverageResult } from "@/lib/delivery-coverage";
+import { buildProductWhatsappUrl } from "@/lib/product-whatsapp";
+import { trackAddToCart, trackViewItem, trackWhatsAppClick } from "@/lib/analytics";
 import type { Produto, ProductPriceVariation } from "@/lib/products.functions";
 
 type ProductDetailViewProps = {
@@ -105,11 +108,6 @@ function categorySlug(category: string) {
   );
 }
 
-function whatsappProductLink(productName: string) {
-  const text = `Olá! Quero consultar disponibilidade e entrega para: ${productName}.`;
-  return `${WHATSAPP_URL}?text=${encodeURIComponent(text)}`;
-}
-
 export function ProductDetailView({
   product,
   catalogProducts,
@@ -130,6 +128,7 @@ export function ProductDetailView({
   const [selectedBundleIds, setSelectedBundleIds] = useState<string[]>([]);
   const [bundleOptionSkus, setBundleOptionSkus] = useState<Record<string, string>>({});
   const [bundleColorNames, setBundleColorNames] = useState<Record<string, string>>({});
+  const [resolvedCep, setResolvedCep] = useState<CepCoverageResult | null>(null);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const swipedImage = useRef(false);
   const { data: fetchedProducts = [] } = useQuery({
@@ -256,10 +255,30 @@ export function ProductDetailView({
     setSelectedSku(null);
     setSelectedColor(null);
     setZoomOpen(false);
+    setResolvedCep(null);
   }, [product.id]);
+
+  useEffect(() => {
+    trackViewItem({
+      id: product.id,
+      name: product.nome,
+      category: product.categoria,
+      price: product.preco_novo,
+    });
+  }, [product.id, product.nome, product.categoria, product.preco_novo]);
 
   const isOutOfStock = product.status_estoque === "esgotado";
   const isVerifiedInStock = product.status_estoque === "disponivel";
+  const whatsappHref = buildProductWhatsappUrl({
+    productName: product.nome,
+    variant: selectedOption?.name,
+    color: currentColor,
+    pixPrice: currentPrice,
+    installmentCount: MAX_INSTALLMENTS,
+    installmentValue: payment.approximateInstallment,
+    cardTotal: payment.total,
+    cepResult: resolvedCep,
+  });
 
   const addToCart = () => {
     if (isOutOfStock) return;
@@ -275,6 +294,13 @@ export function ProductDetailView({
       quantity,
       color: currentColor,
       variant: selectedOption?.name ?? null,
+    });
+    trackAddToCart({
+      id: product.id,
+      name: product.nome,
+      category: product.categoria,
+      price: currentPrice,
+      quantity,
     });
   };
 
@@ -689,9 +715,12 @@ export function ProductDetailView({
                   Indisponível no momento
                 </button>
                 <a
-                  href={whatsappProductLink(product.nome)}
+                  href={whatsappHref}
                   target="_blank"
                   rel="noreferrer"
+                  onClick={() =>
+                    trackWhatsAppClick({ source: "pdp_out_of_stock", productName: product.nome })
+                  }
                   className="mobi-product-delivery-link inline-flex min-h-11 items-center justify-center rounded-md px-3 text-sm font-semibold"
                 >
                   Consultar opções similares pelo WhatsApp
@@ -720,12 +749,15 @@ export function ProductDetailView({
               </div>
             </div>
             <div className="mt-3">
-              <CepCoverageChecker productName={product.nome} />
+              <CepCoverageChecker productName={product.nome} onResolved={setResolvedCep} />
             </div>
             <a
-              href={whatsappProductLink(product.nome)}
+              href={whatsappHref}
               target="_blank"
               rel="noreferrer"
+              onClick={() =>
+                trackWhatsAppClick({ source: "pdp_delivery", productName: product.nome })
+              }
               className="mobi-product-delivery-link mt-3 inline-flex min-h-11 items-center justify-center rounded-md px-3 text-sm font-semibold"
             >
               Consultar pelo WhatsApp

@@ -9,6 +9,7 @@ import { MAX_INSTALLMENTS } from "@/lib/constants";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
 import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import { cartPaymentLine, orderPaymentSummary, orderWhatsAppMessage } from "@/lib/cart-payment";
+import { trackBeginCheckout, trackOrderSubmitted, trackWhatsAppClick } from "@/lib/analytics";
 import {
   formatCep,
   lookupCepWithCoverage,
@@ -110,6 +111,11 @@ export function CartDrawer() {
 
   const openCheckout = () => {
     setStep("checkout");
+    trackBeginCheckout({
+      itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
+      pixTotal: summary.pixTotal,
+      cardTotal: summary.cardTotal,
+    });
     if (!form.cep.trim()) {
       const saved = readSavedCep();
       if (saved) void handleCepLookup(saved);
@@ -166,6 +172,12 @@ export function CartDrawer() {
       });
       clearCart();
       setStep("confirmed");
+      trackOrderSubmitted({
+        codigo: result.codigo,
+        paymentMethod: result.formaPagamento,
+        pixTotal: result.totalPix,
+        cardTotal: result.totalCartao,
+      });
       toast.success(`Pedido ${result.codigo} registrado!`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível registrar o pedido.");
@@ -183,6 +195,8 @@ export function CartDrawer() {
       form.observacoes.trim() ? `Observações de entrega: ${form.observacoes.trim()}` : "",
     ].filter(Boolean);
     const message = extraLines.length ? `${baseMessage}\n${extraLines.join("\n")}` : baseMessage;
+
+    trackWhatsAppClick({ source: "cart_whatsapp" });
 
     window.open(
       `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`,

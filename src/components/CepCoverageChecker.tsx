@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { AlertTriangle, CheckCircle2, MapPin, Search, XCircle } from "lucide-react";
 import { MAX_INSTALLMENTS, WHATSAPP_URL } from "@/lib/constants";
+import { trackCheckCep, trackWhatsAppClick } from "@/lib/analytics";
 import {
   formatCep,
   lookupCepWithCoverage,
@@ -49,6 +50,12 @@ export function CepCoverageChecker({
       if (digits.length === 8 && next.status !== "invalid" && next.status !== "not_found") {
         saveLastCep(digits);
       }
+      trackCheckCep({
+        status: next.status,
+        cep: next.cep,
+        city: next.address?.localidade,
+        uf: next.address?.uf,
+      });
       onResolvedRef.current?.(next);
     } finally {
       setLoading(false);
@@ -167,6 +174,7 @@ export function CepCoverageChecker({
                 href={buildConsultWhatsappUrl(result.cep, productName)}
                 target="_blank"
                 rel="noreferrer"
+                onClick={() => trackWhatsAppClick({ source: "cep_checker", productName })}
                 className="mobi-cep-result-link"
               >
                 Consultar outro endereço no WhatsApp
@@ -191,6 +199,7 @@ export function CepCoverageChecker({
                 href={buildConsultWhatsappUrl(result.cep, productName)}
                 target="_blank"
                 rel="noreferrer"
+                onClick={() => trackWhatsAppClick({ source: "cep_checker", productName })}
                 className="mobi-cep-result-link"
               >
                 Confirmar atendimento no WhatsApp

@@ -4,6 +4,7 @@ import {
   type HomepageBanner,
 } from "./homepage-banners.ts";
 import { getCategory, WHATSAPP_NUMBER } from "./constants.ts";
+import { REGIONAL_PAGE_PATHS } from "./regional-pages.ts";
 
 export interface BannerDraft extends HomepageBanner {
   id: string;
@@ -64,13 +65,16 @@ export function isSafeBannerDestination(value: string): boolean {
     if (url.hostname !== "mobimb.com.br") return false;
     const path = url.pathname;
     if (
-      [
-        "/",
-        "/black-friday",
-        "/links",
-        "/moveis-nova-iguacu",
-        "/moveis-pagamento-na-entrega",
-      ].includes(path)
+      (
+        [
+          "/",
+          "/black-friday",
+          "/links",
+          "/moveis-nova-iguacu",
+          ...REGIONAL_PAGE_PATHS,
+          "/moveis-pagamento-na-entrega",
+        ] as string[]
+      ).includes(path)
     )
       return true;
     if (/^\/produto\/[a-zA-Z0-9_-]+$/.test(path)) return true;
