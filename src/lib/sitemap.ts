@@ -1,4 +1,5 @@
 import { CATEGORIES, SUBCATEGORIES, categoryMatches } from "./constants.ts";
+import { REGIONAL_PAGE_PATHS } from "./regional-pages.ts";
 import { normalizeHttpUrl } from "./seo.ts";
 import { SITE_URL } from "./site-metadata.ts";
 
@@ -29,6 +30,7 @@ export function buildSitemap(products: SitemapProduct[]) {
     "/",
     "/black-friday",
     "/moveis-nova-iguacu",
+    ...REGIONAL_PAGE_PATHS,
     "/moveis-pagamento-na-entrega",
     "/ajuda",
     "/ajuda/como-comprar",

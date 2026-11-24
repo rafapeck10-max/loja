@@ -13,6 +13,7 @@ import {
 } from "./catalog-search.ts";
 import type { EditorProduct } from "./homepage-curation.ts";
 import { isEligibleBundleProduct, normalizeProductBundleIds } from "./product-bundles.ts";
+import { REGIONAL_PAGE_PATHS } from "./regional-pages.ts";
 export const FILTER_LABELS = {
   material: "Material",
   color: "Cor",
@@ -50,13 +51,16 @@ export function safeMobiLink(value: string) {
     if (u.hostname === "wa.me") return u.pathname === `/${WHATSAPP_NUMBER}`;
     if (!["mobimb.com.br", "www.mobimb.com.br"].includes(u.hostname)) return false;
     if (
-      [
-        "/",
-        "/black-friday",
-        "/links",
-        "/moveis-nova-iguacu",
-        "/moveis-pagamento-na-entrega",
-      ].includes(u.pathname)
+      (
+        [
+          "/",
+          "/black-friday",
+          "/links",
+          "/moveis-nova-iguacu",
+          ...REGIONAL_PAGE_PATHS,
+          "/moveis-pagamento-na-entrega",
+        ] as string[]
+      ).includes(u.pathname)
     )
       return true;
     const category = u.pathname.match(/^\/categoria\/([a-z0-9-]+)$/);

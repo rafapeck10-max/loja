@@ -16,8 +16,14 @@ import { Route as BlackFridayRouteImport } from './routes/black-friday'
 import { Route as GoogleMerchantDottsvRouteImport } from './routes/google-merchant[.]tsv'
 import { Route as InspiracaoRouteImport } from './routes/inspiracao'
 import { Route as LinksRouteImport } from './routes/links'
+import { Route as MoveisDuqueDeCaxiasRouteImport } from './routes/moveis-duque-de-caxias'
+import { Route as MoveisMesquitaRouteImport } from './routes/moveis-mesquita'
+import { Route as MoveisNilopolisRouteImport } from './routes/moveis-nilopolis'
 import { Route as MoveisNovaIguacuRouteImport } from './routes/moveis-nova-iguacu'
 import { Route as MoveisPagamentoNaEntregaRouteImport } from './routes/moveis-pagamento-na-entrega'
+import { Route as MoveisQueimadosRouteImport } from './routes/moveis-queimados'
+import { Route as MoveisSaoJoaoDeMeritiRouteImport } from './routes/moveis-sao-joao-de-meriti'
+import { Route as MoveisZonaOesteRjRouteImport } from './routes/moveis-zona-oeste-rj'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AjudaSlugRouteImport } from './routes/ajuda.$slug'
 import { Route as CategoriaSlugRouteImport } from './routes/categoria.$slug'
@@ -59,6 +65,21 @@ const LinksRoute = LinksRouteImport.update({
   path: '/links',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MoveisDuqueDeCaxiasRoute = MoveisDuqueDeCaxiasRouteImport.update({
+  id: '/moveis-duque-de-caxias',
+  path: '/moveis-duque-de-caxias',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MoveisMesquitaRoute = MoveisMesquitaRouteImport.update({
+  id: '/moveis-mesquita',
+  path: '/moveis-mesquita',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MoveisNilopolisRoute = MoveisNilopolisRouteImport.update({
+  id: '/moveis-nilopolis',
+  path: '/moveis-nilopolis',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MoveisNovaIguacuRoute = MoveisNovaIguacuRouteImport.update({
   id: '/moveis-nova-iguacu',
   path: '/moveis-nova-iguacu',
@@ -70,6 +91,21 @@ const MoveisPagamentoNaEntregaRoute =
     path: '/moveis-pagamento-na-entrega',
     getParentRoute: () => rootRouteImport,
   } as any)
+const MoveisQueimadosRoute = MoveisQueimadosRouteImport.update({
+  id: '/moveis-queimados',
+  path: '/moveis-queimados',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MoveisSaoJoaoDeMeritiRoute = MoveisSaoJoaoDeMeritiRouteImport.update({
+  id: '/moveis-sao-joao-de-meriti',
+  path: '/moveis-sao-joao-de-meriti',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MoveisZonaOesteRjRoute = MoveisZonaOesteRjRouteImport.update({
+  id: '/moveis-zona-oeste-rj',
+  path: '/moveis-zona-oeste-rj',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -104,8 +140,14 @@ export interface FileRoutesByFullPath {
   '/google-merchant.tsv': typeof GoogleMerchantDottsvRoute
   '/inspiracao': typeof InspiracaoRouteWithChildren
   '/links': typeof LinksRoute
+  '/moveis-duque-de-caxias': typeof MoveisDuqueDeCaxiasRoute
+  '/moveis-mesquita': typeof MoveisMesquitaRoute
+  '/moveis-nilopolis': typeof MoveisNilopolisRoute
   '/moveis-nova-iguacu': typeof MoveisNovaIguacuRoute
   '/moveis-pagamento-na-entrega': typeof MoveisPagamentoNaEntregaRoute
+  '/moveis-queimados': typeof MoveisQueimadosRoute
+  '/moveis-sao-joao-de-meriti': typeof MoveisSaoJoaoDeMeritiRoute
+  '/moveis-zona-oeste-rj': typeof MoveisZonaOesteRjRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/ajuda/$slug': typeof AjudaSlugRoute
   '/categoria/$slug': typeof CategoriaSlugRoute
@@ -120,8 +162,14 @@ export interface FileRoutesByTo {
   '/google-merchant.tsv': typeof GoogleMerchantDottsvRoute
   '/inspiracao': typeof InspiracaoRouteWithChildren
   '/links': typeof LinksRoute
+  '/moveis-duque-de-caxias': typeof MoveisDuqueDeCaxiasRoute
+  '/moveis-mesquita': typeof MoveisMesquitaRoute
+  '/moveis-nilopolis': typeof MoveisNilopolisRoute
   '/moveis-nova-iguacu': typeof MoveisNovaIguacuRoute
   '/moveis-pagamento-na-entrega': typeof MoveisPagamentoNaEntregaRoute
+  '/moveis-queimados': typeof MoveisQueimadosRoute
+  '/moveis-sao-joao-de-meriti': typeof MoveisSaoJoaoDeMeritiRoute
+  '/moveis-zona-oeste-rj': typeof MoveisZonaOesteRjRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/ajuda/$slug': typeof AjudaSlugRoute
   '/categoria/$slug': typeof CategoriaSlugRoute
@@ -137,8 +185,14 @@ export interface FileRoutesById {
   '/google-merchant.tsv': typeof GoogleMerchantDottsvRoute
   '/inspiracao': typeof InspiracaoRouteWithChildren
   '/links': typeof LinksRoute
+  '/moveis-duque-de-caxias': typeof MoveisDuqueDeCaxiasRoute
+  '/moveis-mesquita': typeof MoveisMesquitaRoute
+  '/moveis-nilopolis': typeof MoveisNilopolisRoute
   '/moveis-nova-iguacu': typeof MoveisNovaIguacuRoute
   '/moveis-pagamento-na-entrega': typeof MoveisPagamentoNaEntregaRoute
+  '/moveis-queimados': typeof MoveisQueimadosRoute
+  '/moveis-sao-joao-de-meriti': typeof MoveisSaoJoaoDeMeritiRoute
+  '/moveis-zona-oeste-rj': typeof MoveisZonaOesteRjRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/ajuda/$slug': typeof AjudaSlugRoute
   '/categoria/$slug': typeof CategoriaSlugRoute
@@ -155,8 +209,14 @@ export interface FileRouteTypes {
     | '/google-merchant.tsv'
     | '/inspiracao'
     | '/links'
+    | '/moveis-duque-de-caxias'
+    | '/moveis-mesquita'
+    | '/moveis-nilopolis'
     | '/moveis-nova-iguacu'
     | '/moveis-pagamento-na-entrega'
+    | '/moveis-queimados'
+    | '/moveis-sao-joao-de-meriti'
+    | '/moveis-zona-oeste-rj'
     | '/sitemap.xml'
     | '/ajuda/$slug'
     | '/categoria/$slug'
@@ -171,8 +231,14 @@ export interface FileRouteTypes {
     | '/google-merchant.tsv'
     | '/inspiracao'
     | '/links'
+    | '/moveis-duque-de-caxias'
+    | '/moveis-mesquita'
+    | '/moveis-nilopolis'
     | '/moveis-nova-iguacu'
     | '/moveis-pagamento-na-entrega'
+    | '/moveis-queimados'
+    | '/moveis-sao-joao-de-meriti'
+    | '/moveis-zona-oeste-rj'
     | '/sitemap.xml'
     | '/ajuda/$slug'
     | '/categoria/$slug'
@@ -187,8 +253,14 @@ export interface FileRouteTypes {
     | '/google-merchant.tsv'
     | '/inspiracao'
     | '/links'
+    | '/moveis-duque-de-caxias'
+    | '/moveis-mesquita'
+    | '/moveis-nilopolis'
     | '/moveis-nova-iguacu'
     | '/moveis-pagamento-na-entrega'
+    | '/moveis-queimados'
+    | '/moveis-sao-joao-de-meriti'
+    | '/moveis-zona-oeste-rj'
     | '/sitemap.xml'
     | '/ajuda/$slug'
     | '/categoria/$slug'
@@ -204,8 +276,14 @@ export interface RootRouteChildren {
   GoogleMerchantDottsvRoute: typeof GoogleMerchantDottsvRoute
   InspiracaoRoute: typeof InspiracaoRouteWithChildren
   LinksRoute: typeof LinksRoute
+  MoveisDuqueDeCaxiasRoute: typeof MoveisDuqueDeCaxiasRoute
+  MoveisMesquitaRoute: typeof MoveisMesquitaRoute
+  MoveisNilopolisRoute: typeof MoveisNilopolisRoute
   MoveisNovaIguacuRoute: typeof MoveisNovaIguacuRoute
   MoveisPagamentoNaEntregaRoute: typeof MoveisPagamentoNaEntregaRoute
+  MoveisQueimadosRoute: typeof MoveisQueimadosRoute
+  MoveisSaoJoaoDeMeritiRoute: typeof MoveisSaoJoaoDeMeritiRoute
+  MoveisZonaOesteRjRoute: typeof MoveisZonaOesteRjRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   CategoriaSlugRoute: typeof CategoriaSlugRoute
   ProdutoIdRoute: typeof ProdutoIdRoute
@@ -262,6 +340,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LinksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/moveis-duque-de-caxias': {
+      id: '/moveis-duque-de-caxias'
+      path: '/moveis-duque-de-caxias'
+      fullPath: '/moveis-duque-de-caxias'
+      preLoaderRoute: typeof MoveisDuqueDeCaxiasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/moveis-mesquita': {
+      id: '/moveis-mesquita'
+      path: '/moveis-mesquita'
+      fullPath: '/moveis-mesquita'
+      preLoaderRoute: typeof MoveisMesquitaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/moveis-nilopolis': {
+      id: '/moveis-nilopolis'
+      path: '/moveis-nilopolis'
+      fullPath: '/moveis-nilopolis'
+      preLoaderRoute: typeof MoveisNilopolisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/moveis-nova-iguacu': {
       id: '/moveis-nova-iguacu'
       path: '/moveis-nova-iguacu'
@@ -274,6 +373,27 @@ declare module '@tanstack/react-router' {
       path: '/moveis-pagamento-na-entrega'
       fullPath: '/moveis-pagamento-na-entrega'
       preLoaderRoute: typeof MoveisPagamentoNaEntregaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/moveis-queimados': {
+      id: '/moveis-queimados'
+      path: '/moveis-queimados'
+      fullPath: '/moveis-queimados'
+      preLoaderRoute: typeof MoveisQueimadosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/moveis-sao-joao-de-meriti': {
+      id: '/moveis-sao-joao-de-meriti'
+      path: '/moveis-sao-joao-de-meriti'
+      fullPath: '/moveis-sao-joao-de-meriti'
+      preLoaderRoute: typeof MoveisSaoJoaoDeMeritiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/moveis-zona-oeste-rj': {
+      id: '/moveis-zona-oeste-rj'
+      path: '/moveis-zona-oeste-rj'
+      fullPath: '/moveis-zona-oeste-rj'
+      preLoaderRoute: typeof MoveisZonaOesteRjRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -344,8 +464,14 @@ const rootRouteChildren: RootRouteChildren = {
   GoogleMerchantDottsvRoute: GoogleMerchantDottsvRoute,
   InspiracaoRoute: InspiracaoRouteWithChildren,
   LinksRoute: LinksRoute,
+  MoveisDuqueDeCaxiasRoute: MoveisDuqueDeCaxiasRoute,
+  MoveisMesquitaRoute: MoveisMesquitaRoute,
+  MoveisNilopolisRoute: MoveisNilopolisRoute,
   MoveisNovaIguacuRoute: MoveisNovaIguacuRoute,
   MoveisPagamentoNaEntregaRoute: MoveisPagamentoNaEntregaRoute,
+  MoveisQueimadosRoute: MoveisQueimadosRoute,
+  MoveisSaoJoaoDeMeritiRoute: MoveisSaoJoaoDeMeritiRoute,
+  MoveisZonaOesteRjRoute: MoveisZonaOesteRjRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   CategoriaSlugRoute: CategoriaSlugRoute,
   ProdutoIdRoute: ProdutoIdRoute,

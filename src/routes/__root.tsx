@@ -24,6 +24,7 @@ import { MobileBottomBar } from "@/components/MobileBottomBar";
 import { SITE_TITLE, SITE_DESCRIPTION, SITE_URL } from "@/lib/site-metadata";
 import { jsonLd, seoHead } from "@/lib/seo";
 import { WHATSAPP_DISPLAY } from "@/lib/constants";
+import { initAnalytics, trackPageView } from "@/lib/analytics";
 import { LocalHomeConfigurationProvider } from "../components/LocalHomeConfigurationProvider";
 
 function NotFoundComponent() {
@@ -198,18 +199,23 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const isAdminRoute = useRouterState({
-    select: (state) => state.location.pathname.replace(/\/$/, "") === "/admin",
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
   });
-  const isLinksRoute = useRouterState({
-    select: (state) => state.location.pathname.replace(/\/$/, "") === "/links",
-  });
-  const isHelpRoute = useRouterState({
-    select: (state) => {
-      const pathname = state.location.pathname.replace(/\/$/, "");
-      return pathname === "/ajuda" || pathname.startsWith("/ajuda/");
-    },
-  });
+  const isAdminRoute = pathname.replace(/\/$/, "") === "/admin";
+  const isLinksRoute = pathname.replace(/\/$/, "") === "/links";
+  const isHelpRoute =
+    pathname.replace(/\/$/, "") === "/ajuda" || pathname.replace(/\/$/, "").startsWith("/ajuda/");
+
+  useEffect(() => {
+    if (isAdminRoute) return;
+    initAnalytics();
+  }, [isAdminRoute]);
+
+  useEffect(() => {
+    if (isAdminRoute) return;
+    trackPageView(pathname);
+  }, [pathname, isAdminRoute]);
 
   return (
     <QueryClientProvider client={queryClient}>
