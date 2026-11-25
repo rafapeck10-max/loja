@@ -6,16 +6,20 @@ import * as Dialog from "@radix-ui/react-dialog";
 import {
   AlertCircle,
   CircleDollarSign,
-  FileUp,
   Images,
   Layers3,
+  LayoutGrid,
+  List,
   Lock,
   LogOut,
   Package,
   Pencil,
   Plus,
   RefreshCw,
+  RotateCcw,
   Ruler,
+  Search,
+  SlidersHorizontal,
   Trash2,
   X,
 } from "lucide-react";
@@ -30,6 +34,7 @@ import {
   getAdminStudioStorageMode,
   listPendingScrapedProducts,
   listAdminHomepageBanners,
+  quickUpdateProductPrice,
   upsertProduto,
   type ProdutoInput,
   type ProdutoAdmin,
@@ -38,7 +43,6 @@ import {
   type PriceVariation,
 } from "@/lib/admin.functions";
 import { formatBRL } from "@/lib/constants";
-import { adminCategoryKey, adminCategoryOptions } from "@/lib/admin-categories";
 import { cardInstallment, cardQuote } from "@/lib/payment";
 import { hasRealReferencePrice } from "@/lib/price-reference";
 import { productMeasurements } from "@/lib/product-measurements";
@@ -50,15 +54,19 @@ import { ADMIN_REVIEW_QUERY_LIMIT } from "@/lib/admin-overview";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
 import { ProductThumbnail, ProductIdentity } from "@/components/admin/ProductThumbnail";
 import { SupplierPricingPanel } from "@/components/admin/SupplierPricingPanel";
+import { ScrapedImportsPanel } from "@/components/admin/ScrapedImportsPanel";
 import { GoogleShoppingPanel } from "@/components/admin/GoogleShoppingPanel";
 import { StoreOrdersPanel } from "@/components/admin/StoreOrdersPanel";
 import { createRemoteStudioTransport } from "@/lib/admin-studio-remote";
 import { isEligibleBundleProduct } from "@/lib/product-bundles";
 import type { AdminViewId } from "@/lib/admin-navigation";
 import {
-  matchesPriceFilter,
+  buildCategoryCounts,
+  filterAndSortAdminProducts,
   parsePriceFilter,
   productStatus,
+  type ProductQuickFilter,
+  type ProductSortOption,
   type ProductStatus,
 } from "@/lib/admin-filters";
 
@@ -350,8 +358,10 @@ export function AdminDashboard({
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [workspaceTab, setWorkspaceTab] = useState<AdminViewId>("overview");
   const [statusFilter, setStatusFilter] = useState<"all" | ProductStatus>("all");
+  const [quickFilter, setQuickFilter] = useState<ProductQuickFilter>("all");
+  const [productSort, setProductSort] = useState<ProductSortOption>("default");
+  const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   const [priceField, setPriceField] = useState<"site" | "supplier">("site");
-  const [priceFiltersOpen, setPriceFiltersOpen] = useState(false);
   const [minimumPrice, setMinimumPrice] = useState("");
   const [maximumPrice, setMaximumPrice] = useState("");
   const [page, setPage] = useState(1);
@@ -467,60 +477,82 @@ export function AdminDashboard({
         }),
     [produtos, supplierFilter],
   );
-  const categories = useMemo(
-    () => adminCategoryOptions(produtos.map((product) => product.categoria)),
-    [produtos],
+  const productCategoryOptions = useMemo(() => {
+    const base = filterAndSortAdminProducts(produtos, {
+      query: search,
+      supplierFilter,
+      missingSupplierKey: MISSING_SUPPLIER_FILTER,
+      categoryKey: "all",
+      statusFilter,
+      quickFilter,
+      priceField,
+      minPrice: minimumPrice,
+      maxPrice: maximumPrice,
+      sort: "default",
+    });
+    return buildCategoryCounts(base);
+  }, [
+    produtos,
+    search,
+    supplierFilter,
+    statusFilter,
+    quickFilter,
+    priceField,
+    minimumPrice,
+    maximumPrice,
+  ]);
+  const filteredProdutos = useMemo(
+    () =>
+      filterAndSortAdminProducts(produtos, {
+        query: search,
+        supplierFilter,
+        missingSupplierKey: MISSING_SUPPLIER_FILTER,
+        categoryKey: categoryFilter,
+        statusFilter,
+        quickFilter,
+        priceField,
+        minPrice: minimumPrice,
+        maxPrice: maximumPrice,
+        sort: productSort,
+      }),
+    [
+      produtos,
+      search,
+      supplierFilter,
+      categoryFilter,
+      statusFilter,
+      quickFilter,
+      priceField,
+      minimumPrice,
+      maximumPrice,
+      productSort,
+    ],
   );
-  const filteredProdutos = useMemo(() => {
-    const normalizedSearch = normalizeFilterText(search);
-    const normalizedCategory = adminCategoryKey(categoryFilter);
-    return produtos
-      .filter((product) => {
-        const searchableText = normalizeFilterText(
-          [
-            product.nome,
-            product.slug,
-            product.sku,
-            product.fornecedor,
-            product.categoria,
-            product.fonte_preco,
-            product.url_fornecedor,
-            product.descricao,
-            product.medidas,
-            ...(product.cores ?? []),
-          ]
-            .filter(Boolean)
-            .join(" "),
-        );
-        const matchesSearch = !normalizedSearch || searchableText.includes(normalizedSearch);
-        const supplier = product.fornecedor?.trim() ?? "";
-        const matchesSupplier =
-          supplierFilter === "all" ||
-          (supplierFilter === MISSING_SUPPLIER_FILTER
-            ? !supplier
-            : supplierFilter === supplierFilterValue(supplier));
-        const matchesCategory =
-          categoryFilter === "all" || adminCategoryKey(product.categoria) === normalizedCategory;
-        const matchesStatus = statusFilter === "all" || productStatus(product) === statusFilter;
-        const matchesPrice = matchesPriceFilter(
-          priceField === "site" ? product.preco_atual : product.preco_atacado,
-          minimumPrice,
-          maximumPrice,
-        );
-        return matchesSearch && matchesSupplier && matchesCategory && matchesStatus && matchesPrice;
-      })
-      .sort((a, b) => {
-        const supplierA = a.fornecedor?.trim() ?? "";
-        const supplierB = b.fornecedor?.trim() ?? "";
-        if (!supplierA && supplierB) return 1;
-        if (supplierA && !supplierB) return -1;
-        const supplierOrder = supplierA.localeCompare(supplierB, "pt-BR");
-        return (
-          supplierOrder ||
-          Number(a.ordem ?? 0) - Number(b.ordem ?? 0) ||
-          a.nome.localeCompare(b.nome, "pt-BR")
-        );
-      });
+  const quickCounts = useMemo(() => {
+    const base = filterAndSortAdminProducts(produtos, {
+      query: search,
+      supplierFilter,
+      missingSupplierKey: MISSING_SUPPLIER_FILTER,
+      categoryKey: categoryFilter,
+      statusFilter,
+      quickFilter: "all",
+      priceField,
+      minPrice: minimumPrice,
+      maxPrice: maximumPrice,
+      sort: "default",
+    });
+    return {
+      all: base.length,
+      "missing-photo": base.filter((p) => !/^https?:\/\//i.test(p.url_imagem ?? "")).length,
+      "missing-measures": base.filter((p) => !(p.medidas ?? "").trim()).length,
+      "out-of-stock": base.filter((p) => p.status_estoque === "esgotado").length,
+      "black-friday": base.filter((p) => p.vitrine_black_friday === true).length,
+      "below-cost": base.filter((p) => {
+        const c = Number(p.preco_atacado ?? 0);
+        const s = Number(p.preco_atual ?? 0);
+        return c > 0 && s > 0 && s < c;
+      }).length,
+    };
   }, [
     produtos,
     search,
@@ -566,10 +598,22 @@ export function AdminDashboard({
     supplierFilter,
     categoryFilter,
     statusFilter,
+    quickFilter,
+    productSort,
     priceField,
     minimumPrice,
     maximumPrice,
   ]);
+
+  useEffect(() => {
+    if (
+      categoryFilter !== "all" &&
+      productCategoryOptions.length > 0 &&
+      !productCategoryOptions.some((opt) => opt.key === categoryFilter)
+    ) {
+      setCategoryFilter("all");
+    }
+  }, [categoryFilter, productCategoryOptions]);
 
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
@@ -729,11 +773,37 @@ export function AdminDashboard({
     }
   };
 
+  const handleQuickSavePrice = async (product: ProdutoAdmin, nextPrice: number) => {
+    if (demonstration) {
+      toast.info("Edição rápida desativada nesta prévia isolada.");
+      return;
+    }
+    const updated = await quickUpdateProductPrice({
+      data: { password, id: product.id, preco_atual: nextPrice },
+    });
+    qc.setQueryData<ProdutoAdmin[]>(["admin-produtos"], (current) =>
+      current?.map((item) =>
+        item.id === updated.id
+          ? {
+              ...item,
+              preco_atual: updated.preco_atual,
+              preco_antigo: updated.preco_antigo,
+              variacoes_preco:
+                updated.variacoes_preco as unknown as ProdutoAdmin["variacoes_preco"],
+            }
+          : item,
+      ),
+    );
+    toast.success(`Preço de ${product.nome} salvo (${formatBRL(updated.preco_atual)}).`);
+  };
+
   const clearFilters = () => {
     setSearch("");
     setSupplierFilter("all");
     setCategoryFilter("all");
     setStatusFilter("all");
+    setQuickFilter("all");
+    setProductSort("default");
     setPriceField("site");
     setMinimumPrice("");
     setMaximumPrice("");
@@ -756,17 +826,22 @@ export function AdminDashboard({
     Number.isNaN(minPrice) ||
     Number.isNaN(maxPrice) ||
     (minPrice != null && maxPrice != null && minPrice > maxPrice);
-  const priceFiltersActive =
-    priceField !== "site" || minimumPrice.trim() !== "" || maximumPrice.trim() !== "";
-
-  useEffect(() => {
-    setPriceFiltersOpen(priceFiltersActive || invalidPrices);
-  }, [priceFiltersActive, invalidPrices]);
+  const hasAnyProductFilter =
+    search.trim() !== "" ||
+    supplierFilter !== "all" ||
+    categoryFilter !== "all" ||
+    statusFilter !== "all" ||
+    quickFilter !== "all" ||
+    productSort !== "default" ||
+    priceField !== "site" ||
+    minimumPrice.trim() !== "" ||
+    maximumPrice.trim() !== "";
 
   return (
     <AdminWorkspace
       area={workspaceTab}
       demonstration={demonstration}
+      badges={{ fornecedores: totals.awaiting, revisao: pendingScrapedProducts.length }}
       onNavigate={setWorkspaceTab}
       onLogout={onLogout}
       onSearch={(query) => {
@@ -892,119 +967,16 @@ export function AdminDashboard({
           className="admin-workspace-panel"
           aria-label="revisao"
         >
-          <section className="mb-6 border border-gold/30 bg-gold/5 p-4 sm:p-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="font-semibold text-deep-green">Produtos coletados para revisão</h2>
-                <p className="mt-1 text-xs text-text-light">
-                  Importe um JSONL do worker. O custo fica registrado como preço do fornecedor; o
-                  preço de venda só é definido por você ao completar o cadastro.
-                </p>
-              </div>
-              <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md bg-deep-green px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-sand transition-colors hover:bg-gold hover:text-deep-green">
-                <FileUp className="h-4 w-4" />
-                {importing ? "Importando…" : "Importar JSONL"}
-                <input
-                  type="file"
-                  accept=".jsonl,.ndjson,.json,application/json,text/plain"
-                  onChange={handleScrapeImport}
-                  disabled={importing}
-                  className="hidden"
-                />
-              </label>
-            </div>
-
-            {pendingScrapedProducts.length === 0 ? (
-              <p className="mt-4 border-t border-gold/20 pt-3 text-sm text-text-light">
-                {isScrapedError
-                  ? `A fila de importação ainda não está disponível: ${scrapedError instanceof Error ? scrapedError.message : "verifique a migração do banco."}`
-                  : isFetchingScraped
-                    ? "Carregando importações…"
-                    : "Nenhum produto aguardando revisão."}
-              </p>
-            ) : (
-              <>
-                <div className="mt-4 flex items-center justify-between border-t border-gold/20 pt-3 text-xs text-text-light">
-                  <span>{pendingScrapedProducts.length} produto(s) aguardando revisão</span>
-                  <button
-                    type="button"
-                    onClick={() => refreshScrapedProducts()}
-                    disabled={isFetchingScraped}
-                    className="inline-flex min-h-11 items-center gap-1.5 px-2 font-semibold text-cacau"
-                  >
-                    <RefreshCw
-                      className={`h-3.5 w-3.5 ${isFetchingScraped ? "animate-spin" : ""}`}
-                    />
-                    Atualizar
-                  </button>
-                </div>
-                <div className="mt-3 grid max-h-[640px] gap-3 overflow-y-auto pr-1 xl:grid-cols-2">
-                  {pendingScrapedProducts.map((product) => (
-                    <article
-                      key={product.id}
-                      className="border border-cacau/10 bg-white p-3 sm:p-4"
-                    >
-                      <div className="flex gap-3">
-                        <ProductThumbnail
-                          product={{
-                            nome: product.name,
-                            url_imagem: product.image_urls[0],
-                            imagens: product.image_urls.slice(1),
-                          }}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-start justify-between gap-2">
-                            <h3 className="font-semibold text-cacau">{product.name}</h3>
-                            <span className="shrink-0 text-xs font-bold text-deep-green">
-                              {moneyOrDash(product.supplier_price)} custo
-                            </span>
-                          </div>
-                          <p className="mt-1 text-xs text-text-light">
-                            {[product.supplier, product.category, product.sku]
-                              .filter(Boolean)
-                              .join(" · ")}
-                          </p>
-                          {parsePriceVariations(product.price_variations).length > 1 && (
-                            <p className="mt-2 text-xs text-cacau">
-                              {parsePriceVariations(product.price_variations)
-                                .map(
-                                  (variation) =>
-                                    `${variation.name}: ${moneyOrDash(variation.supplier_price)}`,
-                                )
-                                .join(" · ")}
-                            </p>
-                          )}
-                          {product.measurements && (
-                            <p className="mt-2 line-clamp-2 text-xs text-cacau">
-                              {product.measurements}
-                            </p>
-                          )}
-                          {product.description && (
-                            <p className="mt-1 line-clamp-2 text-xs text-text-light">
-                              {product.description}
-                            </p>
-                          )}
-                          {Array.isArray(product.availability) &&
-                            product.availability.length > 0 && (
-                              <p className="mt-1 line-clamp-2 text-[11px] text-text-light">
-                                Disponibilidade: {product.availability.map(String).join(" · ")}
-                              </p>
-                            )}
-                          <button
-                            type="button"
-                            onClick={() => startScrapedEdit(product)}
-                            className="mt-3 min-h-11 rounded border border-gold px-3 py-2 text-xs font-bold uppercase tracking-wide text-cacau transition-colors hover:bg-gold hover:text-deep-green"
-                          >
-                            Completar preço e fotos
-                          </button>
-                        </div>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </>
-            )}
-          </section>
+          <ScrapedImportsPanel
+            items={pendingScrapedProducts}
+            importing={importing}
+            isFetching={isFetchingScraped}
+            isError={isScrapedError}
+            errorMessage={scrapedError instanceof Error ? scrapedError.message : undefined}
+            onImportFile={handleScrapeImport}
+            onRefresh={() => void refreshScrapedProducts()}
+            onReview={startScrapedEdit}
+          />
         </section>
         <section
           hidden={workspaceTab !== "produtos"}
@@ -1012,123 +984,214 @@ export function AdminDashboard({
           className="admin-workspace-panel"
           aria-label="produtos"
         >
-          <section
-            id="admin-product-filters"
-            className="mb-6 scroll-mt-4 border border-cacau/10 bg-sand/50 p-4 sm:p-5"
-          >
-            <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="font-semibold text-deep-green">Encontrar produtos</h2>
-                <p className="text-xs text-text-light">
-                  Pesquise por nome, SKU, fornecedor ou fonte do preço.
-                </p>
+          <section id="admin-product-filters" className="admin-filter-card scroll-mt-4">
+            <div className="admin-filter-row-main admin-filter-row-products">
+              <label className="admin-filter-field admin-filter-search">
+                <span>Buscar no catálogo</span>
+                <div className="admin-input-with-icon">
+                  <Search size={16} aria-hidden="true" />
+                  <input
+                    type="search"
+                    aria-label="Buscar produto no painel"
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Nome, SKU ou categoria…"
+                  />
+                </div>
+              </label>
+
+              <label className="admin-filter-field">
+                <span>Fornecedor</span>
+                <select
+                  aria-label="Filtrar fornecedor"
+                  value={supplierFilter}
+                  onChange={(event) => setSupplierFilter(event.target.value)}
+                >
+                  <option value="all">Todos ({produtos.length})</option>
+                  {supplierPricingGroups.map((group) => (
+                    <option key={group.key} value={group.key}>
+                      {group.label} ({group.total})
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="admin-filter-field">
+                <span>Categoria</span>
+                <select
+                  aria-label="Filtrar categoria"
+                  value={categoryFilter}
+                  onChange={(event) => setCategoryFilter(event.target.value)}
+                >
+                  <option value="all">
+                    Todas ({productCategoryOptions.reduce((sum, item) => sum + item.count, 0)})
+                  </option>
+                  {productCategoryOptions.map((category) => (
+                    <option key={category.key} value={category.key}>
+                      {category.label} ({category.count})
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="admin-filter-field">
+                <span>Situação</span>
+                <select
+                  aria-label="Filtrar estado de publicação"
+                  value={statusFilter}
+                  onChange={(event) => setStatusFilter(event.target.value as "all" | ProductStatus)}
+                >
+                  <option value="all">Todos os estados</option>
+                  <option value="published">Aptos na loja</option>
+                  <option value="awaiting">Aguardando preço</option>
+                  <option value="incomplete">Dados incompletos</option>
+                </select>
+              </label>
+
+              <label className="admin-filter-field">
+                <span>Ordenar por</span>
+                <select
+                  aria-label="Ordenar produtos"
+                  value={productSort}
+                  onChange={(event) => setProductSort(event.target.value as ProductSortOption)}
+                >
+                  <option value="default">Padrão (por fornecedor)</option>
+                  <option value="cost-asc">Menor custo</option>
+                  <option value="cost-desc">Maior custo</option>
+                  <option value="price-asc">Menor preço no site</option>
+                  <option value="price-desc">Maior preço no site</option>
+                  <option value="margin-asc">Menor diferença bruta</option>
+                  <option value="name-asc">Nome (A–Z)</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="admin-filter-row-secondary">
+              <div
+                className="pricing-filter-pills"
+                role="group"
+                aria-label="Atalhos de conferência"
+              >
+                {(
+                  [
+                    { id: "all", label: "Todos", count: quickCounts.all },
+                    { id: "missing-photo", label: "Sem foto", count: quickCounts["missing-photo"] },
+                    {
+                      id: "missing-measures",
+                      label: "Sem medidas",
+                      count: quickCounts["missing-measures"],
+                    },
+                    { id: "out-of-stock", label: "Esgotados", count: quickCounts["out-of-stock"] },
+                    {
+                      id: "black-friday",
+                      label: "Black Friday",
+                      count: quickCounts["black-friday"],
+                    },
+                    {
+                      id: "below-cost",
+                      label: "Abaixo do custo",
+                      count: quickCounts["below-cost"],
+                    },
+                  ] as const
+                )
+                  .filter((pill) => pill.id === "all" || pill.count > 0 || quickFilter === pill.id)
+                  .map((pill) => (
+                    <button
+                      key={pill.id}
+                      type="button"
+                      className="pricing-filter-pill"
+                      aria-pressed={quickFilter === pill.id}
+                      onClick={() => setQuickFilter(pill.id)}
+                    >
+                      <span>{pill.label}</span>
+                      <b>{pill.count.toLocaleString("pt-BR")}</b>
+                    </button>
+                  ))}
               </div>
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="min-h-11 self-start px-2 text-xs font-bold uppercase tracking-wider text-cacau underline decoration-gold underline-offset-4"
-              >
-                Limpar filtros
-              </button>
-            </div>
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
-              <input
-                aria-label="Buscar produto no painel"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Nome, SKU, slug..."
-                className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold lg:col-span-2"
-              />
-              <select
-                aria-label="Filtrar fornecedor"
-                value={supplierFilter}
-                onChange={(event) => setSupplierFilter(event.target.value)}
-                className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold"
-              >
-                <option value="all">Todos os fornecedores</option>
-                {supplierPricingGroups.map((group) => (
-                  <option key={group.key} value={group.key}>
-                    {group.label}
-                  </option>
-                ))}
-              </select>
-              <select
-                aria-label="Filtrar categoria"
-                value={categoryFilter}
-                onChange={(event) => setCategoryFilter(event.target.value)}
-                className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold"
-              >
-                <option value="all">Todas as categorias</option>
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-              <select
-                aria-label="Filtrar estado de publicação"
-                value={statusFilter}
-                onChange={(event) => setStatusFilter(event.target.value as "all" | ProductStatus)}
-                className="border border-cacau/15 bg-white px-3 py-3 text-sm text-cacau outline-none focus:border-gold md:col-span-2 lg:col-span-1"
-              >
-                <option value="all">Todos os estados</option>
-                <option value="published">Publicados</option>
-                <option value="awaiting">Aguardando precificação</option>
-                <option value="incomplete">Dados incompletos</option>
-              </select>
-            </div>
-            <details
-              className="admin-advanced-price-filters"
-              open={priceFiltersOpen}
-              onToggle={(event) => setPriceFiltersOpen(event.currentTarget.open)}
-            >
-              <summary>Faixa de preço{priceFiltersActive ? " · aplicada" : ""}</summary>
-              <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                <label className="text-xs text-cacau">
-                  Aplicar faixa a
+
+              <div className="admin-products-secondary-right">
+                <div className="admin-cost-range" aria-label="Filtrar por faixa de valor">
+                  <SlidersHorizontal size={14} aria-hidden="true" />
                   <select
+                    aria-label="Campo da faixa de preço"
                     value={priceField}
                     onChange={(event) => setPriceField(event.target.value as "site" | "supplier")}
-                    className="mt-1 min-h-11 w-full border border-cacau/15 bg-white px-3 text-sm"
+                    className="admin-range-field-select"
                   >
-                    <option value="site">Preço no site</option>
-                    <option value="supplier">Custo informado pelo fornecedor</option>
+                    <option value="site">Preço site</option>
+                    <option value="supplier">Custo</option>
                   </select>
-                </label>
-                <label className="text-xs text-cacau">
-                  Preço mínimo (R$)
                   <input
                     inputMode="decimal"
                     value={minimumPrice}
                     onChange={(event) => setMinimumPrice(event.target.value)}
-                    placeholder="Sem mínimo"
+                    placeholder="Mín."
+                    aria-label="Valor mínimo em reais"
                     aria-invalid={invalidPrices}
-                    className="mt-1 min-h-11 w-full border border-cacau/15 bg-white px-3 text-sm"
                   />
-                </label>
-                <label className="text-xs text-cacau">
-                  Preço máximo (R$)
+                  <span className="admin-cost-sep">até</span>
                   <input
                     inputMode="decimal"
                     value={maximumPrice}
                     onChange={(event) => setMaximumPrice(event.target.value)}
-                    placeholder="Sem máximo"
+                    placeholder="Máx."
+                    aria-label="Valor máximo em reais"
                     aria-invalid={invalidPrices}
-                    className="mt-1 min-h-11 w-full border border-cacau/15 bg-white px-3 text-sm"
                   />
-                </label>
+                </div>
+
+                <div className="admin-view-toggle" role="group" aria-label="Modo de visualização">
+                  <button
+                    type="button"
+                    aria-pressed={viewMode === "table"}
+                    onClick={() => setViewMode("table")}
+                    title="Lista compacta"
+                  >
+                    <List size={15} aria-hidden="true" />
+                    <span>Lista</span>
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={viewMode === "cards"}
+                    onClick={() => setViewMode("cards")}
+                    title="Cartões detalhados"
+                  >
+                    <LayoutGrid size={15} aria-hidden="true" />
+                    <span>Cartões</span>
+                  </button>
+                </div>
               </div>
-              {invalidPrices && (
-                <p role="alert" className="mt-2 text-xs text-destructive">
-                  Informe valores válidos; o mínimo não pode ser maior que o máximo.
-                </p>
-              )}
-            </details>
-            {statusFilter === "awaiting" && (
-              <p className="mt-3 text-xs text-cacau">
-                Produtos sem preço de venda, inclusive os que ainda não têm custo cadastrado. Edite
-                o produto para definir o preço; ele continua fora da vitrine até estar pronto.
+            </div>
+
+            {invalidPrices && (
+              <p role="alert" className="admin-filter-error">
+                Informe valores válidos; o mínimo não pode ser maior que o máximo.
               </p>
+            )}
+
+            {hasAnyProductFilter && (
+              <div className="admin-active-chips">
+                {search.trim() && (
+                  <button type="button" className="admin-chip" onClick={() => setSearch("")}>
+                    Busca: “{search.trim()}” <X size={13} aria-hidden="true" />
+                  </button>
+                )}
+                {categoryFilter !== "all" && (
+                  <button
+                    type="button"
+                    className="admin-chip"
+                    onClick={() => setCategoryFilter("all")}
+                  >
+                    Categoria:{" "}
+                    {productCategoryOptions.find((c) => c.key === categoryFilter)?.label ??
+                      categoryFilter}{" "}
+                    <X size={13} aria-hidden="true" />
+                  </button>
+                )}
+                <button type="button" className="admin-reset-filters" onClick={clearFilters}>
+                  <RotateCcw size={13} aria-hidden="true" /> Limpar filtros
+                </button>
+              </div>
             )}
           </section>
 
@@ -1158,7 +1221,9 @@ export function AdminDashboard({
           ) : (
             <div>
               <div className="mb-3 flex items-center justify-between gap-3 text-xs text-text-light">
-                <span>{filteredProdutos.length} produto(s) encontrado(s)</span>
+                <span>
+                  {filteredProdutos.length.toLocaleString("pt-BR")} produto(s) encontrado(s)
+                </span>
                 <span>
                   Página {page} de {totalPages}
                 </span>
@@ -1173,6 +1238,98 @@ export function AdminDashboard({
                   >
                     Limpar filtros
                   </button>
+                </div>
+              ) : viewMode === "table" ? (
+                <div className="admin-products-table-wrap">
+                  <div
+                    className="admin-products-table"
+                    role="table"
+                    aria-label="Produtos do catálogo"
+                  >
+                    <div className="admin-products-row admin-products-head" role="row">
+                      <span role="columnheader">Produto / Categoria / Fornecedor</span>
+                      <span role="columnheader">Custo</span>
+                      <span role="columnheader">Preço site / 10x</span>
+                      <span role="columnheader">Dif. bruta</span>
+                      <span role="columnheader">Situação</span>
+                      <span role="columnheader">
+                        <span className="aw-sr-only">Ações</span>
+                      </span>
+                    </div>
+                    {visibleProdutos.map((p) => {
+                      const status = productStatus(p);
+                      const difference = grossPriceDifference(p);
+                      const sitePrice = Number(p.preco_atual ?? 0);
+                      return (
+                        <div className="admin-products-row" role="row" key={p.id}>
+                          <div className="admin-products-cell-main" role="cell">
+                            <ProductIdentity product={p}>
+                              <small>
+                                {[p.categoria || "Sem categoria", p.sku || "Sem SKU", sourceName(p)]
+                                  .filter(Boolean)
+                                  .join(" · ")}
+                              </small>
+                            </ProductIdentity>
+                          </div>
+                          <span className="supplier-pricing-value" role="cell" data-label="Custo">
+                            {moneyOrDash(p.preco_atacado)}
+                          </span>
+                          <span
+                            className="supplier-pricing-value supplier-pricing-site-price"
+                            role="cell"
+                            data-label="Preço no site"
+                          >
+                            <strong>{moneyOrDash(p.preco_atual)}</strong>
+                            {sitePrice > 0 && (
+                              <small>10x de {formatBRL(cardInstallment(sitePrice, 10))}</small>
+                            )}
+                          </span>
+                          <span
+                            className={`supplier-pricing-value ${difference == null ? "is-muted" : difference >= 0 ? "is-positive" : "is-negative"}`}
+                            role="cell"
+                            data-label="Diferença bruta"
+                          >
+                            {grossPriceDifferenceLabel(p)}
+                          </span>
+                          <span
+                            className="admin-products-status-cell"
+                            role="cell"
+                            data-label="Situação"
+                          >
+                            <StatusBadge status={status} />
+                          </span>
+                          <div className="admin-products-actions" role="cell">
+                            <button
+                              type="button"
+                              onClick={() => startEdit(p, "preco")}
+                              className="admin-row-btn-price"
+                              aria-label={`Precificar ${p.nome}`}
+                            >
+                              <CircleDollarSign size={14} aria-hidden="true" />
+                              <span>Precificar</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => startEdit(p, "dados")}
+                              className="admin-row-btn-edit"
+                              aria-label={`Editar ${p.nome}`}
+                            >
+                              <Pencil size={14} aria-hidden="true" />
+                              <span>Editar</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => remove(p.id)}
+                              aria-label={`Remover ${p.nome}`}
+                              className="admin-row-btn-delete"
+                            >
+                              <Trash2 size={14} aria-hidden="true" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-5">
@@ -1258,14 +1415,21 @@ export function AdminDashboard({
                                   </div>
                                 </div>
                               </div>
-                              <div className="flex items-center justify-between gap-3 pt-2">
+                              <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
                                 <span className="text-xs text-text-light">
                                   {p.vendas_ultimos_30_dias ?? 0} venda(s) em 30 dias
                                 </span>
-                                <div className="flex gap-2">
+                                <div className="flex flex-wrap gap-2">
                                   <button
                                     type="button"
-                                    onClick={() => startEdit(p)}
+                                    onClick={() => startEdit(p, "preco")}
+                                    className="inline-flex min-h-11 items-center gap-1.5 rounded border border-deep-green/30 bg-[#edf4e9] px-3 py-2 text-xs font-bold uppercase tracking-wider text-deep-green hover:border-gold"
+                                  >
+                                    <CircleDollarSign className="h-3.5 w-3.5" /> Precificar
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => startEdit(p, "dados")}
                                     className="inline-flex min-h-11 items-center gap-1.5 rounded border border-cacau/20 px-3 py-2 text-xs font-bold uppercase tracking-wider text-cacau hover:border-gold hover:text-deep-green"
                                   >
                                     <Pencil className="h-3.5 w-3.5" /> Editar
@@ -1347,6 +1511,7 @@ export function AdminDashboard({
               selectedSupplier={supplierFilter}
               onSelectSupplier={setSupplierFilter}
               onEdit={(product) => startEdit(product, "preco")}
+              onQuickSavePrice={handleQuickSavePrice}
             />
           )}
         </section>

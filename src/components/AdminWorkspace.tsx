@@ -3,17 +3,19 @@ import * as Dialog from "@radix-ui/react-dialog";
 import {
   ArrowUpRight,
   ChevronRight,
+  CircleDollarSign,
   CircleHelp,
+  FileUp,
   LayoutDashboard,
   LogOut,
-  MessageCircle,
   Menu,
   MoreHorizontal,
   Package,
   PanelsTopLeft,
   Search,
-  Tag,
   ShieldCheck,
+  ShoppingBag,
+  SlidersHorizontal,
   X,
 } from "lucide-react";
 import { MobiliLogo } from "./MobiliLogo";
@@ -21,26 +23,33 @@ import {
   ADMIN_NAV_GROUPS,
   getAdminNavGroup,
   getAdminViewLabel,
+  type AdminNavGroup,
   type AdminViewId,
 } from "../lib/admin-navigation";
 import "../admin-overview.css";
 import "../admin-density.css";
 import "../admin-usability.css";
 
-const groupIcons = {
+const groupIcons: Record<AdminNavGroup["id"], typeof LayoutDashboard> = {
   start: LayoutDashboard,
+  pricing: CircleDollarSign,
   catalog: Package,
+  imports: FileUp,
+  orders: ShoppingBag,
   storeContent: PanelsTopLeft,
-  offers: Tag,
-  service: MessageCircle,
+  channels: SlidersHorizontal,
   more: MoreHorizontal,
 };
+
+const OPERACAO_GROUPS = ADMIN_NAV_GROUPS.filter((group) => group.section === "operacao");
+const LOJA_GROUPS = ADMIN_NAV_GROUPS.filter((group) => group.section === "loja");
 
 export function AdminWorkspace({
   area,
   onNavigate,
   onSearch,
   onLogout,
+  badges,
   demonstration = false,
   storefrontHref = "https://www.mobimb.com.br/",
   children,
@@ -49,6 +58,7 @@ export function AdminWorkspace({
   onNavigate: (area: AdminViewId) => void;
   onSearch: (query: string) => void;
   onLogout?: () => void;
+  badges?: Partial<Record<AdminViewId, number>>;
   demonstration?: boolean;
   storefrontHref?: string;
   children: ReactNode;
@@ -71,6 +81,29 @@ export function AdminWorkspace({
     onNavigate(next);
     setOpen(false);
   };
+  const renderNavGroup = (group: AdminNavGroup) => {
+    const Icon = groupIcons[group.id];
+    const active = activeGroup.id === group.id;
+    const badgeCount = badges?.[group.defaultView];
+    const showBadge = typeof badgeCount === "number" && badgeCount > 0;
+    return (
+      <div className="aw-nav-group" key={group.id}>
+        <button
+          type="button"
+          aria-current={active ? "page" : undefined}
+          onClick={() => navigate(group.defaultView)}
+        >
+          <Icon size={18} aria-hidden="true" />
+          <span className="aw-nav-item-text">{group.label}</span>
+          {showBadge ? (
+            <span className="aw-nav-badge">{badgeCount.toLocaleString("pt-BR")}</span>
+          ) : (
+            active && <span className="aw-active-dot" />
+          )}
+        </button>
+      </div>
+    );
+  };
   const renderNavigation = (variant: "desktop" | "mobile") => (
     <>
       <a
@@ -83,44 +116,11 @@ export function AdminWorkspace({
         <MobiliLogo className="aw-logo" />
         <span>mobimb.com.br</span>
       </a>
-      <p className="aw-nav-label">OPERAÇÃO DA MOBI</p>
       <nav aria-label={variant === "mobile" ? "Navegação mobile do painel" : "Navegação do painel"}>
-        {ADMIN_NAV_GROUPS.map((group) => {
-          const Icon = groupIcons[group.id];
-          const active = activeGroup.id === group.id;
-          const showSubviews = group.views.length > 1 && (variant === "mobile" || active);
-          return (
-            <div className="aw-nav-group" key={group.id}>
-              <button
-                type="button"
-                aria-current={active ? "page" : undefined}
-                onClick={() => navigate(group.defaultView)}
-              >
-                <Icon size={18} aria-hidden="true" />
-                <span>{group.label}</span>
-                {active && <span className="aw-active-dot" />}
-              </button>
-              {showSubviews && (
-                <div
-                  className="aw-nav-sublist"
-                  role="group"
-                  aria-label={`Subáreas de ${group.label}`}
-                >
-                  {group.views.map((view) => (
-                    <button
-                      type="button"
-                      key={view.id}
-                      aria-current={area === view.id ? "page" : undefined}
-                      onClick={() => navigate(view.id)}
-                    >
-                      {view.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
+        <p className="aw-nav-label">OPERAÇÃO DIÁRIA</p>
+        {OPERACAO_GROUPS.map(renderNavGroup)}
+        <p className="aw-nav-label aw-nav-label-spaced">LOJA E CONFIGURAÇÕES</p>
+        {LOJA_GROUPS.map(renderNavGroup)}
       </nav>
       <div className="aw-sidebar-bottom">
         <ShieldCheck size={18} aria-hidden="true" />
@@ -188,7 +188,7 @@ export function AdminWorkspace({
               </>
             )}
           </div>
-          {area !== "produtos" && area !== "fornecedores" && (
+          {area !== "produtos" && area !== "fornecedores" && area !== "revisao" && (
             <form
               className="aw-search"
               role="search"

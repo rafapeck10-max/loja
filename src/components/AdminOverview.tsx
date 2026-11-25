@@ -9,6 +9,7 @@ import {
   CircleDollarSign,
   Images,
   FileDown,
+  ShoppingBag,
   Tag,
 } from "lucide-react";
 import {
@@ -31,7 +32,7 @@ export interface AdminOverviewProps<T extends OverviewProduct = OverviewProduct>
   onEdit: (product: T) => void;
   onPrice?: (product: T) => void;
   onNavigate: (
-    area: "produtos" | "vitrine" | "banners" | "revisao" | "fornecedores" | "campaigns",
+    area: "produtos" | "vitrine" | "banners" | "revisao" | "fornecedores" | "campaigns" | "pedidos",
   ) => void;
   demonstration?: boolean;
 }
@@ -94,10 +95,16 @@ export function AdminOverview<T extends OverviewProduct>({
       </header>
 
       <div className="ov-summary" aria-label="Resumo do catálogo">
-        <div className="ov-summary-item">
+        <button
+          type="button"
+          className="ov-summary-item ov-summary-link"
+          onClick={() => onProducts("all")}
+          disabled={!ready}
+        >
           <span>No catálogo</span>
           <strong>{counts.total ?? "—"}</strong>
-        </div>
+          <ArrowRight size={14} aria-hidden="true" />
+        </button>
         <span className="ov-summary-divider" aria-hidden="true" />
         <button
           type="button"
@@ -105,9 +112,34 @@ export function AdminOverview<T extends OverviewProduct>({
           onClick={() => onProducts("published")}
           disabled={!ready}
         >
-          <span>Aptos para exibição</span>
+          <span>Aptos na loja</span>
           <strong>{counts.published ?? "—"}</strong>
-          <ArrowRight size={15} aria-hidden="true" />
+          <ArrowRight size={14} aria-hidden="true" />
+        </button>
+        <span className="ov-summary-divider" aria-hidden="true" />
+        <button
+          type="button"
+          className="ov-summary-item ov-summary-link"
+          onClick={() => onNavigate("fornecedores")}
+          disabled={!ready}
+        >
+          <span>Aguardando preço</span>
+          <strong>{counts.awaiting ?? "—"}</strong>
+          <ArrowRight size={14} aria-hidden="true" />
+        </button>
+        <span className="ov-summary-divider" aria-hidden="true" />
+        <button
+          type="button"
+          className="ov-summary-item ov-summary-link"
+          onClick={() => onNavigate("revisao")}
+          disabled={!queueReady}
+        >
+          <span>Importações</span>
+          <strong>
+            {counts.review ?? "—"}
+            {reviewLimitReached ? "+" : ""}
+          </strong>
+          <ArrowRight size={14} aria-hidden="true" />
         </button>
       </div>
 
@@ -156,6 +188,9 @@ export function AdminOverview<T extends OverviewProduct>({
       <div className="ov-quick-strip" aria-label="Atalhos diretos">
         <button type="button" className="ov-quick-pill" onClick={() => onProducts("all")}>
           <Package size={15} aria-hidden="true" /> Catálogo completo ({counts.total ?? "—"})
+        </button>
+        <button type="button" className="ov-quick-pill" onClick={() => onNavigate("pedidos")}>
+          <ShoppingBag size={15} aria-hidden="true" /> Pedidos do site
         </button>
         <button type="button" className="ov-quick-pill" onClick={() => onNavigate("banners")}>
           <Images size={15} aria-hidden="true" /> Banners e mídias
@@ -279,11 +314,22 @@ export function AdminOverview<T extends OverviewProduct>({
                 {demonstration ? "Amostra local" : "Fonte: cadastro de produtos"} ·{" "}
                 <SourceTime value={catalog.updatedAt} />
               </span>
-              {issues.length > 5 && (
-                <button className="ov-text-button" onClick={() => setShowAll(!showAll)}>
-                  {showAll ? "Mostrar menos" : `Ver mais (${issues.length} nesta fila)`}
-                </button>
-              )}
+              <div className="flex flex-wrap items-center gap-4">
+                {queue === "pricing" && (
+                  <button
+                    type="button"
+                    className="ov-text-button"
+                    onClick={() => onNavigate("fornecedores")}
+                  >
+                    Abrir fila completa com filtros <ArrowRight size={15} />
+                  </button>
+                )}
+                {issues.length > 5 && (
+                  <button className="ov-text-button" onClick={() => setShowAll(!showAll)}>
+                    {showAll ? "Mostrar menos" : `Ver mais (${issues.length} nesta fila)`}
+                  </button>
+                )}
+              </div>
             </div>
           </>
         )}

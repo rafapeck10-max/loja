@@ -20,7 +20,8 @@ export interface AdminNavView {
 }
 
 export interface AdminNavGroup {
-  id: "start" | "catalog" | "storeContent" | "offers" | "service" | "more";
+  id: "start" | "pricing" | "catalog" | "imports" | "orders" | "storeContent" | "channels" | "more";
+  section: "operacao" | "loja";
   label: string;
   defaultView: AdminViewId;
   views: readonly AdminNavView[];
@@ -29,24 +30,42 @@ export interface AdminNavGroup {
 export const ADMIN_NAV_GROUPS = [
   {
     id: "start",
+    section: "operacao",
     label: "Início",
     defaultView: "overview",
     views: [{ id: "overview", label: "Início" }],
   },
   {
+    id: "pricing",
+    section: "operacao",
+    label: "Precificar",
+    defaultView: "fornecedores",
+    views: [{ id: "fornecedores", label: "Precificar" }],
+  },
+  {
     id: "catalog",
-    label: "Catálogo",
+    section: "operacao",
+    label: "Produtos",
     defaultView: "produtos",
-    views: [
-      { id: "produtos", label: "Produtos" },
-      { id: "fornecedores", label: "Precificar" },
-      { id: "revisao", label: "Importações" },
-      { id: "shopping", label: "Google Shopping" },
-      { id: "navigation", label: "Categorias e filtros" },
-    ],
+    views: [{ id: "produtos", label: "Produtos" }],
+  },
+  {
+    id: "imports",
+    section: "operacao",
+    label: "Importações",
+    defaultView: "revisao",
+    views: [{ id: "revisao", label: "Importações" }],
+  },
+  {
+    id: "orders",
+    section: "operacao",
+    label: "Pedidos do site",
+    defaultView: "pedidos",
+    views: [{ id: "pedidos", label: "Pedidos do site" }],
   },
   {
     id: "storeContent",
+    section: "loja",
     label: "Vitrine e banners",
     defaultView: "vitrine",
     views: [
@@ -56,26 +75,24 @@ export const ADMIN_NAV_GROUPS = [
     ],
   },
   {
-    id: "offers",
-    label: "Simular ofertas",
-    defaultView: "campaigns",
-    views: [{ id: "campaigns", label: "Simulador de ofertas" }],
-  },
-  {
-    id: "service",
-    label: "Atendimento",
-    defaultView: "service",
+    id: "channels",
+    section: "loja",
+    label: "Canais e catálogo",
+    defaultView: "shopping",
     views: [
-      { id: "pedidos", label: "Pedidos do site" },
+      { id: "shopping", label: "Google Shopping" },
+      { id: "navigation", label: "Categorias e filtros" },
       { id: "service", label: "Atendimento online" },
     ],
   },
   {
     id: "more",
-    label: "Configurações",
-    defaultView: "history",
+    section: "loja",
+    label: "Ferramentas e histórico",
+    defaultView: "campaigns",
     views: [
-      { id: "history", label: "Histórico e estado do painel" },
+      { id: "campaigns", label: "Simulador de ofertas" },
+      { id: "history", label: "Histórico do painel" },
       { id: "evolution", label: "Evolução do site" },
     ],
   },
