@@ -60,134 +60,149 @@ export function StoreOrdersPanel({ password }: { password: string }) {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-cacau/15 bg-white p-4">
-        <div className="flex flex-wrap gap-2">
-          {(["all", "novo", "em_atendimento", "concluido", "cancelado"] as const).map((status) => (
-            <button
-              key={status}
-              type="button"
-              aria-pressed={statusFilter === status}
-              onClick={() => setStatusFilter(status)}
-              className="inline-flex min-h-11 items-center rounded-full border border-cacau/15 bg-[#faf7f1] px-4 text-xs font-bold text-cacau aria-pressed:border-deep-green aria-pressed:bg-deep-green aria-pressed:text-sand"
-            >
-              {status === "all"
-                ? `Todos (${orders.length})`
-                : `${STATUS_LABELS[status]} (${orders.filter((item) => item.status === status).length})`}
-            </button>
-          ))}
+    <section aria-labelledby="store-orders-title">
+      <header className="aw-editor-toolbar admin-page-header">
+        <div>
+          <h1 id="store-orders-title">Pedidos do site</h1>
+          <p className="admin-page-subtitle">
+            Acompanhe os pedidos enviados pela loja e atualize o status de atendimento.
+          </p>
         </div>
-        <button
-          type="button"
-          onClick={() => refetch()}
-          className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-cacau/20 bg-white px-3 text-xs font-bold text-cacau hover:bg-sand"
-        >
-          <RefreshCw size={14} className={isFetching ? "animate-spin" : ""} /> Atualizar
+        <button type="button" onClick={() => refetch()} disabled={isFetching} className="aw-action">
+          <RefreshCw size={15} className={isFetching ? "ov-spin" : ""} aria-hidden="true" />
+          {isFetching ? "Atualizando…" : "Atualizar"}
         </button>
-      </div>
+      </header>
 
-      {isError && (
-        <div
-          role="alert"
-          className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive"
-        >
-          {error instanceof Error ? error.message : "Não foi possível carregar os pedidos."}
-        </div>
-      )}
-
-      {isPending ? (
-        <div className="rounded-xl border border-cacau/10 bg-white p-6 text-center text-sm text-text-light">
-          Carregando pedidos do site…
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="rounded-xl border border-cacau/10 bg-white p-6 text-center text-sm text-text-light">
-          Nenhum pedido registrado para este filtro ainda.
-        </div>
-      ) : (
-        <div className="grid gap-3">
-          {filtered.map((order) => (
-            <article
-              key={order.id}
-              className="rounded-xl border border-cacau/15 bg-white p-4 sm:p-5"
-            >
-              <div className="flex flex-col gap-3 border-b border-cacau/10 pb-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <strong className="text-base text-deep-green">{order.codigo}</strong>
-                    <span className="rounded-full bg-[#faf7f1] px-2.5 py-0.5 text-[11px] font-semibold text-cacau">
-                      {order.forma_pagamento}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-xs text-text-light">
-                    {new Date(order.created_at).toLocaleString("pt-BR")} · {order.cliente_nome} ·{" "}
-                    {order.cliente_telefone}
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <select
-                    aria-label={`Status do pedido ${order.codigo}`}
-                    value={order.status}
-                    disabled={updatingId === order.id}
-                    onChange={(event) => changeStatus(order, event.target.value as OrderStatus)}
-                    className="min-h-11 rounded-lg border border-cacau/20 bg-white px-3 text-xs font-semibold text-cacau"
+      <div className="admin-workbench">
+        <div className="admin-workbench-filters">
+          <div
+            className="pricing-filter-pills"
+            role="group"
+            aria-label="Filtrar pedidos por status"
+          >
+            {(["all", "novo", "em_atendimento", "concluido", "cancelado"] as const).map(
+              (status) => {
+                const count =
+                  status === "all"
+                    ? orders.length
+                    : orders.filter((item) => item.status === status).length;
+                return (
+                  <button
+                    key={status}
+                    type="button"
+                    aria-pressed={statusFilter === status}
+                    onClick={() => setStatusFilter(status)}
+                    className="pricing-filter-pill"
                   >
-                    {(Object.keys(STATUS_LABELS) as OrderStatus[]).map((key) => (
-                      <option key={key} value={key}>
-                        {STATUS_LABELS[key]}
-                      </option>
-                    ))}
-                  </select>
-                  <a
-                    href={phoneToWhatsApp(order.cliente_telefone)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-whatsapp px-3 text-xs font-bold text-white no-underline hover:brightness-110"
-                  >
-                    <WhatsAppIcon className="h-4 w-4" /> WhatsApp
-                  </a>
-                </div>
-              </div>
+                    <span>{status === "all" ? "Todos" : STATUS_LABELS[status]}</span>
+                    <b>{count}</b>
+                  </button>
+                );
+              },
+            )}
+          </div>
+        </div>
 
-              <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
-                <div className="space-y-1 text-xs text-cacau">
+        {isError && (
+          <div
+            role="alert"
+            className="m-4 rounded-md border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive"
+          >
+            {error instanceof Error ? error.message : "Não foi possível carregar os pedidos."}
+          </div>
+        )}
+
+        {isPending ? (
+          <div className="scraped-empty-box">Carregando pedidos do site…</div>
+        ) : filtered.length === 0 ? (
+          <div className="scraped-empty-box">Nenhum pedido registrado para este filtro ainda.</div>
+        ) : (
+          <div className="grid gap-3 p-5">
+            {filtered.map((order) => (
+              <article
+                key={order.id}
+                className="rounded-lg border border-cacau/15 bg-white p-4 sm:p-5"
+              >
+                <div className="flex flex-col gap-3 border-b border-cacau/10 pb-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <strong>Entrega:</strong> {order.endereco_rua}, {order.endereco_bairro} —{" "}
-                    {order.endereco_cidade}
-                    {order.endereco_cep ? ` · CEP ${order.endereco_cep}` : ""}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <strong className="text-base text-deep-green">{order.codigo}</strong>
+                      <span className="rounded bg-[#faf7f1] px-2.5 py-0.5 text-[11px] font-semibold text-cacau">
+                        {order.forma_pagamento}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-text-light">
+                      {new Date(order.created_at).toLocaleString("pt-BR")} · {order.cliente_nome} ·{" "}
+                      {order.cliente_telefone}
+                    </p>
                   </div>
-                  <ul className="mt-2 list-disc space-y-1 pl-4">
-                    {(Array.isArray(order.itens) ? order.itens : []).map((item, idx) => (
-                      <li key={`${item.id}-${idx}`}>
-                        <strong>
-                          {item.quantity}× {item.nome}
-                        </strong>{" "}
-                        ({formatBRL(item.unitPix)} Pix / {order.parcelas}× total{" "}
-                        {formatBRL(item.unitCard)})
-                        {[
-                          item.color && `Cor: ${item.color}`,
-                          item.finish && `Pés: ${item.finish}`,
-                          item.variant && `Opção: ${item.variant}`,
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <select
+                      aria-label={`Status do pedido ${order.codigo}`}
+                      value={order.status}
+                      disabled={updatingId === order.id}
+                      onChange={(event) => changeStatus(order, event.target.value as OrderStatus)}
+                      className="min-h-11 rounded-md border border-cacau/20 bg-white px-3 text-xs font-semibold text-cacau"
+                    >
+                      {(Object.keys(STATUS_LABELS) as OrderStatus[]).map((key) => (
+                        <option key={key} value={key}>
+                          {STATUS_LABELS[key]}
+                        </option>
+                      ))}
+                    </select>
+                    <a
+                      href={phoneToWhatsApp(order.cliente_telefone)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex min-h-11 items-center gap-1.5 rounded-md bg-whatsapp px-3 text-xs font-bold text-white no-underline hover:brightness-110"
+                    >
+                      <WhatsAppIcon className="h-4 w-4" /> WhatsApp
+                    </a>
+                  </div>
                 </div>
-                <div className="rounded-lg border border-cacau/10 bg-[#faf7f1] px-4 py-3 text-right">
-                  <div className="text-[11px] uppercase text-text-light">Total no Pix</div>
-                  <div className="text-lg font-bold text-price-green">
-                    {formatBRL(Number(order.total_pix))}
+
+                <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+                  <div className="space-y-1 text-xs text-cacau">
+                    <div>
+                      <strong>Entrega:</strong> {order.endereco_rua}, {order.endereco_bairro} —{" "}
+                      {order.endereco_cidade}
+                      {order.endereco_cep ? ` · CEP ${order.endereco_cep}` : ""}
+                    </div>
+                    <ul className="mt-2 list-disc space-y-1 pl-4">
+                      {(Array.isArray(order.itens) ? order.itens : []).map((item, idx) => (
+                        <li key={`${item.id}-${idx}`}>
+                          <strong>
+                            {item.quantity}× {item.nome}
+                          </strong>{" "}
+                          ({formatBRL(item.unitPix)} Pix / {order.parcelas}× total{" "}
+                          {formatBRL(item.unitCard)})
+                          {[
+                            item.color && `Cor: ${item.color}`,
+                            item.finish && `Pés: ${item.finish}`,
+                            item.variant && `Opção: ${item.variant}`,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                  <div className="mt-1 text-[11px] text-text-light">
-                    Cartão ({order.parcelas}x): {formatBRL(Number(order.total_cartao))}
+                  <div className="rounded-md border border-cacau/10 bg-[#faf7f1] px-4 py-3 text-right">
+                    <div className="text-[11px] uppercase text-text-light">Total no Pix</div>
+                    <div className="text-lg font-bold text-price-green">
+                      {formatBRL(Number(order.total_pix))}
+                    </div>
+                    <div className="mt-1 text-[11px] text-text-light">
+                      Cartão ({order.parcelas}x): {formatBRL(Number(order.total_cartao))}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      )}
-    </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
   );
 }

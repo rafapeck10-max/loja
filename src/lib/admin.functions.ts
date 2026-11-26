@@ -799,6 +799,84 @@ export const upsertProduto = createServerFn({ method: "POST" })
     return { ok: true as const, id: inserted.id, duplicate: Boolean(existing) };
   });
 
+export const quickUpdateProductPrice = createServerFn({ method: "POST" })
+  .inputValidator((input: { password: string; id: string; preco_atual: number }) => {
+    const id = String(input?.id ?? "").trim();
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+      throw new Error("ID de produto inválido.");
+    }
+    const rawPrice = Number(input?.preco_atual);
+    if (!Number.isFinite(rawPrice) || rawPrice < 0) {
+      throw new Error("Preço de venda inválido.");
+    }
+    return {
+      password: String(input?.password ?? ""),
+      id,
+      preco_atual: Math.round(rawPrice * 100) / 100,
+    };
+  })
+  .handler(async ({ data }) => {
+    checkPassword(data.password);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: existing, error: fetchError } = await supabaseAdmin
+      .from("produtos")
+      .select("id, preco_atual, preco_antigo, preco_atacado, variacoes_preco")
+      .eq("id", data.id)
+      .maybeSingle();
+
+    if (fetchError) throw new Error(fetchError.message);
+    if (!existing) throw new Error("Produto não encontrado.");
+
+    const existingVariations = Array.isArray(existing.variacoes_preco)
+      ? (existing.variacoes_preco as unknown as PriceVariation[])
+      : [];
+    if (existingVariations.length > 1) {
+      throw new Error(
+        "Este produto possui múltiplas variações de preço; abra os detalhes para precificar cada opção.",
+      );
+    }
+
+    const nextPrecoAtual = data.preco_atual;
+    const existingOldPrice = Number(existing.preco_antigo ?? 0);
+    const nextPrecoAntigo = hasRealReferencePrice(existingOldPrice, nextPrecoAtual)
+      ? existingOldPrice
+      : nextPrecoAtual;
+
+    const patch: Database["public"]["Tables"]["produtos"]["Update"] = {
+      preco_atual: nextPrecoAtual,
+      preco_antigo: nextPrecoAntigo,
+    };
+    let nextVariations = existingVariations;
+    if (existingVariations.length === 1) {
+      nextVariations = [
+        {
+          ...existingVariations[0],
+          sale_price: nextPrecoAtual > 0 ? nextPrecoAtual : null,
+        },
+      ];
+      patch.variacoes_preco = nextVariations.map(({ name, sku, supplier_price, sale_price }) => ({
+        name,
+        sku,
+        supplier_price,
+        sale_price,
+      }));
+    }
+
+    const { error: updateError } = await supabaseAdmin
+      .from("produtos")
+      .update(patch)
+      .eq("id", data.id);
+
+    if (updateError) throw new Error(updateError.message);
+    return {
+      ok: true as const,
+      id: data.id,
+      preco_atual: nextPrecoAtual,
+      preco_antigo: nextPrecoAntigo,
+      variacoes_preco: nextVariations,
+    };
+  });
+
 const ALLOWED_STOCK_STATUSES = new Set([
   "nao_verificado",
   "disponivel",
