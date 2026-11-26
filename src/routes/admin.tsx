@@ -5,7 +5,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   AlertCircle,
-  Check,
   CircleDollarSign,
   Images,
   Layers3,
@@ -162,35 +161,35 @@ function LoginForm({ onSuccess }: { onSuccess: (pwd: string) => void }) {
   return (
     <div className="admin-login-shell">
       <div className="admin-login-card">
-        <div className="admin-login-brand">
-          <div className="admin-login-logo-pill">
-            <MobiliLogo className="admin-login-logo" />
-          </div>
+        <div className="admin-login-header">
+          <MobiliLogo className="admin-login-logo" />
           <span className="admin-login-badge">
             <Lock size={13} aria-hidden="true" />
             Acesso restrito
           </span>
         </div>
-        <h1>Painel administrativo</h1>
-        <p className="admin-login-subtitle">
-          Entre para precificar móveis, revisar importações e gerenciar o catálogo da Mobi.
-        </p>
-        <form onSubmit={submit} className="admin-login-form">
-          <div className="admin-login-field">
-            <label htmlFor="admin-password-input">Senha administrativa</label>
-            <input
-              id="admin-password-input"
-              type="password"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              placeholder="Digite sua senha"
-              autoFocus
-            />
-          </div>
-          <button type="submit" disabled={loading} className="admin-login-submit">
-            {loading ? "Verificando…" : "Entrar no painel"}
-          </button>
-        </form>
+        <div className="admin-login-body">
+          <h1>Painel administrativo</h1>
+          <p className="admin-login-subtitle">
+            Entre para precificar móveis, revisar importações e gerenciar o catálogo da Mobi.
+          </p>
+          <form onSubmit={submit} className="admin-login-form">
+            <div className="admin-login-field">
+              <label htmlFor="admin-password-input">Senha administrativa</label>
+              <input
+                id="admin-password-input"
+                type="password"
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                placeholder="Digite sua senha"
+                autoFocus
+              />
+            </div>
+            <button type="submit" disabled={loading} className="admin-login-submit">
+              {loading ? "Verificando…" : "Entrar"}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
@@ -846,7 +845,6 @@ export function AdminDashboard({
       {workspaceTab === "produtos" && (
         <div className="aw-editor-toolbar admin-page-header">
           <div>
-            <p className="admin-page-eyebrow">OPERAÇÃO DIÁRIA · CATÁLOGO</p>
             <h1>Produtos</h1>
             <p className="admin-page-subtitle">
               Busque, filtre por fornecedor ou categoria e edite custos e preços de venda.
@@ -881,26 +879,21 @@ export function AdminDashboard({
       />
       <div
         hidden={workspaceTab !== "produtos"}
-        className="admin-kpi-grid"
+        className="mobi-kpi-strip"
         aria-label="Resumo do catálogo"
       >
         <button
           type="button"
           onClick={() => selectSummary("all")}
           aria-pressed={statusFilter === "all"}
-          className="admin-kpi-card is-forest"
+          className="mobi-kpi-cell"
         >
-          <span className="admin-kpi-top">
-            <span className="admin-kpi-label-wrap">
-              <span className="admin-kpi-icon" aria-hidden="true">
-                <Package size={15} />
-              </span>
-              <span className="admin-kpi-label">Total</span>
-            </span>
+          <span className="mobi-kpi-head">
+            <span className="mobi-kpi-label">Total</span>
           </span>
-          <span className="admin-kpi-value-row">
+          <span className="mobi-kpi-value-row">
             <strong>{produtos.length.toLocaleString("pt-BR")}</strong>
-            <span className="admin-kpi-hint">Todos os itens</span>
+            <span className="mobi-kpi-hint">Todos os itens</span>
           </span>
         </button>
 
@@ -908,19 +901,14 @@ export function AdminDashboard({
           type="button"
           onClick={() => selectSummary("published")}
           aria-pressed={statusFilter === "published"}
-          className="admin-kpi-card is-emerald"
+          className="mobi-kpi-cell is-green"
         >
-          <span className="admin-kpi-top">
-            <span className="admin-kpi-label-wrap">
-              <span className="admin-kpi-icon" aria-hidden="true">
-                <Check size={15} />
-              </span>
-              <span className="admin-kpi-label">Aptos para exibição</span>
-            </span>
+          <span className="mobi-kpi-head">
+            <span className="mobi-kpi-label">Aptos para exibição</span>
           </span>
-          <span className="admin-kpi-value-row">
+          <span className="mobi-kpi-value-row">
             <strong>{totals.published.toLocaleString("pt-BR")}</strong>
-            <span className="admin-kpi-hint">No site</span>
+            <span className="mobi-kpi-hint">No site</span>
           </span>
         </button>
 
@@ -928,19 +916,14 @@ export function AdminDashboard({
           type="button"
           onClick={() => selectSummary("awaiting")}
           aria-pressed={statusFilter === "awaiting"}
-          className="admin-kpi-card is-amber"
+          className="mobi-kpi-cell is-gold"
         >
-          <span className="admin-kpi-top">
-            <span className="admin-kpi-label-wrap">
-              <span className="admin-kpi-icon" aria-hidden="true">
-                <CircleDollarSign size={15} />
-              </span>
-              <span className="admin-kpi-label">Aguardando preço</span>
-            </span>
+          <span className="mobi-kpi-head">
+            <span className="mobi-kpi-label">Aguardando preço</span>
           </span>
-          <span className="admin-kpi-value-row">
+          <span className="mobi-kpi-value-row">
             <strong>{totals.awaiting.toLocaleString("pt-BR")}</strong>
-            <span className="admin-kpi-hint">Sem preço</span>
+            <span className="mobi-kpi-hint">Sem preço</span>
           </span>
         </button>
 
@@ -948,19 +931,14 @@ export function AdminDashboard({
           type="button"
           onClick={() => selectSummary("incomplete")}
           aria-pressed={statusFilter === "incomplete"}
-          className="admin-kpi-card is-danger"
+          className="mobi-kpi-cell is-danger"
         >
-          <span className="admin-kpi-top">
-            <span className="admin-kpi-label-wrap">
-              <span className="admin-kpi-icon" aria-hidden="true">
-                <AlertCircle size={15} />
-              </span>
-              <span className="admin-kpi-label">Incompletos</span>
-            </span>
+          <span className="mobi-kpi-head">
+            <span className="mobi-kpi-label">Incompletos</span>
           </span>
-          <span className="admin-kpi-value-row">
+          <span className="mobi-kpi-value-row">
             <strong>{totals.incomplete.toLocaleString("pt-BR")}</strong>
-            <span className="admin-kpi-hint">Falta dado</span>
+            <span className="mobi-kpi-hint">Falta dado</span>
           </span>
         </button>
       </div>

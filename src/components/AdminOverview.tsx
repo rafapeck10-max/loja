@@ -79,9 +79,8 @@ export function AdminOverview<T extends OverviewProduct>({
     <section className="mobi-overview" aria-label="Visão geral do painel">
       <header className="ov-heading">
         <div>
-          <p className="ov-eyebrow">OPERAÇÃO DA MOBI</p>
-          <h1>Vamos cuidar da sua loja?</h1>
-          <p>Escolha uma tarefa e continue de onde parou.</p>
+          <h1>Visão geral</h1>
+          <p>Resumo do catálogo e pendências operacionais da Mobi.</p>
         </div>
         <div className="ov-heading-actions">
           <span className="ov-source-note">
@@ -89,101 +88,81 @@ export function AdminOverview<T extends OverviewProduct>({
             {ready ? <SourceTime value={catalog.updatedAt} /> : "consulta não confirmada"}
           </span>
           <button type="button" className="aw-action" onClick={onRefresh} disabled={refreshing}>
-            <RefreshCw size={16} className={refreshing ? "ov-spin" : ""} />
+            <RefreshCw size={15} className={refreshing ? "ov-spin" : ""} />
             {refreshing ? "Atualizando…" : "Atualizar"}
           </button>
         </div>
       </header>
 
-      <div className="admin-kpi-grid" aria-label="Resumo do catálogo">
+      <div className="mobi-kpi-strip" aria-label="Resumo do catálogo">
         <button
           type="button"
-          className="admin-kpi-card is-forest"
+          className="mobi-kpi-cell"
           onClick={() => onProducts("all")}
           disabled={!ready}
         >
-          <span className="admin-kpi-top">
-            <span className="admin-kpi-label-wrap">
-              <span className="admin-kpi-icon" aria-hidden="true">
-                <Package size={15} />
-              </span>
-              <span className="admin-kpi-label">No catálogo</span>
-            </span>
-            <ArrowRight size={14} className="admin-kpi-arrow" aria-hidden="true" />
+          <span className="mobi-kpi-head">
+            <span className="mobi-kpi-label">No catálogo</span>
+            <ArrowRight size={13} className="mobi-kpi-arrow" aria-hidden="true" />
           </span>
-          <span className="admin-kpi-value-row">
+          <span className="mobi-kpi-value-row">
             <strong>{counts.total != null ? counts.total.toLocaleString("pt-BR") : "—"}</strong>
-            <span className="admin-kpi-hint">Ver todos</span>
+            <span className="mobi-kpi-hint">Ver todos</span>
           </span>
         </button>
 
         <button
           type="button"
-          className="admin-kpi-card is-emerald"
+          className="mobi-kpi-cell is-green"
           onClick={() => onProducts("published")}
           disabled={!ready}
         >
-          <span className="admin-kpi-top">
-            <span className="admin-kpi-label-wrap">
-              <span className="admin-kpi-icon" aria-hidden="true">
-                <Check size={15} />
-              </span>
-              <span className="admin-kpi-label">Aptos na loja</span>
-            </span>
-            <ArrowRight size={14} className="admin-kpi-arrow" aria-hidden="true" />
+          <span className="mobi-kpi-head">
+            <span className="mobi-kpi-label">Aptos na loja</span>
+            <ArrowRight size={13} className="mobi-kpi-arrow" aria-hidden="true" />
           </span>
-          <span className="admin-kpi-value-row">
+          <span className="mobi-kpi-value-row">
             <strong>
               {counts.published != null ? counts.published.toLocaleString("pt-BR") : "—"}
             </strong>
-            <span className="admin-kpi-hint">Publicados</span>
+            <span className="mobi-kpi-hint">Publicados</span>
           </span>
         </button>
 
         <button
           type="button"
-          className="admin-kpi-card is-amber"
+          className="mobi-kpi-cell is-gold"
           onClick={() => onNavigate("fornecedores")}
           disabled={!ready}
         >
-          <span className="admin-kpi-top">
-            <span className="admin-kpi-label-wrap">
-              <span className="admin-kpi-icon" aria-hidden="true">
-                <CircleDollarSign size={15} />
-              </span>
-              <span className="admin-kpi-label">Aguardando preço</span>
-            </span>
-            <ArrowRight size={14} className="admin-kpi-arrow" aria-hidden="true" />
+          <span className="mobi-kpi-head">
+            <span className="mobi-kpi-label">Aguardando preço</span>
+            <ArrowRight size={13} className="mobi-kpi-arrow" aria-hidden="true" />
           </span>
-          <span className="admin-kpi-value-row">
+          <span className="mobi-kpi-value-row">
             <strong>
               {counts.awaiting != null ? counts.awaiting.toLocaleString("pt-BR") : "—"}
             </strong>
-            <span className="admin-kpi-hint">Precificar</span>
+            <span className="mobi-kpi-hint">Precificar</span>
           </span>
         </button>
 
         <button
           type="button"
-          className="admin-kpi-card is-forest"
+          className="mobi-kpi-cell"
           onClick={() => onNavigate("revisao")}
           disabled={!queueReady}
         >
-          <span className="admin-kpi-top">
-            <span className="admin-kpi-label-wrap">
-              <span className="admin-kpi-icon" aria-hidden="true">
-                <FileDown size={15} />
-              </span>
-              <span className="admin-kpi-label">Importações</span>
-            </span>
-            <ArrowRight size={14} className="admin-kpi-arrow" aria-hidden="true" />
+          <span className="mobi-kpi-head">
+            <span className="mobi-kpi-label">Importações</span>
+            <ArrowRight size={13} className="mobi-kpi-arrow" aria-hidden="true" />
           </span>
-          <span className="admin-kpi-value-row">
+          <span className="mobi-kpi-value-row">
             <strong>
               {counts.review != null ? counts.review.toLocaleString("pt-BR") : "—"}
               {reviewLimitReached ? "+" : ""}
             </strong>
-            <span className="admin-kpi-hint">Revisar fila</span>
+            <span className="mobi-kpi-hint">Revisar fila</span>
           </span>
         </button>
       </div>
@@ -192,41 +171,38 @@ export function AdminOverview<T extends OverviewProduct>({
         <section className="ov-panel ov-queue" aria-labelledby="ov-attention-title">
           <div className="ov-queue-header">
             <div className="ov-queue-title-block">
-              <p className="ov-eyebrow">FILA PRIORITÁRIA</p>
               <h2 id="ov-attention-title">
-                {queue === "pricing"
-                  ? "Prontos para você precificar"
-                  : "Cadastros com dados pendentes"}
+                {queue === "pricing" ? "Fila de precificação" : "Cadastros para conferir"}
               </h2>
               <p>
                 {queue === "pricing"
-                  ? "Produtos sem preço de venda. Aguardam sua decisão comercial."
+                  ? "Produtos sem preço de venda. Aguardam definição comercial."
                   : "Produtos com preço informado, mas sem custo ou foto válida."}
               </p>
             </div>
-            <div className="ov-queue-controls">
-              <div className="mobi-queue-tabs" role="group" aria-label="Filas de trabalho">
-                <button
-                  type="button"
-                  aria-pressed={queue === "pricing"}
-                  onClick={() => {
-                    setQueue("pricing");
-                    setShowAll(false);
-                  }}
-                >
-                  Sem preço <b>{ready ? pricing.length.toLocaleString("pt-BR") : "—"}</b>
-                </button>
-                <button
-                  type="button"
-                  aria-pressed={queue === "repair"}
-                  onClick={() => {
-                    setQueue("repair");
-                    setShowAll(false);
-                  }}
-                >
-                  Conferência <b>{ready ? repairs.length.toLocaleString("pt-BR") : "—"}</b>
-                </button>
-              </div>
+            <div className="mobi-tabs-bar" role="group" aria-label="Filas de trabalho">
+              <button
+                type="button"
+                className="mobi-tab-btn"
+                aria-pressed={queue === "pricing"}
+                onClick={() => {
+                  setQueue("pricing");
+                  setShowAll(false);
+                }}
+              >
+                Sem preço <b>{ready ? pricing.length.toLocaleString("pt-BR") : "—"}</b>
+              </button>
+              <button
+                type="button"
+                className="mobi-tab-btn"
+                aria-pressed={queue === "repair"}
+                onClick={() => {
+                  setQueue("repair");
+                  setShowAll(false);
+                }}
+              >
+                Conferência <b>{ready ? repairs.length.toLocaleString("pt-BR") : "—"}</b>
+              </button>
             </div>
           </div>
 
@@ -285,8 +261,8 @@ export function AdminOverview<T extends OverviewProduct>({
                         <div className="ov-issue-content">
                           <h3>{product.nome}</h3>
                           <p className="ov-supplier">{metaParts.join(" · ")}</p>
-                          <div className="ov-issue-badges">
-                            <span className="ov-problem-pill">{reasons.join(" · ")}</span>
+                          <div className="ov-issue-meta-row">
+                            <span className="ov-problem-inline">{reasons.join(" · ")}</span>
                             <details className="ov-impact-detail">
                               <summary>Por que revisar</summary>
                               <p className="ov-impact">{overviewImpact(product)}</p>
@@ -384,18 +360,18 @@ export function AdminOverview<T extends OverviewProduct>({
 
         <aside className="ov-rail" aria-label="Atalhos operacionais">
           <div className="ov-rail-card">
-            <h2 className="ov-rail-title">Ações rápidas</h2>
-            <div className="ov-rail-primary">
+            <div className="ov-rail-head">
+              <h2 className="ov-rail-title">Atalhos</h2>
+            </div>
+            <div className="ov-rail-list">
               <button
                 type="button"
                 onClick={() => onNavigate("fornecedores")}
                 disabled={!ready}
-                className="ov-rail-task is-featured"
+                className="ov-rail-row is-primary"
               >
-                <span className="ov-rail-task-icon" aria-hidden="true">
-                  <CircleDollarSign size={18} />
-                </span>
-                <span className="ov-rail-task-text">
+                <CircleDollarSign size={17} aria-hidden="true" />
+                <span className="ov-rail-row-text">
                   <strong>Precificar produtos</strong>
                   <small>
                     {ready
@@ -403,19 +379,17 @@ export function AdminOverview<T extends OverviewProduct>({
                       : "Consultando catálogo…"}
                   </small>
                 </span>
-                <ArrowRight size={16} aria-hidden="true" />
+                <ArrowRight size={14} className="ov-rail-chevron" aria-hidden="true" />
               </button>
 
               <button
                 type="button"
                 onClick={() => onNavigate("revisao")}
                 disabled={!queueReady}
-                className="ov-rail-task"
+                className="ov-rail-row"
               >
-                <span className="ov-rail-task-icon" aria-hidden="true">
-                  <FileDown size={18} />
-                </span>
-                <span className="ov-rail-task-text">
+                <FileDown size={17} aria-hidden="true" />
+                <span className="ov-rail-row-text">
                   <strong>Conferir importações</strong>
                   <small>
                     {queueReady
@@ -423,23 +397,20 @@ export function AdminOverview<T extends OverviewProduct>({
                       : "Fila não confirmada"}
                   </small>
                 </span>
-                <ArrowRight size={16} aria-hidden="true" />
+                <ArrowRight size={14} className="ov-rail-chevron" aria-hidden="true" />
               </button>
 
-              <button type="button" onClick={() => onNavigate("vitrine")} className="ov-rail-task">
-                <span className="ov-rail-task-icon" aria-hidden="true">
-                  <Images size={18} />
-                </span>
-                <span className="ov-rail-task-text">
+              <button type="button" onClick={() => onNavigate("vitrine")} className="ov-rail-row">
+                <Images size={17} aria-hidden="true" />
+                <span className="ov-rail-row-text">
                   <strong>Organizar a vitrine</strong>
                   <small>Destaques da página inicial</small>
                 </span>
-                <ArrowRight size={16} aria-hidden="true" />
+                <ArrowRight size={14} className="ov-rail-chevron" aria-hidden="true" />
               </button>
             </div>
 
-            <div className="ov-rail-divider" aria-hidden="true" />
-
+            <div className="ov-rail-subhead">Outras áreas</div>
             <div className="ov-rail-secondary" aria-label="Outras áreas">
               <button type="button" className="ov-rail-shortcut" onClick={() => onProducts("all")}>
                 <Package size={15} aria-hidden="true" />

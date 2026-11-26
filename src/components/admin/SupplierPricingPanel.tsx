@@ -308,7 +308,6 @@ export function SupplierPricingPanel<T extends SupplierPricingProduct>({
     <section className="supplier-pricing" aria-labelledby="supplier-pricing-title">
       <header className="supplier-pricing-header">
         <div>
-          <p className="supplier-pricing-eyebrow">OPERAÇÃO DIÁRIA · PRECIFICAÇÃO</p>
           <h1 id="supplier-pricing-title">Precificar produtos</h1>
           <p>
             Filtre por fornecedor, categoria ou faixa de custo e salve o preço à vista direto na

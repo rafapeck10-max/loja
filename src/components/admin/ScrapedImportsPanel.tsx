@@ -168,7 +168,6 @@ export function ScrapedImportsPanel({
     <section className="scraped-imports" aria-labelledby="scraped-imports-title">
       <header className="scraped-imports-header">
         <div>
-          <p className="supplier-pricing-eyebrow">OPERAÇÃO DIÁRIA · COLETAS</p>
           <h1 id="scraped-imports-title">Importações pendentes</h1>
           <p>
             {items.length > 0
