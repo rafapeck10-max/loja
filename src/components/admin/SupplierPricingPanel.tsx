@@ -355,407 +355,400 @@ export function SupplierPricingPanel<T extends SupplierPricingProduct>({
         })}
       </div>
 
-      <section className="admin-filter-card" aria-label="Filtros da precificação">
-        <div className="admin-filter-row-main">
-          <label className="admin-filter-field admin-filter-search">
-            <span>Buscar móvel</span>
-            <div className="admin-input-with-icon">
-              <Search size={16} aria-hidden="true" />
-              <input
-                type="search"
-                aria-label="Buscar na precificação"
-                placeholder="Nome, SKU, categoria ou cor…"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-              />
-            </div>
-          </label>
-
-          <label className="admin-filter-field">
-            <span>Categoria</span>
-            <select
-              aria-label="Filtrar por categoria na precificação"
-              value={categoryKey}
-              onChange={(event) => setCategoryKey(event.target.value)}
-            >
-              <option value="all">
-                Todas as categorias ({categoryOptions.reduce((sum, item) => sum + item.count, 0)})
-              </option>
-              {categoryOptions.map((category) => (
-                <option key={category.key} value={category.key}>
-                  {category.label} ({category.count})
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="admin-filter-field">
-            <span>Ordenar por</span>
-            <select
-              aria-label="Ordenar fila de precificação"
-              value={sort}
-              onChange={(event) => setSort(event.target.value as PricingSortOption)}
-            >
-              {SORT_LABELS.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        <div className="admin-filter-row-secondary">
-          <div
-            className="pricing-filter-pills"
-            role="group"
-            aria-label="Filtrar fila de precificação"
-          >
-            {filterPills
-              .filter((pill) => !pill.hideWhenZero || pill.count > 0 || statusFilter === pill.id)
-              .map((pill) => (
-                <button
-                  key={pill.id}
-                  type="button"
-                  className="pricing-filter-pill"
-                  aria-pressed={statusFilter === pill.id}
-                  onClick={() => setStatusFilter(pill.id)}
-                >
-                  <span>{pill.label}</span>
-                  <b>{pill.count.toLocaleString("pt-BR")}</b>
-                </button>
-              ))}
-          </div>
-
-          <div className="admin-cost-range" aria-label="Filtrar por faixa de custo">
-            <SlidersHorizontal size={14} aria-hidden="true" />
-            <label>
-              <span className="aw-sr-only">Custo mínimo (R$)</span>
-              <input
-                inputMode="decimal"
-                placeholder="Custo mín."
-                aria-label="Custo mínimo em reais"
-                aria-invalid={invalidCostRange}
-                value={minCost}
-                onChange={(event) => setMinCost(event.target.value)}
-              />
+      <div className="admin-workbench">
+        <section className="admin-workbench-filters" aria-label="Filtros da precificação">
+          <div className="admin-filter-row-main">
+            <label className="admin-filter-field admin-filter-search">
+              <span>Buscar móvel</span>
+              <div className="admin-input-with-icon">
+                <Search size={16} aria-hidden="true" />
+                <input
+                  type="search"
+                  aria-label="Buscar na precificação"
+                  placeholder="Nome, SKU, categoria ou cor…"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                />
+              </div>
             </label>
-            <span className="admin-cost-sep">até</span>
-            <label>
-              <span className="aw-sr-only">Custo máximo (R$)</span>
-              <input
-                inputMode="decimal"
-                placeholder="Custo máx."
-                aria-label="Custo máximo em reais"
-                aria-invalid={invalidCostRange}
-                value={maxCost}
-                onChange={(event) => setMaxCost(event.target.value)}
-              />
-            </label>
-          </div>
-        </div>
 
-        {invalidCostRange && (
-          <p role="alert" className="admin-filter-error">
-            Informe valores válidos de custo; o mínimo não pode ser maior que o máximo.
-          </p>
-        )}
-
-        {(selectedCategoryLabel ||
-          query.trim() ||
-          minCost.trim() ||
-          maxCost.trim() ||
-          hasCustomFilters) && (
-          <div className="admin-active-chips">
-            {query.trim() && (
-              <button type="button" className="admin-chip" onClick={() => setQuery("")}>
-                Busca: “{query.trim()}” <X size={13} aria-hidden="true" />
-              </button>
-            )}
-            {selectedCategoryLabel && (
-              <button type="button" className="admin-chip" onClick={() => setCategoryKey("all")}>
-                Categoria: {selectedCategoryLabel} <X size={13} aria-hidden="true" />
-              </button>
-            )}
-            {(minCost.trim() || maxCost.trim()) && (
-              <button
-                type="button"
-                className="admin-chip"
-                onClick={() => {
-                  setMinCost("");
-                  setMaxCost("");
-                }}
+            <label className="admin-filter-field">
+              <span>Categoria</span>
+              <select
+                aria-label="Filtrar por categoria na precificação"
+                value={categoryKey}
+                onChange={(event) => setCategoryKey(event.target.value)}
               >
-                Custo: {minCost.trim() || "0"} – {maxCost.trim() || "sem máx."}{" "}
-                <X size={13} aria-hidden="true" />
-              </button>
-            )}
-            {hasCustomFilters && (
-              <button type="button" className="admin-reset-filters" onClick={clearFilters}>
-                <RotateCcw size={13} aria-hidden="true" /> Restaurar padrão
-              </button>
-            )}
-          </div>
-        )}
-      </section>
+                <option value="all">
+                  Todas as categorias ({categoryOptions.reduce((sum, item) => sum + item.count, 0)})
+                </option>
+                {categoryOptions.map((category) => (
+                  <option key={category.key} value={category.key}>
+                    {category.label} ({category.count})
+                  </option>
+                ))}
+              </select>
+            </label>
 
-      <section className="supplier-pricing-results" aria-labelledby="supplier-selected-title">
-        <header className="supplier-pricing-results-header">
-          <div>
-            <h2 id="supplier-selected-title">
-              {selected?.label ?? "Produtos"}
-              {selectedCategoryLabel ? ` · ${selectedCategoryLabel}` : ""}
-            </h2>
-            <p>
-              {filtered.length === 0
-                ? "0 produtos encontrados nesta seleção"
-                : `Mostrando ${rangeStart}–${rangeEnd} de ${filtered.length.toLocaleString("pt-BR")} ${filtered.length === 1 ? "produto" : "produtos"}`}
-            </p>
+            <label className="admin-filter-field">
+              <span>Ordenar por</span>
+              <select
+                aria-label="Ordenar fila de precificação"
+                value={sort}
+                onChange={(event) => setSort(event.target.value as PricingSortOption)}
+              >
+                {SORT_LABELS.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
-          {selected && (
-            <div className="supplier-pricing-selected-summary">
-              <span>{selected.missingSitePrice.toLocaleString("pt-BR")} sem preço</span>
-              {selected.missingCost > 0 && <span>{selected.missingCost} sem custo</span>}
-              {selected.belowCost > 0 && <span>{selected.belowCost} abaixo do custo</span>}
+
+          <div className="admin-filter-row-secondary">
+            <div
+              className="pricing-filter-pills"
+              role="group"
+              aria-label="Filtrar fila de precificação"
+            >
+              {filterPills
+                .filter((pill) => !pill.hideWhenZero || pill.count > 0 || statusFilter === pill.id)
+                .map((pill) => (
+                  <button
+                    key={pill.id}
+                    type="button"
+                    className="pricing-filter-pill"
+                    aria-pressed={statusFilter === pill.id}
+                    onClick={() => setStatusFilter(pill.id)}
+                  >
+                    <span>{pill.label}</span>
+                    <b>{pill.count.toLocaleString("pt-BR")}</b>
+                  </button>
+                ))}
             </div>
-          )}
-        </header>
 
-        {filtered.length === 0 ? (
-          <div className="supplier-pricing-empty">
-            <p>
-              Nenhum produto encontrado com estes filtros.
-              {products.length > 0 && statusFilter !== "all"
-                ? " Você pode exibir todos os produtos desta seleção ou restaurar os filtros."
-                : ""}
+            <div className="admin-filter-toolbar-right">
+              <div className="admin-cost-range" aria-label="Filtrar por faixa de custo">
+                <SlidersHorizontal size={14} aria-hidden="true" />
+                <label>
+                  <span className="aw-sr-only">Custo mínimo (R$)</span>
+                  <input
+                    inputMode="decimal"
+                    placeholder="Custo mín."
+                    aria-label="Custo mínimo em reais"
+                    aria-invalid={invalidCostRange}
+                    value={minCost}
+                    onChange={(event) => setMinCost(event.target.value)}
+                  />
+                </label>
+                <span className="admin-cost-sep">até</span>
+                <label>
+                  <span className="aw-sr-only">Custo máximo (R$)</span>
+                  <input
+                    inputMode="decimal"
+                    placeholder="Custo máx."
+                    aria-label="Custo máximo em reais"
+                    aria-invalid={invalidCostRange}
+                    value={maxCost}
+                    onChange={(event) => setMaxCost(event.target.value)}
+                  />
+                </label>
+              </div>
+              <span className="admin-workbench-meta-pill">
+                {filtered.length === 0
+                  ? "0 itens"
+                  : `${rangeStart}–${rangeEnd} de ${filtered.length.toLocaleString("pt-BR")}`}
+              </span>
+            </div>
+          </div>
+
+          {invalidCostRange && (
+            <p role="alert" className="admin-filter-error">
+              Informe valores válidos de custo; o mínimo não pode ser maior que o máximo.
             </p>
-            <div className="supplier-pricing-empty-actions">
-              {statusFilter !== "all" && (
-                <button type="button" onClick={() => setStatusFilter("all")}>
-                  Ver todos ({counts.all})
+          )}
+
+          {(selectedCategoryLabel ||
+            query.trim() ||
+            minCost.trim() ||
+            maxCost.trim() ||
+            hasCustomFilters) && (
+            <div className="admin-active-chips">
+              {query.trim() && (
+                <button type="button" className="admin-chip" onClick={() => setQuery("")}>
+                  Busca: “{query.trim()}” <X size={13} aria-hidden="true" />
+                </button>
+              )}
+              {selectedCategoryLabel && (
+                <button type="button" className="admin-chip" onClick={() => setCategoryKey("all")}>
+                  Categoria: {selectedCategoryLabel} <X size={13} aria-hidden="true" />
+                </button>
+              )}
+              {(minCost.trim() || maxCost.trim()) && (
+                <button
+                  type="button"
+                  className="admin-chip"
+                  onClick={() => {
+                    setMinCost("");
+                    setMaxCost("");
+                  }}
+                >
+                  Custo: {minCost.trim() || "0"} – {maxCost.trim() || "sem máx."}{" "}
+                  <X size={13} aria-hidden="true" />
                 </button>
               )}
               {hasCustomFilters && (
-                <button type="button" onClick={clearFilters}>
-                  Restaurar filtros padrão
+                <button type="button" className="admin-reset-filters" onClick={clearFilters}>
+                  <RotateCcw size={13} aria-hidden="true" /> Restaurar padrão
                 </button>
               )}
             </div>
-          </div>
-        ) : (
-          <>
-            <div
-              className={`supplier-pricing-table${onQuickSavePrice ? " has-inline-pricing" : ""}`}
-              role="table"
-              aria-label="Preços por produto"
-            >
-              <div className="supplier-pricing-row supplier-pricing-table-head" role="row">
-                <span role="columnheader">Produto / Categoria / SKU</span>
-                <span role="columnheader">Custo fornecedor</span>
-                <span role="columnheader">Preço à vista (site)</span>
-                <span role="columnheader">Diferença bruta</span>
-                <span role="columnheader">Situação</span>
-                <span role="columnheader">
-                  <span className="aw-sr-only">Ações</span>
-                </span>
+          )}
+        </section>
+
+        <section className="supplier-pricing-results" aria-labelledby="supplier-selected-title">
+          <h2 id="supplier-selected-title" className="aw-sr-only">
+            {selected?.label ?? "Produtos"}
+            {selectedCategoryLabel ? ` — ${selectedCategoryLabel}` : ""}
+          </h2>
+
+          {filtered.length === 0 ? (
+            <div className="supplier-pricing-empty">
+              <p>
+                Nenhum produto encontrado com estes filtros.
+                {products.length > 0 && statusFilter !== "all"
+                  ? " Você pode exibir todos os produtos desta seleção ou restaurar os filtros."
+                  : ""}
+              </p>
+              <div className="supplier-pricing-empty-actions">
+                {statusFilter !== "all" && (
+                  <button type="button" onClick={() => setStatusFilter("all")}>
+                    Ver todos ({counts.all})
+                  </button>
+                )}
+                {hasCustomFilters && (
+                  <button type="button" onClick={clearFilters}>
+                    Restaurar filtros padrão
+                  </button>
+                )}
               </div>
-              {visibleProducts.map((product) => {
-                const variationCount = countPriceVariations(product.variacoes_preco);
-                const multiVariation = variationCount > 1;
-                const savedSitePrice = Number(product.preco_atual ?? 0);
-                const draftString = draftPrices[product.id];
-                const inputValue = draftString ?? inputFormat(product.preco_atual);
-                const parsedDraft =
-                  draftString !== undefined ? parseQuickPriceInput(draftString) : null;
-                const effectiveSitePrice =
-                  draftString !== undefined
-                    ? parsedDraft != null && !Number.isNaN(parsedDraft) && parsedDraft > 0
-                      ? parsedDraft
-                      : 0
-                    : savedSitePrice;
-                const delta = difference(product.preco_atacado, effectiveSitePrice);
-                const pct = marginPercentLabel(product.preco_atacado, effectiveSitePrice);
-                const status = productStatus(product);
-                const source = product.url_fornecedor || product.fonte_preco || null;
-                const isDirty =
-                  draftString !== undefined &&
-                  parsedDraft != null &&
-                  !Number.isNaN(parsedDraft) &&
-                  parsedDraft > 0 &&
-                  Math.abs(parsedDraft - savedSitePrice) >= 0.005;
-                const isSaving = Boolean(savingIds[product.id]);
-                const isSaved = Boolean(savedIds[product.id]);
-                const rowError = rowErrors[product.id];
-                const metaParts = [
-                  product.categoria || "Sem categoria",
-                  product.sku || "Sem SKU",
-                  product.fornecedor || null,
-                ].filter(Boolean);
+            </div>
+          ) : (
+            <>
+              <div
+                className={`supplier-pricing-table${onQuickSavePrice ? " has-inline-pricing" : ""}`}
+                role="table"
+                aria-label="Preços por produto"
+              >
+                <div className="supplier-pricing-row supplier-pricing-table-head" role="row">
+                  <span role="columnheader">Produto / Categoria / SKU</span>
+                  <span role="columnheader">Custo fornecedor</span>
+                  <span role="columnheader">Preço à vista (site)</span>
+                  <span role="columnheader">Diferença bruta</span>
+                  <span role="columnheader">Situação</span>
+                  <span role="columnheader">
+                    <span className="aw-sr-only">Ações</span>
+                  </span>
+                </div>
+                {visibleProducts.map((product) => {
+                  const variationCount = countPriceVariations(product.variacoes_preco);
+                  const multiVariation = variationCount > 1;
+                  const savedSitePrice = Number(product.preco_atual ?? 0);
+                  const draftString = draftPrices[product.id];
+                  const inputValue = draftString ?? inputFormat(product.preco_atual);
+                  const parsedDraft =
+                    draftString !== undefined ? parseQuickPriceInput(draftString) : null;
+                  const effectiveSitePrice =
+                    draftString !== undefined
+                      ? parsedDraft != null && !Number.isNaN(parsedDraft) && parsedDraft > 0
+                        ? parsedDraft
+                        : 0
+                      : savedSitePrice;
+                  const delta = difference(product.preco_atacado, effectiveSitePrice);
+                  const pct = marginPercentLabel(product.preco_atacado, effectiveSitePrice);
+                  const status = productStatus(product);
+                  const source = product.url_fornecedor || product.fonte_preco || null;
+                  const isDirty =
+                    draftString !== undefined &&
+                    parsedDraft != null &&
+                    !Number.isNaN(parsedDraft) &&
+                    parsedDraft > 0 &&
+                    Math.abs(parsedDraft - savedSitePrice) >= 0.005;
+                  const isSaving = Boolean(savingIds[product.id]);
+                  const isSaved = Boolean(savedIds[product.id]);
+                  const rowError = rowErrors[product.id];
+                  const metaParts = [
+                    product.categoria || "Sem categoria",
+                    product.sku || "Sem SKU",
+                    product.fornecedor || null,
+                  ].filter(Boolean);
 
-                return (
-                  <div className="supplier-pricing-row" role="row" key={product.id}>
-                    <div className="supplier-pricing-product" role="cell">
-                      <ProductIdentity product={product}>
-                        <small>{metaParts.join(" · ")}</small>
-                        {source && (
-                          <a
-                            href={source}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="pricing-source-link"
-                          >
-                            Ver no fornecedor <ExternalLink size={11} aria-hidden="true" />
-                          </a>
-                        )}
-                      </ProductIdentity>
-                    </div>
+                  return (
+                    <div className="supplier-pricing-row" role="row" key={product.id}>
+                      <div className="supplier-pricing-product" role="cell">
+                        <ProductIdentity product={product}>
+                          <small>{metaParts.join(" · ")}</small>
+                          {source && (
+                            <a
+                              href={source}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="pricing-source-link"
+                            >
+                              Ver no fornecedor <ExternalLink size={11} aria-hidden="true" />
+                            </a>
+                          )}
+                        </ProductIdentity>
+                      </div>
 
-                    <span
-                      className="supplier-pricing-value"
-                      role="cell"
-                      data-label="Custo fornecedor"
-                    >
-                      {money(product.preco_atacado)}
-                    </span>
+                      <span
+                        className="supplier-pricing-value"
+                        role="cell"
+                        data-label="Custo fornecedor"
+                      >
+                        {money(product.preco_atacado)}
+                      </span>
 
-                    <div
-                      className="supplier-pricing-value supplier-pricing-site-price"
-                      role="cell"
-                      data-label="Preço à vista (site)"
-                    >
-                      {onQuickSavePrice && !multiVariation ? (
-                        <div className="pricing-inline-field">
-                          <div className="pricing-inline-input-group">
-                            <span aria-hidden="true">R$</span>
-                            <input
-                              type="text"
-                              inputMode="decimal"
-                              aria-label={`Preço à vista para ${product.nome}`}
-                              placeholder="0,00"
-                              value={inputValue}
-                              disabled={isSaving}
-                              onChange={(event) => {
-                                const val = event.target.value;
-                                setDraftPrices((prev) => ({ ...prev, [product.id]: val }));
-                                if (rowErrors[product.id]) {
-                                  setRowErrors((prev) => {
-                                    const next = { ...prev };
-                                    delete next[product.id];
-                                    return next;
-                                  });
-                                }
-                              }}
-                              onKeyDown={(event) => {
-                                if (event.key === "Enter") {
-                                  event.preventDefault();
-                                  void handleQuickSave(product);
-                                }
-                              }}
-                            />
+                      <div
+                        className="supplier-pricing-value supplier-pricing-site-price"
+                        role="cell"
+                        data-label="Preço à vista (site)"
+                      >
+                        {onQuickSavePrice && !multiVariation ? (
+                          <div className="pricing-inline-field">
+                            <div className="pricing-inline-input-group">
+                              <span aria-hidden="true">R$</span>
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                aria-label={`Preço à vista para ${product.nome}`}
+                                placeholder="0,00"
+                                value={inputValue}
+                                disabled={isSaving}
+                                onChange={(event) => {
+                                  const val = event.target.value;
+                                  setDraftPrices((prev) => ({ ...prev, [product.id]: val }));
+                                  if (rowErrors[product.id]) {
+                                    setRowErrors((prev) => {
+                                      const next = { ...prev };
+                                      delete next[product.id];
+                                      return next;
+                                    });
+                                  }
+                                }}
+                                onKeyDown={(event) => {
+                                  if (event.key === "Enter") {
+                                    event.preventDefault();
+                                    void handleQuickSave(product);
+                                  }
+                                }}
+                              />
+                            </div>
+                            <small>
+                              {effectiveSitePrice > 0
+                                ? `10x de ${formatBRL(cardInstallment(effectiveSitePrice, 10))}`
+                                : "Digite para calcular 10x"}
+                            </small>
+                            {rowError && (
+                              <small role="alert" className="pricing-inline-error">
+                                {rowError}
+                              </small>
+                            )}
                           </div>
-                          <small>
-                            {effectiveSitePrice > 0
-                              ? `10x de ${formatBRL(cardInstallment(effectiveSitePrice, 10))}`
-                              : "Digite para calcular 10x"}
-                          </small>
-                          {rowError && (
-                            <small role="alert" className="pricing-inline-error">
-                              {rowError}
-                            </small>
-                          )}
-                        </div>
-                      ) : (
-                        <>
-                          <strong>{money(product.preco_atual)}</strong>
-                          {savedSitePrice > 0 && (
-                            <small>10x de {formatBRL(cardInstallment(savedSitePrice, 10))}</small>
-                          )}
-                          {multiVariation && (
-                            <small className="pricing-variation-tag">
-                              {variationCount} variações de preço
-                            </small>
-                          )}
-                        </>
-                      )}
-                    </div>
+                        ) : (
+                          <>
+                            <strong>{money(product.preco_atual)}</strong>
+                            {savedSitePrice > 0 && (
+                              <small>10x de {formatBRL(cardInstallment(savedSitePrice, 10))}</small>
+                            )}
+                            {multiVariation && (
+                              <small className="pricing-variation-tag">
+                                {variationCount} variações de preço
+                              </small>
+                            )}
+                          </>
+                        )}
+                      </div>
 
-                    <span
-                      className={
-                        "supplier-pricing-value " +
-                        (delta == null ? "is-muted" : delta < 0 ? "is-negative" : "is-positive")
-                      }
-                      role="cell"
-                      data-label="Diferença bruta"
-                    >
-                      <span>{differenceLabel(product.preco_atacado, effectiveSitePrice)}</span>
-                      {pct && <small className="pricing-margin-pct">{pct}</small>}
-                    </span>
+                      <span
+                        className={
+                          "supplier-pricing-value " +
+                          (delta == null ? "is-muted" : delta < 0 ? "is-negative" : "is-positive")
+                        }
+                        role="cell"
+                        data-label="Diferença bruta"
+                      >
+                        <span>{differenceLabel(product.preco_atacado, effectiveSitePrice)}</span>
+                        {pct && <small className="pricing-margin-pct">{pct}</small>}
+                      </span>
 
-                    <span
-                      className={"supplier-pricing-status status-" + status}
-                      role="cell"
-                      data-label="Situação"
-                    >
-                      {statusLabels[status]}
-                    </span>
+                      <span
+                        className={"supplier-pricing-status status-" + status}
+                        role="cell"
+                        data-label="Situação"
+                      >
+                        {statusLabels[status]}
+                      </span>
 
-                    <span className="supplier-pricing-action" role="cell">
-                      {onQuickSavePrice && !multiVariation && (
+                      <span className="supplier-pricing-action" role="cell">
+                        {onQuickSavePrice && !multiVariation && (
+                          <button
+                            type="button"
+                            className={`pricing-save-btn${isDirty ? " is-dirty" : ""}${isSaved ? " is-saved" : ""}`}
+                            disabled={isSaving || (!isDirty && draftString === undefined)}
+                            onClick={() => void handleQuickSave(product)}
+                          >
+                            {isSaved ? (
+                              <>
+                                <Check size={14} aria-hidden="true" /> Salvo
+                              </>
+                            ) : isSaving ? (
+                              "Salvando…"
+                            ) : (
+                              "Salvar"
+                            )}
+                          </button>
+                        )}
                         <button
                           type="button"
-                          className={`pricing-save-btn${isDirty ? " is-dirty" : ""}${isSaved ? " is-saved" : ""}`}
-                          disabled={isSaving || (!isDirty && draftString === undefined)}
-                          onClick={() => void handleQuickSave(product)}
+                          className="pricing-details-btn"
+                          aria-label={`Abrir detalhes de ${product.nome}`}
+                          onClick={() => onEdit(product)}
                         >
-                          {isSaved ? (
-                            <>
-                              <Check size={14} aria-hidden="true" /> Salvo
-                            </>
-                          ) : isSaving ? (
-                            "Salvando…"
-                          ) : (
-                            "Salvar"
-                          )}
+                          <Pencil size={14} aria-hidden="true" />
+                          <span>{multiVariation ? "Opções" : "Detalhes"}</span>
                         </button>
-                      )}
-                      <button
-                        type="button"
-                        className="pricing-details-btn"
-                        aria-label={`Abrir detalhes de ${product.nome}`}
-                        onClick={() => onEdit(product)}
-                      >
-                        <Pencil size={14} aria-hidden="true" />
-                        <span>{multiVariation ? "Opções" : "Detalhes"}</span>
-                      </button>
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-            {totalPages > 1 && (
-              <div className="supplier-pricing-pagination" aria-label="Paginação dos produtos">
-                <button
-                  type="button"
-                  disabled={safePage === 1}
-                  onClick={() => setPage((current) => Math.max(1, current - 1))}
-                >
-                  <ArrowLeft size={15} /> Anterior
-                </button>
-                <span>
-                  Página {safePage} de {totalPages}
-                </span>
-                <button
-                  type="button"
-                  disabled={safePage === totalPages}
-                  onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-                >
-                  Próxima <ArrowRight size={15} />
-                </button>
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
-            )}
-          </>
-        )}
-      </section>
+              {totalPages > 1 && (
+                <div className="supplier-pricing-pagination" aria-label="Paginação dos produtos">
+                  <button
+                    type="button"
+                    disabled={safePage === 1}
+                    onClick={() => setPage((current) => Math.max(1, current - 1))}
+                  >
+                    <ArrowLeft size={15} /> Anterior
+                  </button>
+                  <span>
+                    Página {safePage} de {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={safePage === totalPages}
+                    onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+                  >
+                    Próxima <ArrowRight size={15} />
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </section>
+      </div>
     </section>
   );
 }

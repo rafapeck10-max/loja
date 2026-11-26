@@ -206,8 +206,8 @@ export function ScrapedImportsPanel({
           </p>
         </div>
       ) : (
-        <>
-          <section className="admin-filter-card" aria-label="Filtros das importações">
+        <div className="admin-workbench">
+          <section className="admin-workbench-filters" aria-label="Filtros das importações">
             <div className="admin-filter-row-main admin-filter-row-imports">
               <label className="admin-filter-field admin-filter-search">
                 <span>Buscar importação</span>
@@ -450,7 +450,7 @@ export function ScrapedImportsPanel({
               )}
             </>
           )}
-        </>
+        </div>
       )}
     </section>
   );

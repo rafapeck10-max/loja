@@ -29,6 +29,7 @@ import {
 import "../admin-overview.css";
 import "../admin-density.css";
 import "../admin-usability.css";
+import "../admin-theme.css";
 
 const groupIcons: Record<AdminNavGroup["id"], typeof LayoutDashboard> = {
   start: LayoutDashboard,

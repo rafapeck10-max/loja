@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   AlertCircle,
+  Check,
   CircleDollarSign,
   Images,
   Layers3,
@@ -24,6 +25,8 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { MobiliLogo } from "@/components/MobiliLogo";
+import "@/admin-theme.css";
 import { PRODUCT_CATEGORY_OPTIONS } from "@/lib/constants";
 import {
   checkAdminPassword,
@@ -157,34 +160,35 @@ function LoginForm({ onSuccess }: { onSuccess: (pwd: string) => void }) {
   };
 
   return (
-    <div className="mx-auto max-w-md px-[5%] py-16">
-      <div className="border border-cacau/10 bg-white p-8 shadow-premium">
-        <div className="mb-6 flex items-center gap-3 text-deep-green">
-          <Lock className="h-5 w-5 text-gold" />
-          <h1 className="text-2xl">Painel Mobi</h1>
+    <div className="admin-login-shell">
+      <div className="admin-login-card">
+        <div className="admin-login-brand">
+          <div className="admin-login-logo-pill">
+            <MobiliLogo className="admin-login-logo" />
+          </div>
+          <span className="admin-login-badge">
+            <Lock size={13} aria-hidden="true" />
+            Acesso restrito
+          </span>
         </div>
-        <p className="mb-6 text-sm text-text-light">
-          Área restrita para cadastrar e atualizar produtos.
+        <h1>Painel administrativo</h1>
+        <p className="admin-login-subtitle">
+          Entre para precificar móveis, revisar importações e gerenciar o catálogo da Mobi.
         </p>
-        <form onSubmit={submit} className="space-y-4">
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-cacau">
-              Senha administrativa
-            </label>
+        <form onSubmit={submit} className="admin-login-form">
+          <div className="admin-login-field">
+            <label htmlFor="admin-password-input">Senha administrativa</label>
             <input
+              id="admin-password-input"
               type="password"
               value={value}
               onChange={(e) => setValue(e.target.value)}
+              placeholder="Digite sua senha"
               autoFocus
-              className="w-full border border-cacau/15 bg-white px-4 py-3 font-sans text-sm text-cacau outline-none transition-colors focus:border-gold"
             />
           </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="min-h-11 w-full bg-deep-green py-3 text-xs font-bold uppercase tracking-[1.5px] text-sand transition-colors hover:bg-gold hover:text-deep-green disabled:opacity-60"
-          >
-            {loading ? "Verificando…" : "Entrar"}
+          <button type="submit" disabled={loading} className="admin-login-submit">
+            {loading ? "Verificando…" : "Entrar no painel"}
           </button>
         </form>
       </div>
@@ -296,18 +300,7 @@ function grossPriceDifferenceLabel(product: ProdutoAdmin): string {
 }
 
 function StatusBadge({ status }: { status: ProductStatus }) {
-  const colors: Record<ProductStatus, string> = {
-    published: "border-price-green/25 bg-price-green/10 text-price-green",
-    awaiting: "border-gold/40 bg-gold/15 text-cacau",
-    incomplete: "border-destructive/25 bg-destructive/10 text-destructive",
-  };
-  return (
-    <span
-      className={`inline-flex shrink-0 items-center border px-2 py-1 text-[10px] font-bold uppercase tracking-wide ${colors[status]}`}
-    >
-      {STATUS_LABELS[status]}
-    </span>
-  );
+  return <span className={`admin-status-pill is-${status}`}>{STATUS_LABELS[status]}</span>;
 }
 
 export function AdminDashboard({
@@ -851,10 +844,16 @@ export function AdminDashboard({
       }}
     >
       {workspaceTab === "produtos" && (
-        <div className="aw-editor-toolbar">
-          <h1>Produtos</h1>
-          <button type="button" className="aw-action" onClick={startNew}>
-            <Plus size={16} /> Novo produto
+        <div className="aw-editor-toolbar admin-page-header">
+          <div>
+            <p className="admin-page-eyebrow">OPERAÇÃO DIÁRIA · CATÁLOGO</p>
+            <h1>Produtos</h1>
+            <p className="admin-page-subtitle">
+              Busque, filtre por fornecedor ou categoria e edite custos e preços de venda.
+            </p>
+          </div>
+          <button type="button" className="aw-action admin-btn-primary" onClick={startNew}>
+            <Plus size={16} aria-hidden="true" /> Novo produto
           </button>
         </div>
       )}
@@ -882,51 +881,87 @@ export function AdminDashboard({
       />
       <div
         hidden={workspaceTab !== "produtos"}
-        className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4"
+        className="admin-kpi-grid"
+        aria-label="Resumo do catálogo"
       >
         <button
           type="button"
           onClick={() => selectSummary("all")}
           aria-pressed={statusFilter === "all"}
-          className="border border-cacau/10 bg-white p-4 text-left aria-pressed:ring-2 aria-pressed:ring-deep-green"
+          className="admin-kpi-card is-forest"
         >
-          <div className="text-xs font-semibold uppercase tracking-wider text-text-light">
-            Total
-          </div>
-          <div className="mt-1 text-2xl font-bold text-deep-green">{produtos.length}</div>
+          <span className="admin-kpi-top">
+            <span className="admin-kpi-label-wrap">
+              <span className="admin-kpi-icon" aria-hidden="true">
+                <Package size={15} />
+              </span>
+              <span className="admin-kpi-label">Total</span>
+            </span>
+          </span>
+          <span className="admin-kpi-value-row">
+            <strong>{produtos.length.toLocaleString("pt-BR")}</strong>
+            <span className="admin-kpi-hint">Todos os itens</span>
+          </span>
         </button>
+
         <button
           type="button"
           onClick={() => selectSummary("published")}
           aria-pressed={statusFilter === "published"}
-          className="border border-price-green/20 bg-price-green/5 p-4 text-left aria-pressed:ring-2 aria-pressed:ring-deep-green"
+          className="admin-kpi-card is-emerald"
         >
-          <div className="text-xs font-semibold uppercase tracking-wider text-price-green">
-            Aptos para exibição
-          </div>
-          <div className="mt-1 text-2xl font-bold text-price-green">{totals.published}</div>
+          <span className="admin-kpi-top">
+            <span className="admin-kpi-label-wrap">
+              <span className="admin-kpi-icon" aria-hidden="true">
+                <Check size={15} />
+              </span>
+              <span className="admin-kpi-label">Aptos para exibição</span>
+            </span>
+          </span>
+          <span className="admin-kpi-value-row">
+            <strong>{totals.published.toLocaleString("pt-BR")}</strong>
+            <span className="admin-kpi-hint">No site</span>
+          </span>
         </button>
+
         <button
           type="button"
           onClick={() => selectSummary("awaiting")}
           aria-pressed={statusFilter === "awaiting"}
-          className="border border-gold/30 bg-gold/10 p-4 text-left aria-pressed:ring-2 aria-pressed:ring-deep-green"
+          className="admin-kpi-card is-amber"
         >
-          <div className="text-xs font-semibold uppercase tracking-wider text-cacau">
-            Aguardando preço
-          </div>
-          <div className="mt-1 text-2xl font-bold text-cacau">{totals.awaiting}</div>
+          <span className="admin-kpi-top">
+            <span className="admin-kpi-label-wrap">
+              <span className="admin-kpi-icon" aria-hidden="true">
+                <CircleDollarSign size={15} />
+              </span>
+              <span className="admin-kpi-label">Aguardando preço</span>
+            </span>
+          </span>
+          <span className="admin-kpi-value-row">
+            <strong>{totals.awaiting.toLocaleString("pt-BR")}</strong>
+            <span className="admin-kpi-hint">Sem preço</span>
+          </span>
         </button>
+
         <button
           type="button"
           onClick={() => selectSummary("incomplete")}
           aria-pressed={statusFilter === "incomplete"}
-          className="border border-destructive/20 bg-destructive/5 p-4 text-left aria-pressed:ring-2 aria-pressed:ring-deep-green"
+          className="admin-kpi-card is-danger"
         >
-          <div className="text-xs font-semibold uppercase tracking-wider text-destructive">
-            Incompletos
-          </div>
-          <div className="mt-1 text-2xl font-bold text-destructive">{totals.incomplete}</div>
+          <span className="admin-kpi-top">
+            <span className="admin-kpi-label-wrap">
+              <span className="admin-kpi-icon" aria-hidden="true">
+                <AlertCircle size={15} />
+              </span>
+              <span className="admin-kpi-label">Incompletos</span>
+            </span>
+          </span>
+          <span className="admin-kpi-value-row">
+            <strong>{totals.incomplete.toLocaleString("pt-BR")}</strong>
+            <span className="admin-kpi-hint">Falta dado</span>
+          </span>
         </button>
       </div>
 
@@ -984,499 +1019,517 @@ export function AdminDashboard({
           className="admin-workspace-panel"
           aria-label="produtos"
         >
-          <section id="admin-product-filters" className="admin-filter-card scroll-mt-4">
-            <div className="admin-filter-row-main admin-filter-row-products">
-              <label className="admin-filter-field admin-filter-search">
-                <span>Buscar no catálogo</span>
-                <div className="admin-input-with-icon">
-                  <Search size={16} aria-hidden="true" />
-                  <input
-                    type="search"
-                    aria-label="Buscar produto no painel"
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Nome, SKU ou categoria…"
-                  />
-                </div>
-              </label>
+          <div className="admin-workbench">
+            <section id="admin-product-filters" className="admin-workbench-filters scroll-mt-4">
+              <div className="admin-filter-row-main admin-filter-row-products">
+                <label className="admin-filter-field admin-filter-search">
+                  <span>Buscar no catálogo</span>
+                  <div className="admin-input-with-icon">
+                    <Search size={16} aria-hidden="true" />
+                    <input
+                      type="search"
+                      aria-label="Buscar produto no painel"
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder="Nome, SKU ou categoria…"
+                    />
+                  </div>
+                </label>
 
-              <label className="admin-filter-field">
-                <span>Fornecedor</span>
-                <select
-                  aria-label="Filtrar fornecedor"
-                  value={supplierFilter}
-                  onChange={(event) => setSupplierFilter(event.target.value)}
-                >
-                  <option value="all">Todos ({produtos.length})</option>
-                  {supplierPricingGroups.map((group) => (
-                    <option key={group.key} value={group.key}>
-                      {group.label} ({group.total})
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="admin-filter-field">
-                <span>Categoria</span>
-                <select
-                  aria-label="Filtrar categoria"
-                  value={categoryFilter}
-                  onChange={(event) => setCategoryFilter(event.target.value)}
-                >
-                  <option value="all">
-                    Todas ({productCategoryOptions.reduce((sum, item) => sum + item.count, 0)})
-                  </option>
-                  {productCategoryOptions.map((category) => (
-                    <option key={category.key} value={category.key}>
-                      {category.label} ({category.count})
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="admin-filter-field">
-                <span>Situação</span>
-                <select
-                  aria-label="Filtrar estado de publicação"
-                  value={statusFilter}
-                  onChange={(event) => setStatusFilter(event.target.value as "all" | ProductStatus)}
-                >
-                  <option value="all">Todos os estados</option>
-                  <option value="published">Aptos na loja</option>
-                  <option value="awaiting">Aguardando preço</option>
-                  <option value="incomplete">Dados incompletos</option>
-                </select>
-              </label>
-
-              <label className="admin-filter-field">
-                <span>Ordenar por</span>
-                <select
-                  aria-label="Ordenar produtos"
-                  value={productSort}
-                  onChange={(event) => setProductSort(event.target.value as ProductSortOption)}
-                >
-                  <option value="default">Padrão (por fornecedor)</option>
-                  <option value="cost-asc">Menor custo</option>
-                  <option value="cost-desc">Maior custo</option>
-                  <option value="price-asc">Menor preço no site</option>
-                  <option value="price-desc">Maior preço no site</option>
-                  <option value="margin-asc">Menor diferença bruta</option>
-                  <option value="name-asc">Nome (A–Z)</option>
-                </select>
-              </label>
-            </div>
-
-            <div className="admin-filter-row-secondary">
-              <div
-                className="pricing-filter-pills"
-                role="group"
-                aria-label="Atalhos de conferência"
-              >
-                {(
-                  [
-                    { id: "all", label: "Todos", count: quickCounts.all },
-                    { id: "missing-photo", label: "Sem foto", count: quickCounts["missing-photo"] },
-                    {
-                      id: "missing-measures",
-                      label: "Sem medidas",
-                      count: quickCounts["missing-measures"],
-                    },
-                    { id: "out-of-stock", label: "Esgotados", count: quickCounts["out-of-stock"] },
-                    {
-                      id: "black-friday",
-                      label: "Black Friday",
-                      count: quickCounts["black-friday"],
-                    },
-                    {
-                      id: "below-cost",
-                      label: "Abaixo do custo",
-                      count: quickCounts["below-cost"],
-                    },
-                  ] as const
-                )
-                  .filter((pill) => pill.id === "all" || pill.count > 0 || quickFilter === pill.id)
-                  .map((pill) => (
-                    <button
-                      key={pill.id}
-                      type="button"
-                      className="pricing-filter-pill"
-                      aria-pressed={quickFilter === pill.id}
-                      onClick={() => setQuickFilter(pill.id)}
-                    >
-                      <span>{pill.label}</span>
-                      <b>{pill.count.toLocaleString("pt-BR")}</b>
-                    </button>
-                  ))}
-              </div>
-
-              <div className="admin-products-secondary-right">
-                <div className="admin-cost-range" aria-label="Filtrar por faixa de valor">
-                  <SlidersHorizontal size={14} aria-hidden="true" />
+                <label className="admin-filter-field">
+                  <span>Fornecedor</span>
                   <select
-                    aria-label="Campo da faixa de preço"
-                    value={priceField}
-                    onChange={(event) => setPriceField(event.target.value as "site" | "supplier")}
-                    className="admin-range-field-select"
+                    aria-label="Filtrar fornecedor"
+                    value={supplierFilter}
+                    onChange={(event) => setSupplierFilter(event.target.value)}
                   >
-                    <option value="site">Preço site</option>
-                    <option value="supplier">Custo</option>
+                    <option value="all">Todos ({produtos.length})</option>
+                    {supplierPricingGroups.map((group) => (
+                      <option key={group.key} value={group.key}>
+                        {group.label} ({group.total})
+                      </option>
+                    ))}
                   </select>
-                  <input
-                    inputMode="decimal"
-                    value={minimumPrice}
-                    onChange={(event) => setMinimumPrice(event.target.value)}
-                    placeholder="Mín."
-                    aria-label="Valor mínimo em reais"
-                    aria-invalid={invalidPrices}
-                  />
-                  <span className="admin-cost-sep">até</span>
-                  <input
-                    inputMode="decimal"
-                    value={maximumPrice}
-                    onChange={(event) => setMaximumPrice(event.target.value)}
-                    placeholder="Máx."
-                    aria-label="Valor máximo em reais"
-                    aria-invalid={invalidPrices}
-                  />
+                </label>
+
+                <label className="admin-filter-field">
+                  <span>Categoria</span>
+                  <select
+                    aria-label="Filtrar categoria"
+                    value={categoryFilter}
+                    onChange={(event) => setCategoryFilter(event.target.value)}
+                  >
+                    <option value="all">
+                      Todas ({productCategoryOptions.reduce((sum, item) => sum + item.count, 0)})
+                    </option>
+                    {productCategoryOptions.map((category) => (
+                      <option key={category.key} value={category.key}>
+                        {category.label} ({category.count})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="admin-filter-field">
+                  <span>Situação</span>
+                  <select
+                    aria-label="Filtrar estado de publicação"
+                    value={statusFilter}
+                    onChange={(event) =>
+                      setStatusFilter(event.target.value as "all" | ProductStatus)
+                    }
+                  >
+                    <option value="all">Todos os estados</option>
+                    <option value="published">Aptos na loja</option>
+                    <option value="awaiting">Aguardando preço</option>
+                    <option value="incomplete">Dados incompletos</option>
+                  </select>
+                </label>
+
+                <label className="admin-filter-field">
+                  <span>Ordenar por</span>
+                  <select
+                    aria-label="Ordenar produtos"
+                    value={productSort}
+                    onChange={(event) => setProductSort(event.target.value as ProductSortOption)}
+                  >
+                    <option value="default">Padrão (por fornecedor)</option>
+                    <option value="cost-asc">Menor custo</option>
+                    <option value="cost-desc">Maior custo</option>
+                    <option value="price-asc">Menor preço no site</option>
+                    <option value="price-desc">Maior preço no site</option>
+                    <option value="margin-asc">Menor diferença bruta</option>
+                    <option value="name-asc">Nome (A–Z)</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="admin-filter-row-secondary">
+                <div
+                  className="pricing-filter-pills"
+                  role="group"
+                  aria-label="Atalhos de conferência"
+                >
+                  {(
+                    [
+                      { id: "all", label: "Todos", count: quickCounts.all },
+                      {
+                        id: "missing-photo",
+                        label: "Sem foto",
+                        count: quickCounts["missing-photo"],
+                      },
+                      {
+                        id: "missing-measures",
+                        label: "Sem medidas",
+                        count: quickCounts["missing-measures"],
+                      },
+                      {
+                        id: "out-of-stock",
+                        label: "Esgotados",
+                        count: quickCounts["out-of-stock"],
+                      },
+                      {
+                        id: "black-friday",
+                        label: "Black Friday",
+                        count: quickCounts["black-friday"],
+                      },
+                      {
+                        id: "below-cost",
+                        label: "Abaixo do custo",
+                        count: quickCounts["below-cost"],
+                      },
+                    ] as const
+                  )
+                    .filter(
+                      (pill) => pill.id === "all" || pill.count > 0 || quickFilter === pill.id,
+                    )
+                    .map((pill) => (
+                      <button
+                        key={pill.id}
+                        type="button"
+                        className="pricing-filter-pill"
+                        aria-pressed={quickFilter === pill.id}
+                        onClick={() => setQuickFilter(pill.id)}
+                      >
+                        <span>{pill.label}</span>
+                        <b>{pill.count.toLocaleString("pt-BR")}</b>
+                      </button>
+                    ))}
                 </div>
 
-                <div className="admin-view-toggle" role="group" aria-label="Modo de visualização">
-                  <button
-                    type="button"
-                    aria-pressed={viewMode === "table"}
-                    onClick={() => setViewMode("table")}
-                    title="Lista compacta"
-                  >
-                    <List size={15} aria-hidden="true" />
-                    <span>Lista</span>
-                  </button>
-                  <button
-                    type="button"
-                    aria-pressed={viewMode === "cards"}
-                    onClick={() => setViewMode("cards")}
-                    title="Cartões detalhados"
-                  >
-                    <LayoutGrid size={15} aria-hidden="true" />
-                    <span>Cartões</span>
-                  </button>
-                </div>
-              </div>
-            </div>
+                <div className="admin-products-secondary-right">
+                  <div className="admin-cost-range" aria-label="Filtrar por faixa de valor">
+                    <SlidersHorizontal size={14} aria-hidden="true" />
+                    <select
+                      aria-label="Campo da faixa de preço"
+                      value={priceField}
+                      onChange={(event) => setPriceField(event.target.value as "site" | "supplier")}
+                      className="admin-range-field-select"
+                    >
+                      <option value="site">Preço site</option>
+                      <option value="supplier">Custo</option>
+                    </select>
+                    <input
+                      inputMode="decimal"
+                      value={minimumPrice}
+                      onChange={(event) => setMinimumPrice(event.target.value)}
+                      placeholder="Mín."
+                      aria-label="Valor mínimo em reais"
+                      aria-invalid={invalidPrices}
+                    />
+                    <span className="admin-cost-sep">até</span>
+                    <input
+                      inputMode="decimal"
+                      value={maximumPrice}
+                      onChange={(event) => setMaximumPrice(event.target.value)}
+                      placeholder="Máx."
+                      aria-label="Valor máximo em reais"
+                      aria-invalid={invalidPrices}
+                    />
+                  </div>
 
-            {invalidPrices && (
-              <p role="alert" className="admin-filter-error">
-                Informe valores válidos; o mínimo não pode ser maior que o máximo.
-              </p>
-            )}
-
-            {hasAnyProductFilter && (
-              <div className="admin-active-chips">
-                {search.trim() && (
-                  <button type="button" className="admin-chip" onClick={() => setSearch("")}>
-                    Busca: “{search.trim()}” <X size={13} aria-hidden="true" />
-                  </button>
-                )}
-                {categoryFilter !== "all" && (
-                  <button
-                    type="button"
-                    className="admin-chip"
-                    onClick={() => setCategoryFilter("all")}
-                  >
-                    Categoria:{" "}
-                    {productCategoryOptions.find((c) => c.key === categoryFilter)?.label ??
-                      categoryFilter}{" "}
-                    <X size={13} aria-hidden="true" />
-                  </button>
-                )}
-                <button type="button" className="admin-reset-filters" onClick={clearFilters}>
-                  <RotateCcw size={13} aria-hidden="true" /> Limpar filtros
-                </button>
-              </div>
-            )}
-          </section>
-
-          {isLoading ? (
-            <p className="text-text-light">Carregando produtos…</p>
-          ) : isError ? (
-            <div className="border border-destructive/25 bg-destructive/5 p-6 text-cacau">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
-                <div>
-                  <h2 className="font-semibold">Não foi possível carregar os produtos</h2>
-                  <p className="mt-1 text-sm text-text-light">
-                    {error instanceof Error ? error.message : "Tente novamente em instantes."}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => refetch()}
-                    disabled={isFetching}
-                    className="mt-4 inline-flex items-center gap-2 bg-deep-green px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-sand disabled:opacity-60"
-                  >
-                    <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
-                    {isFetching ? "Tentando…" : "Tentar novamente"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div>
-              <div className="mb-3 flex items-center justify-between gap-3 text-xs text-text-light">
-                <span>
-                  {filteredProdutos.length.toLocaleString("pt-BR")} produto(s) encontrado(s)
-                </span>
-                <span>
-                  Página {page} de {totalPages}
-                </span>
-              </div>
-              {visibleProdutos.length === 0 ? (
-                <div className="border border-cacau/10 bg-white p-8 text-center text-sm text-text-light">
-                  <p>Nenhum produto corresponde aos filtros atuais.</p>
-                  <button
-                    type="button"
-                    onClick={clearFilters}
-                    className="mt-3 inline-flex min-h-11 items-center rounded-md border border-cacau/20 px-4 text-xs font-semibold text-cacau hover:border-gold hover:text-deep-green"
-                  >
-                    Limpar filtros
-                  </button>
-                </div>
-              ) : viewMode === "table" ? (
-                <div className="admin-products-table-wrap">
-                  <div
-                    className="admin-products-table"
-                    role="table"
-                    aria-label="Produtos do catálogo"
-                  >
-                    <div className="admin-products-row admin-products-head" role="row">
-                      <span role="columnheader">Produto / Categoria / Fornecedor</span>
-                      <span role="columnheader">Custo</span>
-                      <span role="columnheader">Preço site / 10x</span>
-                      <span role="columnheader">Dif. bruta</span>
-                      <span role="columnheader">Situação</span>
-                      <span role="columnheader">
-                        <span className="aw-sr-only">Ações</span>
-                      </span>
-                    </div>
-                    {visibleProdutos.map((p) => {
-                      const status = productStatus(p);
-                      const difference = grossPriceDifference(p);
-                      const sitePrice = Number(p.preco_atual ?? 0);
-                      return (
-                        <div className="admin-products-row" role="row" key={p.id}>
-                          <div className="admin-products-cell-main" role="cell">
-                            <ProductIdentity product={p}>
-                              <small>
-                                {[p.categoria || "Sem categoria", p.sku || "Sem SKU", sourceName(p)]
-                                  .filter(Boolean)
-                                  .join(" · ")}
-                              </small>
-                            </ProductIdentity>
-                          </div>
-                          <span className="supplier-pricing-value" role="cell" data-label="Custo">
-                            {moneyOrDash(p.preco_atacado)}
-                          </span>
-                          <span
-                            className="supplier-pricing-value supplier-pricing-site-price"
-                            role="cell"
-                            data-label="Preço no site"
-                          >
-                            <strong>{moneyOrDash(p.preco_atual)}</strong>
-                            {sitePrice > 0 && (
-                              <small>10x de {formatBRL(cardInstallment(sitePrice, 10))}</small>
-                            )}
-                          </span>
-                          <span
-                            className={`supplier-pricing-value ${difference == null ? "is-muted" : difference >= 0 ? "is-positive" : "is-negative"}`}
-                            role="cell"
-                            data-label="Diferença bruta"
-                          >
-                            {grossPriceDifferenceLabel(p)}
-                          </span>
-                          <span
-                            className="admin-products-status-cell"
-                            role="cell"
-                            data-label="Situação"
-                          >
-                            <StatusBadge status={status} />
-                          </span>
-                          <div className="admin-products-actions" role="cell">
-                            <button
-                              type="button"
-                              onClick={() => startEdit(p, "preco")}
-                              className="admin-row-btn-price"
-                              aria-label={`Precificar ${p.nome}`}
-                            >
-                              <CircleDollarSign size={14} aria-hidden="true" />
-                              <span>Precificar</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => startEdit(p, "dados")}
-                              className="admin-row-btn-edit"
-                              aria-label={`Editar ${p.nome}`}
-                            >
-                              <Pencil size={14} aria-hidden="true" />
-                              <span>Editar</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => remove(p.id)}
-                              aria-label={`Remover ${p.nome}`}
-                              className="admin-row-btn-delete"
-                            >
-                              <Trash2 size={14} aria-hidden="true" />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <div className="admin-view-toggle" role="group" aria-label="Modo de visualização">
+                    <button
+                      type="button"
+                      aria-pressed={viewMode === "table"}
+                      onClick={() => setViewMode("table")}
+                      title="Lista compacta"
+                    >
+                      <List size={15} aria-hidden="true" />
+                      <span>Lista</span>
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={viewMode === "cards"}
+                      onClick={() => setViewMode("cards")}
+                      title="Cartões detalhados"
+                    >
+                      <LayoutGrid size={15} aria-hidden="true" />
+                      <span>Cartões</span>
+                    </button>
                   </div>
                 </div>
-              ) : (
-                <div className="space-y-5">
-                  {visibleProductGroups.map((group) => (
-                    <section key={group.key} aria-label={`Produtos de ${group.label}`}>
-                      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2 border-b border-cacau/10 pb-2">
-                        <h3 className="font-semibold text-deep-green">{group.label}</h3>
-                        <span className="text-xs text-text-light">
-                          {group.products.length} produto(s) nesta página
+              </div>
+
+              {invalidPrices && (
+                <p role="alert" className="admin-filter-error">
+                  Informe valores válidos; o mínimo não pode ser maior que o máximo.
+                </p>
+              )}
+
+              {hasAnyProductFilter && (
+                <div className="admin-active-chips">
+                  {search.trim() && (
+                    <button type="button" className="admin-chip" onClick={() => setSearch("")}>
+                      Busca: “{search.trim()}” <X size={13} aria-hidden="true" />
+                    </button>
+                  )}
+                  {categoryFilter !== "all" && (
+                    <button
+                      type="button"
+                      className="admin-chip"
+                      onClick={() => setCategoryFilter("all")}
+                    >
+                      Categoria:{" "}
+                      {productCategoryOptions.find((c) => c.key === categoryFilter)?.label ??
+                        categoryFilter}{" "}
+                      <X size={13} aria-hidden="true" />
+                    </button>
+                  )}
+                  <button type="button" className="admin-reset-filters" onClick={clearFilters}>
+                    <RotateCcw size={13} aria-hidden="true" /> Limpar filtros
+                  </button>
+                </div>
+              )}
+            </section>
+
+            {isLoading ? (
+              <p className="text-text-light">Carregando produtos…</p>
+            ) : isError ? (
+              <div className="border border-destructive/25 bg-destructive/5 p-6 text-cacau">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+                  <div>
+                    <h2 className="font-semibold">Não foi possível carregar os produtos</h2>
+                    <p className="mt-1 text-sm text-text-light">
+                      {error instanceof Error ? error.message : "Tente novamente em instantes."}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => refetch()}
+                      disabled={isFetching}
+                      className="mt-4 inline-flex items-center gap-2 bg-deep-green px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-sand disabled:opacity-60"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+                      {isFetching ? "Tentando…" : "Tentar novamente"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div className="admin-workbench-status-bar">
+                  <span>
+                    {filteredProdutos.length.toLocaleString("pt-BR")} produto(s) encontrado(s)
+                  </span>
+                  <span>
+                    Página {page} de {totalPages}
+                  </span>
+                </div>
+                {visibleProdutos.length === 0 ? (
+                  <div className="border border-cacau/10 bg-white p-8 text-center text-sm text-text-light">
+                    <p>Nenhum produto corresponde aos filtros atuais.</p>
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="mt-3 inline-flex min-h-11 items-center rounded-md border border-cacau/20 px-4 text-xs font-semibold text-cacau hover:border-gold hover:text-deep-green"
+                    >
+                      Limpar filtros
+                    </button>
+                  </div>
+                ) : viewMode === "table" ? (
+                  <div className="admin-products-table-wrap">
+                    <div
+                      className="admin-products-table"
+                      role="table"
+                      aria-label="Produtos do catálogo"
+                    >
+                      <div className="admin-products-row admin-products-head" role="row">
+                        <span role="columnheader">Produto / Categoria / Fornecedor</span>
+                        <span role="columnheader">Custo</span>
+                        <span role="columnheader">Preço site / 10x</span>
+                        <span role="columnheader">Dif. bruta</span>
+                        <span role="columnheader">Situação</span>
+                        <span role="columnheader">
+                          <span className="aw-sr-only">Ações</span>
                         </span>
                       </div>
-                      <div className="grid gap-3 xl:grid-cols-2">
-                        {group.products.map((p) => {
-                          const status = productStatus(p);
-                          const source = sourceUrl(p);
-                          const difference = grossPriceDifference(p);
-                          const sitePrice = Number(p.preco_atual ?? 0);
-                          return (
-                            <article
-                              key={p.id}
-                              className="rounded-lg border border-cacau/10 bg-white p-4 transition-shadow hover:shadow-premium sm:p-5"
+                      {visibleProdutos.map((p) => {
+                        const status = productStatus(p);
+                        const difference = grossPriceDifference(p);
+                        const sitePrice = Number(p.preco_atual ?? 0);
+                        return (
+                          <div className="admin-products-row" role="row" key={p.id}>
+                            <div className="admin-products-cell-main" role="cell">
+                              <ProductIdentity product={p}>
+                                <small>
+                                  {[
+                                    p.categoria || "Sem categoria",
+                                    p.sku || "Sem SKU",
+                                    sourceName(p),
+                                  ]
+                                    .filter(Boolean)
+                                    .join(" · ")}
+                                </small>
+                              </ProductIdentity>
+                            </div>
+                            <span className="supplier-pricing-value" role="cell" data-label="Custo">
+                              {moneyOrDash(p.preco_atacado)}
+                            </span>
+                            <span
+                              className="supplier-pricing-value supplier-pricing-site-price"
+                              role="cell"
+                              data-label="Preço no site"
                             >
-                              <div className="flex gap-3">
-                                <ProductThumbnail product={p} />
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex flex-wrap items-start justify-between gap-2">
-                                    <button
-                                      type="button"
-                                      onClick={() => startEdit(p)}
-                                      className="min-h-11 text-left font-semibold text-cacau hover:text-deep-green"
-                                    >
-                                      {p.nome}
-                                    </button>
-                                    <StatusBadge status={status} />
-                                  </div>
-                                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-text-light">
-                                    <span>{p.sku || "Sem SKU"}</span>
-                                    <span>{p.categoria || "Sem categoria"}</span>
-                                  </div>
-                                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                                    <span className="font-semibold text-deep-green">
-                                      {sourceName(p)}
-                                    </span>
-                                    {source ? (
-                                      <a
-                                        href={source}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="text-gold underline underline-offset-2"
+                              <strong>{moneyOrDash(p.preco_atual)}</strong>
+                              {sitePrice > 0 && (
+                                <small>10x de {formatBRL(cardInstallment(sitePrice, 10))}</small>
+                              )}
+                            </span>
+                            <span
+                              className={`supplier-pricing-value ${difference == null ? "is-muted" : difference >= 0 ? "is-positive" : "is-negative"}`}
+                              role="cell"
+                              data-label="Diferença bruta"
+                            >
+                              {grossPriceDifferenceLabel(p)}
+                            </span>
+                            <span
+                              className="admin-products-status-cell"
+                              role="cell"
+                              data-label="Situação"
+                            >
+                              <StatusBadge status={status} />
+                            </span>
+                            <div className="admin-products-actions" role="cell">
+                              <button
+                                type="button"
+                                onClick={() => startEdit(p, "preco")}
+                                className="admin-row-btn-price"
+                                aria-label={`Precificar ${p.nome}`}
+                              >
+                                <CircleDollarSign size={14} aria-hidden="true" />
+                                <span>Precificar</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => startEdit(p, "dados")}
+                                className="admin-row-btn-edit"
+                                aria-label={`Editar ${p.nome}`}
+                              >
+                                <Pencil size={14} aria-hidden="true" />
+                                <span>Editar</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => remove(p.id)}
+                                aria-label={`Remover ${p.nome}`}
+                                className="admin-row-btn-delete"
+                              >
+                                <Trash2 size={14} aria-hidden="true" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="admin-products-cards-wrap space-y-5">
+                    {visibleProductGroups.map((group) => (
+                      <section key={group.key} aria-label={`Produtos de ${group.label}`}>
+                        <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2 border-b border-cacau/10 pb-2">
+                          <h3 className="font-semibold text-deep-green">{group.label}</h3>
+                          <span className="text-xs text-text-light">
+                            {group.products.length} produto(s) nesta página
+                          </span>
+                        </div>
+                        <div className="grid gap-3 xl:grid-cols-2">
+                          {group.products.map((p) => {
+                            const status = productStatus(p);
+                            const source = sourceUrl(p);
+                            const difference = grossPriceDifference(p);
+                            const sitePrice = Number(p.preco_atual ?? 0);
+                            return (
+                              <article
+                                key={p.id}
+                                className="rounded-lg border border-cacau/10 bg-white p-4 transition-shadow hover:shadow-premium sm:p-5"
+                              >
+                                <div className="flex gap-3">
+                                  <ProductThumbnail product={p} />
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex flex-wrap items-start justify-between gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={() => startEdit(p)}
+                                        className="min-h-11 text-left font-semibold text-cacau hover:text-deep-green"
                                       >
-                                        Abrir fonte
-                                      </a>
-                                    ) : (
-                                      <span className="text-text-light">Fonte não cadastrada</span>
+                                        {p.nome}
+                                      </button>
+                                      <StatusBadge status={status} />
+                                    </div>
+                                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-text-light">
+                                      <span>{p.sku || "Sem SKU"}</span>
+                                      <span>{p.categoria || "Sem categoria"}</span>
+                                    </div>
+                                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                                      <span className="font-semibold text-deep-green">
+                                        {sourceName(p)}
+                                      </span>
+                                      {source ? (
+                                        <a
+                                          href={source}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="text-gold underline underline-offset-2"
+                                        >
+                                          Abrir fonte
+                                        </a>
+                                      ) : (
+                                        <span className="text-text-light">
+                                          Fonte não cadastrada
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="mt-4 grid grid-cols-3 gap-2 border-y border-cacau/10 py-3 text-xs">
+                                  <div>
+                                    <div className="text-text-light">Custo informado</div>
+                                    <div className="mt-1 font-bold text-cacau">
+                                      {moneyOrDash(p.preco_atacado)}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div className="text-text-light">Preço no site</div>
+                                    <div className="mt-1 font-bold text-price-green">
+                                      {moneyOrDash(p.preco_atual)}
+                                    </div>
+                                    {sitePrice > 0 && (
+                                      <div className="mt-0.5 text-[11px] text-text-light">
+                                        10x de {formatBRL(cardInstallment(sitePrice, 10))}
+                                      </div>
                                     )}
                                   </div>
-                                </div>
-                              </div>
-                              <div className="mt-4 grid grid-cols-3 gap-2 border-y border-cacau/10 py-3 text-xs">
-                                <div>
-                                  <div className="text-text-light">Custo informado</div>
-                                  <div className="mt-1 font-bold text-cacau">
-                                    {moneyOrDash(p.preco_atacado)}
-                                  </div>
-                                </div>
-                                <div>
-                                  <div className="text-text-light">Preço no site</div>
-                                  <div className="mt-1 font-bold text-price-green">
-                                    {moneyOrDash(p.preco_atual)}
-                                  </div>
-                                  {sitePrice > 0 && (
-                                    <div className="mt-0.5 text-[11px] text-text-light">
-                                      10x de {formatBRL(cardInstallment(sitePrice, 10))}
+                                  <div>
+                                    <div className="text-text-light">Diferença bruta</div>
+                                    <div
+                                      className={`mt-1 font-bold ${difference == null ? "text-text-light" : difference >= 0 ? "text-price-green" : "text-destructive"}`}
+                                    >
+                                      {grossPriceDifferenceLabel(p)}
                                     </div>
-                                  )}
-                                </div>
-                                <div>
-                                  <div className="text-text-light">Diferença bruta</div>
-                                  <div
-                                    className={`mt-1 font-bold ${difference == null ? "text-text-light" : difference >= 0 ? "text-price-green" : "text-destructive"}`}
-                                  >
-                                    {grossPriceDifferenceLabel(p)}
                                   </div>
                                 </div>
-                              </div>
-                              <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
-                                <span className="text-xs text-text-light">
-                                  {p.vendas_ultimos_30_dias ?? 0} venda(s) em 30 dias
-                                </span>
-                                <div className="flex flex-wrap gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => startEdit(p, "preco")}
-                                    className="inline-flex min-h-11 items-center gap-1.5 rounded border border-deep-green/30 bg-[#edf4e9] px-3 py-2 text-xs font-bold uppercase tracking-wider text-deep-green hover:border-gold"
-                                  >
-                                    <CircleDollarSign className="h-3.5 w-3.5" /> Precificar
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => startEdit(p, "dados")}
-                                    className="inline-flex min-h-11 items-center gap-1.5 rounded border border-cacau/20 px-3 py-2 text-xs font-bold uppercase tracking-wider text-cacau hover:border-gold hover:text-deep-green"
-                                  >
-                                    <Pencil className="h-3.5 w-3.5" /> Editar
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => remove(p.id)}
-                                    aria-label={`Remover ${p.nome}`}
-                                    className="min-h-11 min-w-11 rounded border border-cacau/20 p-2 text-cacau hover:border-destructive hover:text-destructive"
-                                  >
-                                    <Trash2 className="mx-auto h-4 w-4" />
-                                  </button>
+                                <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+                                  <span className="text-xs text-text-light">
+                                    {p.vendas_ultimos_30_dias ?? 0} venda(s) em 30 dias
+                                  </span>
+                                  <div className="flex flex-wrap gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => startEdit(p, "preco")}
+                                      className="inline-flex min-h-11 items-center gap-1.5 rounded border border-deep-green/30 bg-[#edf4e9] px-3 py-2 text-xs font-bold uppercase tracking-wider text-deep-green hover:border-gold"
+                                    >
+                                      <CircleDollarSign className="h-3.5 w-3.5" /> Precificar
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => startEdit(p, "dados")}
+                                      className="inline-flex min-h-11 items-center gap-1.5 rounded border border-cacau/20 px-3 py-2 text-xs font-bold uppercase tracking-wider text-cacau hover:border-gold hover:text-deep-green"
+                                    >
+                                      <Pencil className="h-3.5 w-3.5" /> Editar
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => remove(p.id)}
+                                      aria-label={`Remover ${p.nome}`}
+                                      className="min-h-11 min-w-11 rounded border border-cacau/20 p-2 text-cacau hover:border-destructive hover:text-destructive"
+                                    >
+                                      <Trash2 className="mx-auto h-4 w-4" />
+                                    </button>
+                                  </div>
                                 </div>
-                              </div>
-                            </article>
-                          );
-                        })}
-                      </div>
-                    </section>
-                  ))}
-                </div>
-              )}
-              {totalPages > 1 && (
-                <div className="mt-5 flex items-center justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setPage((current) => Math.max(1, current - 1))}
-                    disabled={page === 1}
-                    className="min-h-11 rounded border border-cacau/20 px-4 py-2 text-xs font-bold uppercase tracking-wider text-cacau disabled:opacity-40"
-                  >
-                    Anterior
-                  </button>
-                  <span className="text-xs text-text-light">
-                    {page} / {totalPages}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-                    disabled={page === totalPages}
-                    className="min-h-11 rounded border border-cacau/20 px-4 py-2 text-xs font-bold uppercase tracking-wider text-cacau disabled:opacity-40"
-                  >
-                    Próxima
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+                              </article>
+                            );
+                          })}
+                        </div>
+                      </section>
+                    ))}
+                  </div>
+                )}
+                {totalPages > 1 && (
+                  <div className="supplier-pricing-pagination" aria-label="Paginação dos produtos">
+                    <button
+                      type="button"
+                      onClick={() => setPage((current) => Math.max(1, current - 1))}
+                      disabled={page === 1}
+                    >
+                      Anterior
+                    </button>
+                    <span>
+                      Página {page} de {totalPages}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+                      disabled={page === totalPages}
+                    >
+                      Próxima
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </section>
         <section
           hidden={workspaceTab !== "fornecedores"}
