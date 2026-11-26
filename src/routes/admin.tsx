@@ -25,7 +25,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { MobiliLogo } from "@/components/MobiliLogo";
-import "@/admin-theme.css";
 import { PRODUCT_CATEGORY_OPTIONS } from "@/lib/constants";
 import {
   checkAdminPassword,
@@ -71,6 +70,7 @@ import {
   type ProductSortOption,
   type ProductStatus,
 } from "@/lib/admin-filters";
+import "@/admin-theme.css";
 
 const STORAGE_KEY = "mobili_admin_pwd";
 
@@ -2691,7 +2691,7 @@ function ProductForm({
               <button
                 type="button"
                 onClick={onSave}
-                disabled={saving || uploading}
+                disabled={saving || uploading || (Boolean(value.id) && !hasUnsavedChanges)}
                 className="min-h-11 flex-1 rounded-lg bg-deep-green px-6 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#243a28] disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none"
               >
                 {saving ? "Salvando…" : "Salvar produto"}

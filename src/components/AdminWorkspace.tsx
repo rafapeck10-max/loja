@@ -189,29 +189,32 @@ export function AdminWorkspace({
               </>
             )}
           </div>
-          {area !== "produtos" && area !== "fornecedores" && area !== "revisao" && (
-            <form
-              className="aw-search"
-              role="search"
-              onSubmit={(event) => {
-                event.preventDefault();
-                const term = query.trim();
-                onSearch(term);
-                if (term) setQuery("");
-              }}
-            >
-              <Search size={17} aria-hidden="true" />
-              <input
-                aria-label="Buscar produtos pelo nome ou SKU"
-                placeholder="Buscar produto ou SKU…"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-              />
-              <button type="submit" aria-label="Buscar produtos">
-                <ArrowUpRight size={16} />
-              </button>
-            </form>
-          )}
+          {area !== "produtos" &&
+            area !== "fornecedores" &&
+            area !== "revisao" &&
+            area !== "pedidos" && (
+              <form
+                className="aw-search"
+                role="search"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  const term = query.trim();
+                  onSearch(term);
+                  if (term) setQuery("");
+                }}
+              >
+                <Search size={17} aria-hidden="true" />
+                <input
+                  aria-label="Buscar produtos pelo nome ou SKU"
+                  placeholder="Buscar produto ou SKU…"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                />
+                <button type="submit" aria-label="Buscar produtos">
+                  <ArrowUpRight size={16} />
+                </button>
+              </form>
+            )}
           <a className="aw-store-link" href={storefrontHref} target="_blank" rel="noreferrer">
             Ver loja <ArrowUpRight size={15} />
           </a>

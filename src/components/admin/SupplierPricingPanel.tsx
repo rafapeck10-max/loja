@@ -309,10 +309,7 @@ export function SupplierPricingPanel<T extends SupplierPricingProduct>({
       <header className="supplier-pricing-header">
         <div>
           <h1 id="supplier-pricing-title">Precificar produtos</h1>
-          <p>
-            Filtre por fornecedor, categoria ou faixa de custo e salve o preço à vista direto na
-            linha.
-          </p>
+          <p>Filtre por fornecedor, categoria ou faixa de custo e salve o preço direto na linha.</p>
         </div>
         <details className="pricing-formula-note">
           <summary>Como a margem é calculada</summary>
@@ -574,6 +571,10 @@ export function SupplierPricingPanel<T extends SupplierPricingProduct>({
                     !Number.isNaN(parsedDraft) &&
                     parsedDraft > 0 &&
                     Math.abs(parsedDraft - savedSitePrice) >= 0.005;
+                  const hasInvalidDraft =
+                    draftString !== undefined &&
+                    draftString.trim() !== "" &&
+                    (parsedDraft == null || Number.isNaN(parsedDraft) || parsedDraft <= 0);
                   const isSaving = Boolean(savingIds[product.id]);
                   const isSaved = Boolean(savedIds[product.id]);
                   const rowError = rowErrors[product.id];
@@ -649,6 +650,11 @@ export function SupplierPricingPanel<T extends SupplierPricingProduct>({
                                 ? `10x de ${formatBRL(cardInstallment(effectiveSitePrice, 10))}`
                                 : "Digite para calcular 10x"}
                             </small>
+                            {hasInvalidDraft && !rowError && (
+                              <small role="alert" className="pricing-inline-error">
+                                Informe um valor maior que zero.
+                              </small>
+                            )}
                             {rowError && (
                               <small role="alert" className="pricing-inline-error">
                                 {rowError}
@@ -683,11 +689,13 @@ export function SupplierPricingPanel<T extends SupplierPricingProduct>({
                       </span>
 
                       <span
-                        className={"supplier-pricing-status status-" + status}
+                        className="supplier-pricing-status-cell"
                         role="cell"
                         data-label="Situação"
                       >
-                        {statusLabels[status]}
+                        <span className={"supplier-pricing-status status-" + status}>
+                          {statusLabels[status]}
+                        </span>
                       </span>
 
                       <span className="supplier-pricing-action" role="cell">
@@ -695,7 +703,7 @@ export function SupplierPricingPanel<T extends SupplierPricingProduct>({
                           <button
                             type="button"
                             className={`pricing-save-btn${isDirty ? " is-dirty" : ""}${isSaved ? " is-saved" : ""}`}
-                            disabled={isSaving || (!isDirty && draftString === undefined)}
+                            disabled={isSaving || !isDirty}
                             onClick={() => void handleQuickSave(product)}
                           >
                             {isSaved ? (

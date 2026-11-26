@@ -132,9 +132,12 @@ export function GoogleShoppingPanel({
               Feed dinâmico do Google Merchant Center
             </h2>
             <p className="mt-1 text-xs leading-relaxed text-text-light">
-              Substitui o envio manual antigo (`mobi_google_produtos.tsv`) emitindo apenas produtos
-              com custo, venda, foto HTTPS e disponibilidade confirmada (`disponivel` ou
-              `esgotado`), em total sincronia com o JSON-LD da página.
+              Substitui o envio manual antigo (
+              <code className="rounded bg-sand px-1 py-0.5 text-[11px] font-semibold text-deep-green">
+                mobi_google_produtos.tsv
+              </code>
+              ) emitindo apenas produtos com custo, venda, foto HTTPS e disponibilidade confirmada
+              (disponível ou esgotado), em total sincronia com o JSON-LD da página.
             </p>
           </div>
           {demonstration && (
@@ -178,7 +181,7 @@ export function GoogleShoppingPanel({
         </div>
         <div className="rounded-xl border border-cacau/10 bg-white p-4">
           <div className="text-[11px] font-semibold uppercase tracking-wide text-text-light">
-            Disponível (`in_stock`)
+            Disponível (in_stock)
           </div>
           <div className="mt-1 text-2xl font-bold text-price-green">
             {stats.byStatus.disponivel}
@@ -186,7 +189,7 @@ export function GoogleShoppingPanel({
         </div>
         <div className="rounded-xl border border-cacau/10 bg-white p-4">
           <div className="text-[11px] font-semibold uppercase tracking-wide text-text-light">
-            Esgotado (`out_of_stock`)
+            Esgotado (out_of_stock)
           </div>
           <div className="mt-1 text-2xl font-bold text-cacau">{stats.byStatus.esgotado}</div>
         </div>
