@@ -1230,6 +1230,7 @@
   color: var(--adm-ink);
   font-size: 12px;
   font-weight: 600;
+  transition: none;
 }
 
 .aw-layout .pricing-filter-pill span {
@@ -1246,7 +1247,12 @@
 .aw-layout .pricing-filter-pill[aria-pressed="true"]:hover {
   background: var(--adm-green);
   border-color: var(--adm-green);
-  color: var(--adm-sand);
+  color: #f4efe6;
+}
+
+.aw-layout .pricing-filter-pill[aria-pressed="true"] span,
+.aw-layout .pricing-filter-pill[aria-pressed="true"]:hover span {
+  color: #f4efe6;
 }
 
 .aw-layout .pricing-filter-pill b {
@@ -1259,8 +1265,8 @@
 }
 
 .aw-layout .pricing-filter-pill[aria-pressed="true"] b {
-  background: rgba(255, 255, 255, 0.14);
-  color: var(--adm-gold);
+  background: rgba(255, 255, 255, 0.16);
+  color: #e2c27d;
   opacity: 1;
 }
 
@@ -2090,6 +2096,11 @@
   font-weight: 600;
 }
 
+.aw-layout .pm-button:disabled {
+  color: var(--adm-ink-muted);
+  opacity: 0.65;
+}
+
 .aw-layout .pm-button.is-primary,
 .aw-layout .pm-button-primary,
 .aw-layout .pm-primary {
@@ -2099,17 +2110,13 @@
 }
 
 .aw-layout .pm-button.is-primary:disabled,
+.aw-layout .pm-button.pm-primary:disabled,
 .aw-layout .pm-button-primary:disabled,
 .aw-layout .pm-primary:disabled {
-  background: var(--adm-green);
-  border-color: var(--adm-green);
-  color: var(--adm-sand);
-  opacity: 0.5;
-}
-
-.aw-layout .pm-button:disabled {
-  color: var(--adm-ink-muted);
-  opacity: 0.65;
+  background: #5b6d5f;
+  border-color: #5b6d5f;
+  color: #f4efe6;
+  opacity: 1;
 }
 
 @media (min-width: 1024px) {
@@ -2145,7 +2152,9 @@
   }
 
   .aw-layout .supplier-pricing-row.has-inline-pricing,
-  .aw-layout .supplier-pricing-table.has-inline-pricing .supplier-pricing-row,
+  .aw-layout
+    .supplier-pricing-table.has-inline-pricing
+    .supplier-pricing-row:not(.supplier-pricing-table-head),
   .aw-layout .admin-products-row {
     grid-template-columns: 1fr;
     gap: 10px;
@@ -2163,6 +2172,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
+    width: 100%;
   }
 
   .aw-layout .supplier-pricing-value[data-label]::before,
