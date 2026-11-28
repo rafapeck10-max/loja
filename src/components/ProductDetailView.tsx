@@ -641,6 +641,7 @@ export function ProductDetailView({
               oldPrice={displayOldPrice}
               price={currentPrice}
               payment={payment}
+              blackFriday={isBlackFridayProduct(product)}
             />
             <button
               type="button"
